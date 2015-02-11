@@ -24,6 +24,20 @@ import re
 # TODO : Les communes, les noms des départements, les noms des regions
 
 
+#### PROCESSING DU TEXTE
+
+def _process_text(val):
+    '''Met le string val sous sous sa forme normée'''
+    val = val.lower()
+    val = val.replace('-', ' ')
+    val = val.replace("'", ' ')
+    val = val.replace('\xc3\xa8', 'e')
+    val = val.replace('\xc3\xa9', 'e')
+    val = val.replace('\xc3\x8e', 'i')    
+    val = val.replace('\xc3\xb4', 'o')
+    return val
+
+
 #### GEOGRAPHIQUES
 def _code_postal(val):
     '''Renvoie True si val peut être un code postal, False sinon'''
@@ -38,8 +52,23 @@ def _code_postal(val):
         return False
     if not (val > 1000) and (val < 100000):
         return False    
-    return True
+    f = open('codes_postaux.txt', 'r')
+    liste = f.read().split('\n')
+    f.close()
+    return str(val).zfill(5) in liste
     
+def _code_commune_insee(val):
+    '''Renvoie True si val peut être un code commune INSEE, False sinon'''
+    if not isinstance(val, str):
+        val = str(val)
+        # TODO : ajouter une regex pour : 'que des chiffres ou bien commence par 2A, 2B puis 3 chiffres'
+    if not len(val) in [4,5]:
+        return False
+    val = val.zfill(5)
+    f = open('codes_commune_insee.txt', 'r')
+    liste = f.read().split('\n')
+    f.close()
+    return val in liste
 
 def _code_departement(val):
     '''Renvoie True si val peut être un département, False sinon'''
@@ -52,17 +81,6 @@ def _code_departement(val):
     return val in liste_des_dep
         
         
-def _process_text(val):
-    '''Met le string val sous sous sa forme normée'''
-    val = val.lower()
-    val = val.replace('-', ' ')
-    val = val.replace("'", ' ')
-    val = val.replace('\xc3\xa8', 'e')
-    val = val.replace('\xc3\xa9', 'e')
-    val = val.replace('\xc3\x8e', 'i')    
-    val = val.replace('\xc3\xb4', 'o')
-    return val
-
 def _region(val):
     '''Match avec le nom des départements'''
     if not (isinstance(val, str) or isinstance(val, unicode)):
@@ -113,23 +131,29 @@ def _jour_de_la_semaine(val):
     if not isinstance(val, str) or isinstance(val, unicode):
         return False
     val = val.lower()
-    jours = ['lu', 'ma', 'me', 'je', 've', 'sa', 'di']
-    if not any([jour in val for jour in jours]):
+    jours = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
+    return val in jours
+
+def _annee(val):
+    '''Renvoie True si les cahmps peuvent être des jours de la semaine'''
+    try:
+        val = int(val)
+    except:
         return False
-        
-    return True
+    if (1900 <= val) and (val <= 2100):
+        return True
+    else:
+        return False
 
- 
-#def _date(val):
-#    '''Renvoie True si val peut être une date, False sinon'''
-#    if not isinstance(val, str) or isinstance(val, unicode): # Une date doit être un string ou unicode
-#        return False
-#    list_of_regex_to_check = ['^(19|20)\d\d[- /.](0[1-9]|1[012])[- /.](0[1-9]|[12][0-9]|3[01])$']
-#    expr = '^(19|20)\d\d[- /.](0[1-9]|1[012])[- /.](0[1-9]|[12][0-9]|3[01])$'
-#    a = bool(re.match(expr, val))
-#    a.match(string)
-    
-
+def _date(val):
+    '''Renvoie True si val peut être une date, False sinon'''
+    if not isinstance(val, str) or isinstance(val, unicode): # Une date doit être un string ou unicode
+        return False
+    a = bool(re.match(r'^(19|20)\d\d[ -/_](0[1-9]|1[012])[ -/_](0[1-9]|[12][0-9]|3[01])', val)) # matches 1993-12/02
+    b = bool(re.match(r'^(0[1-9]|[12][0-9]|3[01])[ -/_](0[1-9]|1[012])[ -/_]([0-9]{2}|(19|20)[0-9]{2}$)', val)) # matches 02/12 03 and 02_12 2003
+    c = bool(re.match(r'^(0[1-9]|[12][0-9]|3[01])(0[1-9]|1[012])([0-9]{2}|(19|20){2}$)', val)) # matches 02_05_2003
+    d = bool(re.match(r'^(19|20)\d\d(0[1-9]|1[012])(0[1-9]|[12][0-9]|3[01])', val)) # matches 19931202
+    return a or b or c or d
 
 #############################################################################
 ############### ROUTINE DE TEST CI DESSOUS ##################################
@@ -150,11 +174,11 @@ def test_col(serie, test_func):
 def routine(file):
     '''Renvoie un table avec en colonnes les colonnes du csv et en ligne, les champs testes'''
     table = pd.read_csv(file, sep = ';', nrows = 50)
-    
+    table['date'] = '1992_05_25'
     fonctions_test = dict()
     # Geographique
     fonctions_test['code_postal'] = _code_postal
-    fonctions_test['code_insee'] = _code_postal
+    fonctions_test['code_insee'] = _code_commune_insee
     fonctions_test['code_departement'] = _code_departement
     
     fonctions_test['region'] = _region
@@ -163,6 +187,8 @@ def routine(file):
 
     # Date
     fonctions_test['jour_de_la_semaine'] = _jour_de_la_semaine
+    fonctions_test['annee'] = _annee
+    fonctions_test['date'] = _date
 
     
     return_table = pd.DataFrame(columns = table.columns)    
