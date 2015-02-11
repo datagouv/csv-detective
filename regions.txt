@@ -1,0 +1,27 @@
+alsace
+aquitaine
+auvergne
+basse normandie
+bourgogne
+bretagne
+centre
+champagne ardenne
+corse
+franche comte
+guadeloupe
+guyane
+haute normandie
+ile de france
+la reunion
+languedoc roussillon
+limousin
+lorraine
+martinique
+mayotte
+midi pyrenees
+nord pas de calais
+pays de la loire
+picardie
+poitou charentes
+provence alpes cote d azur
+rhone alpes

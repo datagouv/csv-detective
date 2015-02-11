@@ -18,6 +18,11 @@ import re
 ############### TESTS POUR DIFFERENTS CHAMPS ##################################
 # On fait des test successifs qui ne peuvent renvoyer que False. On renvoie True
 # à la fin de la fonction
+# Le standard que j'ai adopté est de tout mettre en minuscules, sans accents, 
+# sans ponctuation (remplacée par des espaces)
+
+# TODO : Les communes, les noms des départements, les noms des regions
+
 
 #### GEOGRAPHIQUES
 def _code_postal(val):
@@ -36,7 +41,7 @@ def _code_postal(val):
     return True
     
 
-def _departement(val):
+def _code_departement(val):
     '''Renvoie True si val peut être un département, False sinon'''
     if isinstance(val, int) or isinstance(val, float): # Si val est un int, on convertit en string
         val = str(val)
@@ -46,6 +51,61 @@ def _departement(val):
     # TODO: Enregistrer la liste des départements dans un fichier texte séparé
     return val in liste_des_dep
         
+        
+def _process_text(val):
+    '''Met le string val sous sous sa forme normée'''
+    val = val.lower()
+    val = val.replace('-', ' ')
+    val = val.replace("'", ' ')
+    val = val.replace('\xc3\xa8', 'e')
+    val = val.replace('\xc3\xa9', 'e')
+    val = val.replace('\xc3\x8e', 'i')    
+    val = val.replace('\xc3\xb4', 'o')
+    return val
+
+def _region(val):
+    '''Match avec le nom des départements'''
+    if not (isinstance(val, str) or isinstance(val, unicode)):
+        return False
+    
+    f = open('regions.txt', 'r')
+    liste = f.read().split('\n')
+    f.close()
+    val = _process_text(val)
+    return val in liste
+
+def _departement(val):
+    '''Match avec le nom des départements'''
+    if not (isinstance(val, str) or isinstance(val, unicode)):
+        return False
+    
+    f = open('departements.txt', 'r')
+    liste = f.read().split('\n')
+    f.close()
+    val = _process_text(val)
+    return val in liste
+    
+def _commune(val):
+    '''Match avec le nom des départements'''
+    if not (isinstance(val, str) or isinstance(val, unicode)):
+        return False
+    
+    f = open('communes.txt', 'r')
+    liste = f.read().split('\n')
+    f.close()
+    val = _process_text(val)
+    return val in liste
+    
+
+## Traitement du fichier texte
+#f = open('regions.txt', 'r')
+#text = f.read().split('\n')
+#f.close()  
+#text = [_process_text(val) for val in text]
+#f = open('regions.txt', 'w')
+#for x in text:
+#    f.write(x + '\n')
+#f.close()
 
 #### DATES
 def _jour_de_la_semaine(val):
@@ -65,14 +125,17 @@ def _jour_de_la_semaine(val):
 #    if not isinstance(val, str) or isinstance(val, unicode): # Une date doit être un string ou unicode
 #        return False
 #    list_of_regex_to_check = ['^(19|20)\d\d[- /.](0[1-9]|1[012])[- /.](0[1-9]|[12][0-9]|3[01])$']
-#    a = re.compile('^(19|20)\d\d[- /.](0[1-9]|1[012])[- /.](0[1-9]|[12][0-9]|3[01])$')
+#    expr = '^(19|20)\d\d[- /.](0[1-9]|1[012])[- /.](0[1-9]|[12][0-9]|3[01])$'
+#    a = bool(re.match(expr, val))
 #    a.match(string)
     
 
 
 #############################################################################
 ############### ROUTINE DE TEST CI DESSOUS ##################################
-       
+
+# TODO : Mettre un pourcentage de valeurs justes (au lieu de nécessiter que toutes les valeurs soient justes)
+
 def test_col(serie, test_func):
     '''Teste progressivement une colonne avec la foncition test_func, renvoie True si toutes
     les valeurs de la série renvoient True avec test_func. False sinon.    
@@ -89,24 +152,35 @@ def routine(file):
     table = pd.read_csv(file, sep = ';', nrows = 50)
     
     fonctions_test = dict()
+    # Geographique
     fonctions_test['code_postal'] = _code_postal
     fonctions_test['code_insee'] = _code_postal
-    fonctions_test['jour_de_la_semaine'] = _jour_de_la_semaine
+    fonctions_test['code_departement'] = _code_departement
+    
+    fonctions_test['region'] = _region
     fonctions_test['departement'] = _departement
+    fonctions_test['commune'] = _commune
+
+    # Date
+    fonctions_test['jour_de_la_semaine'] = _jour_de_la_semaine
+
     
     return_table = pd.DataFrame(columns = table.columns)    
     for key, test_func in fonctions_test.iteritems():
         return_table.loc[key] = table.apply(lambda serie: test_col(serie, test_func))
         
+        
+    for x in return_table.columns:
+        print 'La colonne', x, 'est peut-être :',
+        valeurs_possibles = list(return_table[return_table[x]].index)
+        print valeurs_possibles
     return return_table
-    
-    
-    
-    
+
     
 if __name__ == '__main__':
     path = '/home/debian/Documents/data/villes'
     file = join(path, 'info_villes.csv')
+    print '\n'
     routine(file)
 
 
