@@ -1,0 +1,571 @@
+agriculteurs exploitants
+artisans commercants et chefs d entreprise
+cadres et professions intellectuelles superieures
+professions intermediaires
+employes
+ouvriers
+retraites
+autres personnes sans activite professionnelle
+agriculteurs exploitants
+artisans
+commercants et assimiles
+chefs d entreprise de 10 salaries ou plus
+professions liberales et assimiles
+cadres de la fonction publique professions intellectuelles et artistiques
+cadres d entreprise
+professions intermediaires de l enseignement de la sante de la fonction publique et assimiles
+professions intermediaires administratives et commerciales des entreprises
+techniciens
+contremaitres agents de maitrise
+employes de la fonction publique
+employes administratifs d entreprise
+employes de commerce
+personnels des services directs aux particuliers
+ouvriers qualifies
+ouvriers non qualifies
+ouvriers agricoles
+anciens agriculteurs exploitants
+anciens artisans commercants chefs d entreprise
+anciens cadres et professions intermediaires
+anciens employes et ouvriers
+chomeurs n ayant jamais travaille
+inactifs divers (autres que retraites)
+agriculteurs sur petite exploitation
+agriculteurs sur moyenne exploitation
+agriculteurs sur grande exploitation
+artisans
+commercants et assimiles
+chefs d entreprise de 10 salaries ou plus
+professions liberales
+cadres de la fonction publique
+professeurs professions scientifiques
+professions de l information des arts et des spectacles
+cadres administratifs et commerciaux d entreprise
+ingenieurs et cadres techniques d entreprise
+professeurs des ecoles instituteurs et assimiles
+professions intermediaires de la sante et du travail social
+clerge religieux
+professions intermediaires administratives de la fonction publique
+professions intermediaires administratives et commerciales des entreprises
+techniciens
+contremaitres agents de maitrise
+employes civils et agents de service de la fonction publique
+policiers et militaires
+employes administratifs d entreprise
+employes de commerce
+personnels des services directs aux particuliers
+ouvriers qualifies de type industriel
+ouvriers qualifies de type artisanal
+chauffeurs
+ouvriers qualifies de la manutention du magasinage et du transport
+ouvriers non qualifies de type industriel
+ouvriers non qualifies de type artisanal
+ouvriers agricoles
+anciens agriculteurs exploitants
+anciens artisans commercants chefs d entreprise
+anciens cadres
+anciennes professions intermediaires
+anciens employes
+anciens ouvriers
+chomeurs n ayant jamais travaille
+militaires du contingent
+eleves etudiants
+personnes diverses sans activite professionnelle de moins de 60 ans (sauf retraites)
+personnes diverses sans activite professionnelle de 60 ans et plus (sauf retraites)
+agriculteurs sur petite exploitation de cereales grandes cultures
+maraichers horticulteurs sur petite exploitation
+viticulteurs arboriculteurs fruitiers sur petite exploitation
+eleveurs d herbivores sur petite exploitation
+eleveurs de granivores et eleveurs mixtes sur petite exploitation
+agriculteurs sur petite exploitation sans orientation dominante
+agriculteurs sur moyenne exploitation de cereales grandes cultures
+maraichers horticulteurs sur moyenne exploitation
+viticulteurs arboriculteurs fruitiers sur moyenne exploitation
+eleveurs d herbivores sur moyenne exploitation
+eleveurs de granivores et eleveurs mixtes sur moyenne exploitation
+agriculteurs sur moyenne exploitation sans orientation dominante
+entrepreneurs de travaux agricoles a facon de 0 a 9 salaries
+exploitants forestiers independants de 0 a 9 salaries
+patrons pecheurs et aquaculteurs de 0 a 9 salaries
+agriculteurs sur grande exploitation de cereales grandes cultures
+maraichers horticulteurs sur grande exploitation
+viticulteurs arboriculteurs fruitiers sur grande exploitation
+eleveurs d herbivores sur grande exploitation
+eleveurs de granivores et eleveurs mixtes sur grande exploitation
+agriculteurs sur grande exploitation sans orientation dominante
+artisans macons
+artisans menuisiers du batiment charpentiers en bois
+artisans couvreurs
+artisans plombiers chauffagistes
+artisans electriciens du batiment
+artisans de la peinture et des finitions du batiment
+artisans serruriers metalliers
+artisans en terrassement travaux publics
+entrepreneurs en parcs et jardins paysagistes
+artisans mecaniciens en machines agricoles
+artisans chaudronniers
+artisans en mecanique generale fabrication et travail des metaux (hors horlogerie et materiel de precision)
+artisans divers de fabrication de machines
+artisans de l habillement du textile et du cuir
+artisans de l ameublement
+artisans du travail mecanique du bois
+artisans du papier de l imprimerie et de la reproduction
+artisans de fabrication en materiaux de construction (hors artisanat d art)
+artisans d art
+autres artisans de fabrication (y.c. horlogers materiel de precision)
+artisans boulangers patissiers de 0 a 9 salaries
+artisans bouchers de 0 a 9 salaries
+artisans charcutiers de 0 a 9 salaries
+autres artisans de l alimentation de 0 a 9 salaries
+artisans mecaniciens reparateurs d automobiles
+artisans toliers carrossiers d automobiles
+artisans reparateurs divers
+conducteurs de taxis ambulanciers et autres artisans du transport de 0 a 9 salaries
+artisans demenageurs de 0 a 9 salaries
+artisans coiffeurs manucures estheticiens de 0 a 9 salaries
+artisans teinturiers blanchisseurs de 0 a 9 salaries
+artisans des services divers de 0 a 9 salaries
+transporteurs independants routiers et fluviaux de 0 a 9 salaries
+aides familiaux non salaries ou associes d artisans effectuant un travail administratif ou commercial
+petits et moyens grossistes en alimentation de 0 a 9 salaries
+petits et moyens grossistes en produits non alimentaires de 0 a 9 salaries
+petits et moyens detaillants en alimentation specialisee de 0 a 9 salaries
+petits et moyens detaillants en alimentation generale de 0 a 9 salaries
+detaillants en ameublement decor equipement du foyer de 0 a 9 salaries
+detaillants en droguerie bazar quincaillerie bricolage de 0 a 9 salaries
+fleuristes de 0 a 9 salaries
+detaillants en habillement et articles de sport de 0 a 9 salaries
+detaillants en produits de beaute de luxe (hors biens culturels) de 0 a 9 salaries
+detaillants en biens culturels (livres disques multimedia objets d art) de 0 a 9 salaries
+detaillants en tabac presse et articles divers de 0 a 9 salaries
+exploitants et gerants libres de station service de 0 a 9 salaries
+exploitants de petit restaurant cafe restaurant de 0 a 2 salaries
+exploitants de petit cafe debit de boisson associe ou non a une autre activite hors restauration de 0 a 2 salaries
+exploitants de petit hotel hotel restaurant de 0 a 2 salaries
+exploitants de cafe restaurant hotel de 3 a 9 salaries
+intermediaires independants du commerce de 0 a 9 salaries
+agents generaux et courtiers d assurance independants de 0 a 9 salaries
+agents de voyage et auxiliaires de transports independants de 0 a 9 salaries
+agents immobiliers independants de 0 a 9 salaries
+independants gestionnaires de spectacle ou de service recreatif de 0 a 9 salaries
+independants gestionnaires d etablissements prives (enseignement sante social) de 0 a 9 salaries
+astrologues professionnels de la parapsychologie guerisseurs de 0 a 9 salaries
+autres independants divers prestataires de services de 0 a 9 salaries
+chefs de grande entreprise de 500 salaries et plus
+chefs de moyenne entreprise de 50 a 499 salaries
+chefs d entreprise du batiment et des travaux publics de 10 a 49 salaries
+chefs d entreprise de l industrie ou des transports de 10 a 49 salaries
+chefs d entreprise commerciale de 10 a 49 salaries
+chefs d entreprise de services de 10 a 49 salaries
+medecins liberaux specialistes
+medecins liberaux generalistes
+chirurgiens dentistes (liberaux ou salaries)
+psychologues psychanalystes psychotherapeutes (non medecins)
+veterinaires (liberaux ou salaries)
+pharmaciens liberaux
+avocats
+notaires
+experts comptables comptables agrees liberaux
+conseils et experts liberaux en etudes economiques organisation et recrutement gestion et fiscalite
+ingenieurs conseils liberaux en etudes techniques
+architectes liberaux
+geometres experts huissiers de justice officiers ministeriels professions liberales diverses
+aides familiaux non salaries de professions liberales effectuant un travail administratif
+personnels de direction de la fonction publique (etat collectivites locales hopitaux)
+ingenieurs de l etat (y.c. ingenieurs militaires) et assimiles
+ingenieurs des collectivites locales et des hopitaux
+magistrats
+inspecteurs et autres personnels de categorie a des impots du tresor et des douanes
+cadres de la poste
+cadres administratifs de france telecom (statut public)
+autres personnels administratifs de categorie a de l etat (hors enseignement patrimoine impots tresor douanes)
+personnels administratifs de categorie a des collectivites locales et hopitaux publics (hors enseignement patrimoine)
+officiers des armees et de la gendarmerie (sauf officiers generaux)
+personnes exercant un mandat politique ou syndical
+professeurs agreges et certifies de l enseignement secondaire
+chefs d etablissement de l enseignement secondaire et inspecteurs
+enseignants de l enseignement superieur
+chercheurs de la recherche publique
+psychologues specialistes de l orientation scolaire et professionnelle
+medecins hospitaliers sans activite liberale
+medecins salaries non hospitaliers
+internes en medecine odontologie et pharmacie
+pharmaciens salaries
+bibliothecaires archivistes conservateurs et autres cadres du patrimoine (fonction publique)
+journalistes (y. c. redacteurs en chef)
+auteurs litteraires scenaristes dialoguistes
+directeurs de journaux administrateurs de presse directeurs d editions (litteraire musicale audiovisuelle et multimedia)
+directeurs responsables de programmation et de production de l audiovisuel et des spectacles
+cadres artistiques et technico artistiques de la realisation de l audiovisuel et des spectacles
+artistes plasticiens
+artistes+b493 de la musique et du chant
+artistes dramatiques
+artistes de la danse du cirque et des spectacles divers
+professeurs d art (hors etablissements scolaires)
+cadres d etat major administratifs financiers commerciaux des grandes entreprises
+cadres charges d etudes economiques financieres commerciales
+cadres de l organisation ou du controle des services administratifs et financiers
+cadres specialistes des ressources humaines et du recrutement
+cadres specialistes de la formation
+juristes
+cadres de la documentation de l archivage (hors fonction publique)
+cadres des services financiers ou comptables des grandes entreprises
+cadres des autres services administratifs des grandes entreprises
+cadres des services financiers ou comptables des petites et moyennes entreprises
+cadres des autres services administratifs des petites et moyennes entreprises
+cadres de l exploitation des magasins de vente du commerce de detail
+chefs de produits acheteurs du commerce et autres cadres de la mercatique
+cadres commerciaux des grandes entreprises (hors commerce de detail)
+cadres commerciaux des petites et moyennes entreprises (hors commerce de detail)
+cadres de la publicite
+cadres des relations publiques et de la communication
+cadres des marches financiers
+cadres des operations bancaires
+cadres commerciaux de la banque
+chefs d etablissements et responsables de l exploitation bancaire
+cadres des services techniques des assurances
+cadres des services techniques des organismes de securite sociale et assimiles
+cadres de l immobilier
+cadres de l hotellerie et de la restauration
+directeurs techniques des grandes entreprises
+ingenieurs et cadres d etude et d exploitation de l agriculture la peche les eaux et forets
+ingenieurs et cadres d etude du batiment et des travaux publics
+architectes salaries
+ingenieurs cadres de chantier et conducteurs de travaux (cadres) du batiment et des travaux publics
+ingenieurs et cadres technico commerciaux en batiment travaux publics
+ingenieurs et cadres d etude recherche et developpement en electricite electronique
+ingenieurs et cadres de fabrication en materiel electrique electronique
+ingenieurs et cadres technico commerciaux en materiel electrique ou electronique professionnel
+ingenieurs et cadres d etude recherche et developpement en mecanique et travail des metaux
+ingenieurs et cadres de fabrication en mecanique et travail des metaux
+ingenieurs et cadres technico commerciaux en materiel mecanique professionnel
+ingenieurs et cadres d etude recherche et developpement des industries de transformation (agroalimentaire chimie metallurgie materiaux lourds)
+ingenieurs et cadres de fabrication des industries de transformation (agroalimentaire chimie metallurgie materiaux lourds)
+ingenieurs et cadres technico commerciaux des industries de transformations (biens intermediaires)
+ingenieurs et cadres d etude recherche et developpement des autres industries (imprimerie materiaux souples ameublement et bois energie eau)
+ingenieurs et cadres de la production et de la distribution d energie eau
+ingenieurs et cadres de fabrication des autres industries (imprimerie materiaux souples ameublement et bois)
+ingenieurs et cadres des achats et approvisionnements industriels
+ingenieurs et cadres de la logistique du planning et de l ordonnancement
+ingenieurs et cadres des methodes de production
+ingenieurs et cadres du controle qualite
+ingenieurs et cadres de la maintenance de l entretien et des travaux neufs
+ingenieurs et cadres techniques de l environnement
+ingenieurs et cadres d etude recherche et developpement en informatique
+ingenieurs et cadres d administration maintenance support et services aux utilisateurs en informatique
+chefs de projets informatiques responsables informatiques
+ingenieurs et cadres technico commerciaux en informatique et telecommunications
+ingenieurs et cadres specialistes des telecommunications
+ingenieurs et cadres techniques de l exploitation des transports
+officiers et cadres navigants techniques et commerciaux de l aviation civile
+officiers et cadres navigants techniques de la marine marchande
+instituteurs
+professeurs des ecoles
+professeurs d enseignement general des colleges
+professeurs de lycee professionnel
+maitres auxiliaires et professeurs contractuels de l enseignement secondaire
+conseillers principaux d education
+surveillants et aides educateurs des etablissements d enseignement
+moniteurs d ecole de conduite
+formateurs et animateurs de formation continue
+moniteurs et educateurs sportifs sportifs professionnels
+sous bibliothecaires cadres intermediaires du patrimoine
+cadres infirmiers et assimiles
+infirmiers psychiatriques
+puericultrices
+infirmiers specialises (autres qu infirmiers psychiatriques et puericultrices)
+sages femmes (liberales ou salariees)
+infirmiers en soins generaux salaries
+infirmiers liberaux
+masseurs kinesitherapeutes reeducateurs liberaux
+masseurs kinesitherapeutes reeducateurs salaries
+autres specialistes de la reeducation liberaux
+autres specialistes de la reeducation salaries
+techniciens medicaux
+opticiens lunetiers et audioprothesistes (independants et salaries)
+autres specialistes de l appareillage medical (independants et salaries)
+preparateurs en pharmacie
+cadres de l intervention socio educative
+assistants de service social
+conseillers en economie sociale familiale
+educateurs specialises
+moniteurs educateurs
+educateurs techniques specialises moniteurs d atelier
+educateurs de jeunes enfants
+directeurs de centres socioculturels et de loisirs
+animateurs socioculturels et de loisirs
+clerge seculier
+clerge regulier
+professions intermediaires de la poste
+professions intermediaires administratives de france telecom (statut public)
+controleurs des impots du tresor des douanes et assimiles
+ingenieurs du controle de la navigation aerienne
+autres personnels administratifs de categorie b de l etat (hors enseignement patrimoine impots tresor douanes)
+personnels administratifs de categorie b des collectivites locales et des hopitaux (hors enseignement patrimoine)
+inspecteurs et officiers de police
+adjudants chefs adjudants et sous officiers de rang superieur de l armee et de la gendarmerie
+personnel de secretariat de niveau superieur secretaires de direction (non cadres)
+maitrise et techniciens des services financiers ou comptables
+maitrise et techniciens administratifs des services juridiques ou du personnel
+maitrise et techniciens administratifs des autres services administratifs
+chefs de petites surfaces de vente (salaries ou mandataires)
+maitrise de l exploitation des magasins de vente
+acheteurs non classes cadres aides acheteurs
+animateurs commerciaux des magasins de vente marchandiseurs (non cadres)
+autres professions intermediaires commerciales (sauf techniciens des forces de vente)
+techniciens commerciaux et technico commerciaux representants en informatique
+techniciens commerciaux et technico commerciaux representants en biens d equipement en biens intermediaires commerce interindustriel (hors informatique)
+techniciens commerciaux et technico commerciaux representants en biens de consommation aupres d entreprises
+techniciens commerciaux et technico commerciaux representants en services aupres d entreprises ou de professionnels (hors banque assurance informatique)
+techniciens commerciaux et technico commerciaux representants aupres de particuliers (hors banque assurance informatique)
+assistants de la publicite des relations publiques (independants ou salaries)
+interpretes traducteurs (independants ou salaries)
+concepteurs et assistants techniques des arts graphiques de la mode et de la decoration (independants et salaries)
+assistants techniques de la realisation des spectacles vivants et audiovisuels (independants ou salaries)
+photographes (independants et salaries)
+responsables commerciaux et administratifs des transports de voyageurs et du tourisme (non cadres)
+responsables commerciaux et administratifs des transports de marchandises (non cadres)
+responsables d exploitation des transports de voyageurs et de marchandises (non cadres)
+charges de clientele bancaire
+techniciens des operations bancaires
+professions intermediaires techniques et commerciales des assurances
+professions intermediaires techniques des organismes de securite sociale
+maitrise de restauration : salle et service
+maitrise de l hebergement : hall et etages
+techniciens d etude et de conseil en agriculture eaux et foret
+techniciens d exploitation et de controle de la production en agriculture eaux et foret
+dessinateurs en batiment travaux publics
+geometres topographes
+metreurs et techniciens divers du batiment et des travaux publics
+techniciens des travaux publics de l etat et des collectivites locales
+dessinateurs en electricite electromecanique et electronique
+techniciens de recherche developpement et des methodes de fabrication en electricite electromecanique et electronique
+techniciens de fabrication et de controle qualite en electricite electromecanique et electronique
+dessinateurs en construction mecanique et travail des metaux
+techniciens de recherche developpement et des methodes de fabrication en construction mecanique et travail des metaux
+techniciens de fabrication et de controle qualite en construction mecanique et travail des metaux
+techniciens de recherche developpement et des methodes de production des industries de transformation
+techniciens de production et de controle qualite des industries de transformation
+assistants techniques techniciens de l imprimerie et de l edition
+techniciens de l industrie des materiaux souples de l ameublement et du bois
+techniciens de la logistique du planning et de l ordonnancement
+techniciens d installation et de maintenance des equipements industriels (electriques electromecaniques mecaniques hors informatique)
+techniciens d installation et de maintenance des equipements non industriels (hors informatique et telecommunications)
+techniciens de l environnement et du traitement des pollutions
+techniciens d etude et de developpement en informatique
+techniciens de production d exploitation en informatique
+techniciens d installation de maintenance support et services aux utilisateurs en informatique
+techniciens des telecommunications et de l informatique des reseaux
+techniciens des laboratoires de recherche publique ou de l enseignement
+experts salaries ou independants de niveau technicien techniciens divers
+contremaitres et agents d encadrement (non cadres) en agriculture sylviculture
+maitres d equipage de la marine marchande et de la peche
+conducteurs de travaux (non cadres)
+chefs de chantier (non cadres)
+agents de maitrise en fabrication de materiel electrique electronique
+agents de maitrise en construction mecanique travail des metaux
+agents de maitrise en fabrication : agroalimentaire chimie plasturgie pharmacie.
+agents de maitrise en fabrication : metallurgie materiaux lourds et autres industries de transformation
+agents de maitrise et techniciens en production et distribution d energie eau chauffage
+agents de maitrise en fabrication des autres industries (imprimerie materiaux souples ameublement et bois)
+agents de maitrise en maintenance installation en electricite electromecanique et electronique
+agents de maitrise en maintenance installation en mecanique
+agents de maitrise en entretien general installation travaux neufs (hors mecanique electromecanique electronique)
+responsables d entrepot de magasinage
+responsables du tri de l emballage de l expedition et autres responsables de la manutention
+maitrise de restauration : cuisine/production
+maitrise de restauration : gestion d etablissement
+employes de la poste
+employes de france telecom (statut public)
+agents de constatation ou de recouvrement des impots du tresor des douanes
+adjoints administratifs de la fonction publique (y.c. enseignement)
+agents administratifs de la fonction publique (y.c. enseignement)
+agents de service des etablissements primaires
+agents de service des autres etablissements d enseignement
+agents de service de la fonction publique (sauf ecoles hopitaux)
+agents de service hospitaliers (de la fonction publique ou du secteur prive)
+aides soignants (de la fonction publique ou du secteur prive)
+assistants dentaires medicaux et veterinaires aides de techniciens medicaux
+auxiliaires de puericulture
+aides medico psychologiques
+ambulanciers salaries (du secteur public ou du secteur prive)
+agents de police de l etat
+agents des polices municipales
+surveillants de l administration penitentiaire
+gendarmes (de grade inferieur a adjudant)
+sergents et sous officiers de grade equivalent des armees (sauf pompiers militaires)
+hommes du rang (sauf pompiers militaires)
+pompiers (y.c. pompiers militaires)
+agents techniques forestiers gardes des espaces naturels
+agents de surveillance du patrimoine et des administrations
+agents civils de securite et de surveillance
+convoyeurs de fonds gardes du corps enqueteurs prives et metiers assimiles (salaries)
+agents et hotesses d accueil et d information (hors hotellerie)
+standardistes telephonistes
+secretaires
+dactylos stenodactylos (sans secretariat) operateurs de traitement de texte
+employes des services comptables ou financiers
+employes administratifs divers d entreprises
+employes et operateurs d exploitation en informatique
+employes administratifs des services techniques de la banque
+employes des services commerciaux de la banque
+employes des services techniques des assurances
+employes des services techniques des organismes de securite sociale et assimiles
+controleurs des transports (personnels roulants)
+agents des services commerciaux des transports de voyageurs et du tourisme
+employes administratifs d exploitation des transports de marchandises
+hotesses de l air et stewards
+autres agents et hotesses d accompagnement (transports tourisme)
+employes de libre service du commerce et magasiniers
+caissiers de magasin
+vendeurs non specialises
+vendeurs en alimentation
+vendeurs en ameublement decor equipement du foyer
+vendeurs en droguerie bazar quincaillerie bricolage
+vendeurs du commerce de fleurs
+vendeurs en habillement et articles de sport
+vendeurs en produits de beaute de luxe (hors biens culturels) et optique
+vendeurs de biens culturels (livres disques multimedia objets d art)
+vendeurs de tabac presse et articles divers
+pompistes et gerants de station service (salaries ou mandataires)
+vendeurs par correspondance televendeurs
+vendeurs en gros de biens d equipement biens intermediaires
+serveurs commis de restaurant garcons (bar brasserie cafe ou restaurant)
+aides de cuisine apprentis de cuisine et employes polyvalents de la restauration
+employes de l hotellerie : reception et hall
+employes d etage et employes polyvalents de l hotellerie
+manucures estheticiens (salaries)
+coiffeurs salaries
+assistantes maternelles gardiennes d enfants familles d accueil
+aides a domicile aides menageres travailleuses familiales
+employes de maison et personnels de menage chez des particuliers
+concierges gardiens d immeubles
+employes des services divers
+chefs d equipe du gros oeuvre et des travaux publics
+ouvriers qualifies du travail du beton
+conducteurs qualifies d engins de chantiers du batiment et des travaux publics
+ouvriers des travaux publics en installations electriques et de telecommunications
+autres ouvriers qualifies des travaux publics
+ouvriers qualifies des travaux publics (salaries de l etat et des collectivites locales)
+mineurs de fond qualifies et autres ouvriers qualifies des industries d extraction (carrieres petrole gaz...)
+operateurs qualifies sur machines automatiques en production electrique ou electronique
+cableurs qualifies bobiniers qualifies
+plateformistes controleurs qualifies de materiel electrique ou electronique
+chaudronniers toliers industriels operateurs qualifies du travail en forge conducteurs qualifies d equipement de formage traceurs qualifies
+tuyauteurs industriels qualifies
+soudeurs qualifies sur metaux
+operateurs qualifies d usinage des metaux travaillant a l unite ou en petite serie moulistes qualifies
+operateurs qualifies d usinage des metaux sur autres machines (sauf moulistes)
+monteurs qualifies d ensembles mecaniques
+monteurs qualifies en structures metalliques
+ouvriers qualifies de controle et d essais en mecanique
+ouvriers qualifies des traitements thermiques et de surface sur metaux
+autres mecaniciens ou ajusteurs qualifies (ou specialite non reconnue)
+pilotes d installation lourde des industries de transformation : agroalimentaire chimie plasturgie energie
+ouvriers qualifies et agents qualifies de laboratoire : agroalimentaire chimie biologie pharmacie
+autres operateurs et ouvriers qualifies de la chimie (y.c. pharmacie) et de la plasturgie
+operateurs de la transformation des viandes
+autres operateurs et ouvriers qualifies de l industrie agricole et alimentaire (hors transformation des viandes)
+ouvriers qualifies des autres industries (eau gaz energie chauffage)
+pilotes d installation lourde des industries de transformation : metallurgie production verriere materiaux de construction
+autres operateurs et ouvriers qualifies : metallurgie production verriere materiaux de construction
+operateurs et ouvriers qualifies des industries lourdes du bois et de la fabrication du papier carton
+operateurs qualifies du textile et de la megisserie
+ouvriers qualifies de la coupe des vetements et de l habillement autres operateurs de confection qualifies
+ouvriers qualifies du travail industriel du cuir
+ouvriers qualifies de scierie de la menuiserie industrielle et de l ameublement
+ouvriers de la photogravure et des laboratoires photographiques et cinematographiques
+ouvriers de la composition et de l impression ouvriers qualifies de la brochure de la reliure et du faconnage du papier carton
+mecaniciens qualifies de maintenance entretien : equipements industriels
+electromecaniciens electriciens qualifies d entretien : equipements industriels
+regleurs qualifies d equipements de fabrication (travail des metaux mecanique)
+regleurs qualifies d equipements de fabrication (hors travail des metaux et mecanique)
+ouvriers qualifies de l assainissement et du traitement des dechets
+agents qualifies de laboratoire (sauf chimie sante)
+ouvriers qualifies divers de type industriel
+jardiniers
+macons qualifies
+ouvriers qualifies du travail de la pierre
+charpentiers en bois qualifies
+menuisiers qualifies du batiment
+couvreurs qualifies
+plombiers et chauffagistes qualifies
+peintres et ouvriers qualifies de pose de revetements sur supports verticaux
+soliers moquetteurs et ouvriers qualifies de pose de revetements souples sur supports horizontaux
+monteurs qualifies en agencement isolation
+ouvriers qualifies d entretien general des batiments
+electriciens qualifies de type artisanal (y.c. batiment)
+depanneurs qualifies en radiotelevision electromenager materiel electronique (salaries)
+electriciens electroniciens qualifies en maintenance entretien reparation : automobile
+electriciens electroniciens qualifies en maintenance entretien : equipements non industriels
+carrossiers d automobiles qualifies
+metalliers serruriers qualifies
+mecaniciens qualifies en maintenance entretien reparation : automobile
+mecaniciens qualifies de maintenance entretien : equipements non industriels
+tailleurs et couturieres qualifies ouvriers qualifies du travail des etoffes (sauf fabrication de vetements) ouvriers qualifies de type artisanal du travail du cuir
+bouchers (sauf industrie de la viande)
+charcutiers (sauf industrie de la viande)
+boulangers patissiers (sauf activite industrielle)
+cuisiniers et commis de cuisine
+modeleurs (sauf modeleurs de metal) mouleurs noyauteurs a la main ouvriers qualifies du travail du verre ou de la ceramique a la main
+ouvriers d art
+ouvriers et techniciens des spectacles vivants et audiovisuels
+ouvriers qualifies divers de type artisanal
+conducteurs routiers et grands routiers (salaries)
+conducteurs de vehicule routier de transport en commun (salaries)
+conducteurs de taxi (salaries)
+conducteurs de voiture particuliere (salaries)
+conducteurs livreurs coursiers (salaries)
+conducteurs de vehicule de ramassage des ordures menageres
+conducteurs d engin lourd de levage
+conducteurs d engin lourd de manoeuvre
+ouvriers qualifies de la manutention conducteurs de chariots elevateurs caristes
+dockers
+magasiniers qualifies
+conducteurs qualifies d engins de transport guides
+autres agents et ouvriers qualifies (sedentaires) des services d exploitation des transports
+matelots de la marine marchande capitaines et matelots timoniers de la navigation fluviale (salaries)
+ouvriers non qualifies des travaux publics de l etat et des collectivites locales
+ouvriers non qualifies des travaux publics du travail du beton et de l extraction hors etat et collectivites locales
+ouvriers non qualifies de l electricite et de l electronique
+ouvriers de production non qualifies travaillant par enlevement de metal
+ouvriers de production non qualifies travaillant par formage de metal
+ouvriers non qualifies de montage controle en mecanique et travail des metaux
+ouvriers de production non qualifies : chimie pharmacie plasturgie
+ouvriers de production non qualifies de la transformation des viandes
+autres ouvriers de production non qualifies : industrie agro alimentaire
+ouvriers de production non qualifies : metallurgie production verriere ceramique materiaux de construction
+ouvriers de production non qualifies : industrie lourde du bois fabrication des papiers et cartons
+ouvriers de production non qualifies du textile et de la confection de la tannerie megisserie et du travail du cuir
+ouvriers de production non qualifies du travail du bois et de l ameublement
+ouvriers de production non qualifies de l imprimerie presse edition
+manutentionnaires non qualifies
+demenageurs (hors chauffeurs demenageurs) non qualifies
+ouvriers du tri de l emballage de l expedition non qualifies
+agents non qualifies des services d exploitation des transports
+ouvriers non qualifies divers de type industriel
+ouvriers non qualifies du gros oeuvre du batiment
+ouvriers non qualifies du second oeuvre du batiment
+metalliers serruriers reparateurs en mecanique non qualifies
+apprentis boulangers bouchers charcutiers
+nettoyeurs
+ouvriers non qualifies de l assainissement et du traitement des dechets
+ouvriers non qualifies divers de type artisanal
+conducteurs d engin agricole ou forestier
+ouvriers de l elevage
+ouvriers du maraichage ou de l horticulture
+ouvriers de la viticulture ou de l arboriculture fruitiere
+ouvriers agricoles sans specialisation particuliere
+ouvriers de l exploitation forestiere ou de la sylviculture
+marins pecheurs et ouvriers de l aquaculture
+anciens agriculteurs exploitants
+anciens artisans commercants chefs d entreprise
+anciens cadres
+anciennes professions intermediaires
+anciens employes
+anciens ouvriers
+chomeurs n ayant jamais travaille
+militaires du contingent
+eleves etudiants
+personnes diverses sans activite professionnelle de moins de 60 ans (sauf retraites)
+personnes diverses sans activite professionnelle de 60 ans et plus (sauf retraites)

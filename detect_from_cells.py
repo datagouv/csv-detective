@@ -7,11 +7,16 @@ Created on Wed Feb 11 09:47:26 2015
 ###############################################################################
 Ce script analyse les premières lignes d'un CSV pour essayer de déterminer le 
 contenu possible des champs
+
+
+ACTUELLEMENT EN DEVELOPPEMENT : Indactions comment tester tout en bas
 """
 
 import pandas as pd
 from os.path import join
 import re
+
+# TODO : Séparer en modules
 
 
 #############################################################################
@@ -21,20 +26,23 @@ import re
 # Le standard que j'ai adopté est de tout mettre en minuscules, sans accents, 
 # sans ponctuation (remplacée par des espaces)
 
-# TODO : Les communes, les noms des départements, les noms des regions
-
-
 #### PROCESSING DU TEXTE
-
 def _process_text(val):
     '''Met le string val sous sous sa forme normée'''
     val = val.lower()
     val = val.replace('-', ' ')
     val = val.replace("'", ' ')
+    val = val.replace(',', ' ')
+    val = val.replace('  ', ' ')
     val = val.replace('\xc3\xa8', 'e')
     val = val.replace('\xc3\xa9', 'e')
+    val = val.replace('\xc3\xaa', 'e')
     val = val.replace('\xc3\x8e', 'i')    
     val = val.replace('\xc3\xb4', 'o')
+    val = val.replace('\xc3\xa7', 'c')
+    val = val.replace('\xc3\xa0', 'a')
+    val = val.replace('\xc3\xa2', 'a')
+    val = val.replace('\xc3\xae', 'i')
     return val
 
 
@@ -80,7 +88,6 @@ def _code_departement(val):
     # TODO: Enregistrer la liste des départements dans un fichier texte séparé
     return val in liste_des_dep
         
-        
 def _region(val):
     '''Match avec le nom des départements'''
     if not (isinstance(val, str) or isinstance(val, unicode)):
@@ -116,11 +123,11 @@ def _commune(val):
     
 
 ## Traitement du fichier texte
-#f = open('regions.txt', 'r')
+#f = open('csp_insee.txt', 'r')
 #text = f.read().split('\n')
 #f.close()  
 #text = [_process_text(val) for val in text]
-#f = open('regions.txt', 'w')
+#f = open('csp_insee.txt', 'w')
 #for x in text:
 #    f.write(x + '\n')
 #f.close()
@@ -155,16 +162,57 @@ def _date(val):
     d = bool(re.match(r'^(19|20)\d\d(0[1-9]|1[012])(0[1-9]|[12][0-9]|3[01])', val)) # matches 19931202
     return a or b or c or d
 
+
+#### AUTRES INFOS
+def _sexe(val):
+    '''Repère le sexe'''
+    if not (isinstance(val, str) or isinstance(val, unicode)):
+        return False
+    val =_process_text(val)
+    return val in ['homme', 'femme', 'h', 'f', 'm', 'masculin', 'feminine']
+
+def _code_csp_insee(val):
+    '''Repère les csp telles que définies par l'INSEE'''
+    val = str(val)
+    val = _process_text(val)
+    if not len(val) == 4:
+        return False
+    a = bool(re.match(r'^[123456][1-9]{2}[abcdefghijkl]$', val))
+    b = val in ['7100', '7200', '7400', '7500', '7700', '7800', '8100', '8300', '8400', '8500', '8600']
+    return a or b
+
+def _csp_insee(val):
+    '''Repère les csp telles que définies par l'INSEE'''
+    if not (isinstance(val, str) or isinstance(val, unicode)):
+        return False
+    val = _process_text(val)
+    f = open('csp_insee.txt', 'r')
+    liste = f.read().split('\n')
+    f.close()
+    return val in liste
+
 #############################################################################
 ############### ROUTINE DE TEST CI DESSOUS ##################################
 
 # TODO : Mettre un pourcentage de valeurs justes (au lieu de nécessiter que toutes les valeurs soient justes)
 
+def detect_delimiter(file):
+    '''Trouve le délimitateur du csv'''
+    with open(file, 'r') as myCsvfile:
+        header=myCsvfile.readline()
+        if header.find(";")!=-1:
+            return ";"
+        if header.find(",")!=-1:
+            return ","
+    #default delimiter (MS Office export)
+    return ";"
+
 def test_col(serie, test_func):
     '''Teste progressivement une colonne avec la foncition test_func, renvoie True si toutes
     les valeurs de la série renvoient True avec test_func. False sinon.    
     '''
-    for range_ in [range(0,1), range(1,5), range(5,50)]: # Pour ne pas faire d'opérations inutiles, on commence par 1, puis 5 puis 50 valeurs
+    ser_len = len(serie)
+    for range_ in [range(0,1), range(min(1, ser_len),min(5, ser_len)), range(min(5, ser_len),min(50, ser_len))]: # Pour ne pas faire d'opérations inutiles, on commence par 1, puis 5 puis 50 valeurs      
         if all(serie.iloc[range_].apply(test_func)):
             pass
         else:
@@ -173,12 +221,13 @@ def test_col(serie, test_func):
 
 def routine(file):
     '''Renvoie un table avec en colonnes les colonnes du csv et en ligne, les champs testes'''
-    table = pd.read_csv(file, sep = ';', nrows = 50)
-    table['date'] = '1992_05_25'
+    sep = detect_delimiter(file)  
+        
+    table = pd.read_csv(file, sep = sep, nrows = 50)
     fonctions_test = dict()
     # Geographique
     fonctions_test['code_postal'] = _code_postal
-    fonctions_test['code_insee'] = _code_commune_insee
+    fonctions_test['code_commune_insee'] = _code_commune_insee
     fonctions_test['code_departement'] = _code_departement
     
     fonctions_test['region'] = _region
@@ -189,6 +238,11 @@ def routine(file):
     fonctions_test['jour_de_la_semaine'] = _jour_de_la_semaine
     fonctions_test['annee'] = _annee
     fonctions_test['date'] = _date
+    
+    # Autres
+    fonctions_test['csp_code_insee'] = _code_csp_insee
+    fonctions_test['csp_insee'] = _csp_insee
+    fonctions_test['sexe'] = _sexe
 
     
     return_table = pd.DataFrame(columns = table.columns)    
@@ -197,17 +251,31 @@ def routine(file):
         
         
     for x in return_table.columns:
-        print 'La colonne', x, 'est peut-être :',
+
         valeurs_possibles = list(return_table[return_table[x]].index)
-        print valeurs_possibles
+        if valeurs_possibles != []:
+            print '  >>  La colonne', x, 'est peut-être :',
+            print valeurs_possibles
     return return_table
 
     
 if __name__ == '__main__':
-    path = '/home/debian/Documents/data/villes'
-    file = join(path, 'info_villes.csv')
-    print '\n'
-    routine(file)
+    
+    from os import listdir
+    from os.path import isfile, join
+    
+    
+    ### CONSIGNES : Mettre toutes les data a tester dans le dossier indiqué par path
+    # et lancer le script. Il doit afficherc pour chaque fichier dans ce dossier (ne doit contenir que des csv)
+    # les colonnes pour lesquelles un match a été trouvé
+    path = '/home/debian/Documents/data/test_csv_detector'    
+    all_files = [join(path, f) for f in listdir(path) if isfile(join(path,f)) ] 
+
+    for file in all_files:
+        print '*****************************************'
+        print file
+        routine(file)
+        print '\n'
 
 
     
