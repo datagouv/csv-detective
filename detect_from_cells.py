@@ -120,7 +120,13 @@ def _commune(val):
     f.close()
     val = _process_text(val)
     return val in liste
-    
+
+def _adresse(val):
+    '''Repère des adresses'''
+    if not (isinstance(val, str) or isinstance(val, unicode)):
+        return False
+    val = _process_text(val)
+    a = any([x in val for x in 'rue allee route avenue chemin boulevard bvd ure ilot'.split()])
 
 ## Traitement du fichier texte
 #f = open('csp_insee.txt', 'r')
@@ -190,6 +196,14 @@ def _csp_insee(val):
     liste = f.read().split('\n')
     f.close()
     return val in liste
+    
+def _url(val):
+    '''Repère les url'''
+    val = str(val)
+    a = 'http://' in val
+    b = 'www.' in val
+    c = any([x in val for x in ['.fr', '.com', '.org', '.gouv', '.net']])
+    return a or b or c
 
 #############################################################################
 ############### ROUTINE DE TEST CI DESSOUS ##################################
@@ -203,6 +217,8 @@ def detect_delimiter(file):
         if header.find(";")!=-1:
             return ";"
         if header.find(",")!=-1:
+            return ","
+        if header.find("|")!=-1:
             return ","
     #default delimiter (MS Office export)
     return ";"
@@ -221,6 +237,8 @@ def test_col(serie, test_func):
 
 def routine(file):
     '''Renvoie un table avec en colonnes les colonnes du csv et en ligne, les champs testes'''
+    if not '.csv' in file:
+        return False
     sep = detect_delimiter(file)  
         
     table = pd.read_csv(file, sep = sep, nrows = 50)
@@ -233,6 +251,8 @@ def routine(file):
     fonctions_test['region'] = _region
     fonctions_test['departement'] = _departement
     fonctions_test['commune'] = _commune
+    
+    fonctions_test['adresse'] = _adresse
 
     # Date
     fonctions_test['jour_de_la_semaine'] = _jour_de_la_semaine
@@ -243,6 +263,7 @@ def routine(file):
     fonctions_test['csp_code_insee'] = _code_csp_insee
     fonctions_test['csp_insee'] = _csp_insee
     fonctions_test['sexe'] = _sexe
+    fonctions_test['url'] = _url
 
     
     return_table = pd.DataFrame(columns = table.columns)    
