@@ -7,7 +7,7 @@ Created on Thu Feb 12 13:50:13 2015
 
 #### PROCESSING DU TEXTE
 def _process_text(val):
-    '''Met le string val sous sous sa forme normée'''
+    '''Met le string val sous sous sa forme normee'''
     val = val.lower()
     val = val.replace('-', ' ')
     val = val.replace("'", ' ')

@@ -15,36 +15,12 @@ ACTUELLEMENT EN DEVELOPPEMENT : Indactions comment tester tout en bas
 
 import pandas as pd
 from os.path import join
-import re
 
-from detect_autres import _sexe, _code_csp_insee, _csp_insee, _url
-from detect_geographiques import _code_postal, _code_commune_insee, _code_departement, _region, _departement, _commune, _adresse 
+from detect_autres import _sexe, _code_csp_insee, _csp_insee, _url, _courriel, _tel_fr, _siren
+from detect_geographiques import _code_postal, _code_commune_insee, _code_departement, _code_iso_pays, _pays, _region, _departement, _commune, _adresse
 from detect_temporel import _jour_de_la_semaine, _annee, _date
 
-# TODO : Séparer en modules
 
-
-#############################################################################
-############### TESTS POUR DIFFERENTS CHAMPS ##################################
-# On fait des test successifs qui ne peuvent renvoyer que False. On renvoie True
-# à la fin de la fonction
-# Le standard que j'ai adopté est de tout mettre en minuscules, sans accents, 
-# sans ponctuation (remplacée par des espaces)
-
-
-
-
-
-
-## Traitement du fichier texte
-#f = open('csp_insee.txt', 'r')
-#text = f.read().split('\n')
-#f.close()  
-#text = [_process_text(val) for val in text]
-#f = open('csp_insee.txt', 'w')
-#for x in text:
-#    f.write(x + '\n')
-#f.close()
 
 
 
@@ -62,16 +38,19 @@ def detect_delimiter(file):
         if header.find(",")!=-1:
             return ","
         if header.find("|")!=-1:
-            return ","
+            return "|"
     #default delimiter (MS Office export)
     return ";"
 
 def test_col(serie, test_func):
     '''Teste progressivement une colonne avec la foncition test_func, renvoie True si toutes
-    les valeurs de la série renvoient True avec test_func. False sinon.    
+    les valeurs de la série renvoient True avec test_func. False sinon.
     '''
+    serie = serie[serie.notnull()]
     ser_len = len(serie)
-    for range_ in [range(0,1), range(min(1, ser_len),min(5, ser_len)), range(min(5, ser_len),min(50, ser_len))]: # Pour ne pas faire d'opérations inutiles, on commence par 1, puis 5 puis 50 valeurs      
+    if ser_len == 0:
+        return False
+    for range_ in [range(0,min(1, ser_len)), range(min(1, ser_len),min(5, ser_len)), range(min(5, ser_len),min(50, ser_len))]: # Pour ne pas faire d'opérations inutiles, on commence par 1, puis 5 puis 50 valeurs      
         if all(serie.iloc[range_].apply(test_func)):
             pass
         else:
@@ -84,13 +63,15 @@ def routine(file):
         return False
     sep = detect_delimiter(file)  
         
-    table = pd.read_csv(file, sep = sep, nrows = 50)
+    table = pd.read_csv(file, sep = sep, nrows = 50, dtype = 'unicode')
     fonctions_test = dict()
     # Geographique
     fonctions_test['code_postal'] = _code_postal
     fonctions_test['code_commune_insee'] = _code_commune_insee
     fonctions_test['code_departement'] = _code_departement
+    fonctions_test['code_iso_pays'] = _code_iso_pays
     
+    fonctions_test['pays'] = _pays
     fonctions_test['region'] = _region
     fonctions_test['departement'] = _departement
     fonctions_test['commune'] = _commune
@@ -107,12 +88,21 @@ def routine(file):
     fonctions_test['csp_insee'] = _csp_insee
     fonctions_test['sexe'] = _sexe
     fonctions_test['url'] = _url
+    fonctions_test['courriel'] = _courriel
+    fonctions_test['tel_fr'] = _tel_fr
+    fonctions_test['siren'] = _siren
 
     
     return_table = pd.DataFrame(columns = table.columns)    
+
     for key, test_func in fonctions_test.iteritems():
-        return_table.loc[key] = table.apply(lambda serie: test_col(serie, test_func))
-        
+        try:
+            return_table.loc[key] = table.apply(lambda serie: test_col(serie, test_func))
+        except Exception, e:
+            import pdb
+            print str(e)
+            pdb.set_trace()
+            
         
     for x in return_table.columns:
 

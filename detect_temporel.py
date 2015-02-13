@@ -16,8 +16,6 @@ path = '/home/debian/Documents/projects/csv_detective/fichiers_de_reference/temp
 #### DATES
 def _jour_de_la_semaine(val):
     '''Renvoie True si les cahmps peuvent être des jours de la semaine'''
-    if not isinstance(val, str) or isinstance(val, unicode):
-        return False
     val = val.lower()
     jours = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
     return val in jours
@@ -35,8 +33,6 @@ def _annee(val):
 
 def _date(val):
     '''Renvoie True si val peut être une date, False sinon'''
-    if not isinstance(val, str) or isinstance(val, unicode): # Une date doit être un string ou unicode
-        return False
     a = bool(re.match(r'^(19|20)\d\d[ -/_](0[1-9]|1[012])[ -/_](0[1-9]|[12][0-9]|3[01])', val)) # matches 1993-12/02
     b = bool(re.match(r'^(0[1-9]|[12][0-9]|3[01])[ -/_](0[1-9]|1[012])[ -/_]([0-9]{2}|(19|20)[0-9]{2}$)', val)) # matches 02/12 03 and 02_12 2003
     c = bool(re.match(r'^(0[1-9]|[12][0-9]|3[01])(0[1-9]|1[012])([0-9]{2}|(19|20){2}$)', val)) # matches 02_05_2003

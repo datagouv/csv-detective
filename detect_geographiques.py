@@ -36,8 +36,6 @@ def _code_postal(val):
     
 def _code_commune_insee(val):
     '''Renvoie True si val peut être un code commune INSEE, False sinon'''
-    if not isinstance(val, str):
-        val = str(val)
         # TODO : ajouter une regex pour : 'que des chiffres ou bien commence par 2A, 2B puis 3 chiffres'
     if not len(val) in [4,5]:
         return False
@@ -49,21 +47,38 @@ def _code_commune_insee(val):
 
 
 def _code_departement(val):
-    '''Renvoie True si val peut être un département, False sinon'''
-    if isinstance(val, int) or isinstance(val, float): # Si val est un int, on convertit en string
-        val = str(val)
+    '''Renvoie True si val peut être un code_département, False sinon'''
     val = val.zfill(3)
     liste_des_dep = [str(x).zfill(3) for x in range(1,96)] + \
-                    ['02A', '02B'] + [str(x).zfill(3) for x in range(971,977)]
+                    ['02A', '02B'] + [str(x).zfill(3) for x in range(971,976)]
     # TODO: Enregistrer la liste des départements dans un fichier texte séparé
     return val in liste_des_dep
+
+
+def _code_iso_pays(val):
+    '''Renvoie True si val peut etre un code iso pays, False sinon'''
+    val = _process_text(val)
+    regex = r'[a-z]{2}'
+    if not bool(re.match(regex, val)):
+        return False
+    
+    f = open(join(path,'codes_iso_pays.txt'), 'r')
+    liste = f.read().split('\n')
+    f.close()
+    return val in liste
+
+   
+def _pays(val):
+    '''Match avec le nom des pays'''
+    f = open(join(path,'pays.txt'), 'r')
+    liste = f.read().split('\n')
+    f.close()
+    val = _process_text(val)
+    return val in liste
     
     
 def _region(val):
-    '''Match avec le nom des départements'''
-    if not (isinstance(val, str) or isinstance(val, unicode)):
-        return False
-    
+    '''Match avec le nom des regions'''
     f = open(join(path,'regions.txt'), 'r')
     liste = f.read().split('\n')
     f.close()
@@ -72,10 +87,7 @@ def _region(val):
 
 
 def _departement(val):
-    '''Match avec le nom des départements'''
-    if not (isinstance(val, str) or isinstance(val, unicode)):
-        return False
-    
+    '''Match avec le nom des departements'''
     f = open(join(path,'departements.txt'), 'r')
     liste = f.read().split('\n')
     f.close()
@@ -84,10 +96,7 @@ def _departement(val):
     
     
 def _commune(val):
-    '''Match avec le nom des départements'''
-    if not (isinstance(val, str) or isinstance(val, unicode)):
-        return False
-    
+    '''Match avec le nom des communes'''
     f = open(join(path,'communes.txt'), 'r')
     liste = f.read().split('\n')
     f.close()
@@ -96,9 +105,7 @@ def _commune(val):
 
 
 def _adresse(val):
-    '''Repère des adresses'''
-    if not (isinstance(val, str) or isinstance(val, unicode)):
-        return False
+    '''Repere des adresses'''
     val = _process_text(val)
     a = any([x in val for x in 'rue allee route avenue chemin boulevard bvd ure ilot'.split()])
     
