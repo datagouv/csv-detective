@@ -9,7 +9,7 @@ from os.path import join
 from process_text import _process_text
 import re
 
-path = '/home/debian/Documents/projects/csv_detective/fichiers_de_reference/temporel'
+path = 'fichiers_de_reference/temporel'
 
 
 

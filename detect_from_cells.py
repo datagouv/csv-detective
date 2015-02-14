@@ -19,7 +19,7 @@ from os.path import join
 from detect_autres import _sexe, _code_csp_insee, _csp_insee, _url, _courriel, _tel_fr, _siren
 from detect_geographiques import _code_postal, _code_commune_insee, _code_departement, _code_iso_pays, _pays, _region, _departement, _commune, _adresse
 from detect_temporel import _jour_de_la_semaine, _annee, _date
-
+from detect_erreur import entier_a_virgule
 
 #############################################################################
 ############### ROUTINE DE TEST CI DESSOUS ##################################
@@ -112,7 +112,8 @@ def routine(file):
     fonctions_test['courriel'] = _courriel
     fonctions_test['tel_fr'] = _tel_fr
     fonctions_test['siren'] = _siren
-
+    
+    
 
     return_table = pd.DataFrame(columns = table.columns)
 
@@ -123,10 +124,10 @@ def routine(file):
             import pdb
             print str(e)
             pdb.set_trace()
-
+            
+    table.apply(entier_a_virgule, axis=1)
 
     for x in return_table.columns:
-
         valeurs_possibles = list(return_table[return_table[x]].index)
         if valeurs_possibles != []:
             print '  >>  La colonne', x, 'est peut-être :',
