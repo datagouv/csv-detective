@@ -29,14 +29,14 @@ from detect_temporel import _jour_de_la_semaine, _annee, _date
 def detect_delimiter(file):
     '''Trouve le délimitateur du csv'''
     with open(file, 'r') as myCsvfile:
-        header=myCsvfile.readline()
-        if header.find(";")!=-1:
-            return ";"
-        if header.find(",")!=-1:
-            return ","
-        if header.find("|")!=-1:
-            return "|"
-    #default delimiter (MS Office export)
+        header = myCsvfile.readline()
+        possible_separators = [";", ",", "|", "\t"]        
+        for sep in possible_separators:
+            if header.find(sep) != -1:
+                print header
+                print header.find(sep)
+                return sep
+    # default delimiter (MS Office export)
     return ";"
 
 
@@ -58,8 +58,10 @@ def test_col(serie, test_func):
 
 def routine(file):
     '''Renvoie un table avec en colonnes les colonnes du csv et en ligne, les champs testes'''
-    if not '.csv' in file:
+    
+    if not any([extension in file for extension in ['.csv', '.tsv']]):
         return False
+    
     sep = detect_delimiter(file)
 
     table = pd.read_csv(file, sep = sep, nrows = 50, dtype = 'unicode')
@@ -120,7 +122,7 @@ if __name__ == '__main__':
     ### CONSIGNES : Mettre toutes les data a tester dans le dossier indiqué par path
     # et lancer le script. Il doit afficherc pour chaque fichier dans ce dossier (ne doit contenir que des csv)
     # les colonnes pour lesquelles un match a été trouvé
-    path = '/home/debian/Documents/data/test_csv_detector'
+    path = 'data'
     all_files = [join(path, f) for f in listdir(path) if isfile(join(path,f)) ]
 
     for file in all_files:
