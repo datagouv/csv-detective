@@ -12,7 +12,6 @@ contenu possible des champs
 ACTUELLEMENT EN DEVELOPPEMENT : Indactions comment tester tout en bas
 """
 
-
 import pandas as pd
 from os.path import join
 
@@ -33,14 +32,25 @@ def detect_delimiter(file):
     # pour l'instant un point virgule
     with open(file, 'r') as myCsvfile:
         header = myCsvfile.readline()
-        possible_separators = [";", ",", "|", "\t"]        
+        possible_separators = [";", ",", "|", "\t"]
         for sep in possible_separators:
             if header.find(sep) != -1:
-                print header
-                print header.find(sep)
                 return sep
     # default delimiter (MS Office export)
     return ";"
+
+
+def detect_headers(file, sep):
+    ''' teste les 5 première ligne pour voir si on a une
+        ligne qui ferait un bon header '''
+    with open(file, 'r') as myCsvfile:
+        for i in range(5):
+            header = myCsvfile.readline()
+            chaine = header.split(sep)
+            if (chaine[-1] not in ['', '\n'] and 
+                 all(mot not in ['', '\n'] for mot in chaine[1:-1])):
+                return i
+    return 0
 
 
 def test_col(serie, test_func):
@@ -61,13 +71,16 @@ def test_col(serie, test_func):
 
 def routine(file):
     '''Renvoie un table avec en colonnes les colonnes du csv et en ligne, les champs testes'''
-    
+
     if not any([extension in file for extension in ['.csv', '.tsv']]):
         return False
-    
-    sep = detect_delimiter(file)
 
-    table = pd.read_csv(file, sep = sep, nrows = 50, dtype = 'unicode')
+    sep = detect_delimiter(file)
+    headers_row = detect_headers(file, sep) 
+
+    table = pd.read_csv(file, sep = sep, 
+                        skiprows = headers_row,
+                        nrows = 50, dtype = 'unicode')
     fonctions_test = dict()
     # Geographique
     fonctions_test['code_postal'] = _code_postal
