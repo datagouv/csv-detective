@@ -13,7 +13,7 @@ Contient : _sexe, _code_csp_insee, _csp_insee, _url
 from os.path import join
 from process_text import _process_text
 import re
-path = '/fichiers_de_reference/autres'
+path = 'fichiers_de_reference/autres'
 
 #### AUTRES INFOS
 def _sexe(val):

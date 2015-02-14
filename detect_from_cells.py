@@ -13,6 +13,7 @@ ACTUELLEMENT EN DEVELOPPEMENT : Indactions comment tester tout en bas
 """
 
 import pandas as pd
+import chardet
 from os.path import join
 
 from detect_autres import _sexe, _code_csp_insee, _csp_insee, _url, _courriel, _tel_fr, _siren
@@ -76,7 +77,10 @@ def routine(file):
         return False
 
     sep = detect_delimiter(file)
-    headers_row = detect_headers(file, sep) 
+    headers_row = detect_headers(file, sep)
+    
+    with open(file, 'r') as myCsvfile:
+        print chardet.detect(myCsvfile.read())
 
     table = pd.read_csv(file, sep = sep, 
                         skiprows = headers_row,
