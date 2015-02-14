@@ -28,6 +28,9 @@ from detect_temporel import _jour_de_la_semaine, _annee, _date
 
 def detect_delimiter(file):
     '''Trouve le délimitateur du csv'''
+    # TODO: add a robust detection:
+    # si on a un point virgule comme texte et \t comme séparateur, on renvoit
+    # pour l'instant un point virgule
     with open(file, 'r') as myCsvfile:
         header = myCsvfile.readline()
         possible_separators = [";", ",", "|", "\t"]        
