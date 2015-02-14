@@ -16,7 +16,7 @@ def _process_text(val):
     val = val.replace('\xc3\xa8', 'e')
     val = val.replace('\xc3\xa9', 'e')
     val = val.replace('\xc3\xaa', 'e')
-    val = val.replace('\xc3\x8e', 'i')    
+    val = val.replace('\xc3\x8e', 'i')
     val = val.replace('\xc3\xb4', 'o')
     val = val.replace('\xc3\xa7', 'c')
     val = val.replace('\xc3\xa0', 'a')

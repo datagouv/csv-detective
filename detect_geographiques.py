@@ -4,13 +4,13 @@ Created on Thu Feb 12 11:51:29 2015
 
 @author: debian
 ##############################################################################
-Contains : _code_postal, _code_commune_insee, _code_departement, _region, _departement, _commune, _adresse 
+Contains : _code_postal, _code_commune_insee, _code_departement, _region, _departement, _commune, _adresse
 """
 
 from os.path import join
 from process_text import _process_text
 import re
-path = '/home/debian/Documents/projects/csv_detective/fichiers_de_reference/geographique'
+path = 'fichiers_de_reference/geographique'
 
 
 
@@ -27,13 +27,13 @@ def _code_postal(val):
     else:
         return False
     if not (val > 1000) and (val < 100000):
-        return False    
+        return False
     f = open(join(path,'codes_postaux.txt'), 'r')
     liste = f.read().split('\n')
     f.close()
     return str(val).zfill(5) in liste
-    
-    
+
+
 def _code_commune_insee(val):
     '''Renvoie True si val peut être un code commune INSEE, False sinon'''
         # TODO : ajouter une regex pour : 'que des chiffres ou bien commence par 2A, 2B puis 3 chiffres'
@@ -61,13 +61,13 @@ def _code_iso_pays(val):
     regex = r'[a-z]{2}'
     if not bool(re.match(regex, val)):
         return False
-    
+
     f = open(join(path,'codes_iso_pays.txt'), 'r')
     liste = f.read().split('\n')
     f.close()
     return val in liste
 
-   
+
 def _pays(val):
     '''Match avec le nom des pays'''
     f = open(join(path,'pays.txt'), 'r')
@@ -75,8 +75,8 @@ def _pays(val):
     f.close()
     val = _process_text(val)
     return val in liste
-    
-    
+
+
 def _region(val):
     '''Match avec le nom des regions'''
     f = open(join(path,'regions.txt'), 'r')
@@ -93,8 +93,8 @@ def _departement(val):
     f.close()
     val = _process_text(val)
     return val in liste
-    
-    
+
+
 def _commune(val):
     '''Match avec le nom des communes'''
     f = open(join(path,'communes.txt'), 'r')
@@ -108,13 +108,13 @@ def _adresse(val):
     '''Repere des adresses'''
     val = _process_text(val)
     a = any([x in val for x in 'rue allee route avenue chemin boulevard bvd ure ilot'.split()])
-    
-    
-    
+
+
+
 ## Traitement du fichier texte (for dev purposes)
 #f = open('csp_insee.txt', 'r')
 #text = f.read().split('\n')
-#f.close()  
+#f.close()
 #text = [_process_text(val) for val in text]
 #f = open('csp_insee.txt', 'w')
 #for x in text:

@@ -1,2 +1,4 @@
 *.txt~
 *.pyc
+*.csv
+.spyderproject

@@ -13,9 +13,7 @@ Contient : _sexe, _code_csp_insee, _csp_insee, _url
 from os.path import join
 from process_text import _process_text
 import re
-path = '/home/debian/Documents/projects/csv_detective/fichiers_de_reference/autres'
-
-
+path = '/fichiers_de_reference/autres'
 
 #### AUTRES INFOS
 def _sexe(val):
@@ -24,7 +22,7 @@ def _sexe(val):
     return val in ['homme', 'femme', 'h', 'f', 'm', 'masculin', 'feminine']
 
 def _code_csp_insee(val):
-    '''Repère les csp telles que définies par l'INSEE'''
+    '''Repère les code csp telles que définies par l'INSEE'''
     val = _process_text(val)
     if not len(val) == 4:
         return False
@@ -35,11 +33,11 @@ def _code_csp_insee(val):
 def _csp_insee(val):
     '''Repère les csp telles que définies par l'INSEE'''
     val = _process_text(val)
-    f = open(join(path,'csp_insee.txt'), 'r')
+    f = open(join(path, 'csp_insee.txt'), 'r')
     liste = f.read().split('\n')
     f.close()
     return val in liste
-    
+
 def _url(val):
     '''Repère les url'''
     a = 'http://' in val
@@ -47,7 +45,7 @@ def _url(val):
     c = any([x in val for x in ['.fr', '.com', '.org', '.gouv', '.net']])
     d = not ('@' in val)
     return (a or b or c) and d
-    
+
 def _courriel(val):
     '''Repère les courriel'''
     regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$'
@@ -58,19 +56,19 @@ def _tel_fr(val):
     # TODO: Cette regex ne marche pas
     regex = r'^(0|(00|\+)33)[67][0-9]{8}$'
     return re.match(regex, val)
-    
+
 def _siren(val):
-    '''Repere les codes SIREN'''    
+    '''Repere les codes SIREN'''
     val = val.replace(' ', '')
     regex = r'[0-9]{9}'
     if not bool(re.match(regex, val)):
-        return false
+        return False
     # Vérification par clé propre aux codes siren
     cle = 0
     pair = False
     for x in val:
         y = int(x) * (1 + pair)
-        cle += y//10 + y%10
+        cle += y // 10 + y % 10
         pair = not pair
-        
-    return cle%10 == 0   
+
+    return cle % 10 == 0
