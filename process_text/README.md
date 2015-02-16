@@ -1,0 +1,1 @@
+Le fichier process_text contient toutes les manipulations standard à effectuer sur les strings pour les rendre comparables. Cela inclut la suppression d'accents, et le remplacement de ponctuation par des espace.
