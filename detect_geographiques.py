@@ -8,7 +8,7 @@ Contains : _code_postal, _code_commune_insee, _code_departement, _region, _depar
 """
 
 from os.path import join
-from process_text import _process_text
+from process_text.process_text import _process_text
 import re
 path = 'fichiers_de_reference/geographique'
 
@@ -57,8 +57,7 @@ def _code_departement(val):
 
 def _code_iso_pays(val):
     '''Renvoie True si val peut etre un code iso pays, False sinon'''
-    val = _process_text(val)
-    regex = r'[a-z]{2}'
+    regex = r'[A-Z]{2}'
     if not bool(re.match(regex, val)):
         return False
 

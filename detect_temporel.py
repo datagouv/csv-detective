@@ -6,7 +6,7 @@ Created on Thu Feb 12 11:53:48 2015
 """
 
 from os.path import join
-from process_text import _process_text
+from process_text.process_text import _process_text
 import re
 
 path = 'fichiers_de_reference/temporel'

@@ -11,7 +11,7 @@ Contient : _sexe, _code_csp_insee, _csp_insee, _url
 """
 
 from os.path import join
-from process_text import _process_text
+from process_text.process_text import _process_text
 import re
 path = 'fichiers_de_reference/autres'
 
@@ -19,7 +19,7 @@ path = 'fichiers_de_reference/autres'
 def _sexe(val):
     '''Repère le sexe'''
     val =_process_text(val)
-    return val in ['homme', 'femme', 'h', 'f', 'm', 'masculin', 'feminine']
+    return val in ['homme', 'femme', 'h', 'f', 'm', 'masculin', 'feminin']
 
 def _code_csp_insee(val):
     '''Repère les code csp telles que définies par l'INSEE'''
