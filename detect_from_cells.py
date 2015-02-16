@@ -136,30 +136,42 @@ def routine(file):
             pdb.set_trace()
             
     table.apply(entier_a_virgule, axis=1)
-
-    for x in return_table.columns:
-        valeurs_possibles = list(return_table[return_table[x]].index)
+    
+    
+    return_dict = dict()
+    for col in return_table.columns:
+        valeurs_possibles = list(return_table[return_table[col]].index)
         if valeurs_possibles != []:
-            print '  >>  La colonne', x, 'est peut-être :',
+            print '  >>  La colonne', col, 'est peut-être :',
             print valeurs_possibles
-    return return_table
+            return_dict[col] = valeurs_possibles
+    return return_dict
 
 
 if __name__ == '__main__':
 
     from os import listdir
     from os.path import isfile, join
-
+    import json
+    
     ### CONSIGNES : Mettre toutes les data a tester dans le dossier indiqué par path
     # et lancer le script. Il doit afficherc pour chaque fichier dans ce dossier (ne doit contenir que des csv)
     # les colonnes pour lesquelles un match a été trouvé
+    
     path = '/home/debian/Documents/data/test_csv_detector' # 'data'
-    all_files = [join(path, f) for f in listdir(path) if isfile(join(path,f)) ]
+    json_path = '/home/debian/Documents/data/test_csv_detector/jsons'
+    
+    
+    all_files = listdir(path)
 
     for file in all_files:
         print '*****************************************'
         print file
-        routine(file)
+        
+        a = routine(join(path, file))
+        if a:
+            with open(join(json_path, file.replace('.csv', '.json')), 'wb') as fp:
+                json.dump(a, fp)
         print '\n'
 
 
