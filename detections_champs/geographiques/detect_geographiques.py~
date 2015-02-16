@@ -2,17 +2,17 @@
 """
 Created on Thu Feb 12 11:51:29 2015
 
-@author: debian
+@author: leo_cdo_inter
 ##############################################################################
 Contains : _code_postal, _code_commune_insee, _code_departement, _region, _departement, _commune, _adresse
 """
 
-from os.path import join
+from os.path import dirname, join
 from process_text.process_text import _process_text
 import re
-path = 'fichiers_de_reference/geographique'
 
-
+rel_path = '../../fichiers_de_reference/geographiques'
+path = join(dirname(__file__), rel_path)
 
 #### GEOGRAPHIQUES
 def _code_postal(val):

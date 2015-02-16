@@ -5,11 +5,12 @@ Created on Thu Feb 12 11:53:48 2015
 @author: leo_cdo_intern
 """
 
-from os.path import join
+from os.path import dirname, join
 from process_text.process_text import _process_text
 import re
 
-path = 'fichiers_de_reference/temporel'
+rel_path = '../../fichiers_de_reference/temporels'
+path = join(dirname(__file__), rel_path)
 
 
 

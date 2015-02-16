@@ -16,9 +16,9 @@ import pandas as pd
 import chardet
 from os.path import join
 
-from detect_autres import _sexe, _code_csp_insee, _csp_insee, _url, _courriel, _tel_fr, _siren
-from detect_geographiques import _code_postal, _code_commune_insee, _code_departement, _code_iso_pays, _pays, _region, _departement, _commune, _adresse
-from detect_temporel import _jour_de_la_semaine, _annee, _date
+import detections_champs
+
+
 from detect_erreur import entier_a_virgule
 
 #############################################################################
@@ -34,11 +34,10 @@ def detect_delimiter(file):
     with open(file, 'r') as myCsvfile:
         header = myCsvfile.readline()
         possible_separators = [";", ",", "|", "\t"]
+        sep_count = dict()
         for sep in possible_separators:
-            if header.find(sep) != -1:
-                return sep
-    # default delimiter (MS Office export)
-    return ";"
+            sep_count[sep] = header.count(sep)
+    return max(sep_count, key = sep_count.get)
 
 
 def detect_headers(file, sep):
@@ -79,40 +78,39 @@ def routine(file):
     sep = detect_delimiter(file)
     headers_row = detect_headers(file, sep)
     
-    with open(file, 'r') as myCsvfile:
-        print chardet.detect(myCsvfile.read())
-
+#    with open(file, 'r') as myCsvfile:
+#        print chardet.detect(myCsvfile.read())
+    
     table = pd.read_csv(file, sep = sep, 
                         skiprows = headers_row,
                         nrows = 50, dtype = 'unicode')
     fonctions_test = dict()
     # Geographique
-    fonctions_test['code_postal'] = _code_postal
-    fonctions_test['code_commune_insee'] = _code_commune_insee
-    fonctions_test['code_departement'] = _code_departement
-    fonctions_test['code_iso_pays'] = _code_iso_pays
+    fonctions_test['code_postal'] = detections_champs.geographiques._code_postal
+    fonctions_test['code_commune_insee'] = detections_champs.geographiques._code_commune_insee
+    fonctions_test['code_departement'] = detections_champs.geographiques._code_departement
+    fonctions_test['code_iso_pays'] = detections_champs.geographiques._code_iso_pays
 
-    fonctions_test['pays'] = _pays
-    fonctions_test['region'] = _region
-    fonctions_test['departement'] = _departement
-    fonctions_test['commune'] = _commune
+    fonctions_test['pays'] = detections_champs.geographiques._pays
+    fonctions_test['region'] = detections_champs.geographiques._region
+    fonctions_test['departement'] = detections_champs.geographiques._departement
+    fonctions_test['commune'] = detections_champs.geographiques._commune
 
-    fonctions_test['adresse'] = _adresse
+    fonctions_test['adresse'] = detections_champs.geographiques._adresse
 
     # Date
-    fonctions_test['jour_de_la_semaine'] = _jour_de_la_semaine
-    fonctions_test['annee'] = _annee
-    fonctions_test['date'] = _date
+    fonctions_test['jour_de_la_semaine'] = detections_champs.temporels._jour_de_la_semaine
+    fonctions_test['annee'] = detections_champs.temporels._annee
+    fonctions_test['date'] = detections_champs.temporels._date
 
     # Autres
-    fonctions_test['csp_code_insee'] = _code_csp_insee
-    fonctions_test['csp_insee'] = _csp_insee
-    fonctions_test['sexe'] = _sexe
-    fonctions_test['url'] = _url
-    fonctions_test['courriel'] = _courriel
-    fonctions_test['tel_fr'] = _tel_fr
-    fonctions_test['siren'] = _siren
-    
+    fonctions_test['csp_code_insee'] = detections_champs.autres._code_csp_insee
+    fonctions_test['csp_insee'] = detections_champs.autres._csp_insee
+    fonctions_test['sexe'] = detections_champs.autres._sexe
+    fonctions_test['url'] = detections_champs.autres._url
+    fonctions_test['courriel'] = detections_champs.autres._courriel
+    fonctions_test['tel_fr'] = detections_champs.autres._tel_fr
+    fonctions_test['siren'] = detections_champs.autres._siren
     
 
     return_table = pd.DataFrame(columns = table.columns)
@@ -143,7 +141,7 @@ if __name__ == '__main__':
     ### CONSIGNES : Mettre toutes les data a tester dans le dossier indiqué par path
     # et lancer le script. Il doit afficherc pour chaque fichier dans ce dossier (ne doit contenir que des csv)
     # les colonnes pour lesquelles un match a été trouvé
-    path = 'data'
+    path = '/home/debian/Documents/data/test_csv_detector' # 'data'
     all_files = [join(path, f) for f in listdir(path) if isfile(join(path,f)) ]
 
     for file in all_files:
