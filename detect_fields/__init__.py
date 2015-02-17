@@ -4,7 +4,12 @@ Created on Sat Feb 14 17:36:30 2015
 
 @author: leo_cdo_intern
 """
-from autres import code_csp_insee, courriel, csp_insee, sexe, siren, tel_fr, url
-from geographiques import adresse, code_commune_insee, code_departement, code_iso_pays, code_postal, commune, departement, pays, region
-from temporels import annee, date, jour_de_la_semaine
+from fr.other import code_csp_insee, csp_insee, sexe, siren, tel_fr
+from itl.other import email, url
+
+from fr.geo import adresse, code_commune_insee, code_postal, commune, departement, pays, region
+from itl.geo import iso_country_code
+
+from fr.temp import jour_de_la_semaine
+from itl.temp import year, date
 

@@ -17,7 +17,7 @@ def _is(val):
     if not bool(re.match(regex, val)):
         return False
 
-    f = open(join(dirname(__file__), 'code_iso_pays.txt'), 'r')
+    f = open(join(dirname(__file__), 'iso_country_code.txt'), 'r')
     liste = f.read().split('\n')
     f.close()
     return val in liste

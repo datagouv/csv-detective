@@ -123,13 +123,14 @@ def routine(file):
 
     sep = detect_separator(file)
     headers_row = detect_headers(file, sep)
-    first_col = detect_heading_columns(file, sep)
-    print headers_row, first_col
+    empty_cols = detect_heading_columns(file, sep)
+    print headers_row, empty_cols
     chardet_res = detect_encoding(file)
     
     print chardet_res
     
     for encoding in [chardet_res['encoding'], 'ISO-8859-1', 'utf-8']:
+        # TODO : modification systematique 
         if 'ISO-8859' in encoding:
             encoding = 'ISO-8859-1'
         try:
@@ -144,13 +145,20 @@ def routine(file):
             pass
     else:
         return False
+     
+
+    # Creating return dictionnary
+    return_dict = dict()
+    return_dict['encoding'] = encoding
+    return_dict['separator'] = sep
+    return_dict['headers_row'] = headers_row
+    return_dict['empty_cols'] = empty_cols       
                         
-                        
-    # Liste des tests de valeur à effectuer  
+    # List of test values
     all_tests = [detect_fields.code_postal,
                  detect_fields.code_commune_insee,
-                 detect_fields.code_departement, 
-                 detect_fields.code_iso_pays,
+                 #detect_fields.code_departement, 
+                 detect_fields.iso_country_code,
                  detect_fields.pays,
                  detect_fields.region,
                  detect_fields.departement,
@@ -158,19 +166,19 @@ def routine(file):
                  detect_fields.adresse,
                  
                  detect_fields.jour_de_la_semaine,
-                 detect_fields.annee,
+                 detect_fields.year,
                  detect_fields.date,
                  
                  detect_fields.code_csp_insee,
                  detect_fields.csp_insee,
                  detect_fields.sexe,
                  detect_fields.url,
-                 detect_fields.courriel,
+                 detect_fields.email,
                  detect_fields.tel_fr,
                  detect_fields.siren
                  ]
     
-    # Initialisation du dictionnaire des tests       
+    # Initialising dict for tests    
     test_funcs = dict()
     for test in all_tests:
         name = test.__name__.split('.')[-1]
@@ -192,10 +200,7 @@ def routine(file):
     table.apply(ints_as_floats, axis=1)
     
     
-    # Création du dictionnaire à ecrire
-    return_dict = dict()
-    return_dict['encoding'] = encoding
-    return_dict['separator'] = sep
+    # Filling the columns attributes of return dictionnary
     return_dict_cols = dict()
     for col in return_table.columns:
         possible_values = list(return_table[return_table[col]].index)
@@ -231,7 +236,7 @@ if __name__ == '__main__':
         print '*****************************************'
         print file_name
         if any([extension in file_name for extension in ['.csv', '.tsv']]):
-            file = open(join(path, file_name))
+            file = open(join(path, file_name), 'r')
             a = routine(file)
             file.close()
         if a:

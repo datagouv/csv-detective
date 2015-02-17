@@ -12,7 +12,7 @@ import re
 PROPORTION = 1
 
 def _is(val):
-    '''Renvoie True si les cahmps peuvent être des jours de la semaine'''
+    '''Returns True if val can be a year'''
     try:
         val = int(val)
     except:

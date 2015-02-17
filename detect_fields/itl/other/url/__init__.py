@@ -12,7 +12,7 @@ import re
 PROPORTION = 1
 
 def _is(val):
-    '''Repère les url'''
+    '''Detects urls'''
     a = 'http://' in val
     b = 'www.' in val
     c = any([x in val for x in ['.fr', '.com', '.org', '.gouv', '.net']])
