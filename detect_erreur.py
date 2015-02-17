@@ -5,7 +5,7 @@ Created on Sat Feb 14 19:33:04 2015
 @author: alexis
 """
 
-def entier_a_virgule(serie):
+def ints_as_floats(serie):
     '''Détecte les colonnes contenant des entiers possibles écrits sous forme de float'''
     regex = r'^[0-9]+\.0+$'
     

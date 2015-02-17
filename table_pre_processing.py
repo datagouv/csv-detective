@@ -3,6 +3,8 @@
 Created on Tue Feb 17 14:53:15 2015
 
 @author: leo_cdo_intern
+
+
 """
 
 def detect_headers(file, sep):
@@ -16,14 +18,3 @@ def detect_headers(file, sep):
                  all(mot not in ['', '\n'] for mot in chaine[1:-1])):
                 return i
     return 0
-
-
-def entier_a_virgule(serie):
-    '''Détecte les colonnes contenant des entiers possibles écrits sous forme de float'''
-    regex = r'^[0-9]+\.0+$'
-    
-    if all(serie.str.match(regex)) and any(serie.notnull()):
-        
-        print "La colonne", str(serie.name), " a une seule valeur après la virgule, on la supprime"
-        print serie
-        print '\n\n\n'

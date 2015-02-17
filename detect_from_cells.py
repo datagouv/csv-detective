@@ -19,31 +19,84 @@ from os.path import join
 import detect_fields
 
 
-from detect_erreur import entier_a_virgule
+from detect_erreur import ints_as_floats
 
 #############################################################################
 ############### ROUTINE DE TEST CI DESSOUS ##################################
 
 # TODO : Mettre un pourcentage de valeurs justes (au lieu de nécessiter que toutes les valeurs soient justes)
 
-def detect_delimiter(file):
-    '''Trouve le délimitateur du csv'''
+def detect_separator(file):
+    '''Detects csv separator'''
     # TODO: add a robust detection:
     # si on a un point virgule comme texte et \t comme séparateur, on renvoit
     # pour l'instant un point virgule
-    with open(file, 'r') as myCsvfile:
-        header = myCsvfile.readline()
-        possible_separators = [";", ",", "|", "\t"]
-        sep_count = dict()
-        for sep in possible_separators:
-            sep_count[sep] = header.count(sep)
+    file.seek(0)
+    header = file.readline()
+    possible_separators = [";", ",", "|", "\t"]
+    sep_count = dict()
+    for sep in possible_separators:
+        sep_count[sep] = header.count(sep)
     return max(sep_count, key = sep_count.get)
 
+def detect_headers(file, sep):
+    ''' Tests 10 first rows for possible header'''
+    file.seek(0)
+    for i in range(10):
+        header = file.readline()
+        chaine = header.split(sep)
+        if (chaine[-1] not in ['', '\n'] and 
+             all([mot not in ['', '\n'] for mot in chaine[1:-1]])):
+            return i
+    return 0
 
-def test_col(serie, test_func, proportion = 0.9):
-    '''Teste progressivement une colonne avec la foncition test_func, renvoie True si toutes
-    les valeurs de la série renvoient True avec test_func. False sinon.
-    proportion indique le taux de valeurs qui doivent passer le test
+def detect_heading_columns(file, sep):
+    ''' Tests first 10 lines to see if there are empty heading columns'''
+    file.seek(0)
+    return_int = inf
+    for i in range(10):
+        header = file.readline()
+        return_int = min(return_int, len(header) - len(header.strip(sep)))
+        if return_int == 0:
+            return 0
+    return return_int
+
+#def detect_trailing_columns(file, sep):
+#    ''' Tests first 10 lines to see if there are empty trailing columns'''
+#    file.seek(0)
+#    return_int = inf
+#    for i in range(10):
+#        header = file.readline()
+#        return_int = min(return_int, len(header) - len(header.strip(sep)))
+#        if return_int == 0:
+#            return 0
+#    return return_int
+   
+def detect_encoding(file):
+    '''Detects file encoding using chardet based on N first lines
+    '''
+    file.seek(0)
+    head = ''
+    count = 0
+    for line in file:
+        if count == 100:
+            break
+        else:
+            count += 1
+            head += line
+    chardet_res = chardet.detect(head)
+    return chardet_res
+    
+
+    
+        
+
+
+def test_col(serie, test_func, proportion = 0.9, skipna = True):
+    ''' Tests values of the serie using test_func.
+    skipna = True indicates that NaNs are not counted as False
+    proportion indicates the proportion of values that have to pass the test
+    for the serie to be detected as a certain type
     '''
     serie = serie[serie.notnull()]
     ser_len = len(serie)
@@ -64,30 +117,23 @@ def test_col(serie, test_func, proportion = 0.9):
             pdb.set_trace()
 
 def routine(file):
-    '''Renvoie un table avec en colonnes les colonnes du csv et en ligne, les champs testes'''
+    '''Returns a dict with information about the csv table and possible
+    column contents    
+    '''
 
-    if not any([extension in file for extension in ['.csv', '.tsv']]):
-        return False
-
-    sep = detect_delimiter(file)
+    sep = detect_separator(file)
     headers_row = detect_headers(file, sep)
+    first_col = detect_heading_columns(file, sep)
+    print headers_row, first_col
+    chardet_res = detect_encoding(file)
     
-    with open(file, 'r') as csv_file:
-        head = ''
-        count = 0
-        for line in csv_file:
-            if count == 100:
-                break
-            else:
-                count += 1
-                head += line
-        chardet_res = chardet.detect(head)
-        print chardet_res
+    print chardet_res
     
     for encoding in [chardet_res['encoding'], 'ISO-8859-1', 'utf-8']:
         if 'ISO-8859' in encoding:
             encoding = 'ISO-8859-1'
         try:
+            file.seek(0)
             table = pd.read_csv(file, sep = sep, 
                                 skiprows = headers_row,
                                 nrows = 50, dtype = 'unicode',
@@ -143,21 +189,21 @@ def routine(file):
             pdb.set_trace()
             
     # Détection des colonnes d'entiers écrits avec virgules
-    table.apply(entier_a_virgule, axis=1)
+    table.apply(ints_as_floats, axis=1)
     
     
     # Création du dictionnaire à ecrire
     return_dict = dict()
     return_dict['encoding'] = encoding
-    
+    return_dict['separator'] = sep
     return_dict_cols = dict()
     for col in return_table.columns:
-        valeurs_possibles = list(return_table[return_table[col]].index)
-        if valeurs_possibles != []:
+        possible_values = list(return_table[return_table[col]].index)
+        if possible_values != []:
             print '  >>  La colonne', col, 'est peut-être :',
-            print valeurs_possibles
-            return_dict_cols[col] = valeurs_possibles
-    return_dict['colonnes'] = return_dict_cols
+            print possible_values
+            return_dict_cols[col] = possible_values
+    return_dict['columns'] = return_dict_cols
     return return_dict
 
 
@@ -181,14 +227,16 @@ if __name__ == '__main__':
     
     all_files = listdir(path)
     counter = 0
-    for file in all_files:
+    for file_name in all_files:
         print '*****************************************'
-        print file
-        
-        a = routine(join(path, file))
+        print file_name
+        if any([extension in file_name for extension in ['.csv', '.tsv']]):
+            file = open(join(path, file_name))
+            a = routine(file)
+            file.close()
         if a:
             counter += len(a)
-            with open(join(json_path, file.replace('.csv', '.json')), 'wb') as fp:
+            with open(join(json_path, file_name.replace('.csv', '.json')), 'wb') as fp:
                 json.dump(a, fp, indent=4, separators=(',', ': '))
         print '\n'
     print 'on a trouvé des matchs éventuels pour ', counter, 'valeurs'
