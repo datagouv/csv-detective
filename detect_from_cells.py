@@ -126,7 +126,6 @@ def routine(file):
     empty_cols = detect_heading_columns(file, sep)
     print headers_row, empty_cols
     chardet_res = detect_encoding(file)
-    
     print chardet_res
     
     for encoding in [chardet_res['encoding'], 'ISO-8859-1', 'utf-8']:
@@ -144,15 +143,20 @@ def routine(file):
         except:
             pass
     else:
+        print '  >> encoding not found'
         return False
      
-
+     
+    # Detects columns that are ints but written as floats
+    res_ints_as_floats = list(ints_as_floats(table))
+     
     # Creating return dictionnary
     return_dict = dict()
     return_dict['encoding'] = encoding
     return_dict['separator'] = sep
     return_dict['headers_row'] = headers_row
-    return_dict['empty_cols'] = empty_cols       
+    return_dict['empty_cols'] = empty_cols
+    return_dict['ints_as_floats'] = res_ints_as_floats
                         
     # List of test values
     all_tests = [detect_fields.code_postal,
@@ -196,8 +200,7 @@ def routine(file):
             print str(e)
             pdb.set_trace()
             
-    # Détection des colonnes d'entiers écrits avec virgules
-    table.apply(ints_as_floats, axis=1)
+
     
     
     # Filling the columns attributes of return dictionnary
