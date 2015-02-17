@@ -1,0 +1,1 @@
+Each folder corresponds to fields specifc to a country.  The 'itl' folder tests values that are international (e-mails, dates ...).
