@@ -9,10 +9,11 @@ from os.path import dirname, join
 from process_text.process_text import _process_text
 import re
 
-PROPORTION = 1
+PROPORTION = 0.6
 
 def _is(val):
     '''Repere des adresses'''
     val = _process_text(val)
     a = any([x in val for x in 'rue allee route avenue chemin boulevard bvd ure ilot'.split()])
+    return a
 

@@ -40,19 +40,6 @@ def detect_delimiter(file):
     return max(sep_count, key = sep_count.get)
 
 
-def detect_headers(file, sep):
-    ''' teste les 5 première ligne pour voir si on a une
-        ligne qui ferait un bon header '''
-    with open(file, 'r') as myCsvfile:
-        for i in range(5):
-            header = myCsvfile.readline()
-            chaine = header.split(sep)
-            if (chaine[-1] not in ['', '\n'] and 
-                 all(mot not in ['', '\n'] for mot in chaine[1:-1])):
-                return i
-    return 0
-
-
 def test_col(serie, test_func, proportion = 0.9):
     '''Teste progressivement une colonne avec la foncition test_func, renvoie True si toutes
     les valeurs de la série renvoient True avec test_func. False sinon.
@@ -85,15 +72,35 @@ def routine(file):
     sep = detect_delimiter(file)
     headers_row = detect_headers(file, sep)
     
-#    with open(file, 'r') as myCsvfile:
-#        print chardet.detect(myCsvfile.read())
+    with open(file, 'r') as csv_file:
+        head = ''
+        count = 0
+        for line in csv_file:
+            if count == 100:
+                break
+            else:
+                count += 1
+                head += line
+        chardet_res = chardet.detect(head)
+        print chardet_res
     
-    table = pd.read_csv(file, sep = sep, 
-                        skiprows = headers_row,
-                        nrows = 50, dtype = 'unicode')
+    for encoding in [chardet_res['encoding'], 'ISO-8859-1', 'utf-8']:
+        if 'ISO-8859' in encoding:
+            encoding = 'ISO-8859-1'
+        try:
+            table = pd.read_csv(file, sep = sep, 
+                                skiprows = headers_row,
+                                nrows = 50, dtype = 'unicode',
+                                encoding = encoding                 
+                                )
+            break
+        except:
+            pass
+    else:
+        return False
                         
                         
-                        
+    # Liste des tests de valeur à effectuer  
     all_tests = [detect_fields.code_postal,
                  detect_fields.code_commune_insee,
                  detect_fields.code_departement, 
@@ -116,7 +123,8 @@ def routine(file):
                  detect_fields.tel_fr,
                  detect_fields.siren
                  ]
-                 
+    
+    # Initialisation du dictionnaire des tests       
     test_funcs = dict()
     for test in all_tests:
         name = test.__name__.split('.')[-1]
@@ -124,9 +132,8 @@ def routine(file):
                             'prop' : test.PROPORTION
                             }
     
-
+    
     return_table = pd.DataFrame(columns = table.columns)
-
     for key, value in test_funcs.iteritems():
         try:
             return_table.loc[key] = table.apply(lambda serie: test_col(serie, value['func'], value['prop']))
@@ -135,17 +142,27 @@ def routine(file):
             print str(e)
             pdb.set_trace()
             
+    # Détection des colonnes d'entiers écrits avec virgules
     table.apply(entier_a_virgule, axis=1)
     
     
+    # Création du dictionnaire à ecrire
     return_dict = dict()
+    return_dict['encoding'] = encoding
+    
+    return_dict_cols = dict()
     for col in return_table.columns:
         valeurs_possibles = list(return_table[return_table[col]].index)
         if valeurs_possibles != []:
             print '  >>  La colonne', col, 'est peut-être :',
             print valeurs_possibles
-            return_dict[col] = valeurs_possibles
+            return_dict_cols[col] = valeurs_possibles
+    return_dict['colonnes'] = return_dict_cols
     return return_dict
+
+
+
+
 
 
 if __name__ == '__main__':
@@ -163,16 +180,18 @@ if __name__ == '__main__':
     
     
     all_files = listdir(path)
-
+    counter = 0
     for file in all_files:
         print '*****************************************'
         print file
         
         a = routine(join(path, file))
         if a:
+            counter += len(a)
             with open(join(json_path, file.replace('.csv', '.json')), 'wb') as fp:
-                json.dump(a, fp)
+                json.dump(a, fp, indent=4, separators=(',', ': '))
         print '\n'
+    print 'on a trouvé des matchs éventuels pour ', counter, 'valeurs'
 
 
 

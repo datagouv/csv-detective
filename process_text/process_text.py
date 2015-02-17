@@ -22,4 +22,9 @@ def _process_text(val):
     val = val.replace('\xc3\xa0', 'a')
     val = val.replace('\xc3\xa2', 'a')
     val = val.replace('\xc3\xae', 'i')
+    
+    ### Replace utf-8
+    
+    
+    
     return val

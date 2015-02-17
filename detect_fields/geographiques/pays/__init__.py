@@ -9,7 +9,7 @@ from os.path import dirname, join
 from process_text.process_text import _process_text
 import re
 
-PROPORTION = 1
+PROPORTION = 0.6
 
 def _is(val):
     '''Match avec le nom des pays'''

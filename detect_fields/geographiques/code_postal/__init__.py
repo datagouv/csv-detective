@@ -18,13 +18,11 @@ def _is(val):
             val = int(val)
         else:
             return False
-    elif isinstance(val, int):
-        pass
     else:
         return False
     if not (val > 1000) and (val < 100000):
         return False
-    f = open(join(dirname(__file__), 'code_postal.txt'), 'r')
+    f = open(join('/home/debian/Documents/projects/csv_detective/detect_fields/geographiques/code_postal', 'code_postal.txt'), 'r')
     liste = f.read().split('\n')
     f.close()
     return str(val).zfill(5) in liste
