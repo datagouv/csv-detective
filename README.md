@@ -1,2 +1,2 @@
 # csv_detective
-Introspection des csv de DataGouv
+Automatic analysis of csv content. 
