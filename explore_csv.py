@@ -20,12 +20,10 @@ from numpy import inf
 import detect_fields
 
 
-from detect_erreur import ints_as_floats
+from detect_erreur import ints_as_floats, detect_headers, detect_heading_columns, detect_trailing_columns
 
 #############################################################################
 ############### ROUTINE DE TEST CI DESSOUS ##################################
-
-# TODO : Mettre un pourcentage de valeurs justes (au lieu de nécessiter que toutes les valeurs soient justes)
 
 def detect_separator(file):
     '''Detects csv separator'''
@@ -40,38 +38,6 @@ def detect_separator(file):
         sep_count[sep] = header.count(sep)
     return max(sep_count, key = sep_count.get)
 
-def detect_headers(file, sep):
-    ''' Tests 10 first rows for possible header'''
-    file.seek(0)
-    for i in range(10):
-        header = file.readline()
-        chaine = header.split(sep)
-        if (chaine[-1] not in ['', '\n'] and 
-             all([mot not in ['', '\n'] for mot in chaine[1:-1]])):
-            return i
-    return 0
-
-def detect_heading_columns(file, sep):
-    ''' Tests first 10 lines to see if there are empty heading columns'''
-    file.seek(0)
-    return_int = inf
-    for i in range(10):
-        header = file.readline()
-        return_int = min(return_int, len(header) - len(header.strip(sep)))
-        if return_int == 0:
-            return 0
-    return return_int
-
-#def detect_trailing_columns(file, sep):
-#    ''' Tests first 10 lines to see if there are empty trailing columns'''
-#    file.seek(0)
-#    return_int = inf
-#    for i in range(10):
-#        header = file.readline()
-#        return_int = min(return_int, len(header) - len(header.strip(sep)))
-#        if return_int == 0:
-#            return 0
-#    return return_int
    
 def detect_encoding(file):
     '''Detects file encoding using chardet based on N first lines
@@ -88,10 +54,6 @@ def detect_encoding(file):
     chardet_res = chardet.detect(head)
     return chardet_res
     
-
-    
-        
-
 
 def test_col(serie, test_func, proportion = 0.9, skipna = True, num_lines = 50):
     ''' Tests values of the serie using test_func.
@@ -123,8 +85,9 @@ def routine(file, num_lines = 50):
     '''
     sep = detect_separator(file)
     headers_row = detect_headers(file, sep)
-    empty_cols = detect_heading_columns(file, sep)
-    print headers_row, empty_cols
+    heading_columns = detect_heading_columns(file, sep)
+    trailing_columns = detect_trailing_columns(file, sep, heading_columns)
+    print headers_row, heading_columns, trailing_columns
     chardet_res = detect_encoding(file)
     print chardet_res
     
@@ -155,7 +118,8 @@ def routine(file, num_lines = 50):
     return_dict['encoding'] = encoding
     return_dict['separator'] = sep
     return_dict['headers_row'] = headers_row
-    return_dict['empty_cols'] = empty_cols
+    return_dict['heading_columns'] = heading_columns
+    return_dict['trailing_columns'] = trailing_columns
     return_dict['ints_as_floats'] = res_ints_as_floats
                         
     # List of test values
