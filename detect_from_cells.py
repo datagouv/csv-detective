@@ -15,6 +15,7 @@ ACTUELLEMENT EN DEVELOPPEMENT : Indactions comment tester tout en bas
 import pandas as pd
 import chardet
 from os.path import join
+from numpy import inf
 
 import detect_fields
 
@@ -92,7 +93,7 @@ def detect_encoding(file):
         
 
 
-def test_col(serie, test_func, proportion = 0.9, skipna = True):
+def test_col(serie, test_func, proportion = 0.9, skipna = True, num_lines = 50):
     ''' Tests values of the serie using test_func.
     skipna = True indicates that NaNs are not counted as False
     proportion indicates the proportion of values that have to pass the test
@@ -102,8 +103,8 @@ def test_col(serie, test_func, proportion = 0.9, skipna = True):
     ser_len = len(serie)
     if ser_len == 0:
         return False
-    if proportion == 1:
-        for range_ in [range(0,min(1, ser_len)), range(min(1, ser_len),min(5, ser_len)), range(min(5, ser_len),min(50, ser_len))]: # Pour ne pas faire d'opérations inutiles, on commence par 1, puis 5 puis 50 valeurs
+    if proportion == 1: # Then try first 1 value, then 5, then all
+        for range_ in [range(0,min(1, ser_len)), range(min(1, ser_len),min(5, ser_len)), range(min(5, ser_len),min(num_lines, ser_len))]: # Pour ne pas faire d'opérations inutiles, on commence par 1, puis 5 puis num_lines valeurs
             if all(serie.iloc[range_].apply(test_func)):
                 pass
             else:
@@ -116,7 +117,7 @@ def test_col(serie, test_func, proportion = 0.9, skipna = True):
             import pdb
             pdb.set_trace()
 
-def routine(file):
+def routine(file, num_lines = 50):
     '''Returns a dict with information about the csv table and possible
     column contents    
     '''
@@ -135,7 +136,7 @@ def routine(file):
             file.seek(0)
             table = pd.read_csv(file, sep = sep, 
                                 skiprows = headers_row,
-                                nrows = 50, dtype = 'unicode',
+                                nrows = num_lines, dtype = 'unicode',
                                 encoding = encoding                 
                                 )
             break
@@ -231,6 +232,7 @@ if __name__ == '__main__':
     path = '/home/debian/Documents/data/test_csv_detector' # 'data'
     json_path = '/home/debian/Documents/data/test_csv_detector/jsons'
     
+    num_lines = 50 # nombre de lignes à analyser
     
     all_files = listdir(path)
     counter = 0
