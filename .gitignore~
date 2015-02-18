@@ -3,3 +3,4 @@
 *.pyc
 *.csv
 .spyderproject
+data_gouv_api_download.py
