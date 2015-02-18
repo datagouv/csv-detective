@@ -120,7 +120,6 @@ def routine(file):
     '''Returns a dict with information about the csv table and possible
     column contents    
     '''
-
     sep = detect_separator(file)
     headers_row = detect_headers(file, sep)
     empty_cols = detect_heading_columns(file, sep)
