@@ -106,7 +106,7 @@ def routine(file, num_lines = 50):
         except:
             pass
     else:
-        print '  >> encoding not found'
+#        print '  >> encoding not found'
         return False
      
      
@@ -153,8 +153,8 @@ def routine(file, num_lines = 50):
         test_funcs[name] = {'func' : test._is,
                             'prop' : test.PROPORTION
                             }
-    
-    
+
+
     return_table = pd.DataFrame(columns = table.columns)
     for key, value in test_funcs.iteritems():
         try:
@@ -163,10 +163,8 @@ def routine(file, num_lines = 50):
             import pdb
             print str(e)
             pdb.set_trace()
-            
 
-    
-    
+
     # Filling the columns attributes of return dictionnary
     return_dict_cols = dict()
     for col in return_table.columns:
