@@ -1,1 +1,1 @@
-Folder for temporal variables (date, time, time zone, etc.).
+Folder for international temporal variables (date, time, time zone, etc.).
