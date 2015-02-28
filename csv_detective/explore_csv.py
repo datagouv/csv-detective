@@ -19,8 +19,8 @@ from numpy import inf
 
 import detect_fields
 
-
-from detect_erreur import ints_as_floats, detect_headers, detect_heading_columns, detect_trailing_columns
+from detect_errors import (ints_as_floats, detect_headers, 
+                           detect_heading_columns, detect_trailing_columns)
 
 #############################################################################
 ############### ROUTINE DE TEST CI DESSOUS ##################################
@@ -191,8 +191,10 @@ if __name__ == '__main__':
     # et lancer le script. Il doit afficherc pour chaque fichier dans ce dossier (ne doit contenir que des csv)
     # les colonnes pour lesquelles un match a été trouvé
     
-    path = '/home/debian/Documents/data/test_csv_detector' # 'data'
-    json_path = '/home/debian/Documents/data/test_csv_detector/jsons'
+    # main_path = '/home/debian/Documents/'
+    main_path = 'C:/git/csv_detective/'    
+    path = main_path + 'data/test_csv_detector' # 
+    json_path = main_path + 'data/test_csv_detector/jsons'
     
     num_lines = 50 # nombre de lignes à analyser
     
@@ -205,10 +207,10 @@ if __name__ == '__main__':
             file = open(join(path, file_name), 'r')
             a = routine(file)
             file.close()
-        if a:
-            counter += len(a)
-            with open(join(json_path, file_name.replace('.csv', '.json')), 'wb') as fp:
-                json.dump(a, fp, indent=4, separators=(',', ': '))
+            if a:
+                counter += len(a)
+                with open(join(json_path, file_name.replace('.csv', '.json')), 'wb') as fp:
+                    json.dump(a, fp, indent=4, separators=(',', ': '))
         print '\n'
     print 'on a trouvé des matchs éventuels pour ', counter, 'valeurs'
 

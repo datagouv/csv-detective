@@ -24,7 +24,4 @@ def _process_text(val):
     val = val.replace('\xc3\xae', 'i')
     
     ### Replace utf-8
-    
-    
-    
     return val
