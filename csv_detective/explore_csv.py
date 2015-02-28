@@ -84,7 +84,7 @@ def routine(file, num_lines = 50):
     column contents    
     '''
     sep = detect_separator(file)
-    headers_row = detect_headers(file, sep)
+    headers_row, headers = detect_headers(file, sep)
     heading_columns = detect_heading_columns(file, sep)
     trailing_columns = detect_trailing_columns(file, sep, heading_columns)
     print headers_row, heading_columns, trailing_columns
@@ -112,12 +112,13 @@ def routine(file, num_lines = 50):
      
     # Detects columns that are ints but written as floats
     res_ints_as_floats = list(ints_as_floats(table))
-     
+    
     # Creating return dictionnary
     return_dict = dict()
     return_dict['encoding'] = encoding
     return_dict['separator'] = sep
     return_dict['headers_row'] = headers_row
+    return_dict['headers'] = headers
     return_dict['heading_columns'] = heading_columns
     return_dict['trailing_columns'] = trailing_columns
     return_dict['ints_as_floats'] = res_ints_as_floats

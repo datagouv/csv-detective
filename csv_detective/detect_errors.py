@@ -21,8 +21,8 @@ def detect_headers(file, sep):
         chaine = header.split(sep)
         if (chaine[-1] not in ['', '\n'] and 
              all([mot not in ['', '\n'] for mot in chaine[1:-1]])):
-            return i
-    return 0
+            return i, chaine
+    return 0, 'not_found'
 
 
 def detect_heading_columns(file, sep, ):
