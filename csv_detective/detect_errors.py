@@ -11,6 +11,43 @@ def ints_as_floats(table):
     regex = r'^[0-9]+\.0+$'
     res = table.apply(lambda serie: serie.str.match(regex).all() and any(serie.notnull()))
     return res.index[res]
+    
+
+def detect_extra_columns(file, sep):
+    file.seek(0)
+    retour = False
+    nb_useless_col = 99999
+    
+    for i in range(10):
+        line = file.readline()
+        # regarde si on a un retour
+        if retour: 
+            assert line[-1] == "\n"
+        if line[-1] == "\n":
+            retour = True
+        
+        # regarde le nombre de derniere colonne inutile
+        deb = 0 + retour
+        line = line[::-1][deb:]
+        k = 0
+        for sign in line:
+            if sign != sep:
+                break
+            k += 1
+        nb_useless_col = min(k, nb_useless_col)
+    return nb_useless_col, retour        
+
+
+def remove_extra_columns(file, detect_extra_columns_results):
+    res = detect_extra_columns_results
+    to_remove = res[0] + res[1]
+    L = file.read().splitlines()
+    for line in L: 
+        line = line[:-to_remove]
+        print line
+    import pdb
+    pdb.set_trace()
+
 
 
 def detect_headers(file, sep):
@@ -21,8 +58,8 @@ def detect_headers(file, sep):
         chaine = header.split(sep)
         if (chaine[-1] not in ['', '\n'] and 
              all([mot not in ['', '\n'] for mot in chaine[1:-1]])):
-            return i, chaine
-    return 0, 'not_found'
+            return i, header.replace(sep, ';')
+    return 0,  'not_found'
 
 
 def detect_heading_columns(file, sep, ):

@@ -20,7 +20,8 @@ from numpy import inf
 import detect_fields
 
 from detect_errors import (ints_as_floats, detect_headers, 
-                           detect_heading_columns, detect_trailing_columns)
+                           detect_heading_columns, detect_trailing_columns,
+                           detect_extra_columns, remove_extra_columns)
 
 #############################################################################
 ############### ROUTINE DE TEST CI DESSOUS ##################################
@@ -84,6 +85,8 @@ def routine(file, num_lines = 50):
     column contents    
     '''
     sep = detect_separator(file)
+    res = detect_extra_columns(file, sep)
+    remove_extra_columns(file, res)
     headers_row, headers = detect_headers(file, sep)
     heading_columns = detect_heading_columns(file, sep)
     trailing_columns = detect_trailing_columns(file, sep, heading_columns)
@@ -118,7 +121,7 @@ def routine(file, num_lines = 50):
     return_dict['encoding'] = encoding
     return_dict['separator'] = sep
     return_dict['headers_row'] = headers_row
-    return_dict['headers'] = headers
+    return_dict['headers'] = headers.decode(encoding).encode('utf-8') 
     return_dict['heading_columns'] = heading_columns
     return_dict['trailing_columns'] = trailing_columns
     return_dict['ints_as_floats'] = res_ints_as_floats
@@ -211,9 +214,8 @@ if __name__ == '__main__':
             if a:
                 counter += len(a)
                 with open(join(json_path, file_name.replace('.csv', '.json')), 'wb') as fp:
-                    json.dump(a, fp, indent=4, separators=(',', ': '))
+                    json.dump(a, fp, indent=4, separators=(',', ': '), encoding="utf-8")
         print '\n'
     print 'on a trouvé des matchs éventuels pour ', counter, 'valeurs'
-
 
 
