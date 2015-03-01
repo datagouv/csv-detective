@@ -36,29 +36,12 @@ tab = one_table()
 head = tab.loc['headers'] 
 cond = (head == u'not_found')
 list_not_found = tab.loc[:,cond].columns
+print list_not_found
 
-
-from csv_detective.detect_errors import (ints_as_floats, detect_headers, 
-                           detect_heading_columns, detect_trailing_columns)
-
-from csv_detective.explore_csv import detect_separator
-
-
-file_name = list_not_found[0]
-try: 
-    file = open(join(main_path, 'data', 'test_csv_detector', file_name + '.csv'), 'r')
-except:
-    file = open(join(main_path, 'data', 'test_csv_detector', file_name + '.tsv'), 'r')
-
-
-sep = detect_separator(file)
-remove_extra_columns(file, sep)
-detect_headers(file, sep)
-file.seek(0)
-for i in range(10):
-    header = file.readline()
-    chaine = header.split(sep)
-    print chaine
-#    if (chaine[-1] not in ['', '\n'] and 
-#         all([mot not in ['', '\n'] for mot in chaine[1:-1]])):
-#        return i, header.replace(sep, ';')
+#file_name = list_not_found[0]
+#try: 
+#    filename = join(main_path, 'data', 'test_csv_detector', file_name + '.csv')
+#    file = open(filename, 'r')
+#except:
+#    filename = join(main_path, 'data', 'test_csv_detector', file_name + '.tsv')
+#    file = open(filename, 'r')

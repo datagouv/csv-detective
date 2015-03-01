@@ -45,6 +45,8 @@ def detect_encoding(file):
 
 
 def detect_extra_columns(file, sep):
+    ''' regarde s'il y a des colonnes en trop 
+        Attention, file ne doit pas avoir de ligne vide '''
     file.seek(0)
     retour = False
     nb_useless_col = 99999
@@ -56,7 +58,7 @@ def detect_extra_columns(file, sep):
             assert line[-1] == "\n"
         if line[-1] == "\n":
             retour = True
-
+            
         # regarde le nombre de derniere colonne inutile
         deb = 0 + retour
         line = line[::-1][deb:]
@@ -65,6 +67,8 @@ def detect_extra_columns(file, sep):
             if sign != sep:
                 break
             k += 1
+        if k == 0:
+            return 0, retour
         nb_useless_col = min(k, nb_useless_col)
     return nb_useless_col, retour
 

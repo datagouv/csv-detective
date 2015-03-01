@@ -23,8 +23,7 @@ from detection import (ints_as_floats,
                        detect_headers,
                        detect_heading_columns,
                        detect_trailing_columns,
-                       detect_extra_columns)
-from correction import remove_extra_columns
+                       )
 
 #############################################################################
 ############### ROUTINE DE TEST CI DESSOUS ##################################
@@ -53,14 +52,14 @@ def test_col(serie, test_func, proportion = 0.9, skipna = True, num_lines = 50):
         except:
             import pdb
             pdb.set_trace()
+            
+
 
 def routine(file, num_lines = 50):
     '''Returns a dict with information about the csv table and possible
     column contents
     '''
     sep = detect_separator(file)
-    res = detect_extra_columns(file, sep)
-    remove_extra_columns(file, res)
     headers_row, headers = detect_headers(file, sep)
     heading_columns = detect_heading_columns(file, sep)
     trailing_columns = detect_trailing_columns(file, sep, heading_columns)
@@ -153,9 +152,6 @@ def routine(file, num_lines = 50):
             return_dict_cols[col] = possible_values
     return_dict['columns'] = return_dict_cols
     return return_dict
-
-
-
 
 
 
