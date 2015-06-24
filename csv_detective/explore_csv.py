@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Feb 11 09:47:26 2015
-
-@author: leo_cdo_intern
-
 ###############################################################################
 Ce script analyse les premières lignes d'un CSV pour essayer de déterminer le
 contenu possible des champs
@@ -47,11 +43,8 @@ def test_col(serie, test_func, proportion = 0.9, skipna = True, num_lines = 50):
                 return False
         return True
     else:
-        try:
-            return serie.apply(test_func).sum() > proportion * len(serie)
-        except:
-            import pdb
-            pdb.set_trace()
+        return serie.apply(test_func).sum() > proportion * len(serie)
+
             
 
 
@@ -63,7 +56,7 @@ def routine(file, num_lines = 50):
     headers_row, headers = detect_headers(file, sep)
     heading_columns = detect_heading_columns(file, sep)
     trailing_columns = detect_trailing_columns(file, sep, heading_columns)
-    print headers_row, heading_columns, trailing_columns
+    # print headers_row, heading_columns, trailing_columns
     chardet_res = detect_encoding(file)
     print chardet_res
 
@@ -71,6 +64,7 @@ def routine(file, num_lines = 50):
         # TODO : modification systematique
         if 'ISO-8859' in encoding:
             encoding = 'ISO-8859-1'
+
         try:
             file.seek(0)
             table = pd.read_csv(file, sep = sep,
@@ -80,7 +74,7 @@ def routine(file, num_lines = 50):
                                 )
             break
         except:
-            pass
+            print 'Trying encoding : {encoding}'.format(encoding = encoding)
     else:
 #        print '  >> encoding not found'
         return False
@@ -131,15 +125,14 @@ def routine(file, num_lines = 50):
                             'prop' : test.PROPORTION
                             }
 
-
     return_table = pd.DataFrame(columns = table.columns)
     for key, value in test_funcs.iteritems():
-        try:
-            return_table.loc[key] = table.apply(lambda serie: test_col(serie, value['func'], value['prop']))
-        except Exception, e:
-            import pdb
-            print str(e)
-            pdb.set_trace()
+        # try:
+        return_table.loc[key] = table.apply(lambda serie: test_col(serie, value['func'], value['prop']))
+        # except Exception, e:
+        #     import pdb
+        #     print str(e)
+        #     pdb.set_trace()
 
 
     # Filling the columns attributes of return dictionnary
@@ -156,6 +149,27 @@ def routine(file, num_lines = 50):
 
 
 if __name__ == '__main__':
+
+    # Import the csv_detective package
+    #from csv_detective.explore_csv import routine
+
+    # Replace by your file path
+    import os
+    import json
+    
+    file_path = os.path.join('..', 'tests', 'code_postaux_v201410.csv')
+
+    # Open your file and run csv_detective
+    with open(file_path, 'r') as file:
+        inspection_results = routine(file)
+
+    # Write your file as json
+    with open(file_path.replace('.csv', '.json'), 'wb') as fp:
+        json.dump(inspection_results, fp, indent=4, separators=(',', ': '), encoding="utf-8")
+
+    import pdb
+    pdb.set_trace()
+    assert False
 
     from os import listdir
     from os.path import isfile, join
