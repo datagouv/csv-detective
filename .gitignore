@@ -7,3 +7,6 @@
 data_gouv_api_download.py
 reformat_tab.py
 *.json
+build
+csv_detective.egg-info
+dist
