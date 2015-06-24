@@ -1,2 +1,103 @@
-# csv_detective
-Automatic analysis of csv content. 
+# csv_detective (WORK IN PROGRESS)
+
+This is a package to automatically detect column content in CSV files. As of now, the script reads the first few rows of the CSV and checks if content matches given regexes and/or values in list of values.
+
+## How To ?
+
+### Requirements
+
+- `pandas` (`pip install pandas`)
+
+### Install the package
+
+Install the package :
+
+```
+git clone https://github.com/SGMAP-AGD/csv_detective
+cd csv_detective
+python setup.py install
+```
+
+### Detect them columns
+
+Say you have a CSV file located in file_path. This is how you could use csv_detective:
+
+```
+# Import the csv_detective package
+from csv_detective.explore_csv import routine
+import os # for this example only
+import json # for json dump only
+
+# Replace by your file path
+file_path = os.path.join('.', 'tests', 'code_postaux_v201410.csv')
+
+# Open your file and run csv_detective
+with open(file_path, 'r') as file:
+	inspection_results = routine(file)
+
+# Write your file as json
+with open(file_path.replace('.csv', '.json'), 'wb') as fp:
+    json.dump(inspection_results, fp, indent=4, separators=(',', ': '), encoding="utf-8")
+```
+
+## So What Do You Get ?
+
+### Output
+
+The program creates a `Python` dictionnary with the following information : 
+
+```
+{
+    "heading_columns": 0, 					# Number of heading columns
+    "encoding": "windows-1252", 			# Encoding detected
+    "ints_as_floats": [],					# Columns where integers may be represented as floats
+    "trailing_columns": 0,					# Number of trailing columns
+    "headers": "code commune INSEE;nom de la commune;code postal;libell\u00e9 d'acheminement\n", # Header row
+    "separator": ";",						# Detected CSV separator
+    "headers_row": 0,						# Number of heading rows
+    "columns": {							# Key: Column name // Value: Possible column content
+        "libell\u00e9 d'acheminement": [
+            "commune"
+        ],
+        "code commune INSEE": [
+            "code_commune_insee"
+        ],
+        "nom de la commune": [
+            "commune"
+        ]
+    }
+}
+```
+
+### What Contents Can Be Detected
+
+Includes : 
+
+- Communes, Départements, Régions, Pays
+- Codes Communes, Codes Postaux, Codes Departement, ISO Pays
+- Codes CSP, Description CSP, SIREN 
+- E-Mails, URLs, Téléphones FR
+- Years, Dates, Jours de la Semaine FR
+
+## TODO (this list is too long)
+
+- More robust
+- Batch analyse
+- Command line interface
+- Improve output format
+- Improve testing structure to make modular searches (search only for cities for example)
+- Get rid of `pandas` dependency
+- Improve pre-processing and pre-processing tracing (removing heading rows for example)
+- Make modular pre-processing (no lower case for country codes for example)
+- Add more and more detection modules...
+
+Related ideas:
+
+- store column names to make a learning model based on column names for (possible pre-screen)
+- entity resolution (good luck...)
+
+
+
+
+
+
