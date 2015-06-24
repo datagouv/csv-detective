@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Sun Mar 01 10:52:57 2015
-
-@author: alexis
-"""
 
 from os import listdir
 from os.path import isfile, join

@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Sat Feb 14 19:33:04 2015
 
-@author: alexis
-"""
 import chardet
 
 

@@ -1,11 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Sun Mar 01 14:09:02 2015
-
-@author: alexis
-"""
-
-
 
 def remove_extra_columns(filename, detect_extra_columns_results, out_file=None):
     res = detect_extra_columns_results

@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Sun Mar 01 11:19:41 2015
-
-@author: alexis
-"""
 
 import json
 from os import listdir

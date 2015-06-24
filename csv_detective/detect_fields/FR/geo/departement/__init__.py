@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Thu Feb 12 11:51:29 2015
-
-@author: leo_cdo_intern
-"""
 
 from os.path import dirname, join
 from csv_detective.process_text import _process_text
