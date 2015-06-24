@@ -1,16 +1,12 @@
-# csv_detective (WORK IN PROGRESS)
+# CSV Detective (WORK IN PROGRESS)
 
-This is a package to automatically detect column content in CSV files. As of now, the script reads the first few rows of the CSV and checks if content matches given regexes and/or values in list of values.
+This is a package to **automatically detect column content in CSV files**. As of now, the script reads the first few rows of the CSV and checks if content matches given regexes and/or values in list of values.
 
 ## How To ?
 
-### Requirements
-
-- `pandas` (`pip install pandas`)
-
 ### Install the package
 
-Install the package :
+Install the package (this will install `pandas`) :
 
 ```
 git clone https://github.com/SGMAP-AGD/csv_detective
@@ -20,7 +16,7 @@ python setup.py install
 
 ### Detect them columns
 
-Say you have a CSV file located in file_path. This is how you could use csv_detective:
+Say you have a CSV file located in `file_path`. This is how you could use `csv_detective`:
 
 ```
 # Import the csv_detective package
@@ -81,21 +77,27 @@ Includes :
 
 ## TODO (this list is too long)
 
-- More robust
+- Clean up
+- Make more robust
 - Batch analyse
 - Command line interface
 - Improve output format
 - Improve testing structure to make modular searches (search only for cities for example)
 - Get rid of `pandas` dependency
 - Improve pre-processing and pre-processing tracing (removing heading rows for example)
-- Make modular pre-processing (no lower case for country codes for example)
+- Make differentiated pre-processing (no lower case for country codes for example)
+- Give a sense of probability in the prediction
 - Add more and more detection modules...
 
 Related ideas:
 
 - store column names to make a learning model based on column names for (possible pre-screen)
+- normalising data based on column prediction
 - entity resolution (good luck...)
 
+## Why Could This Be of Any Use ?
+
+Organisations such as [data.gouv](http://data.gouv.fr) aggregate huge amounts of un-normalised data. Performing cross-examination across datasets can be difficult. This tool could help enrich the datasets metadata and facilitate linking them together.
 
 
 
