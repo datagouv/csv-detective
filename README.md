@@ -37,13 +37,22 @@ with open(file_path.replace('.csv', '.json'), 'wb') as fp:
 ```
 
 ### Additional options
-#### Select the tests you want to pass
+#### `user_input_tests` - Select the tests you want to pass
 This library allows you to select the tests you want to pass. To do so, you have to pass a `user_input_tests` argument to the `routine` function. This variable can be a string or a list of strings and indicates what tests to import. The following rules apply:
 
 - `user_input_tests` defaults to `'ALL'` which means all tests will be passed
 - The tests are referenced by their path, with directories seperated by dots. For example we could have `user_input_tests = 'FR.geo'` which means all tests located in the folder `detect_fields\\FR\\geo` will be run.
 - Input can also be a list of strings : `['FR.geo', 'temp']` will load all tests in `detect_fields\\FR\\geo` and `detect_fields\\temp`
-- When using a list of strings as input, you can also choose to exclude certain test branches by adding a dash (`-`) before their path : `['ALL', '-FR.geo.code_departement']` will load all tests with the exception of the `code_departement` test.
+- When using a list of strings as input, you can also choose to exclude certain test branches by adding a dash before their path : `['ALL', '-FR.geo.code_departement']` will load all tests with the exception of the `code_departement` test.
+
+**Partial code** :
+```
+tests = ['FR.geo', 'other.email', '-FR.geo.code_departement']
+
+# Open your file and run csv_detective
+with open(file_path, 'r') as file:
+	inspection_results = routine(file, user_input_tests = tests)
+```
 
 ## So What Do You Get ?
 
