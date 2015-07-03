@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
+
 """
-###############################################################################
 Ce script analyse les premières lignes d'un CSV pour essayer de déterminer le
 contenu possible des champs
-
-
-ACTUELLEMENT EN DEVELOPPEMENT : Indactions comment tester tout en bas
 """
 
 import pandas as pd
@@ -15,7 +12,7 @@ import itertools
 
 import detect_fields
 
-from detection import (ints_as_floats,
+from detection import (detect_ints_as_floats,
                        detect_separator,
                        detect_encoding,
                        detect_headers,
@@ -27,7 +24,7 @@ from detection import (ints_as_floats,
 ############### ROUTINE DE TEST CI DESSOUS ##################################
 
 
-def test_col(serie, test_func, proportion = 0.9, skipna = True, num_lines = 50):
+def test_col(serie, test_func, proportion = 0.9, skipna = True, num_rows = 50):
     ''' Tests values of the serie using test_func.
          - skipna : if True indicates that NaNs are not counted as False
          - proportion :  indicates the proportion of values that have to pass the test
@@ -38,8 +35,8 @@ def test_col(serie, test_func, proportion = 0.9, skipna = True, num_lines = 50):
     if ser_len == 0:
         return False
     if proportion == 1: # Then try first 1 value, then 5, then all
-        for range_ in [range(0,min(1, ser_len)), range(min(1, ser_len),min(5, ser_len)), range(min(5, ser_len),min(num_lines, ser_len))]: # Pour ne pas faire d'opérations inutiles, on commence par 1, puis 5 puis num_lines valeurs
-            if all(serie.iloc[range_].apply(test_func)):
+        for _range in [range(0,min(1, ser_len)), range(min(1, ser_len),min(5, ser_len)), range(min(5, ser_len),min(num_rows, ser_len))]: # Pour ne pas faire d'opérations inutiles, on commence par 1, puis 5 puis num_rows valeurs
+            if all(serie.iloc[_range].apply(test_func)):
                 pass
             else:
                 return False
@@ -67,7 +64,7 @@ def return_all_tests(user_input_tests):
         - string ('FR.geo') : Will get all tests inside FR.geo directory
         - list of strings (['FR.geo', 'temp', '-FR.geo.code_departement']) : the minus sign will cut off a branch
     '''
-    
+
     if isinstance(user_input_tests, str):
         assert user_input_tests[0] != '-'
         if user_input_tests == 'ALL':
@@ -94,54 +91,34 @@ def return_all_tests(user_input_tests):
     return all_tests
 
 
-def routine(file, num_lines = 50, user_input_tests = 'ALL'):
+def routine(file, num_rows = 50, user_input_tests = 'ALL'):
     '''Returns a dict with information about the csv table and possible
     column contents
     '''
     print 'This is tests_to_do', user_input_tests
 
     sep = detect_separator(file)
-    headers_row, headers = detect_headers(file, sep)
+    header_row_idx, headers = detect_headers(file, sep)
     heading_columns = detect_heading_columns(file, sep)
     trailing_columns = detect_trailing_columns(file, sep, heading_columns)
     # print headers_row, heading_columns, trailing_columns
-    chardet_res = detect_encoding(file)
-    print chardet_res
-
-    for encoding in [chardet_res['encoding'], 'ISO-8859-1', 'utf-8']:
-        # TODO : modification systematique
-        if 'ISO-8859' in encoding:
-            encoding = 'ISO-8859-1'
-
-        try:
-            file.seek(0)
-            table = pd.read_csv(file, sep = sep,
-                                skiprows = headers_row,
-                                nrows = num_lines, dtype = 'unicode',
-                                encoding = encoding
-                                )
-            break
-        except:
-            print 'Trying encoding : {encoding}'.format(encoding = encoding)
-    else:
-#        print '  >> encoding not found'
-        return False
-
+    chardet_res, table = detect_encoding(file, sep, header_row_idx, num_rows)
 
     # Detects columns that are ints but written as floats
-    res_ints_as_floats = list(ints_as_floats(table))
+    res_ints_as_floats = list(detect_ints_as_floats(table))
 
     # Creating return dictionnary
     return_dict = dict()
-    return_dict['encoding'] = encoding
+    return_dict['encoding'] = chardet_res
     return_dict['separator'] = sep
-    return_dict['headers_row'] = headers_row
-    return_dict['headers'] = headers.decode(encoding).encode('utf-8')
+    return_dict['header_row_idx'] = header_row_idx
+    return_dict['headers'] = [x.decode(chardet_res['encoding']).encode('utf-8') for x in headers]
     return_dict['heading_columns'] = heading_columns
     return_dict['trailing_columns'] = trailing_columns
     return_dict['ints_as_floats'] = res_ints_as_floats
 
     all_tests = return_all_tests(user_input_tests)
+
 
     # Initialising dict for tests
     test_funcs = dict()
@@ -164,6 +141,7 @@ def routine(file, num_lines = 50, user_input_tests = 'ALL'):
             print possible_values
             return_dict_cols[col] = possible_values
     return_dict['columns'] = return_dict_cols
+
     return return_dict
 
 
@@ -188,24 +166,8 @@ if __name__ == '__main__':
     with open(file_path.replace('.csv', '.json'), 'wb') as fp:
         json.dump(inspection_results, fp, indent=4, separators=(',', ': '), encoding="utf-8")
 
-    import pdb
-    pdb.set_trace()
     assert False
 
-    from os import listdir
-    from os.path import isfile, join
-    import json
-
-    ### CONSIGNES : Mettre toutes les data a tester dans le dossier indiqué par path
-    # et lancer le script. Il doit afficherc pour chaque fichier dans ce dossier (ne doit contenir que des csv)
-    # les colonnes pour lesquelles un match a été trouvé
-
-    # main_path = '/home/debian/Documents/'
-    main_path = 'C:/git/csv_detective/'
-    path = main_path + 'data/test_csv_detector' #
-    json_path = main_path + 'data/test_csv_detector/jsons'
-
-    num_lines = 50 # nombre de lignes à analyser
 
     all_files = listdir(path)
     counter = 0

@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-
+import pandas as pd
 import chardet
 
 
-def ints_as_floats(table):
+def detect_ints_as_floats(table):
     '''Détecte les colonnes contenant des entiers possibles écrits sous forme de float'''
     regex = r'^[0-9]+\.0+$'
     res = table.apply(lambda serie: serie.str.match(regex).all() and any(serie.notnull()))
@@ -24,7 +24,7 @@ def detect_separator(file):
     return max(sep_count, key = sep_count.get)
 
 
-def detect_encoding(file):
+def detect_encoding(file, sep, headers_row, num_rows):
     '''Detects file encoding using chardet based on N first lines
     '''
     file.seek(0)
@@ -37,7 +37,29 @@ def detect_encoding(file):
             count += 1
             head += line
     chardet_res = chardet.detect(head)
-    return chardet_res
+
+
+    # Takes care of some problems
+    for encoding in [chardet_res['encoding'], 'ISO-8859-1', 'utf-8']:
+        # TODO : modification systematique
+        if 'ISO-8859' in encoding:
+            encoding = 'ISO-8859-1'
+
+        try:
+            file.seek(0)
+            table = pd.read_csv(file, sep = sep,
+                skiprows = headers_row,
+                nrows = num_rows, dtype = 'unicode',
+                encoding = encoding
+                )
+            break
+        except:
+            print 'Trying encoding : {encoding}'.format(encoding=encoding)
+    else:
+        print '  >> encoding not found'
+        raise
+        return False, None
+    return chardet_res, table
 
 
 def detect_extra_columns(file, sep):
@@ -77,11 +99,11 @@ def detect_headers(file, sep):
         chaine = header.split(sep)
         if (chaine[-1] not in ['', '\n'] and
              all([mot not in ['', '\n'] for mot in chaine[1:-1]])):
-            return i, header.replace(sep, ';')
-    return 0,  'not_found'
+            return i, chaine
+    return 0,  None
 
 
-def detect_heading_columns(file, sep, ):
+def detect_heading_columns(file, sep):
     ''' Tests first 10 lines to see if there are empty heading columns'''
     file.seek(0)
     return_int = float('Inf')

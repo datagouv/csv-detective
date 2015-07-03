@@ -25,7 +25,7 @@ if __name__ == "__main__":
         'packages': [
             'csv_detective'
         ],
-        'scripts': [],
+        'scripts': ['bin/csv_detective'],
         'name': 'csv_detective',
         'long_description': readme,
     }

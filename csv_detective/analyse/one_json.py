@@ -9,7 +9,7 @@ main_path = 'C:/git/csv_detective/'
 path = main_path + 'data' # 
 json_path = main_path + 'data/test_csv_detector/jsons'
 
-num_lines = 50 # nombre de lignes à analyser
+num_rows = 50 # nombre de lignes à analyser
 
 # rassemble tous dans une base de donnes
 def one_table():
