@@ -1,3 +1,5 @@
+from setuptools import setup, find_packages
+
 try:
     from setuptools import setup
 except ImportError:
@@ -22,9 +24,7 @@ if __name__ == "__main__":
         'version': '0.1',
         'install_requires': install_requires,
         'tests_require': [],
-        'packages': [
-            'csv_detective'
-        ],
+        'packages':find_packages(),
         'scripts': ['bin/csv_detective'],
         'name': 'csv_detective',
         'long_description': readme,

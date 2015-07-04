@@ -148,16 +148,13 @@ def routine(file, num_rows = 50, user_input_tests = 'ALL'):
 
 if __name__ == '__main__':
 
-    # Import the csv_detective package
-    #from csv_detective.explore_csv import routine
-
-    # Replace by your file path
     import os
     import json
 
     file_path = os.path.join('..', 'tests', 'code_postaux_v201410.csv')
 
     list_tests = ['ALL', '-FR.geo.code_departement']
+    
     # Open your file and run csv_detective
     with open(file_path, 'r') as file:
         inspection_results = routine(file, user_input_tests = list_tests)
@@ -166,23 +163,5 @@ if __name__ == '__main__':
     with open(file_path.replace('.csv', '.json'), 'wb') as fp:
         json.dump(inspection_results, fp, indent=4, separators=(',', ': '), encoding="utf-8")
 
-    assert False
-
-
-    all_files = listdir(path)
-    counter = 0
-    for file_name in all_files:
-        print '*****************************************'
-        print file_name
-        if any([extension in file_name for extension in ['.csv', '.tsv']]):
-            file = open(join(path, file_name), 'r')
-            a = routine(file)
-            file.close()
-            if a:
-                counter += len(a)
-                with open(join(json_path, file_name.replace('.csv', '.json')), 'wb') as fp:
-                    json.dump(a, fp, indent=4, separators=(',', ': '), encoding="utf-8")
-        print '\n'
-    print 'on a trouvé des matchs éventuels pour ', counter, 'valeurs'
 
 

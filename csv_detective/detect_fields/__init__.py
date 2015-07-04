@@ -8,4 +8,3 @@ from geo import iso_country_code
 
 from FR.temp import jour_de_la_semaine
 from temp import year, date
-
