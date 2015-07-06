@@ -42,6 +42,9 @@ def detect_encoding(file, sep, headers_row, num_rows):
     # Takes care of some problems
     for encoding in [chardet_res['encoding'], 'ISO-8859-1', 'utf-8']:
         # TODO : modification systematique
+        if encoding is None:
+            continue
+
         if 'ISO-8859' in encoding:
             encoding = 'ISO-8859-1'
 
