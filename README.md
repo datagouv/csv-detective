@@ -2,6 +2,8 @@
 
 This is a package to **automatically detect column content in CSV files**. As of now, the script reads the first few rows of the CSV and performs various checks to see for each column if it matches with various content types. This is currently done through regex and string comparison.
 
+Work is still in progress, and you will surely encounter errors when using csv_detective; you might not even be able to get it run once! When this will happen, please feel free to open an issue or make a pull request with a fix.
+
 ## How To ?
 
 ### Install the package
@@ -116,6 +118,8 @@ Related ideas:
 ## Why Could This Be of Any Use ?
 
 Organisations such as [data.gouv](http://data.gouv.fr) aggregate huge amounts of un-normalised data. Performing cross-examination across datasets can be difficult. This tool could help enrich the datasets metadata and facilitate linking them together.
+
+[Here](https://github.com/Leobouloc/data.gouv-exploration) is project (just started) that has code to download all csv files from the data.gouv website and analyse them using csv_detective.
 
 
 
