@@ -65,22 +65,17 @@ The program creates a `Python` dictionnary with the following information :
 ```
 {
     "heading_columns": 0, 					# Number of heading columns
-    "encoding": "windows-1252", 			# Encoding detected
+    "encoding": "windows-1252", 			        # Encoding detected
     "ints_as_floats": [],					# Columns where integers may be represented as floats
     "trailing_columns": 0,					# Number of trailing columns
-    "headers": "code commune INSEE;nom de la commune;code postal;libell\u00e9 d'acheminement\n", # Header row
+    "headers": ['code commune INSEE', 'nom de la commune', 'code postal', "libell\\u00e9 d'acheminement\n"], # Header row
     "separator": ";",						# Detected CSV separator
     "headers_row": 0,						# Number of heading rows
-    "columns": {							# Key: Column name // Value: Possible column content
-        "libell\u00e9 d'acheminement": [
-            "commune"
-        ],
-        "code commune INSEE": [
-            "code_commune_insee"
-        ],
-        "nom de la commune": [
-            "commune"
-        ]
+    "columns": {					        # Key: Column name // Value: Possible column content
+        "libell\u00e9 d'acheminement": ["commune"],
+        "code commune INSEE": ["code_commune_insee"],
+        "code postal": ["code_postal"],
+        "nom de la commune": [ "commune"]
     }
 }
 ```
