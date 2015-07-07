@@ -131,11 +131,15 @@ def routine(file, num_rows = 50, user_input_tests = 'ALL'):
     if header is None:
         return_dict = {'error':True}
         return return_dict
+    elif isinstance(header, list):
+        if any([x is None for x in header]):
+            return_dict = {'error':True}
+            return return_dict
     heading_columns = detect_heading_columns(file, sep)
     trailing_columns = detect_trailing_columns(file, sep, heading_columns)
     # print headers_row, heading_columns, trailing_columns
     chardet_res, table = detect_encoding(file, sep, header_row_idx, num_rows)
-    if chardet_res is None:
+    if chardet_res['encoding'] is None:
         return_dict = {'error':True}
         return return_dict
 
@@ -148,6 +152,7 @@ def routine(file, num_rows = 50, user_input_tests = 'ALL'):
     return_dict['separator'] = sep
     return_dict['header_row_idx'] = header_row_idx
     return_dict['header'] = [x.decode(chardet_res['encoding']).encode('utf-8') for x in header]
+
     return_dict['heading_columns'] = heading_columns
     return_dict['trailing_columns'] = trailing_columns
     return_dict['ints_as_floats'] = res_ints_as_floats
