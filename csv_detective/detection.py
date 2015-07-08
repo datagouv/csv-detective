@@ -2,6 +2,10 @@
 import pandas as pd
 import chardet
 
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
+
 
 def detect_ints_as_floats(table):
     '''Détecte les colonnes contenant des entiers possibles écrits sous forme de float'''
@@ -60,8 +64,7 @@ def detect_encoding(file, sep, headers_row, num_rows):
             print 'Trying encoding : {encoding}'.format(encoding=encoding)
     else:
         print '  >> encoding not found'
-        raise
-        return False, None
+        return {'encoding':None}, None
     return chardet_res, table
 
 

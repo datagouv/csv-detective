@@ -5,6 +5,10 @@ Ce script analyse les premières lignes d'un CSV pour essayer de déterminer le
 contenu possible des champs
 """
 
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
+
 import pandas as pd
 import os
 import itertools
