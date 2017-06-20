@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import json
 from os import listdir
 from os.path import isfile, join

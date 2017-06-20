@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Command line client for csv_detective
 """

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 #### Process text
 def _process_text(val):

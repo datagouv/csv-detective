@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from .FR.other import code_csp_insee, csp_insee, sexe, siren, tel_fr
 from .other import email, url
 

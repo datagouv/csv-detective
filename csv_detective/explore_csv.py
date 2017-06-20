@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 Ce script analyse les premières lignes d'un CSV pour essayer de déterminer le
 contenu possible des champs
