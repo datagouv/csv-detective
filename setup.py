@@ -19,7 +19,7 @@ setup(
     description = 'Detect CSV column content',
     keywords = 'CSV data processing encoding guess parser tabular',
     license = 'http://www.fsf.org/licensing/licenses/agpl-3.0.html',
-    url = 'https://github.com/SGMAP-AGD/csv_detective',
+    url = 'https://github.com/etalab/csv_detective',
     data_files = [
         ('share/csv_detective', ['CHANGELOG.md', 'LICENSE.AGPL.txt', 'README.md']),
         ],
