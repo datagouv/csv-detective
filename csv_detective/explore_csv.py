@@ -6,8 +6,6 @@ contenu possible des champs
 """
 
 import sys
-reload(sys)
-sys.setdefaultencoding('utf-8')
 
 import pandas as pd
 import os
@@ -15,9 +13,9 @@ import itertools
 from pkg_resources import resource_string
 
 
-import detect_fields
+from csv_detective import detect_fields
 
-from detection import (detect_ints_as_floats,
+from .detection import (detect_ints_as_floats,
                        detect_separator,
                        detect_encoding,
                        detect_headers,
@@ -128,7 +126,7 @@ def routine(file, num_rows = 50, user_input_tests = 'ALL'):
     '''Returns a dict with information about the csv table and possible
     column contents
     '''
-    print 'This is tests_to_do', user_input_tests
+    print('This is tests_to_do', user_input_tests)
 
     sep = detect_separator(file)
     header_row_idx, header = detect_headers(file, sep)
@@ -182,8 +180,8 @@ def routine(file, num_rows = 50, user_input_tests = 'ALL'):
     for col in return_table.columns:
         possible_values = list(return_table[return_table[col]].index)
         if possible_values != []:
-            print '  >>  La colonne', col, 'est peut-être :',
-            print possible_values
+            print( '  >>  La colonne', col, 'est peut-être :',)
+            print(possible_values)
             return_dict_cols[col] = possible_values
     return_dict['columns'] = return_dict_cols
 

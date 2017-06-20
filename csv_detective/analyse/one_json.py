@@ -16,8 +16,8 @@ def one_table():
     all_files = listdir(json_path)
     all = dict()
     for file_name in all_files:
-        print '*****************************************'
-        print file_name
+        print('*****************************************')
+        print(file_name)
 
         file = open(join(json_path, file_name), 'r')
         data = json.load(file)
@@ -31,7 +31,7 @@ tab = one_table()
 head = tab.loc['headers'] 
 cond = (head == u'not_found')
 list_not_found = tab.loc[:,cond].columns
-print list_not_found
+print(list_not_found)
 
 #file_name = list_not_found[0]
 #try: 
