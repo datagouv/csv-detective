@@ -1,10 +1,7 @@
-# -*- coding: utf-8 -*-
 import pandas as pd
 import chardet
 
 import sys
-reload(sys)
-sys.setdefaultencoding('utf-8')
 
 
 def detect_ints_as_floats(table):
@@ -61,9 +58,9 @@ def detect_encoding(file, sep, headers_row, num_rows):
                 )
             break
         except:
-            print 'Trying encoding : {encoding}'.format(encoding=encoding)
+            print('Trying encoding : {encoding}'.format(encoding=encoding))
     else:
-        print '  >> encoding not found'
+        print('  >> encoding not found')
         return {'encoding':None}, None
     return chardet_res, table
 
