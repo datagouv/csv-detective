@@ -8,12 +8,10 @@ Work is still in progress, and you will surely encounter errors when using csv_d
 
 ### Install the package
 
-Install the package (this will install `pandas`) :
+You need to have python >= 3.4 installed. We recommend using a virtual environement (`pew` or `virtualenvwrapper` for example).
 
 ```
-git clone https://github.com/SGMAP-AGD/csv_detective
-cd csv_detective
-python setup.py install
+pip install csv-detective
 ```
 
 ### Detect some columns
