@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2 - [#10](https://github.com/SGMAP-AGD/csv_detective/pull/10)
+## 0.2 - [#1](https://github.com/etalab/csv_detective/pull/1)
 
 Port from python2 to python3
 
