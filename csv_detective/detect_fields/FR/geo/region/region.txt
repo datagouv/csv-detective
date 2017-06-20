@@ -5,6 +5,7 @@ basse normandie
 bourgogne
 bretagne
 centre
+centre val de loire
 champagne ardenne
 corse
 franche comte
@@ -20,8 +21,20 @@ martinique
 mayotte
 midi pyrenees
 nord pas de calais
+npdc
 pays de la loire
 picardie
 poitou charentes
 provence alpes cote d azur
+paca
 rhone alpes
+hauts de france
+hdf
+normandie
+grand est
+nouvelle aquitaine
+occitanie
+auvergne rhone alpes
+ara
+bourgogne franche comte
+bfc
