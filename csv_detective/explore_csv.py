@@ -164,47 +164,32 @@ def routine(file_path, num_rows=50, user_input_tests='ALL'):
 
     all_tests = return_all_tests(user_input_tests)
 
-
     # Initialising dict for tests
     test_funcs = dict()
     for test in all_tests:
         name = test.__name__.split('.')[-1]
 
-        test_funcs[name] = {'func' : test._is,
-                            'prop' : test.PROPORTION
-                            }
+        test_funcs[name] = {
+            'func': test._is,
+            'prop': test.PROPORTION
+        }
 
-    return_table = pd.DataFrame(columns = table.columns)
+    return_table = pd.DataFrame(columns=table.columns)
     for key, value in test_funcs.items():
-        return_table.loc[key] = table.apply(lambda serie: test_col(serie, value['func'], value['prop']))
+        return_table.loc[key] = table.apply(lambda serie: test_col(
+            serie,
+            value['func'],
+            value['prop']
+        ))
 
     # Filling the columns attributes of return dictionnary
     return_dict_cols = dict()
     for col in return_table.columns:
         possible_values = list(return_table[return_table[col]].index)
         if possible_values != []:
-            print( '  >>  La colonne', col, 'est peut-être :',)
+            print('  >>  La colonne', col, 'est peut-être :',)
             print(possible_values)
             return_dict_cols[col] = possible_values
     return_dict['columns'] = return_dict_cols
 
     return return_dict
-
-
-
-if __name__ == '__main__':
-
-    import os
-    import json
-
-    file_path = os.path.join('..', 'tests', 'code_postaux_v201410.csv')
-
-    list_tests = ['FR.geo', '-FR.geo.code_departement']
-
-    # Open your file and run csv_detective
-    with open(file_path, 'r') as file:
-        inspection_results = routine(file, user_input_tests = list_tests)
-
-    # Write your file as json
-    with open(file_path.replace('.csv', '.json'), 'wb') as fp:
-        json.dump(inspection_results, fp, indent=4, separators=(',', ': '), encoding="utf-8")
