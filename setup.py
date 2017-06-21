@@ -36,6 +36,7 @@ setup(
     install_requires = [
         'pandas >= 0.20',
         'chardet >= 3.0',
+        'unidecode >= 0.4',
         ],
     packages = find_packages(),
 )
