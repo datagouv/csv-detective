@@ -1,7 +1,7 @@
+import random
+
 import pandas as pd
 from chardet.universaldetector import UniversalDetector
-
-import sys
 
 
 def detect_ints_as_floats(table):
@@ -50,16 +50,28 @@ def parse_table(the_file, encoding, sep, headers_row, num_rows):
 
         try:
             the_file.seek(0)
+            # skip random lines to extract `num_rows` randomly
+            total_lines = sum(1 for line in the_file)
+            if total_lines > num_rows + headers_row:
+                skip = sorted(
+                    random.sample(range(total_lines), total_lines - num_rows)
+                )
+                # also skip headers
+                if headers_row:
+                    skip += range(headers_row + 1)
+            else:
+                skip = headers_row
+
+            the_file.seek(0)
             table = pd.read_csv(
                 the_file,
                 sep=sep,
-                skiprows=headers_row,
-                nrows=num_rows,
+                skiprows=skip,
                 dtype='unicode',
                 encoding=encoding
             )
             break
-        except:
+        except TypeError:
             print('Trying encoding : {encoding}'.format(encoding=encoding))
     else:
         print('  >> encoding not found')
