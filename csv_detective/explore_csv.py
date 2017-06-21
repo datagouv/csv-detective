@@ -22,7 +22,7 @@ from .detection import (
 ############### ROUTINE DE TEST CI DESSOUS ##################################
 
 
-def test_col(serie, test_func, proportion = 0.9, skipna = True, num_rows = 50):
+def test_col(serie, test_func, proportion=0.9, skipna=True, num_rows=50):
     ''' Tests values of the serie using test_func.
          - skipna : if True indicates that NaNs are not counted as False
          - proportion :  indicates the proportion of values that have to pass the test
@@ -32,8 +32,13 @@ def test_col(serie, test_func, proportion = 0.9, skipna = True, num_rows = 50):
     ser_len = len(serie)
     if ser_len == 0:
         return False
-    if proportion == 1: # Then try first 1 value, then 5, then all
-        for _range in [range(0,min(1, ser_len)), range(min(1, ser_len),min(5, ser_len)), range(min(5, ser_len),min(num_rows, ser_len))]: # Pour ne pas faire d'opérations inutiles, on commence par 1, puis 5 puis num_rows valeurs
+    if proportion == 1:  # Then try first 1 value, then 5, then all
+        for _range in [
+            range(0, min(1, ser_len)),
+            range(min(1, ser_len), min(5, ser_len)),
+            range(min(5, ser_len), min(num_rows, ser_len))
+        ]:  # Pour ne pas faire d'opérations inutiles, on commence par 1,
+            # puis 5 puis num_rows valeurs
             if all(serie.iloc[_range].apply(test_func)):
                 pass
             else:
@@ -141,7 +146,6 @@ def routine(file_path, num_rows=50, user_input_tests='ALL'):
             return return_dict
     heading_columns = detect_heading_columns(str_file, sep)
     trailing_columns = detect_trailing_columns(str_file, sep, heading_columns)
-    # print headers_row, heading_columns, trailing_columns
     table = parse_table(str_file, encoding, sep, header_row_idx, num_rows)
 
     # Detects columns that are ints but written as floats
