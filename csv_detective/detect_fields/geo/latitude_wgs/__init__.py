@@ -7,7 +7,6 @@ def _is(val):
     val = val.replace(',','.')
     try:
         lat = float(val)
-        print(val, lat >= -90 and lat <= 90 and '.' in val)
         return lat >= -90 and lat <= 90 and '.' in val
     except:
         return False
