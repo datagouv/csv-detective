@@ -9,30 +9,27 @@ from .explore_csv import routine
 
 def run():
     explorer = argparse.ArgumentParser(description='Get the arguments we want')
-    explorer.add_argument('file',  
+    explorer.add_argument('file',
                         type=argparse.FileType('r'),
                         help='Enter path of csv file to explore')
 
     explorer.add_argument('-n', '--num_rows',
-                        dest='num_rows', 
-                        type=str, 
+                        dest='num_rows',
+                        type=str,
                         nargs='?',
                         help='Number of rows to use for detection')
-    explorer.add_argument('-t', '--select_tests', 
-                        dest='city', 
-                        type=str, 
-                        nargs='*', 
+    explorer.add_argument('-t', '--select_tests',
+                        dest='city',
+                        type=str,
+                        nargs='*',
                         help='List of tests to be performed (use "" if you want to use the dash option to remove tests)')
-   
+
     opts = explorer.parse_args()
-    
+
     # file_path = os.path.abspath(opts.file.name)
     # opts.file.close()
 
-    import pdb
-    pdb.set_trace()
-
-    routine(opts.file, num_rows = 50, user_input_tests = 'ALL') 
+    routine(opts.file, num_rows = 50, user_input_tests = 'ALL')
 
     file_dir = os.path.split(file_path)[0]
     file_name = os.path.split(file_path)[1]
@@ -44,7 +41,7 @@ def run():
                     'city': acsz[1].split(','),
                     'state': acsz[2].split(','),
                     'zip_code': acsz[3].split(',')
-                    }  
+                    }
         if not (opts.house_num_and_street_name is None \
                 and opts.city is None \
                 and opts.state is None \
