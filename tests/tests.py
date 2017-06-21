@@ -1,9 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Feb 12 11:54:46 2015
-
-@author: leo_cdo_intern
-"""
 from csv_detective.detect_fields.FR.other import code_csp_insee, csp_insee, sexe, siren, tel_fr
 from csv_detective.detect_fields.other import email, url
 

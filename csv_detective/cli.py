@@ -1,18 +1,16 @@
-# -*- coding: utf-8 -*-
-
 """
 Command line client for csv_detective
 """
 
 import argparse
 import os
-from explore_csv import routine
+from .explore_csv import routine
 
 
 def run():
     explorer = argparse.ArgumentParser(description='Get the arguments we want')
     explorer.add_argument('file',  
-                        type=file,
+                        type=argparse.FileType('r'),
                         help='Enter path of csv file to explore')
 
     explorer.add_argument('-n', '--num_rows',
@@ -51,10 +49,10 @@ def run():
                 and opts.city is None \
                 and opts.state is None \
                 and opts.zip_code is None):
-            print 'Input Error : you have used --acsz argument. You can therefore not use individual arguments to define columns'
+            print('Input Error : you have used --acsz argument. You can therefore not use individual arguments to define columns')
             return
         if len(acsz) != 4:
-            print 'Input Error: --ascz should take exactly four arguments'
+            print('Input Error: --ascz should take exactly four arguments')
             return
     else:
         fields = {'house_num_and_street_name': opts.house_num_and_street_name,
@@ -63,7 +61,7 @@ def run():
                     'zip_code': opts.zip_code
                     }
         if any([column_name is None for column_name in [opts.house_num_and_street_name, opts.city, opts.state, opts.zip_code]]):
-            print 'Input Error : All columns have not been defined'
+            print('Input Error : All columns have not been defined')
             return
 
     run_geocoder(file_dir, file_name, fields, opts.force, opts.delete_cache)

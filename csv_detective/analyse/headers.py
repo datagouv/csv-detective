@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from os import listdir
 from os.path import isfile, join
 import json
@@ -19,8 +17,8 @@ num_rows = 50 # nombre de lignes à analyser
 all_files = listdir(json_path)
 counter = 0
 for file_name in all_files:
-    print '*****************************************'
-    print file_name
+    print('*****************************************')
+    print(file_name)
 
     file = open(join(json_path, file_name), 'r')
         data = json.load(file)
@@ -29,5 +27,5 @@ for file_name in all_files:
     headers     
     with open(join(json_path, file_name.replace('.csv', '.json')), 'wb') as fp:
             json.dump(a, fp, indent=4, separators=(',', ': '), encoding="utf-8")
-    print '\n'
-print 'on a trouvé des matchs éventuels pour ', counter, 'valeurs'
+    print('\n')
+print('on a trouvé des matchs éventuels pour ', counter, 'valeurs')
