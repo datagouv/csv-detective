@@ -27,3 +27,4 @@ csv_detective.detect_fields.FR.geo.region
 csv_detective.detect_fields.FR.geo.code_postal
 csv_detective.detect_fields.FR.geo.departement
 csv_detective.detect_fields.FR.other.uai
+csv_detective.detect_fields.FR.other.siret
