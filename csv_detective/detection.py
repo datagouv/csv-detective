@@ -25,20 +25,22 @@ def detect_separator(file):
     return max(sep_count, key = sep_count.get)
 
 
-def detect_encoding(the_file, sep, headers_row, num_rows):
+def detect_encoding(the_file):
     '''Detects file encoding using chardet based on N first lines
     '''
-
     detector = UniversalDetector()
     for line in the_file.readlines():
         detector.feed(line)
         if detector.done:
             break
     detector.close()
-    chardet_res = detector.result
 
+    return detector.result
+
+
+def parse_table(the_file, encoding, sep, headers_row, num_rows):
     # Takes care of some problems
-    for encoding in [chardet_res['encoding'], 'ISO-8859-1', 'utf-8']:
+    for encoding in [encoding, 'ISO-8859-1', 'utf-8']:
         # TODO : modification systematique
         if encoding is None:
             continue
@@ -62,7 +64,8 @@ def detect_encoding(the_file, sep, headers_row, num_rows):
     else:
         print('  >> encoding not found')
         return {'encoding': None}, None
-    return chardet_res, table
+
+    return table
 
 
 def detect_extra_columns(file, sep):

@@ -3,23 +3,20 @@ Ce script analyse les premières lignes d'un CSV pour essayer de déterminer le
 contenu possible des champs
 """
 
-import sys
-
-import pandas as pd
-import os
-import itertools
 from pkg_resources import resource_string
 
+import pandas as pd
 
 from csv_detective import detect_fields
-
-from .detection import (detect_ints_as_floats,
-                       detect_separator,
-                       detect_encoding,
-                       detect_headers,
-                       detect_heading_columns,
-                       detect_trailing_columns,
-                       )
+from .detection import (
+    detect_ints_as_floats,
+    detect_separator,
+    detect_encoding,
+    detect_headers,
+    detect_heading_columns,
+    detect_trailing_columns,
+    parse_table
+)
 
 #############################################################################
 ############### ROUTINE DE TEST CI DESSOUS ##################################
@@ -128,11 +125,13 @@ def routine(file_path, num_rows=50, user_input_tests='ALL'):
     '''
     print('This is tests_to_do', user_input_tests)
 
-    l1_file = open(file_path, 'r', encoding='latin-1')
-    b_file = open(file_path, 'rb')
+    binary_file = open(file_path, 'rb')
+    encoding = detect_encoding(binary_file)['encoding']
 
-    sep = detect_separator(l1_file)
-    header_row_idx, header = detect_headers(l1_file, sep)
+    str_file = open(file_path, 'r', encoding=encoding)
+
+    sep = detect_separator(str_file)
+    header_row_idx, header = detect_headers(str_file, sep)
     if header is None:
         return_dict = {'error': True}
         return return_dict
@@ -140,20 +139,17 @@ def routine(file_path, num_rows=50, user_input_tests='ALL'):
         if any([x is None for x in header]):
             return_dict = {'error': True}
             return return_dict
-    heading_columns = detect_heading_columns(l1_file, sep)
-    trailing_columns = detect_trailing_columns(l1_file, sep, heading_columns)
+    heading_columns = detect_heading_columns(str_file, sep)
+    trailing_columns = detect_trailing_columns(str_file, sep, heading_columns)
     # print headers_row, heading_columns, trailing_columns
-    chardet_res, table = detect_encoding(b_file, sep, header_row_idx, num_rows)
-    if chardet_res['encoding'] is None:
-        return_dict = {'error': True}
-        return return_dict
+    table = parse_table(str_file, encoding, sep, header_row_idx, num_rows)
 
     # Detects columns that are ints but written as floats
     res_ints_as_floats = list(detect_ints_as_floats(table))
 
     # Creating return dictionnary
     return_dict = dict()
-    return_dict['encoding'] = chardet_res
+    return_dict['encoding'] = encoding
     return_dict['separator'] = sep
     return_dict['header_row_idx'] = header_row_idx
     return_dict['header'] = header
