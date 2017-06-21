@@ -10,5 +10,4 @@ def _is(val):
     f = open(join(dirname(__file__), 'insee_ape700.txt'), 'r')
     liste = f.read().split('\n')
     f.close()
-    print(val, val in liste)
     return val in liste
