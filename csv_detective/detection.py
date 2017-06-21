@@ -1,5 +1,5 @@
 import pandas as pd
-import chardet
+from chardet.universaldetector import UniversalDetector
 
 import sys
 
@@ -25,20 +25,17 @@ def detect_separator(file):
     return max(sep_count, key = sep_count.get)
 
 
-def detect_encoding(file, sep, headers_row, num_rows):
+def detect_encoding(the_file, sep, headers_row, num_rows):
     '''Detects file encoding using chardet based on N first lines
     '''
-    file.seek(0)
-    head = ''
-    count = 0
-    for line in file:
-        if count == 100:
-            break
-        else:
-            count += 1
-            head += line
-    chardet_res = chardet.detect(head)
 
+    detector = UniversalDetector()
+    for line in the_file.readlines():
+        detector.feed(line)
+        if detector.done:
+            break
+    detector.close()
+    chardet_res = detector.result
 
     # Takes care of some problems
     for encoding in [chardet_res['encoding'], 'ISO-8859-1', 'utf-8']:
@@ -50,23 +47,26 @@ def detect_encoding(file, sep, headers_row, num_rows):
             encoding = 'ISO-8859-1'
 
         try:
-            file.seek(0)
-            table = pd.read_csv(file, sep = sep,
-                skiprows = headers_row,
-                nrows = num_rows, dtype = 'unicode',
-                encoding = encoding
-                )
+            the_file.seek(0)
+            table = pd.read_csv(
+                the_file,
+                sep=sep,
+                skiprows=headers_row,
+                nrows=num_rows,
+                dtype='unicode',
+                encoding=encoding
+            )
             break
         except:
             print('Trying encoding : {encoding}'.format(encoding=encoding))
     else:
         print('  >> encoding not found')
-        return {'encoding':None}, None
+        return {'encoding': None}, None
     return chardet_res, table
 
 
 def detect_extra_columns(file, sep):
-    ''' regarde s'il y a des colonnes en trop 
+    ''' regarde s'il y a des colonnes en trop
         Attention, file ne doit pas avoir de ligne vide '''
     file.seek(0)
     retour = False
@@ -79,7 +79,7 @@ def detect_extra_columns(file, sep):
             assert line[-1] == "\n"
         if line[-1] == "\n":
             retour = True
-            
+
         # regarde le nombre de derniere colonne inutile
         deb = 0 + retour
         line = line[::-1][deb:]

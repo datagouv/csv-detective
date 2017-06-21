@@ -85,7 +85,7 @@ def test_col(serie, test_func, proportion = 0.9, skipna = True, num_rows = 50):
 #             paths_to_do = [os.path.join(base_path, *x.split('.')) for x in tests_to_do]
 #         paths_to_not_do = [os.path.join(base_path, *x[1:].split('.')) for x in tests_to_not_do]
 
-#     all_fields_to_do = ['.'.join(y.split(os.sep)) for y in itertools.chain.from_iterable([all_tests_recursive(x) for x in paths_to_do])] 
+#     all_fields_to_do = ['.'.join(y.split(os.sep)) for y in itertools.chain.from_iterable([all_tests_recursive(x) for x in paths_to_do])]
 #     all_fields_to_not_do = ['.'.join(y.split(os.sep)) for y in itertools.chain.from_iterable([all_tests_recursive(x) for x in paths_to_not_do])]
 #     all_fields = [x for x in all_fields_to_do if x not in all_fields_to_not_do]
 
@@ -96,7 +96,8 @@ def test_col(serie, test_func, proportion = 0.9, skipna = True, num_rows = 50):
 #     return all_tests
 
 def return_all_tests(user_input_tests):
-    all_packages = resource_string(__name__, 'all_packages.txt').split('\n')
+    all_packages = resource_string(__name__, 'all_packages.txt')
+    all_packages = all_packages.decode().split('\n')
     all_packages.remove('')
     all_packages.remove('csv_detective')
     all_packages = [x.replace('csv_detective.', '') for x in all_packages]
@@ -110,8 +111,8 @@ def return_all_tests(user_input_tests):
         tests_to_not_do = []
     elif isinstance(user_input_tests, list):
         if 'ALL' in user_input_tests:
-            tests_to_do = ['detect_fields']   
-        else:     
+            tests_to_do = ['detect_fields']
+        else:
             tests_to_do = ['detect_fields' + '.' + x for x in user_input_tests if x[0] != '-']
         tests_to_not_do = ['detect_fields' + '.' + x[1:] for x in user_input_tests if x[0] == '-']
 
@@ -120,27 +121,31 @@ def return_all_tests(user_input_tests):
     all_tests = [test for test in all_tests if '_is' in dir(test)] # TODO : Fix this shit
     return all_tests
 
-def routine(file, num_rows = 50, user_input_tests = 'ALL'):
+
+def routine(file_path, num_rows=50, user_input_tests='ALL'):
     '''Returns a dict with information about the csv table and possible
     column contents
     '''
     print('This is tests_to_do', user_input_tests)
 
-    sep = detect_separator(file)
-    header_row_idx, header = detect_headers(file, sep)
+    l1_file = open(file_path, 'r', encoding='latin-1')
+    b_file = open(file_path, 'rb')
+
+    sep = detect_separator(l1_file)
+    header_row_idx, header = detect_headers(l1_file, sep)
     if header is None:
-        return_dict = {'error':True}
+        return_dict = {'error': True}
         return return_dict
     elif isinstance(header, list):
         if any([x is None for x in header]):
-            return_dict = {'error':True}
+            return_dict = {'error': True}
             return return_dict
-    heading_columns = detect_heading_columns(file, sep)
-    trailing_columns = detect_trailing_columns(file, sep, heading_columns)
+    heading_columns = detect_heading_columns(l1_file, sep)
+    trailing_columns = detect_trailing_columns(l1_file, sep, heading_columns)
     # print headers_row, heading_columns, trailing_columns
-    chardet_res, table = detect_encoding(file, sep, header_row_idx, num_rows)
+    chardet_res, table = detect_encoding(b_file, sep, header_row_idx, num_rows)
     if chardet_res['encoding'] is None:
-        return_dict = {'error':True}
+        return_dict = {'error': True}
         return return_dict
 
     # Detects columns that are ints but written as floats
@@ -151,7 +156,7 @@ def routine(file, num_rows = 50, user_input_tests = 'ALL'):
     return_dict['encoding'] = chardet_res
     return_dict['separator'] = sep
     return_dict['header_row_idx'] = header_row_idx
-    return_dict['header'] = [x.decode(chardet_res['encoding']).encode('utf-8') for x in header]
+    return_dict['header'] = header
 
     return_dict['heading_columns'] = heading_columns
     return_dict['trailing_columns'] = trailing_columns
@@ -170,7 +175,7 @@ def routine(file, num_rows = 50, user_input_tests = 'ALL'):
                             }
 
     return_table = pd.DataFrame(columns = table.columns)
-    for key, value in test_funcs.iteritems():
+    for key, value in test_funcs.items():
         return_table.loc[key] = table.apply(lambda serie: test_col(serie, value['func'], value['prop']))
 
     # Filling the columns attributes of return dictionnary
@@ -195,7 +200,7 @@ if __name__ == '__main__':
     file_path = os.path.join('..', 'tests', 'code_postaux_v201410.csv')
 
     list_tests = ['FR.geo', '-FR.geo.code_departement']
-    
+
     # Open your file and run csv_detective
     with open(file_path, 'r') as file:
         inspection_results = routine(file, user_input_tests = list_tests)
@@ -203,6 +208,3 @@ if __name__ == '__main__':
     # Write your file as json
     with open(file_path.replace('.csv', '.json'), 'wb') as fp:
         json.dump(inspection_results, fp, indent=4, separators=(',', ': '), encoding="utf-8")
-
-
-
