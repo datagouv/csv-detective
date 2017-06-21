@@ -1,4 +1,4 @@
-from .FR.other import code_csp_insee, csp_insee, sexe, siren, tel_fr
+from .FR.other import code_csp_insee, csp_insee, sexe, siren, tel_fr, uai, siret
 from .other import email, url
 
 from .FR.geo import adresse, code_commune_insee, code_postal, commune, departement, pays, region, code_departement
