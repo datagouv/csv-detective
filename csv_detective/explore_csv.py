@@ -146,7 +146,13 @@ def routine(file_path, num_rows=50, user_input_tests='ALL'):
             return return_dict
     heading_columns = detect_heading_columns(str_file, sep)
     trailing_columns = detect_trailing_columns(str_file, sep, heading_columns)
-    table = parse_table(str_file, encoding, sep, header_row_idx, num_rows)
+    table, total_lines = parse_table(
+        str_file,
+        encoding,
+        sep,
+        header_row_idx,
+        num_rows
+    )
 
     # Detects columns that are ints but written as floats
     res_ints_as_floats = list(detect_ints_as_floats(table))
@@ -157,6 +163,7 @@ def routine(file_path, num_rows=50, user_input_tests='ALL'):
     return_dict['separator'] = sep
     return_dict['header_row_idx'] = header_row_idx
     return_dict['header'] = header
+    return_dict['total_lines'] = total_lines
 
     return_dict['heading_columns'] = heading_columns
     return_dict['trailing_columns'] = trailing_columns

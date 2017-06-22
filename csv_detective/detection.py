@@ -48,23 +48,23 @@ def parse_table(the_file, encoding, sep, headers_row, num_rows):
         if 'ISO-8859' in encoding:
             encoding = 'ISO-8859-1'
 
-        try:
-            the_file.seek(0)
-            # skip random lines to extract `num_rows` randomly
-            total_lines = sum(1 for line in the_file)
-            if total_lines > num_rows + headers_row:
-                skip = sorted(
-                    random.sample(
-                        range(1, total_lines),
-                        total_lines - num_rows
-                    )
+        the_file.seek(0)
+        # skip random lines to extract `num_rows` randomly
+        total_lines = sum(1 for line in the_file)
+        if total_lines > num_rows + headers_row:
+            skip = sorted(
+                random.sample(
+                    range(1, total_lines),
+                    total_lines - num_rows
                 )
-                # also skip headers
-                if headers_row:
-                    skip += range(headers_row + 1)
-            else:
-                skip = headers_row
+            )
+            # also skip headers
+            if headers_row:
+                skip += range(headers_row + 1)
+        else:
+            skip = headers_row
 
+        try:
             the_file.seek(0)
             table = pd.read_csv(
                 the_file,
@@ -78,9 +78,9 @@ def parse_table(the_file, encoding, sep, headers_row, num_rows):
             print('Trying encoding : {encoding}'.format(encoding=encoding))
     else:
         print('  >> encoding not found')
-        return {'encoding': None}, None
+        return None, total_lines
 
-    return table
+    return table, total_lines
 
 
 def detect_extra_columns(file, sep):
