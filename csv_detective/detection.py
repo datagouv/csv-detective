@@ -54,7 +54,10 @@ def parse_table(the_file, encoding, sep, headers_row, num_rows):
             total_lines = sum(1 for line in the_file)
             if total_lines > num_rows + headers_row:
                 skip = sorted(
-                    random.sample(range(total_lines), total_lines - num_rows)
+                    random.sample(
+                        range(1, total_lines),
+                        total_lines - num_rows
+                    )
                 )
                 # also skip headers
                 if headers_row:
