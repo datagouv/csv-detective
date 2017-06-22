@@ -7,10 +7,8 @@ PROPORTION = 1
 def _is(val):
     '''Renvoie True si val peut être un code commune INSEE, False sinon'''
     # test sur la longueur
-    if not len(val) in [4,5]:
+    if len(val) != 5:
         return False
-    # ajout 0 au début si nécessaire (perte courante avec tableurs)
-    val = val.zfill(5)
 
     # vérification de cohérence avec prise en compte corse 2A/2B et DOM (971-976 sauf 975)
     regex = r'^([01345678][0-9]{4}|2[AB1-9][0-9]{3}|9([0-5][0-9]{3}|7[12346][0-9]{2}))$'

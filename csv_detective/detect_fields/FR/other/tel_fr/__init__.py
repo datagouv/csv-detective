@@ -6,11 +6,12 @@ PROPORTION = 1
 
 def _is(val):
     '''Repère les numeros de telephone francais'''
-    # TODO: Cette regex ne marche pas
+
+    if len(val)<10: # trop court
+        return False
+
+    val = val.replace('.','').replace('-','').replace(' ','')
+
     regex = r'^(0|\+33|0033)?[0-9]{9}$'
     match_1 = bool(re.match(regex, val))
-
-    regex = r'^(0[1-9]|\+33 [1-9]|00 33 [1-9]|[1-9])( [0-9]{2}){4}$'
-    match_2 = bool(re.match(regex, val))
-
-    return match_1 or match_2
+    return match_1
