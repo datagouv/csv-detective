@@ -38,3 +38,5 @@ csv_detective.detect_fields.temp.datetime_iso
 csv_detective.detect_fields.temp.datetime_rfc822
 csv_detective.detect_fields.FR.geo.latitude_wgs_fr_metropole
 csv_detective.detect_fields.FR.geo.longitude_wgs_fr_metropole
+csv_detective.detect_fields.FR.geo.code_region
+csv_detective.detect_fields.other.booleen
