@@ -6,8 +6,6 @@ PROPORTION = 0.9
 def _is(val):
     '''Renvoie True si val peut etre geojson'''
 
-    print(val)
-
     try:
         j = json.loads(val)
         if 'type' in j and 'coordinates' in j:
