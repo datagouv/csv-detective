@@ -18,7 +18,7 @@ def run():
         '-n',
         '--num_rows',
         dest='num_rows',
-        type=str,
+        type=int,
         nargs='?',
         help='Number of rows to use for detection'
     )
