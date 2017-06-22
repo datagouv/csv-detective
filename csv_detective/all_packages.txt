@@ -30,5 +30,9 @@ csv_detective.detect_fields.FR.other.uai
 csv_detective.detect_fields.FR.other.siret
 csv_detective.detect_fields.geo.latitude_wgs
 csv_detective.detect_fields.geo.longitude_wgs
+csv_detective.detect_fields.geo.latlon_wgs
+csv_detective.detect_fields.geo.json_geojson
 csv_detective.detect_fields.FR.geo.code_fantoir
 csv_detective.detect_fields.FR.other.insee_ape700
+csv_detective.detect_fields.temp.datetime_iso
+csv_detective.detect_fields.temp.datetime_rfc822
