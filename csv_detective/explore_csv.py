@@ -128,7 +128,7 @@ def routine(file_path, num_rows=50, user_input_tests='ALL'):
     '''Returns a dict with information about the csv table and possible
     column contents
     '''
-    print('This is tests_to_do', user_input_tests)
+    # print('This is tests_to_do', user_input_tests)
 
     binary_file = open(file_path, 'rb')
     encoding = detect_encoding(binary_file)['encoding']
