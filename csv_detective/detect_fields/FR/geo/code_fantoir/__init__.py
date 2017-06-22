@@ -7,11 +7,11 @@ PROPORTION = 1
 def _is(val):
     '''Renvoie True si val peut être un code FANTOIR/RIVOLI, False sinon'''
 
-    regex = r'^[0-9A-Z][0-9]{3}[ABCDEFGHJKLMNPRSTUVWXYZ]?$'
+    regex = r'^[0-9A-Z][0-9]{3}[ABCDEFGHJKLMNPRSTUVWXYZ]$'
     if not bool(re.match(regex, val)):
         return False
 
     f = open(join(dirname(__file__), 'code_fantoir.txt'), 'r')
     liste = f.read().split('\n')
     f.close()
-    return val in liste
+    return val[:4] in liste
