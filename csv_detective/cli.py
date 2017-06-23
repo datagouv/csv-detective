@@ -40,7 +40,7 @@ def run():
         user_input_tests='ALL'
     )
 
-    print(json.dumps(inspection_results, indent=4, sort_keys=True))
+    print(json.dumps(inspection_results, indent=4, sort_keys=True, ensure_ascii=False))
 
     # file_dir = os.path.split(opts.file_path)[0]
     # file_name = os.path.split(opts.file_path)[1]
