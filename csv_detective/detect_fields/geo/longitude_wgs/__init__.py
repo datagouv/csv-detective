@@ -4,9 +4,10 @@ PROPORTION = 0.9
 
 def _is(val):
     '''Renvoie True si val peut etre une longitude'''
-    val = val.replace(',','.')
     try:
-        lon = float(val)
-        return lon >= -180 and lon <= 180 and '.' in val
+        val = float(val.replace(',','.'))
+        if int(val) == val:
+            return False
+        return val >= -180 and val <= 180
     except:
         return False

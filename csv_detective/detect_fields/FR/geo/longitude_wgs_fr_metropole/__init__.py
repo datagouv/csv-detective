@@ -4,9 +4,10 @@ PROPORTION = 0.9
 
 def _is(val):
     '''Renvoie True si val peut etre une latitude en métropole'''
-    val = val.replace(',','.')
     try:
-        lat = float(val)
-        return lat >= 41.3 and lat <= 51.3 and '.' in val
+        val = float(val.replace(',','.'))
+        if int(val) == val:
+            return False
+        return val >= 41.3 and val <= 51.3
     except:
         return False

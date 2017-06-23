@@ -4,9 +4,10 @@ PROPORTION = 0.9
 
 def _is(val):
     '''Renvoie True si val peut etre une latitude'''
-    val = val.replace(',','.')
     try:
-        lat = float(val)
-        return lat >= -90 and lat <= 90 and '.' in val
+        val = float(val.replace(',','.'))
+        if int(val) == val:
+            return False
+        return val >= -90 and val <= 90
     except:
         return False

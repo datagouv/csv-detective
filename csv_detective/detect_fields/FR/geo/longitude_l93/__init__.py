@@ -4,9 +4,10 @@ PROPORTION = 0.9
 
 def _is(val):
     '''Renvoie True si val peut etre une longitude en métropole'''
-    val = val.replace(',','.')
     try:
-        lon = float(val)
-        return lon >= -357823 and lon <= 1313633 and '.' in val
+        val = float(val.replace(',','.'))
+        if int(val) == val:
+            return False
+        return val >= -357823 and val <= 1313633
     except:
         return False
