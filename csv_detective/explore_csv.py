@@ -130,7 +130,7 @@ def routine(file_path, num_rows=50, user_input_tests='ALL'):
     '''
     # print('This is tests_to_do', user_input_tests)
 
-    binary_file = open(file_path, 'rb')
+    binary_file = open(file_path, mode='rb')
     encoding = detect_encoding(binary_file)['encoding']
 
     str_file = open(file_path, 'r', encoding=encoding)
@@ -191,12 +191,13 @@ def routine(file_path, num_rows=50, user_input_tests='ALL'):
 
     # Filling the columns attributes of return dictionnary
     return_dict_cols = dict()
-    for col in return_table.columns:
+    for colnum in range(0,len(return_table.columns)):
+        col=return_table.columns[colnum]
         possible_values = list(return_table[return_table[col]].index)
         if possible_values != []:
-            print('  >>  La colonne', col, 'est peut-être :',)
-            print(possible_values)
-            return_dict_cols[col] = possible_values
+            #print('  >>  La colonne', col, 'est peut-être :',)
+            #print(possible_values)
+            return_dict_cols[header[colnum]] = possible_values
     return_dict['columns'] = return_dict_cols
 
     return return_dict
