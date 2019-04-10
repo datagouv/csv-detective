@@ -1,8 +1,7 @@
 import random
 
 import pandas as pd
-from chardet.universaldetector import UniversalDetector
-
+from cchardet import UniversalDetector
 
 def detect_ints_as_floats(table):
     '''Détecte les colonnes contenant des entiers possibles écrits sous forme de float'''
