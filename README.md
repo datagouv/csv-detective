@@ -28,8 +28,7 @@ import json # for json dump only
 file_path = os.path.join('.', 'tests', 'code_postaux_v201410.csv')
 
 # Open your file and run csv_detective
-with open(file_path, 'r') as file:
-	inspection_results = routine(file)
+inspection_results = routine(file_path)
 
 # Write your file as json
 with open(file_path.replace('.csv', '.json'), 'wb') as fp:
