@@ -24,7 +24,7 @@ def _is(val):
 
     # Vérification par clé de luhn du SIRET
     cle = 0
-    pair = False
+    pair = len(val) % 2 == 0
     for x in val:
         y = int(x) * (1 + pair)
         cle += y // 10 + y % 10
