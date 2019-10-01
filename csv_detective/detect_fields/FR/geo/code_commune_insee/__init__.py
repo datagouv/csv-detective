@@ -3,6 +3,10 @@ from csv_detective.process_text import _process_text
 import re
 
 PROPORTION = 1
+f = open(join(dirname(__file__), 'code_commune_insee.txt'), 'r')
+liste = f.read().split('\n')
+f.close()
+
 
 def _is(val):
     '''Renvoie True si val peut être un code commune INSEE, False sinon'''
@@ -15,7 +19,4 @@ def _is(val):
     if not bool(re.match(regex, val)):
         return False
 
-    f = open(join(dirname(__file__), 'code_commune_insee.txt'), 'r')
-    liste = f.read().split('\n')
-    f.close()
     return val in liste
