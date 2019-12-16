@@ -1,5 +1,5 @@
 import random
-
+random.seed(42)
 import pandas as pd
 from cchardet import UniversalDetector
 
