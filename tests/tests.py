@@ -1,4 +1,4 @@
-from csv_detective.detect_fields.FR.other import code_csp_insee, csp_insee, sexe, siren, tel_fr, code_rni, code_weldec
+from csv_detective.detect_fields.FR.other import code_csp_insee, csp_insee, sexe, siren, tel_fr, code_rna, code_waldec
 from csv_detective.detect_fields.other import email, url
 
 from csv_detective.detect_fields.FR.geo import adresse, code_commune_insee, code_postal, commune, departement, pays, region
@@ -185,16 +185,16 @@ def test_do_not_match_siren():
 # rna
 def test_match_rna():
     val = 'W751515517'
-    assert code_rni._is(val)
+    assert code_rna._is(val)
 
 def test_do_not_match_rna():
     val = "W111111111111111111111111111111111111"
-    assert not code_rni._is(val)
+    assert not code_rna._is(val)
 
 def test_match_waldec():
     val = "751P00188854"
-    assert code_weldec._is(val)
+    assert code_waldec._is(val)
 
 def test_do_not_match_waldec():
     val = "AA751PEE00188854"
-    assert code_weldec._is(val)
+    assert not code_waldec._is(val)
