@@ -45,3 +45,6 @@ csv_detective.detect_fields.FR.geo.latitude_l93
 csv_detective.detect_fields.FR.geo.longitude_l93
 csv_detective.detect_fields.FR.geo.insee_canton
 csv_detective.detect_fields.FR.other.date_fr
+csv_detective.detect_fields.FR.other.code_waldec
+csv_detective.detect_fields.FR.other.code_rna
+
