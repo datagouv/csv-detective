@@ -4,7 +4,7 @@ import re
 
 PROPORTION = 0.6
 f = open(join(dirname(__file__), 'pays.txt'), 'r')
-liste = f.read().split('\n')
+pays = f.read().split('\n')
 f.close()
 
 
@@ -12,4 +12,4 @@ def _is(val):
     '''Match avec le nom des pays'''
 
     val = _process_text(val)
-    return val in liste
+    return val in pays

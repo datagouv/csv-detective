@@ -4,7 +4,7 @@ import re
 
 PROPORTION = 0.9
 f = open(join(dirname(__file__), 'departement.txt'), 'r')
-liste = f.read().split('\n')
+codes_departement = f.read().split('\n')
 f.close()
 
 
@@ -12,4 +12,4 @@ def _is(val):
     '''Match avec le nom des departements'''
 
     val = _process_text(val)
-    return val in liste
+    return val in codes_departement

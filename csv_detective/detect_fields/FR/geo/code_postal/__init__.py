@@ -4,7 +4,7 @@ import re
 
 PROPORTION = 0.9
 f = open(join(dirname(__file__), 'code_postal.txt'), 'r')
-liste = f.read().split('\n')
+codes_postal = f.read().split('\n')
 f.close()
 
 
@@ -15,4 +15,4 @@ def _is(val):
     if not bool(re.match(regex, val)):
         return False
 
-    return val in liste
+    return val in codes_postal

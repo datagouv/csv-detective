@@ -4,7 +4,7 @@ import re
 
 PROPORTION = 1
 f = open(join(dirname(__file__), 'code_fantoir.txt'), 'r')
-liste = f.read().split('\n')
+codes_fantoir = f.read().split('\n')
 f.close()
 
 
@@ -15,4 +15,4 @@ def _is(val):
     if not bool(re.match(regex, val)):
         return False
 
-    return val[:4] in liste
+    return val[:4] in codes_fantoir
