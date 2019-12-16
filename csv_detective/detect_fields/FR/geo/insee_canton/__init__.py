@@ -4,11 +4,13 @@ import re
 from unidecode import unidecode
 
 PROPORTION = 0.9
+f = open(join(dirname(__file__), 'cantons.txt'), 'r')
+liste = f.read().split('\n')
+f.close()
+
 
 def _is(val):
     '''Match avec le nom des cantons'''
-    f = open(join(dirname(__file__), 'cantons.txt'), 'r')
-    liste = f.read().split('\n')
-    f.close()
+
     val = unidecode(_process_text(val)).upper()
     return val in liste

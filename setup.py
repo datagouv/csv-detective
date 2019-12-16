@@ -37,6 +37,10 @@ setup(
         'pandas >= 0.20',
         'chardet >= 3.0',
         'unidecode >= 0.4', 'cchardet'
+<<<<<<< HEAD
     ],
+=======
+        ],
+>>>>>>> e7d8ec1ec23bdeca3ac9f339744deed16aac4c88
     packages = find_packages(),
 )
