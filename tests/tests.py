@@ -1,3 +1,6 @@
+import pandas as pd
+from numpy import random
+
 from csv_detective.detect_fields.FR.other import code_csp_insee, csp_insee, sexe, siren, tel_fr, code_rna, code_waldec
 from csv_detective.detect_fields.other import email, url
 
@@ -6,6 +9,33 @@ from csv_detective.detect_fields.geo import iso_country_code
 
 from csv_detective.detect_fields.FR.temp import jour_de_la_semaine
 from csv_detective.detect_fields.temp import year, date
+
+from csv_detective.detection import detetect_categorical_variable, detect_continuous_variable
+
+
+# categorical
+def test_detetect_categorical_variable():
+    categorical_col = ["type_a"] * 33 + ["type_b"] * 33 + ["type_c"] * 33
+    not_categorical_col = [i for i in range(100)]
+
+    df_dict = {"cat": categorical_col, "not_cat": not_categorical_col}
+    df = pd.DataFrame(df_dict, dtype="unicode")
+
+    res, _ = detetect_categorical_variable(df)
+    assert res.values and res.values[0] == "cat"
+
+
+# continous
+def test_detect_continous_variable():
+    continous_col = random.random(100)
+    not_continous_col = ["type_a"] * 33 + ["type_b"] * 33 + ["type_c"] * 34
+
+    df_dict = {"cont": continous_col, "not_cont": not_continous_col}
+    df = pd.DataFrame(df_dict, dtype="unicode")
+
+    res = detect_continuous_variable(df)
+    assert res.values and res.values[0] == "cont"
+
 
 
 # csp_insee

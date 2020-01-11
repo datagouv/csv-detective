@@ -1,12 +1,63 @@
-import random
 import pandas as pd
 from cchardet import UniversalDetector
+from pandas import Series
+from ast import literal_eval
 
 def detect_ints_as_floats(table):
     '''Détecte les colonnes contenant des entiers possibles écrits sous forme de float'''
     regex = r'^[0-9]+\.0+$'
     res = table.apply(lambda serie: serie.str.match(regex).all() and any(serie.notnull()))
     return res.index[res]
+
+
+def detect_continuous_variable(table):
+    """
+    Detects whether a column contains continuous variables. We consider a continuous variable a float value.
+    We removed the integers as we then end up with postal codes, insee codes, and all sort of codes and types.
+    This is not optimal but it will do for now.
+    :param table:
+    :return:
+    """
+    def parses_to_integer(value):
+        try:
+            value = value.replace(',', '.')
+            value = literal_eval(value)
+            return isinstance(value, float)
+        except:
+            return False
+    res = table.apply(lambda serie: all(serie.apply(parses_to_integer)))
+    return res.index[res]
+
+
+def detetect_categorical_variable(table, threshold_pct_categorical=0.05, max_number_categorical_values=25):
+    """
+    Heuristically detects whether a table (df) contains categorical values according to
+    the number of unique values contained.
+    As the idea of detecting categorical values is to then try to learn models to predict them, we limit
+    categorical values to at most 25 different modes. Postal code, insee code, code region and so on, may be thus not
+    considered categorical values.
+    :param table:
+    :param threshold_pct_categorical:
+    :param max_number_categorical_values:
+    :return:
+    """
+    def abs_number_different_values(column_values):
+        return len(column_values.unique())
+
+    def rel_number_different_values(column_values):
+        return len(column_values.unique()) / len(column_values)
+
+    def detect_categorical(column_values):
+        is_categorical = False
+        abs_unique_values = abs_number_different_values(column_values)
+        rel_unique_values = rel_number_different_values(column_values)
+        if abs_unique_values < max_number_categorical_values:
+            if rel_unique_values < threshold_pct_categorical:
+                is_categorical = True
+        return is_categorical
+
+    res = table.apply(lambda serie: detect_categorical(serie))
+    return res.index[res], res
 
 
 def detect_separator(file):
