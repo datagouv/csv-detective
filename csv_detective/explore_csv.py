@@ -133,26 +133,24 @@ def routine(file_path, num_rows=50, user_input_tests='ALL'):
     binary_file = open(file_path, mode='rb')
     encoding = detect_encoding(binary_file)['encoding']
 
-    str_file = open(file_path, 'r', encoding=encoding)
-
-    sep = detect_separator(str_file)
-    header_row_idx, header = detect_headers(str_file, sep)
-    if header is None:
-        return_dict = {'error': True}
-        return return_dict
-    elif isinstance(header, list):
-        if any([x is None for x in header]):
+    with open(file_path, 'r', encoding=encoding) as str_file:
+        sep = detect_separator(str_file)
+        header_row_idx, header = detect_headers(str_file, sep)
+        if header is None:
             return_dict = {'error': True}
             return return_dict
-    heading_columns = detect_heading_columns(str_file, sep)
-    trailing_columns = detect_trailing_columns(str_file, sep, heading_columns)
-    table, total_lines = parse_table(
-        str_file,
-        encoding,
-        sep,
-        header_row_idx,
-        num_rows
-    )
+        elif isinstance(header, list):
+            if any([x is None for x in header]):
+                return_dict = {'error': True}
+                return return_dict
+        heading_columns = detect_heading_columns(str_file, sep)
+        trailing_columns = detect_trailing_columns(str_file, sep, heading_columns)
+        table, total_lines = parse_table(
+            str_file,
+            encoding,
+            sep,
+            num_rows
+        )
 
     # Detects columns that are ints but written as floats
     res_ints_as_floats = list(detect_ints_as_floats(table))

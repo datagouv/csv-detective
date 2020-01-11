@@ -1,5 +1,4 @@
 import random
-random.seed(42)
 import pandas as pd
 from cchardet import UniversalDetector
 
@@ -37,8 +36,11 @@ def detect_encoding(the_file):
     return detector.result
 
 
-def parse_table(the_file, encoding, sep, headers_row, num_rows):
+def parse_table(the_file, encoding, sep, num_rows, random_state=42):
     # Takes care of some problems
+    table = None
+    the_file.seek(0)
+    total_lines = None
     for encoding in [encoding, 'ISO-8859-1', 'utf-8']:
         # TODO : modification systematique
         if encoding is None:
@@ -46,38 +48,23 @@ def parse_table(the_file, encoding, sep, headers_row, num_rows):
 
         if 'ISO-8859' in encoding:
             encoding = 'ISO-8859-1'
-
-        the_file.seek(0)
-        # skip random lines to extract `num_rows` randomly
-        total_lines = sum(1 for line in the_file)
-        if total_lines > num_rows + headers_row:
-            skip = sorted(
-                random.sample(
-                    range(1, total_lines),
-                    total_lines - num_rows
-                )
-            )
-            # also skip headers
-            if headers_row:
-                skip += range(headers_row + 1)
-        else:
-            skip = headers_row
-
         try:
-            the_file.seek(0)
             table = pd.read_csv(
                 the_file,
                 sep=sep,
-                skiprows=skip,
                 dtype='unicode',
                 encoding=encoding
             )
+            total_lines = len(table)
+            num_rows = min(num_rows - 1, total_lines)
+            table = table.sample(num_rows, random_state=random_state)
             break
         except TypeError:
             print('Trying encoding : {encoding}'.format(encoding=encoding))
-    else:
+
+    if table is None:
         print('  >> encoding not found')
-        return None, total_lines
+        return table, "NA"
 
     return table, total_lines
 
