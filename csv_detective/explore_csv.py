@@ -104,6 +104,9 @@ def return_all_tests(user_input_tests):
     all_packages.remove('csv_detective')
     all_packages = [x.replace('csv_detective.', '') for x in all_packages]
 
+    if user_input_tests is None:
+        return []
+
     if isinstance(user_input_tests, str):
         assert user_input_tests[0] != '-'
         if user_input_tests == 'ALL':
@@ -168,6 +171,9 @@ def routine(file_path, num_rows=50, user_input_tests='ALL'):
     return_dict['ints_as_floats'] = res_ints_as_floats
 
     all_tests = return_all_tests(user_input_tests)
+
+    if not all_tests:
+        return return_dict
 
     # Initialising dict for tests
     test_funcs = dict()
