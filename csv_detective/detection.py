@@ -1,6 +1,5 @@
 import pandas as pd
 from cchardet import UniversalDetector
-from pandas import Series
 from ast import literal_eval
 
 def detect_ints_as_floats(table):

@@ -7,7 +7,6 @@ from pkg_resources import resource_string
 
 import pandas as pd
 
-from csv_detective import detect_fields
 from .detection import (
     detect_ints_as_floats,
     detect_separator,

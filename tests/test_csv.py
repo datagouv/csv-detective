@@ -5,8 +5,10 @@ from pprint import pprint
 
 from csv_detective.explore_csv import routine
 
+
 def sort_keys(dicto):
     return dict(sorted(dicto.items(), key=lambda x: x[0]))
+
 
 def test_old_detection():
     file_path = './annuaire-de-leducation.csv'
