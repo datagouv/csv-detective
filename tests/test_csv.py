@@ -17,6 +17,3 @@ def test_old_detection():
     current_result = json.dump(inspection_results, open("current_result.json", "w"))
     pprint(inspection_results)
     assert str(inspection_results) == str(expected_results)
-
-
-test_old_detection()

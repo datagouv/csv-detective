@@ -15,7 +15,7 @@ from csv_detective.detection import detetect_categorical_variable, detect_contin
 
 # categorical
 def test_detetect_categorical_variable():
-    categorical_col = ["type_a"] * 33 + ["type_b"] * 33 + ["type_c"] * 33
+    categorical_col = ["type_a"] * 33 + ["type_b"] * 33 + ["type_c"] * 34
     not_categorical_col = [i for i in range(100)]
 
     df_dict = {"cat": categorical_col, "not_cat": not_categorical_col}
