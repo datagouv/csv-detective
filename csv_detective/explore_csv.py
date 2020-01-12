@@ -7,7 +7,6 @@ from pkg_resources import resource_string
 
 import pandas as pd
 
-from csv_detective import detect_fields
 from .detection import (
     detect_ints_as_floats,
     detect_separator,
@@ -15,8 +14,8 @@ from .detection import (
     detect_headers,
     detect_heading_columns,
     detect_trailing_columns,
-    parse_table
-)
+    parse_table,
+    detetect_categorical_variable, detect_continuous_variable)
 
 #############################################################################
 ############### ROUTINE DE TEST CI DESSOUS ##################################
@@ -148,17 +147,18 @@ def routine(file_path, num_rows=50, user_input_tests='ALL'):
                 return return_dict
         heading_columns = detect_heading_columns(str_file, sep)
         trailing_columns = detect_trailing_columns(str_file, sep, heading_columns)
-        table, total_lines = parse_table(
-            str_file,
-            encoding,
-            sep,
-            num_rows
-        )
+        table, total_lines = parse_table(str_file, encoding, sep, num_rows)
 
     # Detects columns that are ints but written as floats
     res_ints_as_floats = list(detect_ints_as_floats(table))
 
-    # Creating return dictionnary
+    # Detects columns that are categorical
+    res_categorical, categorical_mask = detetect_categorical_variable(table)
+    res_categorical = list(res_categorical)
+    # Detect columns that are continuous (we already know the categorical)
+    res_continous = list(detect_continuous_variable(table.iloc[:, ~categorical_mask.values]))
+
+    # Creating return dictionary
     return_dict = dict()
     return_dict['encoding'] = encoding
     return_dict['separator'] = sep
@@ -169,6 +169,9 @@ def routine(file_path, num_rows=50, user_input_tests='ALL'):
     return_dict['heading_columns'] = heading_columns
     return_dict['trailing_columns'] = trailing_columns
     return_dict['ints_as_floats'] = res_ints_as_floats
+
+    return_dict['continous'] = res_continous
+    return_dict['categorical'] = res_categorical
 
     all_tests = return_all_tests(user_input_tests)
 
