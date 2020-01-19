@@ -28,19 +28,19 @@ def test_detetect_categorical_variable():
 # continous
 def test_detect_continous_variable():
     continous_col = random.random(100)
-    continous_col_2 = [1, 1.0, 2.0, 3., 4.0, 5.0, 6.0, 7, 21]
+    continous_col_2 = [1., 1.0, 2.0, 3., 4.0, 5.0, 6.0, 7, 21, 3] * 10
     not_continous_col = ["type_a"] * 33 + ["type_b"] * 33 + ["type_c"] * 34
 
     df_dict = {"cont": continous_col, "not_cont": not_continous_col}
     df_dict_2 = {"cont": continous_col_2, "not_cont": not_continous_col}
 
     df = pd.DataFrame(df_dict, dtype="unicode")
-    df = pd.DataFrame(df_dict_2, dtype="unicode")
+    df2 = pd.DataFrame(df_dict_2, dtype="unicode")
 
     res = detect_continuous_variable(df)
+    res2 = detect_continuous_variable(df2, continuous_th=.65)
     assert res.values and res.values[0] == "cont"
-
-
+    assert res2.values and res2.values[0] == "cont"
 
 # csp_insee
 def test_match_csp_insee():

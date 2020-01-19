@@ -11,7 +11,7 @@ def detect_ints_as_floats(table):
 
 def detect_continuous_variable(table, continuous_th=0.9):
     """
-    Detects whether a column contains continuous variables. We consider a continuous column a columnb taht contains
+    Detects whether a column contains continuous variables. We consider a continuous column one that contains
     a considerable amount of float values.
     We removed the integers as we then end up with postal codes, insee codes, and all sort of codes and types.
     This is not optimal but it will do for now.
@@ -22,9 +22,10 @@ def detect_continuous_variable(table, continuous_th=0.9):
     def check_threshold(serie, continuous_th):
         count = serie.value_counts().to_dict()
         total_nb = len(serie)
-        nb_floats = count[float]
-        nb_ints = count[int]
-        nb_other = count[False]
+        if float in count:
+            nb_floats = count[float]
+        else:
+            return False
         if nb_floats / total_nb >= continuous_th:
             return True
         else:
@@ -37,7 +38,6 @@ def detect_continuous_variable(table, continuous_th=0.9):
             value = literal_eval(value)
             return type(value)
 
-            # return isinstance(value, float)
         except:
             return False
     res = table.apply(lambda serie: check_threshold(serie.apply(parses_to_integer), continuous_th))
