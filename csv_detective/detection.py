@@ -89,7 +89,10 @@ def detect_encoding(the_file):
 def parse_table(the_file, encoding, sep, num_rows, random_state=42):
     # Takes care of some problems
     table = None
-    the_file.seek(0)
+
+    if not isinstance(the_file, str):
+        the_file.seek(0)
+
     total_lines = None
     for encoding in [encoding, 'ISO-8859-1', 'utf-8']:
         # TODO : modification systematique
