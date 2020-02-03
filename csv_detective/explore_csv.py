@@ -158,7 +158,7 @@ def routine(file_path, num_rows=50, user_input_tests='ALL'):
     res_categorical, categorical_mask = detetect_categorical_variable(table)
     res_categorical = list(res_categorical)
     # Detect columns that are continuous (we already know the categorical)
-    res_continous = list(detect_continuous_variable(table.iloc[:, ~categorical_mask.values]))
+    res_continuous = list(detect_continuous_variable(table.iloc[:, ~categorical_mask.values]))
 
     # Creating return dictionary
     return_dict = dict()
@@ -172,7 +172,7 @@ def routine(file_path, num_rows=50, user_input_tests='ALL'):
     return_dict['trailing_columns'] = trailing_columns
     return_dict['ints_as_floats'] = res_ints_as_floats
 
-    return_dict['continous'] = res_continous
+    return_dict['continuous'] = res_continuous
     return_dict['categorical'] = res_categorical
 
     all_tests = return_all_tests(user_input_tests)

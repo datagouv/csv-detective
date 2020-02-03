@@ -25,14 +25,14 @@ def test_detetect_categorical_variable():
     assert res.values and res.values[0] == "cat"
 
 
-# continous
-def test_detect_continous_variable():
-    continous_col = random.random(100)
-    continous_col_2 = [1., 1.0, 2.0, 3., 4.0, 5.0, 6.0, 7, 21, 3] * 10
-    not_continous_col = ["type_a"] * 33 + ["type_b"] * 33 + ["type_c"] * 34
+# continuous
+def test_detect_continuous_variable():
+    continuous_col = random.random(100)
+    continuous_col_2 = [1., 1.0, 2.0, 3., 4.0, 5.0, 6.0, 7, 21, 3] * 10
+    not_continuous_col = ["type_a"] * 33 + ["type_b"] * 33 + ["type_c"] * 34
 
-    df_dict = {"cont": continous_col, "not_cont": not_continous_col}
-    df_dict_2 = {"cont": continous_col_2, "not_cont": not_continous_col}
+    df_dict = {"cont": continuous_col, "not_cont": not_continuous_col}
+    df_dict_2 = {"cont": continuous_col_2, "not_cont": not_continuous_col}
 
     df = pd.DataFrame(df_dict, dtype="unicode")
     df2 = pd.DataFrame(df_dict_2, dtype="unicode")
