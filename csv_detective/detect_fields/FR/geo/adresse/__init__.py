@@ -7,5 +7,5 @@ PROPORTION = 0.6
 def _is(val):
     '''Repere des adresses'''
     val = _process_text(val)
-    a = any([x in val for x in 'rue allee route avenue chemin boulevard bvd ilot impasse promenade montee rocade'.split()])
+    a = any([x in val for x in 'rue allee route place avenue av chemin boulevard bvd ilot impasse promenade montee rocade'.split()])
     return a
