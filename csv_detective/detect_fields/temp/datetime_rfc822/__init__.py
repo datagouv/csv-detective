@@ -1,4 +1,4 @@
-from csv_detective.process_text import _process_text
+from process_text import _process_text
 import re
 from dateutil.parser import parse
 

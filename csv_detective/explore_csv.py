@@ -6,11 +6,13 @@ import datetime
 
 from pkg_resources import resource_string
 
+import detect_fields
+
 import pandas as pd
 
 from prediction import get_columns_ML_prediction, get_columns_types
 
-from .detection import (
+from detection import (
     detect_ints_as_floats,
     detect_separator,
     detect_encoding,

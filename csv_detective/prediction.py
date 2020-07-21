@@ -1,7 +1,7 @@
 from collections import defaultdict, Counter
 
 import numpy as np
-from csv_detective.detection import detect_encoding, detect_separator, detect_headers, parse_table
+from detection import detect_encoding, detect_separator, detect_headers, parse_table
 from sklearn.base import BaseEstimator, TransformerMixin
 
 

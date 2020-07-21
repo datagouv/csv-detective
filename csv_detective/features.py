@@ -18,7 +18,7 @@ from tqdm import tqdm
 from xgboost import XGBClassifier
 import re
 
-from csv_detective.detection import detect_encoding, detect_separator, detect_headers, parse_table
+from detection import detect_encoding, detect_separator, detect_headers, parse_table
 
 
 class ItemSelector(BaseEstimator, TransformerMixin):

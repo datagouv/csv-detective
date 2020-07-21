@@ -19,14 +19,14 @@ import json
 
 import joblib
 from argopt import argopt
-from csv_detective.explore_csv import routine
+from explore_csv import routine
 from joblib import Parallel, delayed
 from tqdm import tqdm
 import os
 import logging
 
 from prediction import get_columns_ML_prediction, get_columns_types
-from utils_ml.files_io import get_files
+from detect_fields_ml.utils_ml.files_io import get_files
 
 ML_MODEL = None
 logger = logging.getLogger()
@@ -82,7 +82,7 @@ if __name__ == '__main__':
     analysis_name = os.path.basename(os.path.dirname(csv_folder_path))
     if analysis_type != "rule":
         logger.info("Loading ML model...")
-        ML_MODEL = joblib.load('./detect_fields_ml/models/model.joblib')
+        ML_MODEL = joblib.load('csv_detective/detect_fields_ml/models/model.joblib')
 
     if os.path.exists(csv_folder_path):
         if os.path.isfile(csv_folder_path):
