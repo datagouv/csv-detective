@@ -83,7 +83,7 @@ def return_all_tests(user_input_tests):
     return all_tests
 
 
-def routine(file_path, num_rows=50, user_input_tests='ALL',output_mode='ALL'):
+def routine(file_path, num_rows=50, user_input_tests='ALL',output_mode='LIMITED'):
     '''Returns a dict with information about the csv table and possible
     column contents
     '''
@@ -143,8 +143,6 @@ def routine(file_path, num_rows=50, user_input_tests='ALL',output_mode='ALL'):
             'func': test._is,
             'prop': test.PROPORTION
         }
-
-    print(output_mode)
 
     return_table = pd.DataFrame(columns=table.columns)
     for key, value in test_funcs.items():
