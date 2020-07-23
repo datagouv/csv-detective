@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.0 [#15] (https://github.com/etalab/csv_detective/pull/15)
+
+Facilitate ML Integration
+Fix bugs
+Add column types detection
+Fix documentation
+
 ## 0.2.1 - [#2](https://github.com/etalab/csv_detective/pull/2)
 
 Add continuous integration
