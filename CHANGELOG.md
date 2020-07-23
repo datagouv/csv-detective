@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.0 [#15] (https://github.com/etalab/csv_detective/pull/18)
+
+Add detailed output possibility
+
+Details :
+ * two modes now for output report : "LIMITED" and "ALL"
+ * "ALL" option give user information on found proportion for each column types and each columns
+ 
 ## 0.3.0 [#15] (https://github.com/etalab/csv_detective/pull/15)
 
 Fix bugs
