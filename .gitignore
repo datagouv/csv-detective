@@ -11,3 +11,4 @@ build
 csv_detective.egg-info
 dist
 data
+venv
