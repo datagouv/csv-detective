@@ -174,7 +174,7 @@ def routine(file_path, num_rows=50, user_input_tests='ALL',output_mode='LIMITED'
             for subkey in return_dict_cols[key]:
                 dict_tmp = {}
                 dict_tmp['colonne'] = subkey
-                dict_tmp['proportion'] = return_dict_cols[key][subkey]
+                dict_tmp['score_rb'] = return_dict_cols[key][subkey]
                 return_dict_cols_intermediary[key].append(dict_tmp)
         return_dict['columns'] = return_dict_cols_intermediary
 
