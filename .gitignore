@@ -10,3 +10,4 @@ reformat_tab.py
 build
 csv_detective.egg-info
 dist
+venv
