@@ -33,24 +33,7 @@ inspection_results = routine(file_path)
 # Write your file as json
 with open(file_path.replace('.csv', '.json'), 'wb') as fp:
     json.dump(inspection_results, fp, indent=4, separators=(',', ': '), encoding="utf-8")
-```
 
-### Additional options
-#### `user_input_tests` - Select the tests you want to pass
-This library allows you to select the tests you want to pass. To do so, you have to pass a `user_input_tests` argument to the `routine` function. This variable can be a string or a list of strings and indicates what tests to import. The following rules apply:
-
-- `user_input_tests` defaults to `'ALL'` which means all tests will be passed
-- The tests are referenced by their path, with directories seperated by dots. For example we could have `user_input_tests = 'FR.geo'` which means all tests located in the folder `detect_fields\\FR\\geo` will be run.
-- Input can also be a list of strings : `['FR.geo', 'temp']` will load all tests in `detect_fields\\FR\\geo` and `detect_fields\\temp`
-- When using a list of strings as input, you can also choose to exclude certain test branches by adding a dash before their path : `['ALL', '-FR.geo.code_departement']` will load all tests with the exception of the `code_departement` test.
-
-**Partial code** :
-```
-tests = ['FR.geo', 'other.email', '-FR.geo.code_departement']
-
-# Open your file and run csv_detective
-with open(file_path, 'r') as file:
-	inspection_results = routine(file, user_input_tests = tests)
 ```
 
 ## So What Do You Get ?
@@ -86,6 +69,103 @@ Includes :
 - Codes CSP, Description CSP, SIREN 
 - E-Mails, URLs, Téléphones FR
 - Years, Dates, Jours de la Semaine FR
+
+
+### Additional options
+#### `user_input_tests` - Select the tests you want to pass
+This library allows you to select the tests you want to pass. To do so, you have to pass a `user_input_tests` argument to the `routine` function. This variable can be a string or a list of strings and indicates what tests to import. The following rules apply:
+
+- `user_input_tests` defaults to `'ALL'` which means all tests will be passed
+- The tests are referenced by their path, with directories seperated by dots. For example we could have `user_input_tests = 'FR.geo'` which means all tests located in the folder `detect_fields\\FR\\geo` will be run.
+- Input can also be a list of strings : `['FR.geo', 'temp']` will load all tests in `detect_fields\\FR\\geo` and `detect_fields\\temp`
+- When using a list of strings as input, you can also choose to exclude certain test branches by adding a dash before their path : `['ALL', '-FR.geo.code_departement']` will load all tests with the exception of the `code_departement` test.
+
+**Partial code** :
+```
+tests = ['FR.geo', 'other.email', '-FR.geo.code_departement']
+
+# Open your file and run csv_detective
+with open(file_path, 'r') as file:
+	inspection_results = routine(file, user_input_tests = tests)
+```
+
+#### `output_mode` - Select the output mode you want for json report
+
+This option allows you to select the output mode you want to pass. To do so, you have to pass a `output_mode` argument to the `routine` function. This variable has two possible values:
+
+- `output_mode` defaults to `'LIMITED'` which means report will contain only detected column types based on a pre-selected threshold proportion in data. 
+- `output_mode='ALL'` which means report will contain a full list of all column types possibilities for each input data columns with a value associated which match to the proportion of found column type in data. With this report, user can adjust its rules of detection based on a specific threshold and has a better vision of quality detection for each columns. Results couldalso be easily transformed into dataframe (columns types in column / column names in rows) for analysis and test.
+
+
+**Partial code** :
+```
+# Open your file and run csv_detective
+with open(file_path, 'r') as file:
+	inspection_results = routine(file, output_mode='ALL')
+```
+**Output for output_mode='ALL'**
+
+```
+{
+  "categorical": [
+    "dispositif",
+    "volet"
+  ],
+  "columns": {
+    "code_departement": [
+      {
+        "colonne": "dep",
+        "score_rb": 0.8
+      },
+      {
+        "colonne": "reg",
+        "score_rb": 0.4
+      },
+      {
+        "colonne": "assoc",
+        "score_rb": 0
+      }
+    ],
+    "code_region": [
+      {
+        "colonne": "dep",
+        "score_rb": 0.6
+      },
+      {
+        "colonne": "reg",
+        "score_rb": 0.8
+      },
+      {
+        "colonne": "assoc",
+        "score_rb": 0
+      }
+    ],
+    "code_rna": [
+      {
+        "colonne": "dep",
+        "score_rb": 0
+      },
+      {
+        "colonne": "reg",
+        "score_rb": 0
+      },
+      {
+        "colonne": "assoc",
+        "score_rb": 0.9
+      }
+    ],
+    "header_row_idx": 0,
+    "heading_columns": 0,
+    "ints_as_floats": [
+      "montant_total"
+    ],
+    "separator": ",",
+    "total_lines": 321,
+    "trailing_columns": 0
+  }
+}
+```
+
 
 ## TODO (this list is too long)
 
