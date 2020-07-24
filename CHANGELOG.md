@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.0 [#15] (https://github.com/etalab/csv_detective/pull/18)
+## 0.4.0 [#18] (https://github.com/etalab/csv_detective/pull/18)
 
 Add detailed output possibility
 
