@@ -1,11 +1,21 @@
 # Changelog
 
+## 0.4.0 [#15] (https://github.com/etalab/csv_detective/pull/18)
+
+Add detailed output possibility
+
+Details :
+ * two modes now for output report : "LIMITED" and "ALL"
+ * "ALL" option give user information on found proportion for each column types and each columns
+ 
 ## 0.3.0 [#15] (https://github.com/etalab/csv_detective/pull/15)
 
-Facilitate ML Integration
 Fix bugs
-Add column types detection
-Fix documentation
+
+Details :
+ * Facilitate ML Integration
+ * Add column types detection
+ * Fix documentation
 
 ## 0.2.1 - [#2](https://github.com/etalab/csv_detective/pull/2)
 
