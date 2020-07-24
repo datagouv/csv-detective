@@ -93,8 +93,8 @@ with open(file_path, 'r') as file:
 
 This option allows you to select the output mode you want to pass. To do so, you have to pass a `output_mode` argument to the `routine` function. This variable has two possible values:
 
-- `output_mode` defaults to `'LIMITED'` which means report will contain only detected column types based on a pre-selected threshold proportion in data. 
-- `output_mode='ALL'` which means report will contain a full list of all column types possibilities for each input data columns with a value associated which match to the proportion of found column type in data. With this report, user can adjust its rules of detection based on a specific threshold and has a better vision of quality detection for each columns. Results couldalso be easily transformed into dataframe (columns types in column / column names in rows) for analysis and test.
+- `output_mode` defaults to `'LIMITED'` which means report will contain only detected column types based on a pre-selected threshold proportion in data. Report result is the standard output (an example can be found above in 'Output' section).
+- `output_mode='ALL'` which means report will contain a full list of all column types possibilities for each input data columns with a value associated which match to the proportion of found column type in data. With this report, user can adjust its rules of detection based on a specific threshold and has a better vision of quality detection for each columns. Results could also be easily transformed into dataframe (columns types in column / column names in rows) for analysis and test.
 
 
 **Partial code** :
@@ -154,6 +154,7 @@ with open(file_path, 'r') as file:
         "score_rb": 0.9
       }
     ],
+    #[... same output format for each column types]
     "header_row_idx": 0,
     "heading_columns": 0,
     "ints_as_floats": [
