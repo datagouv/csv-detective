@@ -8,8 +8,7 @@ from pkg_resources import resource_string
 import pandas as pd
 
 from csv_detective import detect_fields
-
-from .detection import (
+from detection import (
     detect_ints_as_floats,
     detect_separator,
     detect_encoding,
@@ -18,6 +17,7 @@ from .detection import (
     detect_trailing_columns,
     parse_table,
     detetect_categorical_variable, detect_continuous_variable)
+from csv_detective.utils import test_col_bis
 
 #############################################################################
 ############### ROUTINE DE TEST CI DESSOUS ##################################
@@ -50,7 +50,6 @@ def test_col(serie, test_func, proportion=0.9, skipna=True, num_rows=50, output_
             return True
         else:
             return serie.apply(test_func).sum() > proportion * len(serie)
-
 
 
 def return_all_tests(user_input_tests):
@@ -146,7 +145,7 @@ def routine(file_path, num_rows=50, user_input_tests='ALL',output_mode='LIMITED'
 
     return_table = pd.DataFrame(columns=table.columns)
     for key, value in test_funcs.items():
-        return_table.loc[key] = table.apply(lambda serie: test_col(
+        return_table.loc[key] = table.apply(lambda serie: test_col_bis(
             serie,
             value['func'],
             value['prop'],
@@ -179,3 +178,19 @@ def routine(file_path, num_rows=50, user_input_tests='ALL',output_mode='LIMITED'
         return_dict['columns'] = return_dict_cols_intermediary
 
     return return_dict
+
+
+if __name__ == "__main__":
+    import os  # for this example only
+    import json  # for json dump only
+    from pathlib import Path
+
+    # Replace by your file path
+    file_path = (Path(os.getcwd()).parent) / 'tests' / 'subventions-commune-de-castelmaurou.csv'
+
+    # Open your file and run csv_detective
+    inspection_results = routine(file_path)
+
+    # Write your file as json
+    with open(file_path.replace('.csv', '.json'), 'wb') as fp:
+        json.dump(inspection_results, fp, indent=4, separators=(',', ': '), encoding="utf-8")
