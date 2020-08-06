@@ -150,6 +150,7 @@ def routine(file_path, num_rows=50, user_input_tests='ALL',output_mode='LIMITED'
             serie,
             value['func'],
             value['prop'],
+            num_rows=num_rows,
             output_mode=output_mode
         ))
 
