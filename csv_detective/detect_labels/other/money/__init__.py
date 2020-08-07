@@ -13,4 +13,4 @@ def _is(serie):
 if __name__ == '__main__':
     import pandas as pd
     serie = pd.Series(name='montant total', data=['4.0', '1.0', '1.0'])
-    print(_is(serie))
+    print(all(_is(serie) == np.ones(serie.shape[0])))
