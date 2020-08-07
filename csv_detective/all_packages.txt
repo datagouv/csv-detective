@@ -49,4 +49,5 @@ csv_detective.detect_fields.FR.geo.insee_canton
 csv_detective.detect_fields.FR.other.date_fr
 csv_detective.detect_fields.FR.other.code_waldec
 csv_detective.detect_fields.FR.other.code_rna
+csv_detective.detect_labels.other.money
 
