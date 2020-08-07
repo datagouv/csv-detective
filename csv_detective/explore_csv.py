@@ -23,7 +23,7 @@ from csv_detective.utils import test_col_val
 ############### ROUTINE DE TEST CI DESSOUS ##################################
 
 
-def return_all_tests(user_input_tests):
+def return_all_tests(user_input_tests, sub_package='detect_fields'):
     all_packages = resource_string(__name__, 'all_packages.txt')
     all_packages = all_packages.decode().split('\n')
     all_packages.remove('')
@@ -36,16 +36,16 @@ def return_all_tests(user_input_tests):
     if isinstance(user_input_tests, str):
         assert user_input_tests[0] != '-'
         if user_input_tests == 'ALL':
-            tests_to_do = ['detect_fields']
+            tests_to_do = [sub_package]
         else:
-            tests_to_do = ['detect_fields' + '.' + user_input_tests]
+            tests_to_do = [sub_package + '.' + user_input_tests]
         tests_to_not_do = []
     elif isinstance(user_input_tests, list):
         if 'ALL' in user_input_tests:
-            tests_to_do = ['detect_fields']
+            tests_to_do = [sub_package]
         else:
-            tests_to_do = ['detect_fields' + '.' + x for x in user_input_tests if x[0] != '-']
-        tests_to_not_do = ['detect_fields' + '.' + x[1:] for x in user_input_tests if x[0] == '-']
+            tests_to_do = [sub_package + '.' + x for x in user_input_tests if x[0] != '-']
+        tests_to_not_do = [sub_package + '.' + x[1:] for x in user_input_tests if x[0] == '-']
 
     all_fields = [x for x in all_packages if any([y == x[:len(y)] for y in tests_to_do]) and all([y != x[:len(y)] for y in tests_to_not_do])]
     all_tests = [eval(field) for field in all_fields]
