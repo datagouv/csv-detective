@@ -7,7 +7,7 @@ def test_col(serie, test_func, proportion=0.9, skipna=True, num_rows=50, output_
     def apply_test_func(serie, test_func, _range):
         try:
             return serie.iloc[_range].apply(test_func)
-        except AttributeError:
+        except AttributeError: # .name n'est pas trouvé
             return test_func(serie.iloc[_range])
 
 
