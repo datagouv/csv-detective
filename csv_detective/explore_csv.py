@@ -17,39 +17,10 @@ from detection import (
     detect_trailing_columns,
     parse_table,
     detetect_categorical_variable, detect_continuous_variable)
-from csv_detective.utils import test_col_bis
+from csv_detective.utils import test_col
 
 #############################################################################
 ############### ROUTINE DE TEST CI DESSOUS ##################################
-
-
-def test_col(serie, test_func, proportion=0.9, skipna=True, num_rows=50, output_mode='ALL'):
-    ''' Tests values of the serie using test_func.
-         - skipna : if True indicates that NaNs are not counted as False
-         - proportion :  indicates the proportion of values that have to pass the test
-    for the serie to be detected as a certain type
-    '''
-    serie = serie[serie.notnull()]
-    ser_len = len(serie)
-    if ser_len == 0:
-        return False
-    if(output_mode == 'ALL'):
-        return serie.apply(test_func).sum() / num_rows
-    else:
-        if proportion == 1:  # Then try first 1 value, then 5, then all
-            for _range in [
-                range(0, min(1, ser_len)),
-                range(min(1, ser_len), min(5, ser_len)),
-                range(min(5, ser_len), min(num_rows, ser_len))
-            ]:  # Pour ne pas faire d'opérations inutiles, on commence par 1,
-                # puis 5 puis num_rows valeurs
-                if all(serie.iloc[_range].apply(test_func)):
-                    pass
-                else:
-                    return False
-            return True
-        else:
-            return serie.apply(test_func).sum() > proportion * len(serie)
 
 
 def return_all_tests(user_input_tests):
@@ -145,7 +116,7 @@ def routine(file_path, num_rows=50, user_input_tests='ALL',output_mode='LIMITED'
 
     return_table = pd.DataFrame(columns=table.columns)
     for key, value in test_funcs.items():
-        return_table.loc[key] = table.apply(lambda serie: test_col_bis(
+        return_table.loc[key] = table.apply(lambda serie: test_col(
             serie,
             value['func'],
             value['prop'],
