@@ -41,7 +41,6 @@ csv_detective.detect_fields.FR.geo.longitude_wgs_fr_metropole
 csv_detective.detect_fields.FR.geo.code_region
 csv_detective.detect_fields.other.booleen
 csv_detective.detect_fields.other.twitter
-csv_detective.detect_fields.other.money
 csv_detective.detect_fields.other.float_field
 csv_detective.detect_fields.FR.geo.latitude_l93
 csv_detective.detect_fields.FR.geo.longitude_l93
