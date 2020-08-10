@@ -10,7 +10,7 @@ import pandas as pd
 from csv_detective import detect_fields
 from csv_detective import detect_labels
 from csv_detective.utils import test_fields, prepare_output_dict, test_labels
-from detection import (
+from .detection import (
     detect_ints_as_floats,
     detect_separator,
     detect_encoding,

@@ -3,7 +3,7 @@
 import json
 from pprint import pprint
 
-from csv_detective.explore_csv import routine
+from explore_csv import routine
 
 
 def sort_keys(dicto):
