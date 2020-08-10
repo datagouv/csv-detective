@@ -68,13 +68,17 @@ if __name__ == '__main__':
     parser.add_argument('--date_process',
                         default=TODAY)
     parser.add_argument('--num_files',
-                        default=10)
+                        default='10')
     parser.add_argument('--num_rows',
-                        default=500)
+                        default='500')
     parser.add_argument('--num_cores',
-                        default=1)
+                        default='1')
 
     args = parser.parse_args()
+
+    num_files = int(args.num_files)
+    num_rows = int(args.num_rows)
+    num_cores = int(args.num_cores)
 
     print(args)
 
@@ -94,10 +98,10 @@ if __name__ == '__main__':
         logger.info("No file/folder found to analyze. Exiting...")
         exit(1)
 
-    if args.num_cores and args.num_cores > 1:
+    if num_cores > 1:
         csv_info = Parallel(n_jobs=args.num_cores)((file_path.split("/")[-1].split(".csv")[0],
                                             delayed(analyze_csv)(file_path,
-                                                                 num_rows=args.num_rows,
+                                                                 num_rows=num_rows,
                                                                  date_process=args.date_process))
                                            for file_path in tqdm(list_files))
     else:
@@ -105,7 +109,7 @@ if __name__ == '__main__':
         for file_path in tqdm(list_files):
             dataset_id = file_path.split("/")[-1].split(".csv")[0]
             analysis_output = analyze_csv(file_path,
-                                          num_rows=args.num_rows,
+                                          num_rows=num_rows,
                                           date_process=args.date_process,)
             csv_info.append((dataset_id, analysis_output))
 
