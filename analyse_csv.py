@@ -99,7 +99,7 @@ if __name__ == '__main__':
         exit(1)
 
     if num_cores > 1:
-        csv_info = Parallel(n_jobs=args.num_cores)((file_path.split("/")[-1].split(".csv")[0],
+        csv_info = Parallel(n_jobs=num_cores)((file_path.split("/")[-1].split(".csv")[0],
                                             delayed(analyze_csv)(file_path,
                                                                  num_rows=num_rows,
                                                                  date_process=args.date_process))
