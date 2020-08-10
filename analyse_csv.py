@@ -17,13 +17,12 @@ import datetime
 import json
 import os
 import logging
-import glob
+from pathlib import Path
 import argparse
 
 import joblib
 from joblib import Parallel, delayed
 from tqdm import tqdm
-import numpy as np
 
 from csv_detective.explore_csv import routine
 
@@ -34,16 +33,20 @@ logger.addHandler(logging.StreamHandler())
 TODAY = str(datetime.datetime.today()).split()[0]
 
 
-def get_files(data_path, ext="csv", sample=None):
-    files = glob.glob(data_path + "**/*.{}".format(ext), recursive=True)
-    if sample:
-        return list(np.random.choice(files, sample, replace=False))
-    return files
+def get_files(input_folder, ext=".csv"):
+    list_files = []
+    for folder in os.listdir(input_folder):
+        for file in os.listdir(input_folder / folder):
+            # Open your file and run csv_detective
+            file_path = input_folder / folder / file
+
+            if file_path.suffix == ext:
+                list_files.append(file_path)
+
+    return list_files
 
 
-
-def analyze_csv(file_path, num_rows=500, date_process=TODAY,
-                return_probabilities=True, output_mode="ALL"):
+def analyze_csv(file_path, num_rows=500, date_process=TODAY, output_mode="ALL"):
     logger.info(" csv_detective on {}".format(file_path))
     try:
         dict_result = routine(file_path, num_rows=num_rows, user_input_tests='ALL', output_mode=output_mode)
@@ -80,16 +83,13 @@ if __name__ == '__main__':
     num_rows = int(args.num_rows)
     num_cores = int(args.num_cores)
 
-    print(args)
-
+    input_folder = Path(args.input_folder)
+    output_folder = Path(args.output_folder)
 
     analysis_name = os.path.basename(os.path.dirname(args.input_folder))
     list_files = []
-    if os.path.exists(args.input_folder):
-        if os.path.isfile(args.input_folder):
-            list_files = [args.input_folder]
-        else:
-            list_files = get_files(args.input_folder, sample=None)
+    if input_folder.exists():
+        list_files = get_files(input_folder)
     else:
         logger.info("No file/folder found to analyze. Exiting...")
         exit(1)
@@ -99,22 +99,30 @@ if __name__ == '__main__':
         exit(1)
 
     if num_cores > 1:
-        csv_info = Parallel(n_jobs=num_cores)((file_path.split("/")[-1].split(".csv")[0],
-                                            delayed(analyze_csv)(file_path,
-                                                                 num_rows=num_rows,
-                                                                 date_process=args.date_process))
-                                           for file_path in tqdm(list_files))
+        csv_info_raw = Parallel(n_jobs=num_cores)(delayed(analyze_csv)(file_path,
+                                                                    num_rows=num_rows,
+                                                                    date_process=args.date_process)
+                                              for file_path in tqdm(list_files))
+        csv_info = [(file_path.name, info) for (file_path,info) in zip(list_files, csv_info_raw)]
+
     else:
         csv_info = []
         for file_path in tqdm(list_files):
-            dataset_id = file_path.split("/")[-1].split(".csv")[0]
+            dataset_id = file_path.name
             analysis_output = analyze_csv(file_path,
                                           num_rows=num_rows,
-                                          date_process=args.date_process,)
+                                          date_process=args.date_process)
             csv_info.append((dataset_id, analysis_output))
 
     logger.info("Saving info to JSON")
     # check that we have a good result
-    #_check_full_report(analysis_output, logger)
-    json.dump(csv_info, open(f"{args.output_folder}/{args.date_process}.json", "w"),
-              indent=4, ensure_ascii=False)
+    # _check_full_report(analysis_output, logger)
+
+    # Write your file as json
+    output_folder = Path(args.output_folder)
+    if not output_folder.exists():
+        os.makedirs(output_folder)
+
+    output_file = output_folder / f"{args.date_process}.json"
+    with open(output_file, 'w') as fp:
+        json.dump(csv_info, fp, indent=4, ensure_ascii=False)
