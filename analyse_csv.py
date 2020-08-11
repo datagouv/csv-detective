@@ -19,6 +19,7 @@ import os
 import logging
 from pathlib import Path
 import argparse
+from random import sample
 
 import joblib
 from joblib import Parallel, delayed
@@ -33,7 +34,7 @@ logger.addHandler(logging.StreamHandler())
 TODAY = str(datetime.datetime.today()).split()[0]
 
 
-def get_files(input_folder, ext=".csv"):
+def get_files(input_folder, ext=".csv", n_sample=0):
     list_files = []
     for folder in os.listdir(input_folder):
         for file in os.listdir(input_folder / folder):
@@ -42,7 +43,8 @@ def get_files(input_folder, ext=".csv"):
 
             if file_path.suffix == ext:
                 list_files.append(file_path)
-
+    if n_sample > 0:
+        list_files = sample(list_files, n_sample)
     return list_files
 
 
@@ -76,6 +78,8 @@ if __name__ == '__main__':
                         default='500')
     parser.add_argument('--num_cores',
                         default='1')
+    parser.add_argument('--num_samples',
+                        default='0')
 
     args = parser.parse_args()
 
@@ -89,7 +93,7 @@ if __name__ == '__main__':
     analysis_name = os.path.basename(os.path.dirname(args.input_folder))
     list_files = []
     if input_folder.exists():
-        list_files = get_files(input_folder)
+        list_files = get_files(input_folder, n_sample=int(args.num_samples))
     else:
         logger.info("No file/folder found to analyze. Exiting...")
         exit(1)
