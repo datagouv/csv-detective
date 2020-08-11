@@ -31,7 +31,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 logger.addHandler(logging.StreamHandler())
 
-TODAY = str(datetime.datetime.today()).split()[0]
+TODAY = str(datetime.datetime.today()).split('.')[0].replace(' ','_').replace(':','-')
 
 
 def get_files(input_folder, ext=".csv", n_sample=0):
@@ -48,7 +48,7 @@ def get_files(input_folder, ext=".csv", n_sample=0):
     return list_files
 
 
-def analyze_csv(file_path, num_rows=500, date_process=TODAY, output_mode="ALL"):
+def analyze_csv(file_path, num_rows=500, date_process=TODAY, output_mode="LIMITED"):
     logger.info(" csv_detective on {}".format(file_path))
     try:
         dict_result = routine(file_path, num_rows=num_rows, user_input_tests='ALL', output_mode=output_mode)
@@ -80,6 +80,8 @@ if __name__ == '__main__':
                         default='1')
     parser.add_argument('--num_samples',
                         default='0')
+    parser.add_argument('--output_mode',
+                        default='LIMITED')
 
     args = parser.parse_args()
 
@@ -105,7 +107,8 @@ if __name__ == '__main__':
     if num_cores > 1:
         csv_info_raw = Parallel(n_jobs=num_cores)(delayed(analyze_csv)(file_path,
                                                                     num_rows=num_rows,
-                                                                    date_process=args.date_process)
+                                                                    date_process=args.date_process,
+                                                                       output_mode=args.output_mode)
                                               for file_path in tqdm(list_files))
         csv_info = [(file_path.name, info) for (file_path,info) in zip(list_files, csv_info_raw)]
 
