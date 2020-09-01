@@ -110,12 +110,12 @@ if __name__ == '__main__':
                                                                     date_process=args.date_process,
                                                                        output_mode=args.output_mode)
                                               for file_path in tqdm(list_files))
-        csv_info = {file_path.name.split('.')[0]: info for (file_path,info) in zip(list_files, csv_info_raw)}
+        csv_info = {file_path.stem: info for (file_path,info) in zip(list_files, csv_info_raw)}
 
     else:
         csv_info = {}
         for file_path in tqdm(list_files):
-            dataset_id = file_path.name.split('.')[0]
+            dataset_id = file_path.stems
             analysis_output = analyze_csv(file_path,
                                           num_rows=num_rows,
                                           date_process=args.date_process)
