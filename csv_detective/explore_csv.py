@@ -25,7 +25,7 @@ from .detection import (
 ############### ROUTINE DE TEST CI DESSOUS ##################################
 
 
-def return_all_tests(user_input_tests, sub_package='detect_fields'):
+def return_all_tests(user_input_tests, detect_type='detect_fields'):
     """
     returns all tests that have a method _is and are listed in the user_input_tests
     the function can select a sub_package from csv_detective
@@ -42,16 +42,16 @@ def return_all_tests(user_input_tests, sub_package='detect_fields'):
     if isinstance(user_input_tests, str):
         assert user_input_tests[0] != '-'
         if user_input_tests == 'ALL':
-            tests_to_do = [sub_package]
+            tests_to_do = [detect_type]
         else:
-            tests_to_do = [sub_package + '.' + user_input_tests]
+            tests_to_do = [detect_type + '.' + user_input_tests]
         tests_to_not_do = []
     elif isinstance(user_input_tests, list):
         if 'ALL' in user_input_tests:
-            tests_to_do = [sub_package]
+            tests_to_do = [detect_type]
         else:
-            tests_to_do = [sub_package + '.' + x for x in user_input_tests if x[0] != '-']
-        tests_to_not_do = [sub_package + '.' + x[1:] for x in user_input_tests if x[0] == '-']
+            tests_to_do = [detect_type + '.' + x for x in user_input_tests if x[0] != '-']
+        tests_to_not_do = [detect_type + '.' + x[1:] for x in user_input_tests if x[0] == '-']
 
     all_fields = [x for x in all_packages if any([y == x[:len(y)] for y in tests_to_do]) and all([y != x[:len(y)] for y in tests_to_not_do])]
     all_tests = [eval(field) for field in all_fields]
@@ -106,8 +106,8 @@ def routine(file_path, num_rows=50, user_input_tests='ALL',output_mode='LIMITED'
     return_dict['categorical'] = res_categorical
 
     # list testing to be performed
-    all_tests_fields = return_all_tests(user_input_tests, sub_package='detect_fields') #list all tests for the fields
-    all_tests_labels = return_all_tests(user_input_tests, sub_package='detect_labels')  # list all tests for the labels
+    all_tests_fields = return_all_tests(user_input_tests, detect_type='detect_fields')  #list all tests for the fields
+    all_tests_labels = return_all_tests(user_input_tests, detect_type='detect_labels')  # list all tests for the labels
 
     # if no testing then return
     if not all_tests_fields and all_tests_labels:
