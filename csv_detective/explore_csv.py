@@ -110,7 +110,7 @@ def routine(file_path, num_rows=50, user_input_tests='ALL',output_mode='LIMITED'
     all_tests_labels = return_all_tests(user_input_tests, detect_type='detect_labels')  # list all tests for the labels
 
     # if no testing then return
-    if not all_tests_fields and all_tests_labels:
+    if not all_tests_fields and not all_tests_labels:
         return return_dict
 
     # Perform testing on fields
