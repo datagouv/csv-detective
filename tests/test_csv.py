@@ -11,7 +11,7 @@ def sort_keys(dicto):
 
 
 def test_old_detection():
-    file_path = '../../mlearnable-datasets-detective/data/csv/annuaire-de-leducation.csv'
+    file_path = './annuaire-de-leducation.csv'
     expected_results = sort_keys(json.load(open("baseline_result.json")))
 
     # Open your file and run csv_detective
