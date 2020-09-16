@@ -37,28 +37,7 @@ def test_col_val(serie, test_func, proportion=0.9, skipna=True, num_rows=50, out
         else:
             return apply_test_func(serie, test_func, _range).sum() > proportion * len(serie)
 
-def test_fields(table, all_tests, output_mode):
-    # Initialising dict for tests
-    test_funcs = dict()
-    for test in all_tests:
-        name = test.__name__.split('.')[-1]
-
-        test_funcs[name] = {
-            'func': test._is,
-            'prop': test.PROPORTION
-        }
-
-    return_table = pd.DataFrame(columns=table.columns)
-    for key, value in test_funcs.items():
-        return_table.loc[key] = table.apply(lambda serie: test_col_val(
-            serie,
-            value['func'],
-            value['prop'],
-            output_mode=output_mode
-        ))
-    return return_table
-
-def test_labels(table, all_tests, output_mode):
+def test_col(table, all_tests, output_mode):
     # Initialising dict for tests
     test_funcs = dict()
     for test in all_tests:
@@ -81,8 +60,6 @@ def test_labels(table, all_tests, output_mode):
 
 
 def prepare_output_dict(return_table, output_mode):
-    # Filling the columns attributes of return dictionnary
-    return_dict_cols = dict()
     """
     if (output_mode == 'LIMITED'):
         for colnum in range(0, len(return_table.columns)):
