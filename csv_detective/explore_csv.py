@@ -131,19 +131,3 @@ def routine(file_path, num_rows=50, user_input_tests='ALL',output_mode='LIMITED'
     return_dict['columns'] = return_dict_cols
 
     return return_dict
-
-
-if __name__ == "__main__":
-    import os  # for this example only
-    import json  # for json dump only
-    from pathlib import Path
-
-    # Replace by your file path
-    file_path = (Path(os.getcwd()).parent) / 'tests' / 'subventions-commune-de-castelmaurou.csv'
-
-    # Open your file and run csv_detective
-    inspection_results = routine(file_path)#, output_mode='ALL')
-
-    # Write your file as json
-    with open(file_path.replace('.csv', '.json'), 'wb') as fp:
-        json.dump(inspection_results, fp, indent=4, separators=(',', ': '), encoding="utf-8")
