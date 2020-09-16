@@ -232,3 +232,4 @@ def test_match_waldec():
 def test_do_not_match_waldec():
     val = "AA751PEE00188854"
     assert not code_waldec._is(val)
+

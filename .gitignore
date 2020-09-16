@@ -11,3 +11,5 @@ build
 csv_detective.egg-info
 dist
 venv
+
+analyse_csv.py

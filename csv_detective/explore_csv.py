@@ -8,7 +8,8 @@ from pkg_resources import resource_string
 import pandas as pd
 
 from csv_detective import detect_fields
-
+from csv_detective import detect_labels
+from csv_detective.utils import test_col, prepare_output_dict
 from .detection import (
     detect_ints_as_floats,
     detect_separator,
@@ -19,41 +20,16 @@ from .detection import (
     parse_table,
     detetect_categorical_variable, detect_continuous_variable)
 
+
 #############################################################################
 ############### ROUTINE DE TEST CI DESSOUS ##################################
 
 
-def test_col(serie, test_func, proportion=0.9, skipna=True, num_rows=50, output_mode='ALL'):
-    ''' Tests values of the serie using test_func.
-         - skipna : if True indicates that NaNs are not counted as False
-         - proportion :  indicates the proportion of values that have to pass the test
-    for the serie to be detected as a certain type
-    '''
-    serie = serie[serie.notnull()]
-    ser_len = len(serie)
-    if ser_len == 0:
-        return False
-    if(output_mode == 'ALL'):
-        return serie.apply(test_func).sum() / num_rows
-    else:
-        if proportion == 1:  # Then try first 1 value, then 5, then all
-            for _range in [
-                range(0, min(1, ser_len)),
-                range(min(1, ser_len), min(5, ser_len)),
-                range(min(5, ser_len), min(num_rows, ser_len))
-            ]:  # Pour ne pas faire d'opérations inutiles, on commence par 1,
-                # puis 5 puis num_rows valeurs
-                if all(serie.iloc[_range].apply(test_func)):
-                    pass
-                else:
-                    return False
-            return True
-        else:
-            return serie.apply(test_func).sum() > proportion * len(serie)
-
-
-
-def return_all_tests(user_input_tests):
+def return_all_tests(user_input_tests, detect_type='detect_fields'):
+    """
+    returns all tests that have a method _is and are listed in the user_input_tests
+    the function can select a sub_package from csv_detective
+    """
     all_packages = resource_string(__name__, 'all_packages.txt')
     all_packages = all_packages.decode().split('\n')
     all_packages.remove('')
@@ -66,16 +42,16 @@ def return_all_tests(user_input_tests):
     if isinstance(user_input_tests, str):
         assert user_input_tests[0] != '-'
         if user_input_tests == 'ALL':
-            tests_to_do = ['detect_fields']
+            tests_to_do = [detect_type]
         else:
-            tests_to_do = ['detect_fields' + '.' + user_input_tests]
+            tests_to_do = [detect_type + '.' + user_input_tests]
         tests_to_not_do = []
     elif isinstance(user_input_tests, list):
         if 'ALL' in user_input_tests:
-            tests_to_do = ['detect_fields']
+            tests_to_do = [detect_type]
         else:
-            tests_to_do = ['detect_fields' + '.' + x for x in user_input_tests if x[0] != '-']
-        tests_to_not_do = ['detect_fields' + '.' + x[1:] for x in user_input_tests if x[0] == '-']
+            tests_to_do = [detect_type + '.' + x for x in user_input_tests if x[0] != '-']
+        tests_to_not_do = [detect_type + '.' + x[1:] for x in user_input_tests if x[0] == '-']
 
     all_fields = [x for x in all_packages if any([y == x[:len(y)] for y in tests_to_do]) and all([y != x[:len(y)] for y in tests_to_not_do])]
     all_tests = [eval(field) for field in all_fields]
@@ -129,54 +105,29 @@ def routine(file_path, num_rows=50, user_input_tests='ALL',output_mode='LIMITED'
     return_dict['continuous'] = res_continuous
     return_dict['categorical'] = res_categorical
 
-    all_tests = return_all_tests(user_input_tests)
+    # list testing to be performed
+    all_tests_fields = return_all_tests(user_input_tests, detect_type='detect_fields')  #list all tests for the fields
+    all_tests_labels = return_all_tests(user_input_tests, detect_type='detect_labels')  # list all tests for the labels
 
-    if not all_tests:
+    # if no testing then return
+    if not all_tests_fields and not all_tests_labels:
         return return_dict
 
-    # Initialising dict for tests
-    test_funcs = dict()
-    for test in all_tests:
-        name = test.__name__.split('.')[-1]
+    # Perform testing on fields
+    return_table_fields = test_col(table, all_tests_fields, output_mode)
+    return_dict_cols_fields = prepare_output_dict(return_table_fields, output_mode)
+    return_dict['columns_fields'] = return_dict_cols_fields
 
-        test_funcs[name] = {
-            'func': test._is,
-            'prop': test.PROPORTION
-        }
+    # Perform testing on labels
+    return_table_labels = test_col(table, all_tests_labels, output_mode)
+    return_dict_cols_labels = prepare_output_dict(return_table_labels, output_mode)
+    return_dict['columns_labels'] = return_dict_cols_labels
 
-    return_table = pd.DataFrame(columns=table.columns)
-    for key, value in test_funcs.items():
-        return_table.loc[key] = table.apply(lambda serie: test_col(
-            serie,
-            value['func'],
-            value['prop'],
-            num_rows=num_rows,
-            output_mode=output_mode
-        ))
-
-    # Filling the columns attributes of return dictionnary
-    return_dict_cols = dict()
-    
-    if(output_mode == 'LIMITED'):
-        for colnum in range(0,len(return_table.columns)):
-            col=return_table.columns[colnum]
-            possible_values = list(return_table[return_table[col]].index)
-            if possible_values != []:
-                #print('  >>  La colonne', col, 'est peut-être :',)
-                #print(possible_values)
-                return_dict_cols[header[colnum]] = possible_values
-        return_dict['columns'] = return_dict_cols
-        
-    if(output_mode  == 'ALL'):
-        return_dict_cols = return_table.to_dict('index')
-        return_dict_cols_intermediary = {}
-        for key in return_dict_cols:
-            return_dict_cols_intermediary[key] = []
-            for subkey in return_dict_cols[key]:
-                dict_tmp = {}
-                dict_tmp['colonne'] = subkey
-                dict_tmp['score_rb'] = return_dict_cols[key][subkey]
-                return_dict_cols_intermediary[key].append(dict_tmp)
-        return_dict['columns'] = return_dict_cols_intermediary
+    # Perform a summary by multiplying the two results
+    # The fill_value=1 ensures that if there was no corresponding \
+    #   test for labels and fields, then only the test performed is taken into account
+    return_table = return_table_fields.multiply(return_table_labels, fill_value=1)
+    return_dict_cols = prepare_output_dict(return_table, output_mode)
+    return_dict['columns'] = return_dict_cols
 
     return return_dict
