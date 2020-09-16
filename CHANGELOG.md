@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.1 [#19] (https://github.com/etalab/csv-detective/pull/19)
+
+Fix bug
+ * num_rows was causing problem when it was fix to other value than default - Fixed
+
 ## 0.4.0 [#18] (https://github.com/etalab/csv_detective/pull/18)
 
 Add detailed output possibility
