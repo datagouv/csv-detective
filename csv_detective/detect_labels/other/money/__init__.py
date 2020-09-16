@@ -10,7 +10,3 @@ def _is(serie):
     return column_title_looks_like_money
 
 
-if __name__ == '__main__':
-    import pandas as pd
-    serie = pd.Series(name='montant total', data=['4.0', '1.0', '1.0'])
-    print(all(_is(serie) == np.ones(serie.shape[0])))

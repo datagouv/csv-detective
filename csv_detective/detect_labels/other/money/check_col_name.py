@@ -6,6 +6,3 @@ def is_col_name_related_to_money (name):
         col_name_related_to_money = col_name_related_to_money or (theme in name)
     return col_name_related_to_money
 
-if __name__ == '__main__':
-    name = 'salaire des fonctionnaires'
-    print(is_col_name_related_to_money(name))
