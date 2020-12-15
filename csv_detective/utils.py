@@ -37,6 +37,18 @@ def test_col_val(serie, test_func, proportion=0.9, skipna=True, num_rows=50, out
         else:
             return apply_test_func(serie, test_func, _range).sum() > proportion * len(serie)
 
+def test_col_label(serie, test_func, proportion=0.5, output_mode='ALL') :
+    ''' Tests label (from header) using test_func.
+         - proportion :  indicates the proportion of words in the label that have to macth to pass the test
+    for the serie to be detected as a certain type
+    '''
+    label = serie.name
+
+    if output_mode == 'ALL' :
+        return test_func(label)
+    else :
+        return test_func(label) > proportion
+
 def test_col(table, all_tests, output_mode):
     # Initialising dict for tests
     test_funcs = dict()
@@ -51,6 +63,27 @@ def test_col(table, all_tests, output_mode):
     return_table = pd.DataFrame(columns=table.columns)
     for key, value in test_funcs.items():
         return_table.loc[key] = table.apply(lambda serie: test_col_val(
+            serie,
+            value['func'],
+            value['prop'],
+            output_mode=output_mode
+        ))
+    return return_table
+
+def test_label(table, all_tests, output_mode) :
+    # Initialising dict for tests
+    test_funcs = dict()
+    for test in all_tests:
+        name = test.__name__.split('.')[-1]
+
+        test_funcs[name] = {
+            'func': test._is,
+            'prop': test.PROPORTION
+        }
+
+    return_table = pd.DataFrame(columns=table.columns)
+    for key, value in test_funcs.items():
+        return_table.loc[key] = table.apply(lambda serie: test_col_label(
             serie,
             value['func'],
             value['prop'],

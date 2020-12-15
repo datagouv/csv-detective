@@ -9,7 +9,7 @@ import pandas as pd
 
 from csv_detective import detect_fields
 from csv_detective import detect_labels
-from csv_detective.utils import test_col, prepare_output_dict
+from csv_detective.utils import test_col, test_label, prepare_output_dict
 from .detection import (
     detect_ints_as_floats,
     detect_separator,
@@ -119,7 +119,7 @@ def routine(file_path, num_rows=50, user_input_tests='ALL',output_mode='LIMITED'
     return_dict['columns_fields'] = return_dict_cols_fields
 
     # Perform testing on labels
-    return_table_labels = test_col(table, all_tests_labels, output_mode)
+    return_table_labels = test_label(table, all_tests_labels, output_mode)
     return_dict_cols_labels = prepare_output_dict(return_table_labels, output_mode)
     return_dict['columns_labels'] = return_dict_cols_labels
 

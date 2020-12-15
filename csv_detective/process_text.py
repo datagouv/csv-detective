@@ -4,6 +4,7 @@ def _process_text(val):
     '''Met le unicode val sous sous sa forme normee'''
     val = val.lower()
     val = val.replace(u'-', u' ')
+    val = val.replace(u'_', u' ')
     val = val.replace(u"'", u' ')
     val = val.replace(u',', u' ')
     val = val.replace(u'  ', u' ')
