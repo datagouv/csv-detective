@@ -11,5 +11,6 @@ build
 csv_detective.egg-info
 dist
 venv
+.DS_Store
 
 analyse_csv.py
