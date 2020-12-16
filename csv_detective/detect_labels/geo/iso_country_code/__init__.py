@@ -5,7 +5,7 @@ PROPORTION = 1
 def _is(header):
     '''Returns 1 if the (processed) header matches one of the expected words combination, else 0'''
 
-    words_combinations_list = ['code postal', 'postal code', 'postcode', 'post code', 'cp', 'codes postaux', 'location postcode']
+    words_combinations_list = ['iso country code', 'code pays', 'pays', 'country', 'nation', 'pays code', 'code pays (iso)']
     processed_header = _process_text(header)
 
     return float(any([words_combination == processed_header for words_combination in words_combinations_list]))

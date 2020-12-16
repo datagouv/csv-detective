@@ -1,16 +1,14 @@
-import numpy as np
 from csv_detective.process_text import _process_text
-#from csv_detective.detect_labels.other.money.check_col_name import is_col_name_related_to_money
 
-PROPORTION = 0.5
+PROPORTION = 1
 
 def _is(header):
-    '''Returns the share of words in the (processed) header that match one of the expected words'''
+    '''Returns 1 if at least one of the mentionned words is in the label, else 0
+    '''
 
     words_list = ['budget', 'salaire', 'euro', 'euros', 'prêt', 'montant']
-    processed_header = _process_text(header)
 
-    return np.mean([word in words_list for word in processed_header.split()])
+    return float(any([word in header for word in words_list]))
 
 #def _is(serie):
 #    '''Detects money'''

@@ -37,17 +37,16 @@ def test_col_val(serie, test_func, proportion=0.9, skipna=True, num_rows=50, out
         else:
             return apply_test_func(serie, test_func, _range).sum() > proportion * len(serie)
 
-def test_col_label(serie, test_func, proportion=0.5, output_mode='ALL') :
+def test_col_label(serie, test_func, proportion=1, output_mode='ALL') :
     ''' Tests label (from header) using test_func.
-         - proportion :  indicates the proportion of words in the label that have to macth to pass the test
-    for the serie to be detected as a certain type
+         - proportion :  indicates the minimum score to pass the test for the serie to be detected as a certain type
     '''
     label = serie.name
 
     if output_mode == 'ALL' :
         return test_func(label)
     else :
-        return test_func(label) > proportion
+        return test_func(label) >= proportion
 
 def test_col(table, all_tests, output_mode):
     # Initialising dict for tests
