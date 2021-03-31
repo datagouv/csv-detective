@@ -48,7 +48,7 @@ def test_col_label(serie, test_func, proportion=1, output_mode='ALL') :
     else :
         return test_func(label) >= proportion
 
-def test_col(table, all_tests, output_mode):
+def test_col(table, all_tests, num_rows, output_mode):
     # Initialising dict for tests
     test_funcs = dict()
     for test in all_tests:
@@ -65,6 +65,7 @@ def test_col(table, all_tests, output_mode):
             serie,
             value['func'],
             value['prop'],
+            num_rows = num_rows,
             output_mode=output_mode
         ))
     return return_table
@@ -119,3 +120,5 @@ def prepare_output_dict(return_table, output_mode):
 
     return return_dict_cols_intermediary
 
+def full_word_strictly_inside_string(word, string) :
+    return (' '+word+' ' in string) or (string.startswith(word+' ')) or (string.endswith(' '+word))
