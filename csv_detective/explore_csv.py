@@ -9,7 +9,7 @@ import pandas as pd
 
 from csv_detective import detect_fields
 from csv_detective import detect_labels
-from csv_detective.utils import test_col, prepare_output_dict
+from csv_detective.utils import test_col, test_label, prepare_output_dict
 from .detection import (
     detect_ints_as_floats,
     detect_separator,
@@ -114,19 +114,19 @@ def routine(file_path, num_rows=50, user_input_tests='ALL',output_mode='LIMITED'
         return return_dict
 
     # Perform testing on fields
-    return_table_fields = test_col(table, all_tests_fields, output_mode)
+    return_table_fields = test_col(table, all_tests_fields, num_rows, output_mode)
     return_dict_cols_fields = prepare_output_dict(return_table_fields, output_mode)
     return_dict['columns_fields'] = return_dict_cols_fields
 
     # Perform testing on labels
-    return_table_labels = test_col(table, all_tests_labels, output_mode)
+    return_table_labels = test_label(table, all_tests_labels, output_mode)
     return_dict_cols_labels = prepare_output_dict(return_table_labels, output_mode)
     return_dict['columns_labels'] = return_dict_cols_labels
 
-    # Perform a summary by multiplying the two results
-    # The fill_value=1 ensures that if there was no corresponding \
-    #   test for labels and fields, then only the test performed is taken into account
-    return_table = return_table_fields.multiply(return_table_labels, fill_value=1)
+    # Perform a mean of the two results
+    # The fill_value=0 ensures that if there was no corresponding \
+    #   test for labels and fields, then the overall result is divided by 2 as we are less "sure" that the field is this type
+    return_table = 0.5*return_table_fields.add(return_table_labels, fill_value=0)
     return_dict_cols = prepare_output_dict(return_table, output_mode)
     return_dict['columns'] = return_dict_cols
 
