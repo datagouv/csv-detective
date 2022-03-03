@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.2 [#22] (https://github.com/etalab/csv-detective/pull/22)
+
+Add type detection by header name
+
 ## 0.4.1 [#19] (https://github.com/etalab/csv-detective/pull/19)
 
 Fix bug

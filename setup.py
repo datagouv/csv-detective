@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 setup(
     name = 'csv_detective',
-    version = '0.4.1',
+    version = '0.4.2',
     author = 'Etalab',
     author_email = 'info@data.gouv.fr',
     classifiers = [
