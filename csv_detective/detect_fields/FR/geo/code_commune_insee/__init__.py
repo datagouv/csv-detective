@@ -2,7 +2,7 @@ from os.path import dirname, join
 from csv_detective.process_text import _process_text
 import re
 
-PROPORTION = 1
+PROPORTION = 0.75
 f = open(join(dirname(__file__), 'code_commune_insee.txt'), 'r')
 codes_insee = f.read().split('\n')
 f.close()

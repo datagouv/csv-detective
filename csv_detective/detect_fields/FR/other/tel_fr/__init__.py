@@ -2,7 +2,7 @@ from os.path import dirname, join
 from csv_detective.process_text import _process_text
 import re
 
-PROPORTION = 1
+PROPORTION = 0.8
 
 def _is(val):
     '''Repère les numeros de telephone francais'''
