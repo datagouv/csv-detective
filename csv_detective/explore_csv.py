@@ -5,8 +5,6 @@ contenu possible des champs
 
 from pkg_resources import resource_string
 
-import pandas as pd
-
 from csv_detective import detect_fields
 from csv_detective import detect_labels
 from csv_detective.utils import test_col, test_label, prepare_output_dict

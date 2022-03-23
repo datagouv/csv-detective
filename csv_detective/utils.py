@@ -104,19 +104,20 @@ def prepare_output_dict(return_table, output_mode):
                 return_dict_cols[header[colnum]] = possible_values
         return return_dict_cols"""
 
-    return_dict_cols = return_table.to_dict('index')
+    return_dict_cols = return_table.to_dict('dict')
     return_dict_cols_intermediary = {}
-    for detected_value_type in return_dict_cols:
-        return_dict_cols_intermediary[detected_value_type] = []
-        for column_name in return_dict_cols[detected_value_type]:
+    for column_name in return_dict_cols:
+        return_dict_cols_intermediary[column_name] = []
+        for detected_value_type in return_dict_cols[column_name]:
+            if return_dict_cols[column_name][detected_value_type] == 0:
+                continue
             if output_mode == 'LIMITED':
-                if return_dict_cols[detected_value_type][column_name]:
-                    return_dict_cols_intermediary[detected_value_type].append(column_name)
+                return_dict_cols_intermediary[column_name].append(detected_value_type)
             if (output_mode == 'ALL'):
                 dict_tmp = {}
-                dict_tmp['colonne'] = column_name
-                dict_tmp['score_rb'] = return_dict_cols[detected_value_type][column_name]
-                return_dict_cols_intermediary[detected_value_type].append(dict_tmp)
+                dict_tmp['type'] = detected_value_type
+                dict_tmp['score_rb'] = return_dict_cols[column_name][detected_value_type]
+                return_dict_cols_intermediary[column_name].append(dict_tmp)
 
     return return_dict_cols_intermediary
 
