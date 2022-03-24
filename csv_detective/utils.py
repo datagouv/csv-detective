@@ -119,6 +119,15 @@ def prepare_output_dict(return_table, output_mode):
                 dict_tmp['score_rb'] = return_dict_cols[column_name][detected_value_type]
                 return_dict_cols_intermediary[column_name].append(dict_tmp)
 
+        # Clean dict using priorities
+        if output_mode == 'LIMITED':
+            types_detected = set(return_dict_cols_intermediary[column_name])
+            if 'floats' in types_detected:
+                types_detected.discard('date')
+            if any([x in types_detected for x in ['tel_fr', 'siren', 'code_postal', 'code_commune_insee']]):
+                types_detected.discard('floats')
+            return_dict_cols_intermediary[column_name] = list(types_detected)
+
     return return_dict_cols_intermediary
 
 def full_word_strictly_inside_string(word, string) :

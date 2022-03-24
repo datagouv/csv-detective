@@ -6,7 +6,7 @@ PROPORTION = 1
 def _is(header):
     '''Returns 1 if the (processed) header matches one of the expected words combination, else 0'''
 
-    words_combinations_list = [] #Not relevant to make it match with exact words
+    words_combinations_list = ['nb', 'nombre', 'nbre']
     processed_header = _process_text(header)
 
     header_matches_words_combination = float(any([words_combination == processed_header for words_combination in words_combinations_list]))
