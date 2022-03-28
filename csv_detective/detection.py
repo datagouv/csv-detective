@@ -4,7 +4,7 @@ from ast import literal_eval
 
 def detect_ints_as_floats(table):
     '''Détecte les colonnes contenant des entiers possibles écrits sous forme de float'''
-    regex = r'^[0-9]+\.0+$'
+    regex = r'^(\+|-)?[0-9]+(\.0+)?$'
     res = table.apply(lambda serie: serie.str.match(regex).all() and any(serie.notnull()))
     return res.index[res]
 
