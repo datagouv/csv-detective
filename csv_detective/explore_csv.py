@@ -3,10 +3,13 @@ Ce script analyse les premières lignes d'un CSV pour essayer de déterminer le
 contenu possible des champs
 """
 
+import json
+import os
 from pkg_resources import resource_string
 
 from csv_detective import detect_fields
 from csv_detective import detect_labels
+from csv_detective.minio_utils import get_client, download_minio_file, upload_minio_file
 from csv_detective.utils import test_col, test_label, prepare_output_dict
 from .detection import (
     detect_ints_as_floats,
@@ -57,11 +60,16 @@ def return_all_tests(user_input_tests, detect_type='detect_fields'):
     return all_tests
 
 
-def routine(file_path, num_rows=50, user_input_tests='ALL',output_mode='LIMITED'):
+def routine(file_path, minio_url=None, minio_bucket=None, minio_key=None, num_rows=50, user_input_tests='ALL',output_mode='LIMITED'):
     '''Returns a dict with information about the csv table and possible
-    column contents
+    column contents.
+    In order to run it with Minio, env variables MINIO_USER and MINIO_PASSWORD must be set.
     '''
-    # print('This is tests_to_do', user_input_tests)
+    use_minio = (minio_url is not None) and (minio_bucket is not None) and (minio_key is not None)
+    if use_minio:
+        client = get_client(minio_url)
+        download_minio_file(client, minio_bucket, minio_key, file_path)
+
     binary_file = open(file_path, mode='rb')
     encoding = detect_encoding(binary_file)['encoding']
 
@@ -127,5 +135,16 @@ def routine(file_path, num_rows=50, user_input_tests='ALL',output_mode='LIMITED'
     return_table = 0.5*return_table_fields.add(return_table_labels, fill_value=0)
     return_dict_cols = prepare_output_dict(return_table, output_mode)
     return_dict['columns'] = return_dict_cols
+
+    # Write your file as json
+    output_file_path = file_path.replace('.csv', f'_{output_mode}.json')
+    with open(output_file_path, 'w', encoding='utf8') as fp:
+        json.dump(return_dict, fp, indent=4, separators=(',', ': '))
+
+    if use_minio:
+        output_minio_key = minio_key.replace('.csv', f'_{output_mode}.json')
+        upload_minio_file(client, minio_bucket, output_minio_key, output_file_path)
+        os.remove(file_path)
+        os.remove(output_file_path)
 
     return return_dict
