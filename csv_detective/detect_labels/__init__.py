@@ -2,5 +2,5 @@ from .FR.geo import adresse, code_commune_insee, code_departement, code_fantoir,
 from .FR.other import code_csp_insee, code_rna, code_waldec, csp_insee, date_fr, insee_ape700, sexe, siren, siret, tel_fr, uai
 from .FR.temp import jour_de_la_semaine, mois_de_annee
 from .geo import iso_country_code, json_geojson, latitude_wgs, latlon_wgs, longitude_wgs
-from .other import booleen, email, floats, money, twitter, url, uuid
+from .other import booleen, email, floats, ints, money, twitter, url, uuid
 from .temp import date, datetime_iso, datetime_rfc822, year

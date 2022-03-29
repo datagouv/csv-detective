@@ -12,7 +12,6 @@ from csv_detective import detect_labels
 from csv_detective.minio_utils import get_client, download_minio_file, upload_minio_file
 from csv_detective.utils import test_col, test_label, prepare_output_dict
 from .detection import (
-    detect_ints_as_floats,
     detect_separator,
     detect_encoding,
     detect_headers,
@@ -87,9 +86,6 @@ def routine(file_path, minio_url=None, minio_bucket=None, minio_key=None, num_ro
         trailing_columns = detect_trailing_columns(str_file, sep, heading_columns)
         table, total_lines = parse_table(str_file, encoding, sep, num_rows)
 
-    # Detects columns that are ints but written as floats
-    res_ints_as_floats = list(detect_ints_as_floats(table))
-
     # Detects columns that are categorical
     res_categorical, categorical_mask = detetect_categorical_variable(table)
     res_categorical = list(res_categorical)
@@ -106,7 +102,6 @@ def routine(file_path, minio_url=None, minio_bucket=None, minio_key=None, num_ro
 
     return_dict['heading_columns'] = heading_columns
     return_dict['trailing_columns'] = trailing_columns
-    return_dict['ints_as_floats'] = res_ints_as_floats
 
     return_dict['continuous'] = res_continuous
     return_dict['categorical'] = res_categorical
@@ -135,6 +130,28 @@ def routine(file_path, minio_url=None, minio_bucket=None, minio_key=None, num_ro
     return_table = 0.5*return_table_fields.add(return_table_labels, fill_value=0)
     return_dict_cols = prepare_output_dict(return_table, output_mode)
     return_dict['columns'] = return_dict_cols
+
+    metier_to_python_type = {
+        'booleen': 'bool',
+        'ints': 'int',
+        'floats': 'float',
+        'string': 'str',
+        'latitude': 'float',
+        'latitude_l93': 'float',
+        'latitude_wgs': 'float',
+        'latitude_wgs_fr_metropole': 'float',
+        'longitude': 'float',
+        'longitude_l93': 'float',
+        'longitude_wgs': 'float',
+        'longitude_wgs_fr_metropole': 'float',
+    }
+
+    if output_mode == 'ALL':
+        for detection_method in ['columns_fields', 'columns_labels', 'columns']:
+            return_dict[detection_method] = {col_name: [{'python_type': metier_to_python_type.get(detection['type'], 'str'), **detection} for detection in detections] for col_name, detections in return_dict[detection_method].items()}
+    if output_mode == 'LIMITED':
+        for detection_method in ['columns_fields', 'columns_labels', 'columns']:
+            return_dict[detection_method] = {col_name: {'python_type': metier_to_python_type.get(detection['type'], 'str'), **detection} for col_name, detection in return_dict[detection_method].items()}
 
     # Write your file as json
     output_file_path = file_path.replace('.csv', f'_{output_mode}.json')

@@ -35,7 +35,8 @@ def test_col_val(serie, test_func, proportion=0.9, skipna=True, num_rows=50, out
                     return False
             return True
         else:
-            return apply_test_func(serie, test_func, _range).sum() > proportion * len(serie)
+            result = apply_test_func(serie, test_func, _range).sum() / len(serie)
+            return  result if result >= proportion else False
 
 def test_col_label(serie, test_func, proportion=1, output_mode='ALL') :
     ''' Tests label (from header) using test_func.
@@ -46,7 +47,8 @@ def test_col_label(serie, test_func, proportion=1, output_mode='ALL') :
     if output_mode == 'ALL' :
         return test_func(label)
     else :
-        return test_func(label) >= proportion
+        result = test_func(label)
+        return result if result >= proportion else False
 
 def test_col(table, all_tests, num_rows, output_mode):
     # Initialising dict for tests
@@ -93,17 +95,6 @@ def test_label(table, all_tests, output_mode) :
 
 
 def prepare_output_dict(return_table, output_mode):
-    """
-    if (output_mode == 'LIMITED'):
-        for colnum in range(0, len(return_table.columns)):
-            col = return_table.columns[colnum]
-            possible_values = list(return_table[return_table[col]].index)
-            if possible_values != []:
-                # print('  >>  La colonne', col, 'est peut-être :',)
-                # print(possible_values)
-                return_dict_cols[header[colnum]] = possible_values
-        return return_dict_cols"""
-
     return_dict_cols = return_table.to_dict('dict')
     return_dict_cols_intermediary = {}
     for column_name in return_dict_cols:
@@ -111,22 +102,28 @@ def prepare_output_dict(return_table, output_mode):
         for detected_value_type in return_dict_cols[column_name]:
             if return_dict_cols[column_name][detected_value_type] == 0:
                 continue
-            if output_mode == 'LIMITED':
-                return_dict_cols_intermediary[column_name].append(detected_value_type)
-            if (output_mode == 'ALL'):
-                dict_tmp = {}
-                dict_tmp['type'] = detected_value_type
-                dict_tmp['score_rb'] = return_dict_cols[column_name][detected_value_type]
-                return_dict_cols_intermediary[column_name].append(dict_tmp)
+            dict_tmp = {}
+            dict_tmp['type'] = detected_value_type
+            dict_tmp['score_rb'] = return_dict_cols[column_name][detected_value_type]
+            return_dict_cols_intermediary[column_name].append(dict_tmp)
 
         # Clean dict using priorities
+        types_detected = {x['type'] for x in return_dict_cols_intermediary[column_name]}
+        types_to_remove = set()
+        if 'floats' in types_detected:
+            types_to_remove.add('date')
+        if 'ints' in types_detected:
+            types_to_remove.add('floats')
+        if any([x in types_detected for x in ['tel_fr', 'siren', 'code_postal', 'code_commune_insee', 'ints']]):
+            types_to_remove = types_to_remove.union({'floats', 'ints'})
+        types_to_keep = types_detected - types_to_remove
+
+        detections = return_dict_cols_intermediary[column_name]
+        detections = [x for x in detections if x['type'] in types_to_keep]
+        if output_mode == 'ALL':
+            return_dict_cols_intermediary[column_name] = detections
         if output_mode == 'LIMITED':
-            types_detected = set(return_dict_cols_intermediary[column_name])
-            if 'floats' in types_detected:
-                types_detected.discard('date')
-            if any([x in types_detected for x in ['tel_fr', 'siren', 'code_postal', 'code_commune_insee']]):
-                types_detected.discard('floats')
-            return_dict_cols_intermediary[column_name] = list(types_detected)
+            return_dict_cols_intermediary[column_name] = max(detections, key=lambda x: x['score_rb']) if len(detections) > 0 else {'type': 'string', 'score_rb': 1.0}
 
     return return_dict_cols_intermediary
 

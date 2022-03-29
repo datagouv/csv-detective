@@ -7,5 +7,5 @@ def _is(val):
     try:
         parse(val, fuzzy=False)
         return True
-    except (ValueError, TypeError):
+    except (ValueError, TypeError, OverflowError):
         return False
