@@ -31,8 +31,8 @@ file_path = os.path.join('.', 'tests', 'code_postaux_v201410.csv')
 inspection_results = routine(file_path)
 
 # Write your file as json
-with open(file_path.replace('.csv', '.json'), 'wb') as fp:
-    json.dump(inspection_results, fp, indent=4, separators=(',', ': '), encoding="utf-8")
+with open(file_path.replace('.csv', '.json'), 'w', encoding='utf8') as fp:
+    json.dump(inspection_results, fp, indent=4, separators=(',', ': '))
 
 ```
 
