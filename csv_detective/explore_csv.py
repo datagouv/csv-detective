@@ -59,7 +59,7 @@ def return_all_tests(user_input_tests, detect_type='detect_fields'):
     return all_tests
 
 
-def routine(file_path, minio_url=None, minio_bucket=None, minio_key=None, num_rows=50, user_input_tests='ALL',output_mode='LIMITED'):
+def routine(file_path, minio_url=None, minio_bucket=None, minio_key=None, num_rows=50, user_input_tests='ALL',output_mode='LIMITED', save_results=True, upload_results=False):
     '''Returns a dict with information about the csv table and possible
     column contents.
     In order to run it with Minio, env variables MINIO_USER and MINIO_PASSWORD must be set.
@@ -153,15 +153,18 @@ def routine(file_path, minio_url=None, minio_bucket=None, minio_key=None, num_ro
         for detection_method in ['columns_fields', 'columns_labels', 'columns']:
             return_dict[detection_method] = {col_name: {'python_type': metier_to_python_type.get(detection['type'], 'str'), **detection} for col_name, detection in return_dict[detection_method].items()}
 
-    # Write your file as json
-    output_file_path = file_path.replace('.csv', f'_{output_mode}.json')
-    with open(output_file_path, 'w', encoding='utf8') as fp:
-        json.dump(return_dict, fp, indent=4, separators=(',', ': '))
+    if save_results or upload_results:
+        # Write your file as json
+        output_file_path = file_path.replace('.csv', f'_{output_mode}.json')
+        with open(output_file_path, 'w', encoding='utf8') as fp:
+            json.dump(return_dict, fp, indent=4, separators=(',', ': '))
 
-    if use_minio:
+    if upload_results:
         output_minio_key = minio_key.replace('.csv', f'_{output_mode}.json')
         upload_minio_file(client, minio_bucket, output_minio_key, output_file_path)
-        os.remove(file_path)
         os.remove(output_file_path)
+
+    if use_minio:
+        os.remove(file_path)
 
     return return_dict
