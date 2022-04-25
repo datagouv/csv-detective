@@ -1,5 +1,5 @@
 from .FR.other import code_csp_insee, csp_insee, sexe, siren, tel_fr, uai, siret, insee_ape700, date_fr, code_waldec, code_rna
-from .other import email, url, booleen, twitter, floats, ints, uuid
+from .other import email, url, booleen, mongo_object_id, twitter, floats, ints, uuid
 
 from .FR.geo import adresse, code_commune_insee, code_postal, commune, departement, pays, region, code_departement, code_fantoir, longitude_wgs_fr_metropole, latitude_wgs_fr_metropole, code_region, latitude_l93, longitude_l93, insee_canton
 from .geo import iso_country_code, latitude_wgs, longitude_wgs, latlon_wgs, json_geojson

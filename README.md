@@ -69,6 +69,7 @@ Includes :
 - Codes CSP, Description CSP, SIREN 
 - E-Mails, URLs, Téléphones FR
 - Years, Dates, Jours de la Semaine FR
+- UUIDs, Mongo ObjectIds
 
 
 ### Additional options

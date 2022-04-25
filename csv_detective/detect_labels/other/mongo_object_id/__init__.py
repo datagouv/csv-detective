@@ -6,7 +6,7 @@ PROPORTION = 0.5
 def _is(header):
     '''Returns 1 if the (processed) header matches one of the expected words combination, else 0'''
 
-    words_combinations_list = ['latitude', 'lat', 'y', 'yf', 'yd', 'coordonnee y', 'coord y', 'ycoord', 'geocodage y gps', 'location latitude', 'ylatitude', 'ylat', 'latitude (y)', 'latitudeorg', 'coordinates.latitude', 'googlemap latitude', 'latitudelieu', 'latitude googlemap', 'latitude wgs84', 'y wgs84', 'latitude (wgs84)']
+    words_combinations_list = ['id', 'objectid']
     processed_header = _process_text(header)
 
     header_matches_words_combination = float(any([words_combination == processed_header for words_combination in words_combinations_list]))
