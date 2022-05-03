@@ -116,43 +116,43 @@ with open(file_path, 'r') as file:
     "code_departement": [
       {
         "colonne": "dep",
-        "score_rb": 0.8
+        "score": 0.8
       },
       {
         "colonne": "reg",
-        "score_rb": 0.4
+        "score": 0.4
       },
       {
         "colonne": "assoc",
-        "score_rb": 0
+        "score": 0
       }
     ],
     "code_region": [
       {
         "colonne": "dep",
-        "score_rb": 0.6
+        "score": 0.6
       },
       {
         "colonne": "reg",
-        "score_rb": 0.8
+        "score": 0.8
       },
       {
         "colonne": "assoc",
-        "score_rb": 0
+        "score": 0
       }
     ],
     "code_rna": [
       {
         "colonne": "dep",
-        "score_rb": 0
+        "score": 0
       },
       {
         "colonne": "reg",
-        "score_rb": 0
+        "score": 0
       },
       {
         "colonne": "assoc",
-        "score_rb": 0.9
+        "score": 0.9
       }
     ],
     #[... same output format for each column types]

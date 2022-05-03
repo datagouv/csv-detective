@@ -32,11 +32,11 @@ def test_col_val(serie, test_func, proportion=0.9, skipna=True, num_rows=50, out
                 if all(apply_test_func(serie, test_func, _range)):
                     pass
                 else:
-                    return False
-            return True
+                    return 0.0
+            return 1.0
         else:
             result = apply_test_func(serie, test_func, _range).sum() / len(serie)
-            return  result if result >= proportion else False
+            return  result if result >= proportion else 0.0
 
 def test_col_label(serie, test_func, proportion=1, output_mode='ALL') :
     ''' Tests label (from header) using test_func.
@@ -104,18 +104,22 @@ def prepare_output_dict(return_table, output_mode):
                 continue
             dict_tmp = {}
             dict_tmp['format'] = detected_value_type
-            dict_tmp['score_rb'] = return_dict_cols[column_name][detected_value_type]
+            dict_tmp['score'] = return_dict_cols[column_name][detected_value_type]
             return_dict_cols_intermediary[column_name].append(dict_tmp)
 
         # Clean dict using priorities
         formats_detected = {x['format'] for x in return_dict_cols_intermediary[column_name]}
         formats_to_remove = set()
-        if 'float' in formats_detected:
-            formats_to_remove.add('date')
+        # Deprioritise float and int detection vs others
+        if len(formats_detected - {'float', 'int'}) > 0:
+            formats_to_remove = formats_to_remove.union({'float', 'int'})
         if 'int' in formats_detected:
             formats_to_remove.add('float')
-        if any([x in formats_detected for x in ['tel_fr', 'siren', 'code_postal', 'code_commune_insee']]):
-            formats_to_remove = formats_to_remove.union({'float', 'int'})
+        if 'latitude_wgs_fr_metropole' in formats_detected:
+            formats_to_remove.add('latitude_l93')
+        if 'longitude_wgs_fr_metropole' in formats_detected:
+            formats_to_remove.add('longitude_l93')
+
         formats_to_keep = formats_detected - formats_to_remove
 
         detections = return_dict_cols_intermediary[column_name]
@@ -123,7 +127,7 @@ def prepare_output_dict(return_table, output_mode):
         if output_mode == 'ALL':
             return_dict_cols_intermediary[column_name] = detections
         if output_mode == 'LIMITED':
-            return_dict_cols_intermediary[column_name] = max(detections, key=lambda x: x['score_rb']) if len(detections) > 0 else {'format': 'string', 'score_rb': 1.0}
+            return_dict_cols_intermediary[column_name] = max(detections, key=lambda x: x['score']) if len(detections) > 0 else {'format': 'string', 'score': 1.0}
 
     return return_dict_cols_intermediary
 
