@@ -10,6 +10,7 @@ from pkg_resources import resource_string
 from csv_detective import detect_fields
 from csv_detective import detect_labels
 from csv_detective.s3_utils import download_from_minio, upload_to_minio
+from csv_detective.schema_generation import generate_table_schema
 from csv_detective.utils import test_col, test_label, prepare_output_dict
 from .detection import (
     detect_separator,
@@ -59,7 +60,7 @@ def return_all_tests(user_input_tests, detect_type='detect_fields'):
     return all_tests
 
 
-def routine(file_path, minio_url=None, minio_bucket=None, minio_key=None, num_rows=50, user_input_tests='ALL',output_mode='LIMITED', save_results=True, upload_results=False, minio_user: str=None, minio_pwd: str=None):
+def routine(file_path, minio_url=None, minio_bucket=None, minio_key=None, num_rows=50, user_input_tests='ALL',output_mode='LIMITED', save_results=True, upload_results=False, save_tableschema=False, minio_user: str=None, minio_pwd: str=None):
     '''Returns a dict with information about the csv table and possible
     column contents.
     In order to run it with Minio, env variables MINIO_USER and MINIO_PASSWORD must be set.
@@ -166,5 +167,8 @@ def routine(file_path, minio_url=None, minio_bucket=None, minio_key=None, num_ro
 
     if use_minio:
         os.remove(file_path)
+
+    if save_tableschema:
+        generate_table_schema(return_dict, url=minio_url, bucket="tableschema", key=minio_key, minio_user=minio_user, minio_pwd=minio_pwd)
 
     return return_dict
