@@ -4,7 +4,9 @@ contenu possible des champs
 """
 
 import json
+from multiprocessing.sharedctypes import Value
 import os
+import tempfile
 from pkg_resources import resource_string
 
 from csv_detective import detect_fields
@@ -60,19 +62,41 @@ def return_all_tests(user_input_tests, detect_type='detect_fields'):
     return all_tests
 
 
-def routine(file_path, minio_url=None, minio_bucket=None, minio_key=None, num_rows=50, user_input_tests='ALL',output_mode='LIMITED', save_results=True, upload_results=False, save_tableschema=False, minio_user: str=None, minio_pwd: str=None):
+def routine(csv_file_path=None, minio_url=None, minio_user: str=None, minio_pwd: str=None, minio_bucket=None, minio_key=None, num_rows=50, user_input_tests='ALL',output_mode='LIMITED', save_results=True, upload_results=False, save_tableschema=False):
     '''Returns a dict with information about the csv table and possible
     column contents.
-    In order to run it with Minio, env variables MINIO_USER and MINIO_PASSWORD must be set.
-    '''
-    use_minio = (minio_url is not None) and (minio_bucket is not None) and (minio_key is not None)
-    if use_minio:
-        download_from_minio(url=minio_url, bucket=minio_bucket, key=minio_key, filepath=file_path, minio_user=minio_user, minio_pwd=minio_pwd)
 
-    binary_file = open(file_path, mode='rb')
+    Args:
+        csv_file_path (str): local path to CSV file if not using Minio
+        minio_url (str): url of the minio instance
+        minio_user (str): user name for the minio instance
+        minio_pwd (str): password for the minio instance
+        minio_bucket (str): bucket to download the file from
+        minio_key (str): key of the CSV file to download from the minio instance
+        num_rows (int): number of rows to sample from the file for analysis
+        user_input_tests (str or list): tests to run on the file
+        output_mode (str): LIMITED or ALL, whether or not to return all possible types or only the most likely one for each column
+        save_results (bool): whether or not to save the results in a json file
+        upload_results (bool): whether or not to upload the results to minio
+        save_tableschema (bool): whether or not to save the tableschema in a json file on the minio instance
+
+    Returns:
+        dict: a dict with information about the csv and possible types for each column
+    '''
+    use_minio = not any(param is None for param in [minio_url, minio_bucket, minio_key, minio_user, minio_pwd])
+    if use_minio:
+        if csv_file_path is not None:
+            raise ValueError('You can either use a Minio instance or a local file, not both')
+        csv_file_path = tempfile.NamedTemporaryFile(delete=False).name
+        download_from_minio(url=minio_url, bucket=minio_bucket, key=minio_key, filepath=csv_file_path, minio_user=minio_user, minio_pwd=minio_pwd)
+    elif csv_file_path is None:
+            raise ValueError('file_path is required if not using minio')
+
+
+    binary_file = open(csv_file_path, mode='rb')
     encoding = detect_encoding(binary_file)['encoding']
 
-    with open(file_path, 'r', encoding=encoding) as str_file:
+    with open(csv_file_path, 'r', encoding=encoding) as str_file:
         sep = detect_separator(str_file)
         header_row_idx, header = detect_headers(str_file, sep)
         if header is None:
@@ -155,18 +179,18 @@ def routine(file_path, minio_url=None, minio_bucket=None, minio_key=None, num_ro
 
     if save_results or upload_results:
         # Write your file as json
-        output_file_path = os.path.splitext(file_path)[0] + f'_{output_mode}.json'
-        with open(output_file_path, 'w', encoding='utf8') as fp:
+        output_path_to_store_minio_file = os.path.splitext(csv_file_path)[0] + f'_{output_mode}.json'
+        with open(output_path_to_store_minio_file, 'w', encoding='utf8') as fp:
             json.dump(return_dict, fp, indent=4, separators=(',', ': '))
 
     if upload_results:
         output_minio_key = minio_key.replace('.csv', f'_{output_mode}.json') if minio_key.endswith('.csv') else minio_key + f'_{output_mode}.json'
-        upload_to_minio(url=minio_url, bucket=minio_bucket, key=output_minio_key, filepath=output_file_path, minio_user=minio_user, minio_pwd=minio_pwd)
+        upload_to_minio(url=minio_url, bucket=minio_bucket, key=output_minio_key, filepath=output_path_to_store_minio_file, minio_user=minio_user, minio_pwd=minio_pwd)
         if not save_results:
-            os.unlink(output_file_path)
+            os.unlink(output_path_to_store_minio_file)
 
     if use_minio:
-        os.remove(file_path)
+        os.remove(csv_file_path)
 
     if save_tableschema:
         generate_table_schema(return_dict, url=minio_url, bucket="tableschema", key=minio_key, minio_user=minio_user, minio_pwd=minio_pwd)

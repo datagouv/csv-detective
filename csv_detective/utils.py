@@ -114,7 +114,7 @@ def prepare_output_dict(return_table, output_mode):
             types_to_remove.add('date')
         if 'ints' in types_detected:
             types_to_remove.add('floats')
-        if any([x in types_detected for x in ['tel_fr', 'siren', 'code_postal', 'code_commune_insee', 'ints']]):
+        if any([x in types_detected for x in ['tel_fr', 'siren', 'code_postal', 'code_commune_insee']]):
             types_to_remove = types_to_remove.union({'floats', 'ints'})
         types_to_keep = types_detected - types_to_remove
 
