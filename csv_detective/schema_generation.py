@@ -11,7 +11,7 @@ def generate_table_schema(analysis_report: dict, url: str, bucket="tableschema",
     fields = [{"name": header,
         "description": "",
         "example": "",
-        "type": field_report["type"],
+        "type": field_report["format"],
         "constraints": {
           "required": False
         }

@@ -150,16 +150,16 @@ def routine(csv_file_path=None, minio_url=None, minio_user: str=None, minio_pwd:
 
     # Perform a mean of the two results
     # The fill_value=0 ensures that if there was no corresponding \
-    #   test for labels and fields, then the overall result is divided by 2 as we are less "sure" that the field is this type
+    #   test for labels and fields, then the overall result is divided by 2 as we are less "sure" that the field is this format
     return_table = 0.5*return_table_fields.add(return_table_labels, fill_value=0)
     return_dict_cols = prepare_output_dict(return_table, output_mode)
     return_dict['columns'] = return_dict_cols
 
     metier_to_python_type = {
         'booleen': 'bool',
-        'ints': 'int',
-        'floats': 'float',
-        'string': 'str',
+        'int': 'int',
+        'float': 'float',
+        'string': 'string',
         'latitude': 'float',
         'latitude_l93': 'float',
         'latitude_wgs': 'float',
@@ -172,10 +172,10 @@ def routine(csv_file_path=None, minio_url=None, minio_user: str=None, minio_pwd:
 
     if output_mode == 'ALL':
         for detection_method in ['columns_fields', 'columns_labels', 'columns']:
-            return_dict[detection_method] = {col_name: [{'python_type': metier_to_python_type.get(detection['type'], 'str'), **detection} for detection in detections] for col_name, detections in return_dict[detection_method].items()}
+            return_dict[detection_method] = {col_name: [{'python_type': metier_to_python_type.get(detection['format'], 'string'), **detection} for detection in detections] for col_name, detections in return_dict[detection_method].items()}
     if output_mode == 'LIMITED':
         for detection_method in ['columns_fields', 'columns_labels', 'columns']:
-            return_dict[detection_method] = {col_name: {'python_type': metier_to_python_type.get(detection['type'], 'str'), **detection} for col_name, detection in return_dict[detection_method].items()}
+            return_dict[detection_method] = {col_name: {'python_type': metier_to_python_type.get(detection['format'], 'string'), **detection} for col_name, detection in return_dict[detection_method].items()}
 
     if save_results or upload_results:
         # Write your file as json

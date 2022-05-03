@@ -4,7 +4,7 @@ def test_col_val(serie, test_func, proportion=0.9, skipna=True, num_rows=50, out
     ''' Tests values of the serie using test_func.
          - skipna : if True indicates that NaNs are not counted as False
          - proportion :  indicates the proportion of values that have to pass the test
-    for the serie to be detected as a certain type
+    for the serie to be detected as a certain format
     '''
     def apply_test_func(serie, test_func, _range): #TODO : change for a cleaner method and only test columns in modules labels
         try:
@@ -40,7 +40,7 @@ def test_col_val(serie, test_func, proportion=0.9, skipna=True, num_rows=50, out
 
 def test_col_label(serie, test_func, proportion=1, output_mode='ALL') :
     ''' Tests label (from header) using test_func.
-         - proportion :  indicates the minimum score to pass the test for the serie to be detected as a certain type
+         - proportion :  indicates the minimum score to pass the test for the serie to be detected as a certain format
     '''
     label = serie.name
 
@@ -103,27 +103,27 @@ def prepare_output_dict(return_table, output_mode):
             if return_dict_cols[column_name][detected_value_type] == 0:
                 continue
             dict_tmp = {}
-            dict_tmp['type'] = detected_value_type
+            dict_tmp['format'] = detected_value_type
             dict_tmp['score_rb'] = return_dict_cols[column_name][detected_value_type]
             return_dict_cols_intermediary[column_name].append(dict_tmp)
 
         # Clean dict using priorities
-        types_detected = {x['type'] for x in return_dict_cols_intermediary[column_name]}
-        types_to_remove = set()
-        if 'floats' in types_detected:
-            types_to_remove.add('date')
-        if 'ints' in types_detected:
-            types_to_remove.add('floats')
-        if any([x in types_detected for x in ['tel_fr', 'siren', 'code_postal', 'code_commune_insee']]):
-            types_to_remove = types_to_remove.union({'floats', 'ints'})
-        types_to_keep = types_detected - types_to_remove
+        formats_detected = {x['format'] for x in return_dict_cols_intermediary[column_name]}
+        formats_to_remove = set()
+        if 'float' in formats_detected:
+            formats_to_remove.add('date')
+        if 'int' in formats_detected:
+            formats_to_remove.add('float')
+        if any([x in formats_detected for x in ['tel_fr', 'siren', 'code_postal', 'code_commune_insee']]):
+            formats_to_remove = formats_to_remove.union({'float', 'int'})
+        formats_to_keep = formats_detected - formats_to_remove
 
         detections = return_dict_cols_intermediary[column_name]
-        detections = [x for x in detections if x['type'] in types_to_keep]
+        detections = [x for x in detections if x['format'] in formats_to_keep]
         if output_mode == 'ALL':
             return_dict_cols_intermediary[column_name] = detections
         if output_mode == 'LIMITED':
-            return_dict_cols_intermediary[column_name] = max(detections, key=lambda x: x['score_rb']) if len(detections) > 0 else {'type': 'string', 'score_rb': 1.0}
+            return_dict_cols_intermediary[column_name] = max(detections, key=lambda x: x['score_rb']) if len(detections) > 0 else {'format': 'string', 'score_rb': 1.0}
 
     return return_dict_cols_intermediary
 
