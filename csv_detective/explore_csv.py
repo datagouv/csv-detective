@@ -148,10 +148,10 @@ def routine(csv_file_path=None, minio_url=None, minio_user: str=None, minio_pwd:
     return_dict_cols_labels = prepare_output_dict(return_table_labels, output_mode)
     return_dict['columns_labels'] = return_dict_cols_labels
 
-    # Perform a mean of the two results
-    # The fill_value=0 ensures that if there was no corresponding \
-    #   test for labels and fields, then the overall result is divided by 2 as we are less "sure" that the field is this format
-    return_table = 0.5*return_table_fields.add(return_table_labels, fill_value=0)
+    # Multiply the results of the fields by 1 + 0.5 * the results of the labels.
+    # This is because the fields are more important than the labels and yields a max of 1.5 for the final score.
+    return_table = return_table_fields * (1 + return_table_labels.reindex(index=return_table_fields.index, fill_value=0).values / 2)
+
     return_dict_cols = prepare_output_dict(return_table, output_mode)
     return_dict['columns'] = return_dict_cols
 
@@ -193,6 +193,8 @@ def routine(csv_file_path=None, minio_url=None, minio_user: str=None, minio_pwd:
         os.remove(csv_file_path)
 
     if save_tableschema:
+        if output_mode == 'ALL':
+            raise ValueError('Saving tableschema for ALL output mode is not supported.')
         generate_table_schema(return_dict, url=minio_url, bucket="tableschema", key=minio_key, minio_user=minio_user, minio_pwd=minio_pwd)
 
     return return_dict
