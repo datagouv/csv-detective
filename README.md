@@ -51,16 +51,31 @@ The program creates a `Python` dictionnary with the following information :
     "headers": ['code commune INSEE', 'nom de la commune', 'code postal', "libell\\u00e9 d'acheminement\n"], # Header row
     "separator": ";",						# Detected CSV separator
     "headers_row": 0,						# Number of heading rows
-    "columns": {					        # Key: Column name // Value: Possible column content
-        "libell\u00e9 d'acheminement": ["commune"],
-        "code commune INSEE": ["code_commune_insee"],
-        "code postal": ["code_postal"],
-        "nom de la commune": [ "commune"]
+    "columns_fields": {
+        "nom de la commune": {
+            "python_type": "string",
+            "format": "commune",
+            "score": 1.0
+        },
+    },
+    "columns_labels": {
+        "nom de la commune": {
+            "python_type": "string",
+            "format": "commune",
+            "score": 0.5
+        },
+    },
+    "columns_fields": {
+        "nom de la commune": {
+            "python_type": "string",
+            "format": "commune",
+            "score": 1.25
+        },
     }
 }
 ```
 
-### What Contents Can Be Detected
+### What Formats Can Be Detected
 
 Includes : 
 
@@ -71,6 +86,14 @@ Includes :
 - Years, Dates, Jours de la Semaine FR
 - UUIDs, Mongo ObjectIds
 
+### Format detection and scoring
+For each column, 3 scores are computed for each format, the higher the score, the more likely the format:
+- the field score based on the values contained in the column (0.0 to 1.0).
+- the label score based on the header of the column (0.0 to 1.0).
+- the overall score, computed as `field_score * (1 + label_score/2)` (0.0 to 1.5).
+
+The overall score computation aims to give more weight to the column contents while
+still leveraging the column header.
 
 ### Additional options
 #### `user_input_tests` - Select the tests you want to pass
@@ -94,8 +117,9 @@ with open(file_path, 'r') as file:
 
 This option allows you to select the output mode you want to pass. To do so, you have to pass a `output_mode` argument to the `routine` function. This variable has two possible values:
 
-- `output_mode` defaults to `'LIMITED'` which means report will contain only detected column types based on a pre-selected threshold proportion in data. Report result is the standard output (an example can be found above in 'Output' section).
-- `output_mode='ALL'` which means report will contain a full list of all column types possibilities for each input data columns with a value associated which match to the proportion of found column type in data. With this report, user can adjust its rules of detection based on a specific threshold and has a better vision of quality detection for each columns. Results could also be easily transformed into dataframe (columns types in column / column names in rows) for analysis and test.
+- `output_mode` defaults to `'LIMITED'` which means report will contain only detected column formats based on a pre-selected threshold proportion in data. Report result is the standard output (an example can be found above in 'Output' section).
+Only the format with highest score is present in the output.
+- `output_mode='ALL'` which means report will contain a full list of all column format possibilities for each input data columns with a value associated which match to the proportion of found column type in data. With this report, user can adjust its rules of detection based on a specific threshold and has a better vision of quality detection for each columns. Results could also be easily transformed into dataframe (columns types in column / column names in rows) for analysis and test.
 
 
 **Partial code** :
