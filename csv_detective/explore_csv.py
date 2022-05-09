@@ -177,6 +177,11 @@ def routine(csv_file_path=None, minio_url=None, minio_user: str=None, minio_pwd:
         for detection_method in ['columns_fields', 'columns_labels', 'columns']:
             return_dict[detection_method] = {col_name: {'python_type': metier_to_python_type.get(detection['format'], 'string'), **detection} for col_name, detection in return_dict[detection_method].items()}
 
+        # Add detection with formats as keys
+        return_dict['formats'] = { column_metadata['format']: [] for column_metadata in return_dict['columns'].values() }
+        for header, col_metadata in return_dict['columns'].items():
+            return_dict['formats'][col_metadata['format']].append(header)
+
     if save_results or upload_results:
         # Write your file as json
         output_path_to_store_minio_file = os.path.splitext(csv_file_path)[0] + f'_{output_mode}.json'
