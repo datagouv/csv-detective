@@ -71,5 +71,6 @@ def _is(val):
     ]
 
     val = _process_text(val)
-    a = any([x.lower() in val for x in voies])
+    # Since 'true' contains 'rue', we need to exclude it.
+    a = any([x.lower() in val for x in voies]) and val != 'true'
     return a
