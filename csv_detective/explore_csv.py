@@ -3,6 +3,7 @@ Ce script analyse les premières lignes d'un CSV pour essayer de déterminer le
 contenu possible des champs
 """
 
+from typing import Dict, List, Literal, Optional, Union
 import json
 from multiprocessing.sharedctypes import Value
 import os
@@ -62,33 +63,57 @@ def return_all_tests(user_input_tests, detect_type='detect_fields'):
     return all_tests
 
 
-def routine(csv_file_path=None, minio_url=None, minio_user: str=None, minio_pwd: str=None, minio_bucket=None, minio_key=None, num_rows=50, user_input_tests='ALL',output_mode='LIMITED', save_results=True, upload_results=False, save_tableschema=False):
+def routine(
+    csv_file_path: Optional[str]=None,
+    csv_minio_location: Dict[str, str]=None,
+    minio_user: Optional[str]=None,
+    minio_pwd: Optional[str]=None,
+    num_rows: int=50,
+    user_input_tests: Union[str, List[str]]='ALL',
+    output_mode: Literal['ALL', 'LIMITED']='LIMITED',
+    save_results: bool=True,
+    output_minio_location: Dict[str, str]=None,
+    tableschema_minio_location: Dict[str, str]=None):
     '''Returns a dict with information about the csv table and possible
     column contents.
 
     Args:
-        csv_file_path (str): local path to CSV file if not using Minio
-        minio_url (str): url of the minio instance
-        minio_user (str): user name for the minio instance
-        minio_pwd (str): password for the minio instance
-        minio_bucket (str): bucket to download the file from
-        minio_key (str): key of the CSV file to download from the minio instance
-        num_rows (int): number of rows to sample from the file for analysis
-        user_input_tests (str or list): tests to run on the file
-        output_mode (str): LIMITED or ALL, whether or not to return all possible types or only the most likely one for each column
-        save_results (bool): whether or not to save the results in a json file
-        upload_results (bool): whether or not to upload the results to minio
-        save_tableschema (bool): whether or not to save the tableschema in a json file on the minio instance
+        csv_file_path: local path to CSV file if not using Minio
+        csv_minio_location: dict with Minio URL, bucket and key of the CSV file
+        minio_user: user name for the minio instance
+        minio_pwd: password for the minio instance
+        num_rows: number of rows to sample from the file for analysis
+        user_input_tests: tests to run on the file
+        output_mode: LIMITED or ALL, whether or not to return all possible types or only the most likely one for each column
+        save_results: whether or not to save the results in a json file
+        output_minio_location: Minio URL, bucket and key to store output file. None if not uploading to Minio.
+        tableschema_minio_location: Minio URL, bucket and key to store tableschema file. None if not uploading the tableschema to Minio.
 
     Returns:
         dict: a dict with information about the csv and possible types for each column
     '''
-    use_minio = not any(param is None for param in [minio_url, minio_bucket, minio_key, minio_user, minio_pwd])
-    if use_minio:
+
+    if any([location_dict is not None for location_dict in [csv_minio_location, output_minio_location, tableschema_minio_location]]) and (minio_user is None) or (minio_pwd is None):
+        raise ValueError('Minio credentials are required if using Minio')
+
+    for location_dict in [csv_minio_location, output_minio_location, tableschema_minio_location]:
+        if location_dict is not None:
+            if any([(location_key not in location_dict) or (location_dict[location_key] is None) for location_key in ['url', 'bucket', 'key']]):
+                raise ValueError('Minio location dict must contain url, bucket and key')
+
+    is_csv_on_minio = csv_minio_location is not None
+    if is_csv_on_minio:
         if csv_file_path is not None:
             raise ValueError('You can either use a Minio instance or a local file, not both')
         csv_file_path = tempfile.NamedTemporaryFile(delete=False).name
-        download_from_minio(url=minio_url, bucket=minio_bucket, key=minio_key, filepath=csv_file_path, minio_user=minio_user, minio_pwd=minio_pwd)
+        download_from_minio(
+            url=csv_minio_location['url'],
+            bucket=csv_minio_location['bucket'],
+            key=csv_minio_location['key'],
+            filepath=csv_file_path,
+            minio_user=minio_user,
+            minio_pwd=minio_pwd
+        )
     elif csv_file_path is None:
             raise ValueError('file_path is required if not using minio')
 
@@ -182,24 +207,38 @@ def routine(csv_file_path=None, minio_url=None, minio_user: str=None, minio_pwd:
         for header, col_metadata in return_dict['columns'].items():
             return_dict['formats'][col_metadata['format']].append(header)
 
-    if save_results or upload_results:
+    if save_results or output_minio_location is not None:
         # Write your file as json
-        output_path_to_store_minio_file = os.path.splitext(csv_file_path)[0] + f'_{output_mode}.json'
+        output_path_to_store_minio_file = os.path.splitext(csv_file_path)[0] + '.json'
         with open(output_path_to_store_minio_file, 'w', encoding='utf8') as fp:
             json.dump(return_dict, fp, indent=4, separators=(',', ': '))
 
-    if upload_results:
-        output_minio_key = minio_key.replace('.csv', f'_{output_mode}.json') if minio_key.endswith('.csv') else minio_key + f'_{output_mode}.json'
-        upload_to_minio(url=minio_url, bucket=minio_bucket, key=output_minio_key, filepath=output_path_to_store_minio_file, minio_user=minio_user, minio_pwd=minio_pwd)
+    if output_minio_location is not None:
+        upload_to_minio(
+            url=output_minio_location['url'],
+            bucket=output_minio_location['bucket'],
+            key=output_minio_location['key'],
+            filepath=output_path_to_store_minio_file,
+            minio_user=minio_user,
+            minio_pwd=minio_pwd
+        )
+
         if not save_results:
             os.unlink(output_path_to_store_minio_file)
 
-    if use_minio:
+    if is_csv_on_minio:
         os.remove(csv_file_path)
 
-    if save_tableschema:
+    if tableschema_minio_location is not None:
         if output_mode == 'ALL':
             raise ValueError('Saving tableschema for ALL output mode is not supported.')
-        generate_table_schema(return_dict, url=minio_url, bucket="tableschema", key=minio_key, minio_user=minio_user, minio_pwd=minio_pwd)
+        generate_table_schema(
+            return_dict,
+            url=tableschema_minio_location['url'],
+            bucket=tableschema_minio_location['bucket'],
+            key=tableschema_minio_location['key'],
+            minio_user=minio_user,
+            minio_pwd=minio_pwd
+        )
 
     return return_dict
