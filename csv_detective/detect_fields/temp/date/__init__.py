@@ -1,8 +1,24 @@
-from os.path import dirname, join
-from csv_detective.process_text import _process_text
 import re
+from dateutil.parser import parse
 
 PROPORTION = 1
+
+
+def is_dateutil_date(val: str) -> bool:
+    try:
+        parse(val, fuzzy=False)
+        return True
+    except (ValueError, TypeError, OverflowError):
+        return False
+
+
+def is_float(val: str) -> bool:
+    try:
+        float(val)
+        return True
+    except ValueError:
+        return False
+
 
 def _is(val):
     '''Renvoie True si val peut être une date, False sinon'''
@@ -24,4 +40,4 @@ def _is(val):
     # matches JJ-mmm-AAAA
     f = bool(re.match(r'^(0[1-9]|[12][0-9]|3[01])[ -/_;.:,](jan|fev|feb|mar|avr|apr|mai|may|jun|jui|jul|aou|aug|sep|oct|nov|dec)[ -/_;.:,]([0-9]{2}$|(19|20)[0-9]{2}$)', val))
 
-    return a or b or c or d or e or f
+    return a or b or c or d or e or f or (is_dateutil_date(val) and not is_float(val))

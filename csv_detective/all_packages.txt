@@ -7,6 +7,8 @@ csv_detective.detect_fields.FR
 csv_detective.detect_fields.temp.date
 csv_detective.detect_fields.temp.year
 csv_detective.detect_fields.other.email
+csv_detective.detect_fields.other.mongo_object_id
+csv_detective.detect_fields.other.uuid
 csv_detective.detect_fields.other.url
 csv_detective.detect_fields.geo.iso_country_code
 csv_detective.detect_fields.FR.temp
@@ -41,7 +43,8 @@ csv_detective.detect_fields.FR.geo.longitude_wgs_fr_metropole
 csv_detective.detect_fields.FR.geo.code_region
 csv_detective.detect_fields.other.booleen
 csv_detective.detect_fields.other.twitter
-csv_detective.detect_fields.other.floats
+csv_detective.detect_fields.other.float
+csv_detective.detect_fields.other.int
 csv_detective.detect_fields.FR.geo.latitude_l93
 csv_detective.detect_fields.FR.geo.longitude_l93
 csv_detective.detect_fields.FR.geo.insee_canton
@@ -83,7 +86,10 @@ csv_detective.detect_labels.geo.latlon_wgs
 csv_detective.detect_labels.geo.longitude_wgs
 csv_detective.detect_labels.other.booleen
 csv_detective.detect_labels.other.email
-csv_detective.detect_labels.other.floats
+csv_detective.detect_labels.other.mongo_object_id
+csv_detective.detect_labels.other.uuid
+csv_detective.detect_labels.other.float
+csv_detective.detect_labels.other.int
 csv_detective.detect_labels.other.money
 csv_detective.detect_labels.other.twitter
 csv_detective.detect_labels.other.url

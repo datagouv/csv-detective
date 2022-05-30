@@ -2,13 +2,6 @@ import pandas as pd
 from cchardet import UniversalDetector
 from ast import literal_eval
 
-def detect_ints_as_floats(table):
-    '''Détecte les colonnes contenant des entiers possibles écrits sous forme de float'''
-    regex = r'^[0-9]+\.0+$'
-    res = table.apply(lambda serie: serie.str.match(regex).all() and any(serie.notnull()))
-    return res.index[res]
-
-
 def detect_continuous_variable(table, continuous_th=0.9):
     """
     Detects whether a column contains continuous variables. We consider a continuous column one that contains

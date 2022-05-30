@@ -3,15 +3,19 @@ Ce script analyse les premières lignes d'un CSV pour essayer de déterminer le
 contenu possible des champs
 """
 
+from typing import Dict, List, Literal, Optional, Union
+import json
+from multiprocessing.sharedctypes import Value
+import os
+import tempfile
 from pkg_resources import resource_string
-
-import pandas as pd
 
 from csv_detective import detect_fields
 from csv_detective import detect_labels
+from csv_detective.s3_utils import download_from_minio, upload_to_minio
+from csv_detective.schema_generation import generate_table_schema
 from csv_detective.utils import test_col, test_label, prepare_output_dict
 from .detection import (
-    detect_ints_as_floats,
     detect_separator,
     detect_encoding,
     detect_headers,
@@ -59,15 +63,32 @@ def return_all_tests(user_input_tests, detect_type='detect_fields'):
     return all_tests
 
 
-def routine(file_path, num_rows=50, user_input_tests='ALL',output_mode='LIMITED'):
+def routine(
+    csv_file_path: str,
+    num_rows: int=50,
+    user_input_tests: Union[str, List[str]]='ALL',
+    output_mode: Literal['ALL', 'LIMITED']='LIMITED',
+    save_results=True):
     '''Returns a dict with information about the csv table and possible
-    column contents
+    column contents.
+
+    Args:
+        csv_file_path: local path to CSV file if not using Minio
+        num_rows: number of rows to sample from the file for analysis
+        user_input_tests: tests to run on the file
+        output_mode: LIMITED or ALL, whether or not to return all possible types or only the most likely one for each column
+        save_results: whether or not to save the results in a json file
+
+    Returns:
+        dict: a dict with information about the csv and possible types for each column
     '''
-    # print('This is tests_to_do', user_input_tests)
-    binary_file = open(file_path, mode='rb')
+    if csv_file_path is None:
+        raise ValueError('csv_file_path is required.')
+
+    binary_file = open(csv_file_path, mode='rb')
     encoding = detect_encoding(binary_file)['encoding']
 
-    with open(file_path, 'r', encoding=encoding) as str_file:
+    with open(csv_file_path, 'r', encoding=encoding) as str_file:
         sep = detect_separator(str_file)
         header_row_idx, header = detect_headers(str_file, sep)
         if header is None:
@@ -80,9 +101,6 @@ def routine(file_path, num_rows=50, user_input_tests='ALL',output_mode='LIMITED'
         heading_columns = detect_heading_columns(str_file, sep)
         trailing_columns = detect_trailing_columns(str_file, sep, heading_columns)
         table, total_lines = parse_table(str_file, encoding, sep, num_rows)
-
-    # Detects columns that are ints but written as floats
-    res_ints_as_floats = list(detect_ints_as_floats(table))
 
     # Detects columns that are categorical
     res_categorical, categorical_mask = detetect_categorical_variable(table)
@@ -100,7 +118,6 @@ def routine(file_path, num_rows=50, user_input_tests='ALL',output_mode='LIMITED'
 
     return_dict['heading_columns'] = heading_columns
     return_dict['trailing_columns'] = trailing_columns
-    return_dict['ints_as_floats'] = res_ints_as_floats
 
     return_dict['continuous'] = res_continuous
     return_dict['categorical'] = res_categorical
@@ -123,11 +140,118 @@ def routine(file_path, num_rows=50, user_input_tests='ALL',output_mode='LIMITED'
     return_dict_cols_labels = prepare_output_dict(return_table_labels, output_mode)
     return_dict['columns_labels'] = return_dict_cols_labels
 
-    # Perform a mean of the two results
-    # The fill_value=0 ensures that if there was no corresponding \
-    #   test for labels and fields, then the overall result is divided by 2 as we are less "sure" that the field is this type
-    return_table = 0.5*return_table_fields.add(return_table_labels, fill_value=0)
+    # Multiply the results of the fields by 1 + 0.5 * the results of the labels.
+    # This is because the fields are more important than the labels and yields a max of 1.5 for the final score.
+    return_table = return_table_fields * (1 + return_table_labels.reindex(index=return_table_fields.index, fill_value=0).values / 2)
+
     return_dict_cols = prepare_output_dict(return_table, output_mode)
     return_dict['columns'] = return_dict_cols
+
+    metier_to_python_type = {
+        'booleen': 'bool',
+        'int': 'int',
+        'float': 'float',
+        'string': 'string',
+        'latitude': 'float',
+        'latitude_l93': 'float',
+        'latitude_wgs': 'float',
+        'latitude_wgs_fr_metropole': 'float',
+        'longitude': 'float',
+        'longitude_l93': 'float',
+        'longitude_wgs': 'float',
+        'longitude_wgs_fr_metropole': 'float',
+    }
+
+    if output_mode == 'ALL':
+        for detection_method in ['columns_fields', 'columns_labels', 'columns']:
+            return_dict[detection_method] = {col_name: [{'python_type': metier_to_python_type.get(detection['format'], 'string'), **detection} for detection in detections] for col_name, detections in return_dict[detection_method].items()}
+    if output_mode == 'LIMITED':
+        for detection_method in ['columns_fields', 'columns_labels', 'columns']:
+            return_dict[detection_method] = {col_name: {'python_type': metier_to_python_type.get(detection['format'], 'string'), **detection} for col_name, detection in return_dict[detection_method].items()}
+
+        # Add detection with formats as keys
+        return_dict['formats'] = { column_metadata['format']: [] for column_metadata in return_dict['columns'].values() }
+        for header, col_metadata in return_dict['columns'].items():
+            return_dict['formats'][col_metadata['format']].append(header)
+
+    if save_results:
+        # Write your file as json
+        output_path_to_store_minio_file = os.path.splitext(csv_file_path)[0] + '.json'
+        with open(output_path_to_store_minio_file, 'w', encoding='utf8') as fp:
+            json.dump(return_dict, fp, indent=4, separators=(',', ': '))
+
+    return return_dict
+
+
+def routine_minio(
+    csv_minio_location: Dict[str, str],
+    output_minio_location: Dict[str, str],
+    tableschema_minio_location: Dict[str, str],
+    minio_user: str,
+    minio_pwd: str,
+    num_rows: int=50,
+    user_input_tests: Union[str, List[str]]='ALL'):
+    '''Returns a dict with information about the csv table and possible
+    column contents.
+
+    Args:
+        csv_minio_location: dict with Minio URL, bucket and key of the CSV file
+        output_minio_location: Minio URL, bucket and key to store output file. None if not uploading to Minio.
+        tableschema_minio_location: Minio URL, bucket and key to store tableschema file. None if not uploading the tableschema to Minio.
+        minio_user: user name for the minio instance
+        minio_pwd: password for the minio instance
+        num_rows: number of rows to sample from the file for analysis
+        user_input_tests: tests to run on the file
+        output_mode: LIMITED or ALL, whether or not to return all possible types or only the most likely one for each column
+
+    Returns:
+        dict: a dict with information about the csv and possible types for each column
+    '''
+
+    if any([location_dict is not None for location_dict in [csv_minio_location, output_minio_location, tableschema_minio_location]]) and (minio_user is None) or (minio_pwd is None):
+        raise ValueError('Minio credentials are required if using Minio')
+
+    for location_dict in [csv_minio_location, output_minio_location, tableschema_minio_location]:
+        if location_dict is not None:
+            if any([(location_key not in location_dict) or (location_dict[location_key] is None) for location_key in ['url', 'bucket', 'key']]):
+                raise ValueError('Minio location dict must contain url, bucket and key')
+
+    csv_file_path = tempfile.NamedTemporaryFile(delete=False).name
+    download_from_minio(
+        url=csv_minio_location['url'],
+        bucket=csv_minio_location['bucket'],
+        key=csv_minio_location['key'],
+        filepath=csv_file_path,
+        minio_user=minio_user,
+        minio_pwd=minio_pwd
+    )
+
+    return_dict = routine(csv_file_path, num_rows, user_input_tests, output_mode='LIMITED', save_results=True)
+
+    # Write report JSON file.
+    output_path_to_store_minio_file = os.path.splitext(csv_file_path)[0] + '.json'
+    with open(output_path_to_store_minio_file, 'w', encoding='utf8') as fp:
+        json.dump(return_dict, fp, indent=4, separators=(',', ': '))
+
+    upload_to_minio(
+        url=output_minio_location['url'],
+        bucket=output_minio_location['bucket'],
+        key=output_minio_location['key'],
+        filepath=output_path_to_store_minio_file,
+        minio_user=minio_user,
+        minio_pwd=minio_pwd
+    )
+
+    os.remove(output_path_to_store_minio_file)
+    os.remove(csv_file_path)
+
+    generate_table_schema(
+        return_dict,
+        url=tableschema_minio_location['url'],
+        bucket=tableschema_minio_location['bucket'],
+        key=tableschema_minio_location['key'],
+        minio_user=minio_user,
+        minio_pwd=minio_pwd
+    )
 
     return return_dict

@@ -2,7 +2,7 @@ import pandas as pd
 from numpy import random
 
 from csv_detective.detect_fields.FR.other import code_csp_insee, csp_insee, sexe, siren, tel_fr, code_rna, code_waldec
-from csv_detective.detect_fields.other import email, url
+from csv_detective.detect_fields.other import email, url, uuid, mongo_object_id
 
 from csv_detective.detect_fields.FR.geo import adresse, code_commune_insee, code_postal, commune, departement, pays, region
 from csv_detective.detect_fields.geo import iso_country_code
@@ -94,6 +94,29 @@ def test_match_email():
 def test_do_not_match_email():
     val = 'cdo@@gouv.sfd'
     assert not email._is(val)
+
+
+# uuid
+def test_match_uuid():
+    val = '884762be-51f3-44c3-b811-1e14c5d89262'
+    assert uuid._is(val)
+
+
+def test_do_not_match_uuid():
+    val = '0610928327'
+    assert not uuid._is(val)
+
+
+# Mongo ObjectId
+def test_match_mongo_object_id():
+    val = '62320e50f981bc2b57bcc044'
+    assert mongo_object_id._is(val)
+
+
+def test_do_not_match_mongo_object_id():
+    val = '884762be-51f3-44c3-b811-1e14c5d89262'
+    assert not mongo_object_id._is(val)
+
 
 # url
 def test_match_url():

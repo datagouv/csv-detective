@@ -35,6 +35,7 @@ setup(
     include_package_data = True,  # Will read MANIFEST.in
     install_requires = [
         'pandas >= 0.20',
+        'boto3 >= 1.21.21',
         'chardet >= 3.0',
         'unidecode >= 0.4', 'cchardet'
     ],
