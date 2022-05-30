@@ -2,9 +2,10 @@
 
 ## 0.4.3 [#24] (https://github.com/etalab/csv-detective/pull/24)
 
-- Add geopoint detection
+- Add uuid and MongoID detection
 - Add new function dedicated to interaction with minio data
 - Add table schema automatic generation (only on minio data)
+- Modification of calculated score (consider label detection as a boost for score)
 
 ## 0.4.2 [#22] (https://github.com/etalab/csv-detective/pull/22)
 
