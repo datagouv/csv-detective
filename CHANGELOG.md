@@ -2,9 +2,9 @@
 
 ## 0.4.3 [#24] (https://github.com/etalab/csv-detective/pull/24)
 
-Add geopoint detection
-Add new function dedicated to interaction with minio data
-Add table schema automatic generation (only on minio data)
+- Add geopoint detection
+- Add new function dedicated to interaction with minio data
+- Add table schema automatic generation (only on minio data)
 
 ## 0.4.2 [#22] (https://github.com/etalab/csv-detective/pull/22)
 
