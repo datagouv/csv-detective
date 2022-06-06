@@ -6,6 +6,57 @@ import tempfile
 
 from csv_detective.s3_utils import get_s3_client, download_from_minio, upload_to_minio
 
+
+def get_constraints(format: str) -> dict:
+    """Returns the constraints for a given format"""
+    extra_constraints = {}
+    if format == "code_commune_insee":
+        extra_constraints = {
+            "pattern": "^[0-9]{5}$"
+        }
+    if format == "code_departement":
+        extra_constraints = {
+            "pattern": "^(0[13-9]|[1-8]{2}|9[0-6]|2[a-bA-B]|97[1-6])$"
+        }
+    if format == "code_postal":
+        extra_constraints = {
+            "pattern": "^[0-9]{5}$"
+        }
+    if format == "code_fantoir":
+        extra_constraints = {
+            "pattern": "^[0-9A-Z][0-9]{3}[ABCDEFGHJKLMNPRSTUVWXYZ]$"
+        }
+    if format == "latitude_l93":
+        extra_constraints = {
+            "minimum": 6037008,
+            "maximum": 7230728
+        }
+    if format == "longitude_l93":
+        extra_constraints = {
+            "minimum": -357823,
+            "maximum": 7230728
+        }
+    if format == "latitude_wgs_fr_metropole":
+        extra_constraints = {
+            "minimum": 41.3,
+            "maximum": 51.3
+        }
+    if format == "longitude_wgs_fr_metropole":
+        extra_constraints = {
+            "minimum": -5.5,
+            "maximum": 9.8
+        }
+    if format == "siren":
+        extra_constraints = {
+            "pattern": "^[0-9]{9}$"
+        }
+    if format == "siret":
+        extra_constraints = {
+            "pattern": '^[0-9]{14}$'
+        }
+    return {"required": False, **extra_constraints}
+
+
 def generate_table_schema(analysis_report: dict, url: str, bucket: str, key: str, minio_user: str, minio_pwd: str) -> None:
     """Generates a table schema from the analysis report
 
