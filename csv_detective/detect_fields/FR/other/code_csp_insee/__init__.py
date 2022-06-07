@@ -9,6 +9,6 @@ def _is(val):
     val = _process_text(val)
     if not len(val) == 4:
         return False
-    a = bool(re.match(r'^[123456][1-9]{2}[abcdefghijkl]$', val))
+    a = bool(re.match(r'^[123456][0-9]{2}[abcdefghijkl]$', val))
     b = val in ['7100', '7200', '7400', '7500', '7700', '7800', '8100', '8300', '8400', '8500', '8600']
     return a or b

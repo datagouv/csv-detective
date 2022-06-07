@@ -7,6 +7,88 @@ import tempfile
 from csv_detective.s3_utils import get_s3_client, download_from_minio, upload_to_minio
 
 
+def get_validata_type(format: str) -> str:
+    """Returns the validata type for a given format"""
+    metier_to_validata_type = {
+        'booleen': 'boolean',
+        'int': 'integer',
+        'float': 'number',
+        'string': 'string',
+        'date': 'date',
+        'date_fr': 'date',
+        'datetime_iso': 'datetime',
+        'datetime_rfc822': 'datetime',
+        'json_geojson': 'geojson',
+        'latitude': 'number',
+        'latitude_l93': 'number',
+        'latitude_wgs': 'number',
+        'latitude_wgs_fr_metropole': 'number',
+        'latlon_wgs': 'geo_point',
+        'longitude': 'number',
+        'longitude_l93': 'number',
+        'longitude_wgs': 'number',
+        'longitude_wgs_fr_metropole': 'number',
+        'year': 'year',
+    }
+    return metier_to_validata_type.get(format, 'string')
+
+
+def get_example(format: str) -> str:
+    """Returns the example for a given format"""
+    format_to_example = {
+        'booleen': 'true',
+        'int': 42,
+        'float': 42.42,
+        'string': 'Lorem ipsum dolor sit amet',
+        'adresse': '28 rue Ledion, 75014 Paris',
+        'insee_canton': 'Pont-d\'Ain',
+        'code_commune_insee': '27501',
+        'code_csp_insee': '233c',
+        'code_departement': '2A',
+        'code_fantoir': 'A633',
+        'code_postal': '75014',
+        'code_region': '52',
+        'code_rna': 'W123456789',
+#        'code_waldec': TODO: add code_waldec
+        'commune': 'Joyeux',
+        'csp_insee': 'anciens agriculteurs exploitants',
+        'date': '2020-01-01',
+        'date_fr': '12 janvier 2020',
+        'datetime_iso': '2020-01-01T00:00:00',
+        'datetime_rfc822': 'Tue, 1 Jan 2020 00:00:00 +0000',
+        'departement': 'Ain',
+        'email': 'example@example.com',
+        'insee_ape700': '0130Z',
+        'iso_country_code': 'FR',
+        'jour_de_la_semaine': 'lundi',
+        'json_geojson': '{"type": "Point", "coordinates": [0, 0]}',
+        'latitude': 42.42,
+        'latitude_l93': 6037008,
+        'latitude_wgs': 42.42,
+        'latitude_wgs_fr_metropole': 41.3,
+        'latlon_wgs': '42.42, 0.0',
+        'longitude': 0.0,
+        'longitude_l93': -357823,
+        'longitude_wgs': 0.0,
+        'longitude_wgs_fr_metropole': 1.2,
+        'mois_de_annee': 'janvier',
+        'mongo_object_id': '507f191e810c19729de860ea',
+        'pays': 'France',
+        'region': 'nouvelle aquitaine',
+        'sexe': 'h',
+        'siren': '362521879',
+        'siret': '56894100056',
+        'tel_fr': '+33123456789',
+        'twitter': '@Etalab',
+        'uai': '0470009E',
+        'url': 'https://www.data.gouv.fr',
+        'uuid': '123e4567-e89b-12d3-a456-426614174000',
+        'year': '2020',
+    }
+    return format_to_example.get(format, "")
+
+
+
 def get_constraints(format: str) -> dict:
     """Returns the constraints for a given format"""
     extra_constraints = {}
@@ -16,7 +98,7 @@ def get_constraints(format: str) -> dict:
         }
     if format == "code_departement":
         extra_constraints = {
-            "pattern": "^(0[13-9]|[1-8]{2}|9[0-6]|2[a-bA-B]|97[1-6])$"
+            "pattern": "^(0[13-9]|[1-8][0-9]|9[0-6]|2[a-bA-B]|97[1-6])$"
         }
     if format == "code_postal":
         extra_constraints = {
@@ -72,8 +154,8 @@ def generate_table_schema(analysis_report: dict, url: str, bucket: str, key: str
         """
     fields = [{"name": header,
         "description": "",
-        "example": "",
-        "type": field_report["format"],
+        "example": get_example(field_report["format"]),
+        "type": get_validata_type(field_report["format"]),
         "constraints": {
           "required": False
         }
