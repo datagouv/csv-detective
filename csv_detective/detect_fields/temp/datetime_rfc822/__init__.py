@@ -11,6 +11,6 @@ def _is(val):
     '''
 
     val = val.lower()
-    a = bool(re.match(r'^((mon|tue|wed|thu|fri|sat|sun),|)\d{1,2} (jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec) \d\d(\d\d|) \d\d\:\d\d(\:\d\d|) (ut|gmt|est|edt|cst|cdt|mst|mdt|pst|pdt|([+-]\d{4}))$', val))
+    a = bool(re.match(r'^((mon|tue|wed|thu|fri|sat|sun),|)( )?\d{1,2} (jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec) \d\d(\d\d|) \d\d\:\d\d(\:\d\d|) (ut|gmt|est|edt|cst|cdt|mst|mdt|pst|pdt|([+-]\d{4}))$', val, re.IGNORECASE))
 
     return a
