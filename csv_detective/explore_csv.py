@@ -102,11 +102,15 @@ def routine(
         trailing_columns = detect_trailing_columns(str_file, sep, heading_columns)
         table, total_lines = parse_table(str_file, encoding, sep, num_rows)
 
-    # Detects columns that are categorical
-    res_categorical, categorical_mask = detetect_categorical_variable(table)
-    res_categorical = list(res_categorical)
-    # Detect columns that are continuous (we already know the categorical)
-    res_continuous = list(detect_continuous_variable(table.iloc[:, ~categorical_mask.values]))
+    if table.empty:
+        res_categorical = []
+        res_continuous = []
+    else:
+        # Detects columns that are categorical
+        res_categorical, categorical_mask = detetect_categorical_variable(table)
+        res_categorical = list(res_categorical)
+        # Detect columns that are continuous (we already know the categorical)
+        res_continuous = list(detect_continuous_variable(table.iloc[:, ~categorical_mask.values]))
 
     # Creating return dictionary
     return_dict = dict()
