@@ -38,12 +38,10 @@ def test_col_val(serie, test_func, proportion=0.9, skipna=True, num_rows=50, out
             result = apply_test_func(serie, test_func, _range).sum() / len(serie)
             return  result if result >= proportion else 0.0
 
-def test_col_label(serie, test_func, proportion=1, output_mode='ALL') :
+def test_col_label(label, test_func, proportion=1, output_mode='ALL') :
     ''' Tests label (from header) using test_func.
          - proportion :  indicates the minimum score to pass the test for the serie to be detected as a certain format
     '''
-    label = serie.name
-
     if output_mode == 'ALL' :
         return test_func(label)
     else :
@@ -85,12 +83,12 @@ def test_label(table, all_tests, output_mode) :
 
     return_table = pd.DataFrame(columns=table.columns)
     for key, value in test_funcs.items():
-        return_table.loc[key] = table.apply(lambda serie: test_col_label(
-            serie,
+        return_table.loc[key] = [test_col_label(
+            col_name,
             value['func'],
             value['prop'],
             output_mode=output_mode
-        ))
+        ) for col_name in table.columns]
     return return_table
 
 
