@@ -68,7 +68,9 @@ def routine(
     num_rows: int=50,
     user_input_tests: Union[str, List[str]]='ALL',
     output_mode: Literal['ALL', 'LIMITED']='LIMITED',
-    save_results=True):
+    save_results: bool=True,
+    encoding: str=None,
+    sep: str=None):
     '''Returns a dict with information about the csv table and possible
     column contents.
 
@@ -85,11 +87,13 @@ def routine(
     if csv_file_path is None:
         raise ValueError('csv_file_path is required.')
 
-    binary_file = open(csv_file_path, mode='rb')
-    encoding = detect_encoding(binary_file)['encoding']
+    if encoding is None:
+        binary_file = open(csv_file_path, mode='rb')
+        encoding = detect_encoding(binary_file)['encoding']
 
     with open(csv_file_path, 'r', encoding=encoding) as str_file:
-        sep = detect_separator(str_file)
+        if sep is None:
+            sep = detect_separator(str_file)
         header_row_idx, header = detect_headers(str_file, sep)
         if header is None:
             return_dict = {'error': True}
@@ -194,7 +198,9 @@ def routine_minio(
     minio_user: str,
     minio_pwd: str,
     num_rows: int=50,
-    user_input_tests: Union[str, List[str]]='ALL'):
+    user_input_tests: Union[str, List[str]]='ALL',
+    encoding: str=None,
+    sep: str=None):
     '''Returns a dict with information about the csv table and possible
     column contents.
 
@@ -230,7 +236,7 @@ def routine_minio(
         minio_pwd=minio_pwd
     )
 
-    return_dict = routine(csv_file_path, num_rows, user_input_tests, output_mode='LIMITED', save_results=True)
+    return_dict = routine(csv_file_path, num_rows, user_input_tests, output_mode='LIMITED', save_results=True, encoding=encoding, sep=sep)
 
     # Write report JSON file.
     output_path_to_store_minio_file = os.path.splitext(csv_file_path)[0] + '.json'

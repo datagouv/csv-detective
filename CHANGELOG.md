@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.4 [#24] (https://github.com/etalab/csv-detective/pull/28)
+
+- Prevent crash on empty CSVs
+- Add optional arguments encoding and sep to routine and routine_minio functions
+- Field detection improvements (code_csp_insee and datetime RFC 822)
+- Schema generation improvements with examples
+
+
 ## 0.4.3 [#24] (https://github.com/etalab/csv-detective/pull/24)
 
 - Add uuid and MongoID detection
