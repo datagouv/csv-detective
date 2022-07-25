@@ -139,12 +139,12 @@ def get_constraints(format: str) -> dict:
     return {"required": False, **extra_constraints}
 
 
-def generate_table_schema(analysis_report: dict, url: str, bucket: str, key: str, minio_user: str, minio_pwd: str) -> None:
+def generate_table_schema(analysis_report: dict, netloc: str, bucket: str, key: str, minio_user: str, minio_pwd: str) -> None:
     """Generates a table schema from the analysis report
 
     Args:
         analysis_report (dict): The analysis report from csv_detective
-        url (str): The url of the minio instance to upload the tableschema
+        netloc (str): The netloc of the minio instance to upload the tableschema
         bucket (str): The bucket to save the schema in
         key (str): The key to save the schema in (without extension as we will append version number and extension)
         minio_user (str): The minio user
@@ -162,7 +162,7 @@ def generate_table_schema(analysis_report: dict, url: str, bucket: str, key: str
     } for header, field_report in analysis_report["columns"].items()]
 
     # Create bucket if does not exist
-    client = get_s3_client(url, minio_user, minio_pwd)
+    client = get_s3_client(netloc, minio_user, minio_pwd)
     try:
         client.head_bucket(Bucket=bucket)
     except ClientError:
@@ -176,7 +176,7 @@ def generate_table_schema(analysis_report: dict, url: str, bucket: str, key: str
 
         with tempfile.NamedTemporaryFile() as latest_schema_file:
             with open(latest_schema_file.name, 'w') as fp:
-                download_from_minio(url, bucket, f"{key}_{latest_version}.json", latest_schema_file.name, minio_user, minio_pwd)
+                download_from_minio(netloc, bucket, f"{key}_{latest_version}.json", latest_schema_file.name, minio_user, minio_pwd)
                 # Check if files are different
                 with open(latest_schema_file.name, 'r') as fp:
                     latest_schema = json.load(fp)
@@ -225,10 +225,10 @@ def generate_table_schema(analysis_report: dict, url: str, bucket: str, key: str
         json.dump(schema, fp,  indent=4)
 
     new_version_key = f"{key}_{new_version}.json"
-    upload_to_minio(url, bucket, new_version_key, tableschema_file.name, minio_user, minio_pwd)
+    upload_to_minio(netloc, bucket, new_version_key, tableschema_file.name, minio_user, minio_pwd)
     os.unlink(tableschema_file.name)
     return {
-        'url': url,
+        'netloc': netloc,
         'bucket': bucket,
         'key': new_version_key
     }

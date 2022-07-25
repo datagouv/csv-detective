@@ -223,12 +223,12 @@ def routine_minio(
 
     for location_dict in [csv_minio_location, output_minio_location, tableschema_minio_location]:
         if location_dict is not None:
-            if any([(location_key not in location_dict) or (location_dict[location_key] is None) for location_key in ['url', 'bucket', 'key']]):
+            if any([(location_key not in location_dict) or (location_dict[location_key] is None) for location_key in ['netloc', 'bucket', 'key']]):
                 raise ValueError('Minio location dict must contain url, bucket and key')
 
     csv_file_path = tempfile.NamedTemporaryFile(delete=False).name
     download_from_minio(
-        url=csv_minio_location['url'],
+        netloc=csv_minio_location['netloc'],
         bucket=csv_minio_location['bucket'],
         key=csv_minio_location['key'],
         filepath=csv_file_path,
@@ -244,7 +244,7 @@ def routine_minio(
         json.dump(return_dict, fp, indent=4, separators=(',', ': '))
 
     upload_to_minio(
-        url=output_minio_location['url'],
+        netloc=output_minio_location['netloc'],
         bucket=output_minio_location['bucket'],
         key=output_minio_location['key'],
         filepath=output_path_to_store_minio_file,
@@ -257,7 +257,7 @@ def routine_minio(
 
     generate_table_schema(
         return_dict,
-        url=tableschema_minio_location['url'],
+        netloc=tableschema_minio_location['netloc'],
         bucket=tableschema_minio_location['bucket'],
         key=tableschema_minio_location['key'],
         minio_user=minio_user,
