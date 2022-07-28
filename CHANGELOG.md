@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.5 [#29](https://github.com/etalab/csv-detective/pull/29)
+
+- Use `netloc` instead of `url` in location dict
+
 ## 0.4.4 [#24] (https://github.com/etalab/csv-detective/pull/28)
 
 - Prevent crash on empty CSVs
