@@ -67,10 +67,37 @@ def _is(val):
         'Zone d’aménagement concerté',
         'Zone d’aménagement différé',
         'Zone industrielle',
-        'Zone'
+        'Zone',
+        'r',
+        'av',
+        'pl',
+        'bd',
+        'cami',
+        'che',
+        'chs',
+        'dom',
+        'ham',
+        'ld',
+        'pro',
+        'rte',
+        'vlge',
+        'za',
+        'zac',
+        'zad',
+        'zi',
+        'car',
+        'fg',
+        'lot',
+        'imp',
+        'qu',
+        'mte'
     ]
 
     val = _process_text(val)
-    # Since 'true' contains 'rue', we need to exclude it.
-    a = any([x.lower() in val for x in voies]) and val != 'true'
-    return a
+    arrval = val.split(' ')
+    match = False
+    for val in arrval:
+        a = any([val == x.lower() for x in voies])
+        if a:
+            match = True
+    return match
