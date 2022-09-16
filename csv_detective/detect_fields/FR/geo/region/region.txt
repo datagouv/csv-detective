@@ -38,3 +38,7 @@ auvergne rhone alpes
 ara
 bourgogne franche comte
 bfc
+auvergne et rhone alpes
+bourgogne et franche comte
+reunion
+la reunion
