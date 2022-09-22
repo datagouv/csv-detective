@@ -8,11 +8,4 @@ def _is(header):
 
     words_list = ['budget', 'salaire', 'euro', 'euros', 'prêt', 'montant']
 
-    return float(any([word in header for word in words_list]))
-
-#def _is(serie):
-#    '''Detects money'''
-#    column_title_looks_like_money = np.ones(serie.shape[0]) * is_col_name_related_to_money(serie.name.lower())
-#    return column_title_looks_like_money
-
-
+    return float(any([word in header.lower() for word in words_list]))
