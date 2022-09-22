@@ -115,7 +115,11 @@ def prepare_output_dict(return_table, output_mode):
             formats_to_remove.add('float')
         if 'latitude_wgs_fr_metropole' in formats_detected:
             formats_to_remove.add('latitude_l93')
+            formats_to_remove.add('latitude_wgs')
         if 'longitude_wgs_fr_metropole' in formats_detected:
+            formats_to_remove.add('longitude_l93')
+            formats_to_remove.add('longitude_wgs')
+        if 'longitude_wgs' in formats_detected:
             formats_to_remove.add('longitude_l93')
         if 'code_region' in formats_detected:
             formats_to_remove.add('code_departement')
