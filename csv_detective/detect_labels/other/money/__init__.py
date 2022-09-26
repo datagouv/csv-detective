@@ -1,6 +1,6 @@
 from csv_detective.process_text import _process_text
 
-PROPORTION = 1
+PROPORTION = 0.5
 
 def _is(header):
     '''Returns 1 if at least one of the mentionned words is in the label, else 0
