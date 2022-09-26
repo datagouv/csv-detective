@@ -6,6 +6,7 @@ contenu possible des champs
 from typing import Dict, List, Literal, Optional, Union
 import json
 from multiprocessing.sharedctypes import Value
+import numpy as np
 import os
 import tempfile
 from pkg_resources import resource_string
@@ -151,6 +152,14 @@ def routine(
     # Multiply the results of the fields by 1 + 0.5 * the results of the labels.
     # This is because the fields are more important than the labels and yields a max of 1.5 for the final score.
     return_table = return_table_fields * (1 + return_table_labels.reindex(index=return_table_fields.index, fill_value=0).values / 2)
+
+    # To reduce false positives: ensure these formats are detected only if the label yields a detection.
+    formats_with_mandatory_label = ['code_departement', 'code_commune_insee', 'code_postal', 'latitude_wgs', 'longitude_wgs',
+        'latitude_wgs_fr_metropole', 'longitude_wgs_fr_metropole', 'latitude_l93', 'longitude_l93']
+    return_table.loc[formats_with_mandatory_label, :] = np.where(
+                                                            return_table_labels.loc[formats_with_mandatory_label, :],
+                                                            return_table.loc[formats_with_mandatory_label, :],
+                                                            0)
 
     return_dict_cols = prepare_output_dict(return_table, output_mode)
     return_dict['columns'] = return_dict_cols
