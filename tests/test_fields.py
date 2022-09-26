@@ -5,7 +5,7 @@ from csv_detective.detect_fields.FR.other import code_csp_insee, csp_insee, sexe
 from csv_detective.detect_fields.other import email, url, uuid, mongo_object_id
 
 from csv_detective.detect_fields.FR.geo import adresse, code_commune_insee, code_postal, commune, departement, pays, region
-from csv_detective.detect_fields.geo import iso_country_code
+from csv_detective.detect_fields.geo import iso_country_code_alpha2, iso_country_code_alpha3, iso_country_code_numeric
 
 from csv_detective.detect_fields.FR.temp import jour_de_la_semaine
 from csv_detective.detect_fields.temp import year, date
@@ -191,12 +191,35 @@ def test_do_not_match_region():
 # iso_country_code
 def test_match_iso_country_code():
     val = 'FR'
-    assert iso_country_code._is(val)
+    assert iso_country_code_alpha2._is(val)
 
 
 def test_do_not_match_iso_country_code():
     val = 'XX'
-    assert not iso_country_code._is(val)
+    assert not iso_country_code_alpha2._is(val)
+
+
+# iso_country_code alpha-3
+def test_match_iso_country_code_alpha3():
+    val = 'FRA'
+    assert iso_country_code_alpha3._is(val)
+
+
+def test_do_not_match_iso_country_code_alpha3():
+    val = 'ABC'
+    assert not iso_country_code_alpha3._is(val)
+
+
+# iso_country_code numerique
+def test_match_iso_country_code_numeric():
+    val = 'FRA'
+    assert iso_country_code_numeric._is(val)
+
+
+def test_do_not_match_iso_country_code_numeric():
+    val = '250'
+    assert not iso_country_code_numeric._is(val)
+
 
 # jour de la semaine
 def test_match_jour_de_la_semaine():

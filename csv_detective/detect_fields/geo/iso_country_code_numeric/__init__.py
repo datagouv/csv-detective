@@ -5,12 +5,12 @@ import re
 PROPORTION = 1
 
 
-with open(join(dirname(__file__), 'iso_country_code.txt'), 'r') as iofile:
+with open(join(dirname(__file__), 'iso_country_code_numeric.txt'), 'r') as iofile:
     liste_pays = iofile.read().split('\n')
 
 def _is(val):
-    '''Renvoie True si val peut etre un code iso pays, False sinon'''
-    regex = r'[A-Z]{2,3}$'
+    '''Renvoie True si val peut etre un code iso pays numerique, False sinon'''
+    regex = r'[0-9]{3}$'
     if not bool(re.match(regex, val)):
         return False
     return val in liste_pays

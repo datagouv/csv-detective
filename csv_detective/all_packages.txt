@@ -10,7 +10,9 @@ csv_detective.detect_fields.other.email
 csv_detective.detect_fields.other.mongo_object_id
 csv_detective.detect_fields.other.uuid
 csv_detective.detect_fields.other.url
-csv_detective.detect_fields.geo.iso_country_code
+csv_detective.detect_fields.geo.iso_country_code_alpha2
+csv_detective.detect_fields.geo.iso_country_code_alpha3
+csv_detective.detect_fields.geo.iso_country_code_numeric
 csv_detective.detect_fields.FR.temp
 csv_detective.detect_fields.FR.other
 csv_detective.detect_fields.FR.geo
@@ -79,7 +81,9 @@ csv_detective.detect_labels.FR.other.tel_fr
 csv_detective.detect_labels.FR.other.uai
 csv_detective.detect_labels.FR.temp.jour_de_la_semaine
 csv_detective.detect_labels.FR.temp.mois_de_annee
-csv_detective.detect_labels.geo.iso_country_code
+csv_detective.detect_labels.geo.iso_country_code_alpha2
+csv_detective.detect_labels.geo.iso_country_code_alpha3
+csv_detective.detect_labels.geo.iso_country_code_numeric
 csv_detective.detect_labels.geo.json_geojson
 csv_detective.detect_labels.geo.latitude_wgs
 csv_detective.detect_labels.geo.latlon_wgs
