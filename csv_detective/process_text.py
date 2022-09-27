@@ -1,7 +1,15 @@
+from re import finditer
+
+
+def camel_case_split(identifier):
+    matches = finditer('.+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)', identifier)
+    return " ".join([m.group(0) for m in matches])
+
 
 #### Process text
 def _process_text(val):
     '''Met le unicode val sous sous sa forme normee'''
+    val = camel_case_split(val)
     val = val.lower()
     val = val.replace(u'-', u' ')
     val = val.replace(u'_', u' ')
