@@ -1,7 +1,7 @@
 from csv_detective.utils import full_word_strictly_inside_string
 from csv_detective.process_text import _process_text
 
-PROPORTION = 1
+PROPORTION = 0.5
 
 def _is(header):
     '''Returns 1 if the (processed) header matches one of the expected words combination, else 0'''

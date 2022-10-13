@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.6 [#39](https://github.com/etalab/csv-detective/pull/39)
+
+- Fix tests
+- Prioritise lat / lon FR detection over more generic lat / lon.
+- To reduce false positives, prevent detection of the following if label detection is missing: `['code_departement', 'code_commune_insee', 'code_postal', 'latitude_wgs', 'longitude_wgs', 'latitude_wgs_fr_metropole', 'longitude_wgs_fr_metropole', 'latitude_l93', 'longitude_l93']`
+- Lower threshold of label detection so that if one relevant is detected in the label, it boosts the detection score.
+- Add ISO country alpha-3 and numeric detection
+- include camel case parsing in _process_text function
+- Support optional brackets in latlon format
+
 ## 0.4.5 [#29](https://github.com/etalab/csv-detective/pull/29)
 
 - Use `netloc` instead of `url` in location dict
