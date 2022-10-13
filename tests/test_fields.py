@@ -212,12 +212,13 @@ def test_do_not_match_iso_country_code_alpha3():
 
 # iso_country_code numerique
 def test_match_iso_country_code_numeric():
-    val = 'FRA'
+    val = '250'
+    print(iso_country_code_numeric._is(val))
     assert iso_country_code_numeric._is(val)
 
 
 def test_do_not_match_iso_country_code_numeric():
-    val = '250'
+    val = '003'
     assert not iso_country_code_numeric._is(val)
 
 
