@@ -17,7 +17,7 @@ def test_col_val(serie, test_func, proportion=0.9, skipna=True, num_rows=50, out
     serie = serie[serie.notnull()]
     ser_len = len(serie)
     if num_rows>0:
-		num_rows = min(ser_len, num_rows)
+	    num_rows = min(ser_len, num_rows)
     _range = range(0, ser_len)
     if ser_len == 0:
         return False
