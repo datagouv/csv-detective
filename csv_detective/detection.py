@@ -118,8 +118,10 @@ def parse_table(the_file, encoding, sep, num_rows, random_state=42):
                 encoding=encoding
             )
             total_lines = len(table)
-            num_rows = min(num_rows - 1, total_lines)
-            table = table.sample(num_rows, random_state=random_state)
+            if num_rows>0:
+                num_rows = min(num_rows - 1, total_lines)
+                table = table.sample(num_rows, random_state=random_state)
+            ## else : table is unchanged
             break
         except TypeError:
             print('Trying encoding : {encoding}'.format(encoding=encoding))

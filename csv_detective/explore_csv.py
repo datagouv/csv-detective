@@ -77,7 +77,7 @@ def routine(
 
     Args:
         csv_file_path: local path to CSV file if not using Minio
-        num_rows: number of rows to sample from the file for analysis
+        num_rows: number of rows to sample from the file for analysis ; -1 for analysis of the whole file
         user_input_tests: tests to run on the file
         output_mode: LIMITED or ALL, whether or not to return all possible types or only the most likely one for each column
         save_results: whether or not to save the results in a json file
@@ -219,7 +219,7 @@ def routine_minio(
         tableschema_minio_location: Minio URL, bucket and key to store tableschema file. None if not uploading the tableschema to Minio.
         minio_user: user name for the minio instance
         minio_pwd: password for the minio instance
-        num_rows: number of rows to sample from the file for analysis
+        num_rows: number of rows to sample from the file for analysis ; -1 for analysis of the whole file
         user_input_tests: tests to run on the file
         output_mode: LIMITED or ALL, whether or not to return all possible types or only the most likely one for each column
 
