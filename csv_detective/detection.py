@@ -118,6 +118,7 @@ def parse_table(the_file, encoding, sep, num_rows, random_state=42):
                 encoding=encoding
             )
             total_lines = len(table)
+            nb_duplicates = len(table.loc[table.duplicated()])
             if num_rows>0:
                 num_rows = min(num_rows - 1, total_lines)
                 table = table.sample(num_rows, random_state=random_state)
@@ -128,9 +129,9 @@ def parse_table(the_file, encoding, sep, num_rows, random_state=42):
 
     if table is None:
         print('  >> encoding not found')
-        return table, "NA"
+        return table, "NA", "NA"
 
-    return table, total_lines
+    return table, total_lines, nb_duplicates
 
 
 def detect_extra_columns(file, sep):

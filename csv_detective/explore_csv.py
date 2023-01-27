@@ -105,7 +105,7 @@ def routine(
                 return return_dict
         heading_columns = detect_heading_columns(str_file, sep)
         trailing_columns = detect_trailing_columns(str_file, sep, heading_columns)
-        table, total_lines = parse_table(str_file, encoding, sep, num_rows)
+        table, total_lines, nb_duplicates = parse_table(str_file, encoding, sep, num_rows)
 
     if table.empty:
         res_categorical = []
@@ -124,6 +124,7 @@ def routine(
     return_dict['header_row_idx'] = header_row_idx
     return_dict['header'] = header
     return_dict['total_lines'] = total_lines
+    return_dict['nb_duplicates'] = nb_duplicates
 
     return_dict['heading_columns'] = heading_columns
     return_dict['trailing_columns'] = trailing_columns
