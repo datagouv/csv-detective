@@ -20,7 +20,7 @@ def test_col_val(serie, test_func, proportion=0.9, skipna=True, num_rows=50, out
 	    num_rows = min(ser_len, num_rows)
     _range = range(0, ser_len)
     if ser_len == 0:
-        return False
+        return 0.0
     if(output_mode == 'ALL'):
         if num_rows>0:
             return apply_test_func(serie, test_func, _range).sum() / num_rows
