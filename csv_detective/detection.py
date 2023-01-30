@@ -168,10 +168,14 @@ def detect_headers(file, sep):
     file.seek(0)
     for i in range(10):
         header = file.readline()
+        position = file.tell()
         chaine = [c for c in header.replace('\n', '').split(sep) if c]
         if (chaine[-1] not in ['', '\n'] and
              all([mot not in ['', '\n'] for mot in chaine[1:-1]])):
-            return i, chaine
+            next_row = file.readline()
+            file.seek(position)
+            if header!=next_row:
+                return i, chaine
     return 0,  None
 
 
