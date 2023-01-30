@@ -1,6 +1,6 @@
 import pandas as pd
 
-def test_col_val(serie, test_func, proportion=0.9, skipna=True, num_rows=50, output_mode='ALL'):
+def test_col_val(serie, test_func, proportion=0.9, skipna=True, num_rows=-1, output_mode='ALL'):
     ''' Tests values of the serie using test_func.
          - skipna : if True indicates that NaNs are not counted as False
          - proportion :  indicates the proportion of values that have to pass the test

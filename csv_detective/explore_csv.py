@@ -23,6 +23,7 @@ from .detection import (
     detect_heading_columns,
     detect_trailing_columns,
     parse_table,
+    # create_profile,
     detetect_categorical_variable, detect_continuous_variable)
 
 
@@ -66,7 +67,7 @@ def return_all_tests(user_input_tests, detect_type='detect_fields'):
 
 def routine(
     csv_file_path: str,
-    num_rows: int=50,
+    num_rows: int=-1,
     user_input_tests: Union[str, List[str]]='ALL',
     output_mode: Literal['ALL', 'LIMITED']='LIMITED',
     save_results: bool=True,
@@ -144,6 +145,7 @@ def routine(
     return_table_fields = test_col(table, all_tests_fields, num_rows, output_mode)
     return_dict_cols_fields = prepare_output_dict(return_table_fields, output_mode)
     return_dict['columns_fields'] = return_dict_cols_fields
+    # return_dict['profile'] = create_profile(csv_file_path, return_dict_cols_fields, sep, encoding, num_rows)
 
     # Perform testing on labels
     return_table_labels = test_label(table, all_tests_labels, output_mode)
@@ -170,6 +172,8 @@ def routine(
         'int': 'int',
         'float': 'float',
         'string': 'string',
+        'json': 'json',
+        'json_geojson': 'json',
         'latitude': 'float',
         'latitude_l93': 'float',
         'latitude_wgs': 'float',
@@ -207,7 +211,7 @@ def routine_minio(
     tableschema_minio_location: Dict[str, str],
     minio_user: str,
     minio_pwd: str,
-    num_rows: int=50,
+    num_rows: int=-1,
     user_input_tests: Union[str, List[str]]='ALL',
     encoding: str=None,
     sep: str=None):

@@ -133,6 +133,35 @@ def parse_table(the_file, encoding, sep, num_rows, random_state=42):
 
     return table, total_lines, nb_duplicates
 
+# map_python_types = {
+#     'string': str,
+#     'int': int,
+#     'float': float,
+#     'bool': bool,
+# }
+
+# def create_profile(the_file, dict_cols_fields, sep, encoding, num_rows):
+#     if num_rows > 0:
+#         return {
+#             c : {
+#                 "min": "NA",
+#                 "max": "NA",
+#                 "mean": "NA",
+#                 "std": "NA",
+#                 "tops": "NA",
+#                 "nb_distinct": "NA"
+#             } for c in dict_cols_fields.keys()
+#         }
+#     else:
+#         print({k: map_python_types.get(v['format'], str) for k,v in dict_cols_fields.items()})
+#         table = pd.read_csv(
+#                 the_file,
+#                 sep=sep,
+#                 dtype={k: map_python_types.get(v['format'], str) for k,v in dict_cols_fields.items()},
+#                 encoding=encoding
+#             )
+#         return table.head()
+
 
 def detect_extra_columns(file, sep):
     ''' regarde s'il y a des colonnes en trop
