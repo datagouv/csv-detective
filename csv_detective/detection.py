@@ -141,7 +141,7 @@ map_python_types = {
     'bool': bool,
 }
 
-def create_profile(the_file, dict_cols_fields, sep, encoding, num_rows):
+def create_profile(the_file, dict_cols_fields, sep, encoding, num_rows, skiprows):
     if num_rows > 0:
         return {
             c : {
@@ -159,7 +159,8 @@ def create_profile(the_file, dict_cols_fields, sep, encoding, num_rows):
                 the_file,
                 sep=sep,
                 dtype={k: map_python_types.get(v['python_type'], str) for k,v in dict_cols_fields.items()},
-                encoding=encoding
+                encoding=encoding,
+                skiprows=skiprows
             )
         profile = {}
         for c in table.columns:
