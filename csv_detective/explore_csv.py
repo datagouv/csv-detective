@@ -107,7 +107,7 @@ def routine(
                 return return_dict
         heading_columns = detect_heading_columns(str_file, sep)
         trailing_columns = detect_trailing_columns(str_file, sep, heading_columns)
-        table, total_lines, nb_duplicates = parse_table(str_file, encoding, sep, num_rows)
+        table, total_lines, nb_duplicates = parse_table(str_file, encoding, sep, num_rows, header_row_idx)
 
     if table.empty:
         res_categorical = []
@@ -163,7 +163,6 @@ def routine(
                                                             return_table_labels.loc[formats_with_mandatory_label, :],
                                                             return_table.loc[formats_with_mandatory_label, :],
                                                             0)
-
     return_dict_cols = prepare_output_dict(return_table, output_mode)
     return_dict['columns'] = return_dict_cols
 

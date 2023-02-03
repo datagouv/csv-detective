@@ -51,7 +51,7 @@ def test_col_label(label, test_func, proportion=1, output_mode='ALL') :
         return test_func(label)
     else :
         result = test_func(label)
-        return result if result >= proportion else False
+        return result if result >= proportion else 0
 
 def test_col(table, all_tests, num_rows, output_mode):
     # Initialising dict for tests

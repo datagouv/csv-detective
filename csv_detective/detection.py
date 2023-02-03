@@ -96,7 +96,7 @@ def detect_encoding(the_file):
     return detector.result
 
 
-def parse_table(the_file, encoding, sep, num_rows, random_state=42):
+def parse_table(the_file, encoding, sep, num_rows, skiprows, random_state=42):
     # Takes care of some problems
     table = None
 
@@ -116,7 +116,8 @@ def parse_table(the_file, encoding, sep, num_rows, random_state=42):
                 the_file,
                 sep=sep,
                 dtype='unicode',
-                encoding=encoding
+                encoding=encoding,
+                skiprows=skiprows
             )
             total_lines = len(table)
             nb_duplicates = len(table.loc[table.duplicated()])
