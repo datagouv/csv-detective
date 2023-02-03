@@ -4,6 +4,7 @@ def test_col_val(serie, test_func, proportion=0.9, skipna=True, num_rows=50, out
     ''' Tests values of the serie using test_func.
          - skipna : if True indicates that NaNs are not counted as False
          - proportion :  indicates the proportion of values that have to pass the test
+         - num_rows : number of rows to sample from the file for analysis ; -1 for analysis of the whole file
     for the serie to be detected as a certain format
     '''
     def apply_test_func(serie, test_func, _range): #TODO : change for a cleaner method and only test columns in modules labels
@@ -15,18 +16,22 @@ def test_col_val(serie, test_func, proportion=0.9, skipna=True, num_rows=50, out
 
     serie = serie[serie.notnull()]
     ser_len = len(serie)
-    num_rows = min(ser_len, num_rows)
+    if num_rows>0:
+	    num_rows = min(ser_len, num_rows)
     _range = range(0, ser_len)
     if ser_len == 0:
         return False
     if(output_mode == 'ALL'):
-        return apply_test_func(serie, test_func, _range).sum() / num_rows
+        if num_rows>0:
+            return apply_test_func(serie, test_func, _range).sum() / num_rows
+        else:
+            return apply_test_func(serie, test_func, _range).sum() / ser_len
     else:
         if proportion == 1:  # Then try first 1 value, then 5, then all
             for _range in [
                 range(0, min(1, ser_len)),
                 range(min(1, ser_len), min(5, ser_len)),
-                range(min(5, ser_len), min(num_rows, ser_len))
+                range(min(5, ser_len), min(num_rows, ser_len)) if num_rows>0 else range(min(5, ser_len), ser_len)
             ]:  # Pour ne pas faire d'opérations inutiles, on commence par 1,
                 # puis 5 puis num_rows valeurs
                 if all(apply_test_func(serie, test_func, _range)):

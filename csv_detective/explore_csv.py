@@ -77,7 +77,7 @@ def routine(
 
     Args:
         csv_file_path: local path to CSV file if not using Minio
-        num_rows: number of rows to sample from the file for analysis
+        num_rows: number of rows to sample from the file for analysis ; -1 for analysis of the whole file
         user_input_tests: tests to run on the file
         output_mode: LIMITED or ALL, whether or not to return all possible types or only the most likely one for each column
         save_results: whether or not to save the results in a json file
@@ -105,7 +105,7 @@ def routine(
                 return return_dict
         heading_columns = detect_heading_columns(str_file, sep)
         trailing_columns = detect_trailing_columns(str_file, sep, heading_columns)
-        table, total_lines = parse_table(str_file, encoding, sep, num_rows)
+        table, total_lines, nb_duplicates = parse_table(str_file, encoding, sep, num_rows)
 
     if table.empty:
         res_categorical = []
@@ -124,6 +124,7 @@ def routine(
     return_dict['header_row_idx'] = header_row_idx
     return_dict['header'] = header
     return_dict['total_lines'] = total_lines
+    return_dict['nb_duplicates'] = nb_duplicates
 
     return_dict['heading_columns'] = heading_columns
     return_dict['trailing_columns'] = trailing_columns
@@ -219,7 +220,7 @@ def routine_minio(
         tableschema_minio_location: Minio URL, bucket and key to store tableschema file. None if not uploading the tableschema to Minio.
         minio_user: user name for the minio instance
         minio_pwd: password for the minio instance
-        num_rows: number of rows to sample from the file for analysis
+        num_rows: number of rows to sample from the file for analysis ; -1 for analysis of the whole file
         user_input_tests: tests to run on the file
         output_mode: LIMITED or ALL, whether or not to return all possible types or only the most likely one for each column
 
