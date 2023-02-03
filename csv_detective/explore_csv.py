@@ -23,7 +23,7 @@ from .detection import (
     detect_heading_columns,
     detect_trailing_columns,
     parse_table,
-    # create_profile,
+    create_profile,
     detetect_categorical_variable, detect_continuous_variable)
 
 
@@ -67,12 +67,13 @@ def return_all_tests(user_input_tests, detect_type='detect_fields'):
 
 def routine(
     csv_file_path: str,
-    num_rows: int=-1,
+    num_rows: int=500,
     user_input_tests: Union[str, List[str]]='ALL',
     output_mode: Literal['ALL', 'LIMITED']='LIMITED',
     save_results: bool=True,
     encoding: str=None,
-    sep: str=None):
+    sep: str=None,
+    output_profile: bool=False):
     '''Returns a dict with information about the csv table and possible
     column contents.
 
@@ -145,7 +146,6 @@ def routine(
     return_table_fields = test_col(table, all_tests_fields, num_rows, output_mode)
     return_dict_cols_fields = prepare_output_dict(return_table_fields, output_mode)
     return_dict['columns_fields'] = return_dict_cols_fields
-    # return_dict['profile'] = create_profile(csv_file_path, return_dict_cols_fields, sep, encoding, num_rows)
 
     # Perform testing on labels
     return_table_labels = test_label(table, all_tests_labels, output_mode)
@@ -195,6 +195,9 @@ def routine(
         return_dict['formats'] = { column_metadata['format']: [] for column_metadata in return_dict['columns'].values() }
         for header, col_metadata in return_dict['columns'].items():
             return_dict['formats'][col_metadata['format']].append(header)
+    
+    if output_profile:
+        return_dict['profile'] = create_profile(csv_file_path, return_dict['columns_fields'], sep, encoding, num_rows)
 
     if save_results:
         # Write your file as json
@@ -211,7 +214,7 @@ def routine_minio(
     tableschema_minio_location: Dict[str, str],
     minio_user: str,
     minio_pwd: str,
-    num_rows: int=-1,
+    num_rows: int=500,
     user_input_tests: Union[str, List[str]]='ALL',
     encoding: str=None,
     sep: str=None):
