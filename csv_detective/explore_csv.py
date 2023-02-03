@@ -174,6 +174,7 @@ def routine(
         'string': 'string',
         'json': 'json',
         'json_geojson': 'json',
+        'datetime': 'datetime',
         'latitude': 'float',
         'latitude_l93': 'float',
         'latitude_wgs': 'float',
