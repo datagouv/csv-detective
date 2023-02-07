@@ -1,11 +1,10 @@
 from csv_detective import explore_csv
-import os
+import pytest
 
-def test_routine_on_file():
-    output_profile=True
+def test_columns_output_on_file():
     output = explore_csv.routine(csv_file_path="tests/a_test_file.csv",
         num_rows=-1,
-        output_profile=output_profile,
+        output_profile=False,
         save_results=False
     )
     assert isinstance(output, dict)
@@ -23,5 +22,27 @@ def test_routine_on_file():
     assert output['columns']['GEO_INFO']['format']=='json_geojson'
     assert output['columns']['NUMEPCI']['format']=='siren'
 
-    if output_profile:
-        assert all([c in list(output['profile']['NUMCOM'].keys()) for c in ["min","max","mean","std","tops","nb_distinct","nb_missing_values"]])
+
+def test_profile_output_on_file():
+    output = explore_csv.routine(csv_file_path="tests/a_test_file.csv",
+        num_rows=-1,
+        output_profile=True,
+        save_results=False
+    )
+    assert all([c in list(output['profile']['NUMCOM'].keys()) for c in ["min","max","mean","std","tops","nb_distinct","nb_missing_values"]])
+    assert len(output['profile']['NOMCOM'].keys())==3
+    assert output['profile']['NUMCOM']['min']==1001
+    assert output['profile']['NUMCOM']['max']==6125
+    assert round(output['profile']['NUMCOM']['mean'])==1245
+    assert round(output['profile']['NUMCOM']['std'])==363
+    assert output['profile']['TXCOUVGLO_COM_2014']['nb_distinct']==296
+    assert output['profile']['TXCOUVGLO_COM_2014']['nb_missing_values']==3
+    assert output['profile']['GEO_INFO']['nb_distinct']==1
+
+def test_exception():
+    with pytest.raises(Exception):
+        output = explore_csv.routine(csv_file_path="tests/a_test_file.csv",
+            num_rows=50,
+            output_profile=True,
+            save_results=False
+        )

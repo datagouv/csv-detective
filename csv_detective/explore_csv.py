@@ -198,7 +198,7 @@ def routine(
             return_dict['formats'][col_metadata['format']].append(header)
     
     if output_profile:
-        return_dict['profile'] = create_profile(csv_file_path, return_dict['columns'], sep, encoding, num_rows, header_row_idx)
+        return_dict['profile'] = create_profile(table, return_dict['columns'], sep, encoding, num_rows, header_row_idx)
 
     if save_results:
         # Write your file as json

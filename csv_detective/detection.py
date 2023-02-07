@@ -135,48 +135,34 @@ def parse_table(the_file, encoding, sep, num_rows, skiprows, random_state=42):
 
     return table, total_lines, nb_duplicates
 
-map_python_types = {
-    'string': str,
-    'int': int,
-    'float': float,
-    'bool': bool,
-}
+def create_profile(table, dict_cols_fields, sep, encoding, num_rows, skiprows):
+    map_python_types = {
+        'string': str,
+        'int': float,
+        'float': float,
+    }
 
-def create_profile(the_file, dict_cols_fields, sep, encoding, num_rows, skiprows):
     if num_rows > 0:
-        return {
-            c : {
-                "min": "NA",
-                "max": "NA",
-                "mean": "NA",
-                "std": "NA",
-                "tops": "NA",
-                "nb_distinct": "NA",
-                "nb_missing_values": "NA"
-            } for c in dict_cols_fields.keys()
-        }
+        raise Exception('To create profiles num_rows has to be set to -1')
     else:
-        table = pd.read_csv(
-                the_file,
-                sep=sep,
-                dtype={k: map_python_types.get(v['python_type'], str) for k,v in dict_cols_fields.items()},
-                encoding=encoding,
-                skiprows=skiprows
-            )
+        safe_table = table.copy()
+        dtypes={k: map_python_types.get(v['python_type'], str) for k,v in dict_cols_fields.items()}
+        for c in safe_table.columns:
+            safe_table[c] = safe_table[c].astype(dtypes[c])
         profile = {}
-        for c in table.columns:
+        for c in safe_table.columns:
             profile[c] = {}
             if map_python_types.get(dict_cols_fields[c]['python_type'], str) in [float, int]:
                 profile[c].update(
-                    min=map_python_types.get(dict_cols_fields[c]['python_type'], str)(table[c].min()),
-                    max=map_python_types.get(dict_cols_fields[c]['python_type'], str)(table[c].max()),
-                    mean=map_python_types.get(dict_cols_fields[c]['python_type'], str)(table[c].mean()),
-                    std=map_python_types.get(dict_cols_fields[c]['python_type'], str)(table[c].std())
+                    min=map_python_types.get(dict_cols_fields[c]['python_type'], str)(safe_table[c].min()),
+                    max=map_python_types.get(dict_cols_fields[c]['python_type'], str)(safe_table[c].max()),
+                    mean=map_python_types.get(dict_cols_fields[c]['python_type'], str)(safe_table[c].mean()),
+                    std=map_python_types.get(dict_cols_fields[c]['python_type'], str)(safe_table[c].std())
                 )
             profile[c].update(
-                tops=[None if (isinstance(k, float) and np.isnan(k)) else k for k in list(table[c].value_counts(dropna=False).reset_index().iloc[:10].to_dict()['index'].values())],
-                nb_distinct=len(table[c].unique()),
-                nb_missing_values=len(table[c].loc[table[c].isna()])
+                tops=[None if (isinstance(k, float) and np.isnan(k)) else k for k in list(safe_table[c].value_counts(dropna=False).reset_index().iloc[:10].to_dict()['index'].values())],
+                nb_distinct=safe_table[c].nunique(),
+                nb_missing_values=len(safe_table[c].loc[safe_table[c].isna()])
             )
         return profile
 
