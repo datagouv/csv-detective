@@ -73,7 +73,7 @@ def test_col(table, all_tests, num_rows, output_mode):
         }
     return_table = pd.DataFrame(columns=table.columns)
     for key, value in test_funcs.items():
-        # When analysis of all file is requested (num_rows = -1) we fix a threshold of 
+        # When analysis of all file is requested (num_rows = -1) we fix a threshold of
         # 1000 rows for every checks outside int or float format
         if num_rows == -1:
             local_num_rows = 1000
@@ -81,7 +81,8 @@ def test_col(table, all_tests, num_rows, output_mode):
             local_num_rows = min(num_rows, 1000)
         # For checks detecting int or float format, we analyze the whole file (because
         # error can be generated afterward when exploiting this data into a database)
-        if key in ["int", "float", "longitude", "longitude_l93", "longitude_wgs", 
+        if key in [
+            "int", "float", "longitude", "longitude_l93", "longitude_wgs",
             "longitude_wgs_fr_metropole", "latitude", "latitude_l93", "latitude_wgs",
             "latitude_wgs_fr_metropole", "iso_country_code_numeric"
         ]:
@@ -90,7 +91,7 @@ def test_col(table, all_tests, num_rows, output_mode):
             serie,
             value['func'],
             value['prop'],
-            num_rows = local_num_rows,
+            num_rows=local_num_rows,
             output_mode=output_mode
         ))
     return return_table
