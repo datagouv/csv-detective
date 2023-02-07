@@ -1,5 +1,6 @@
 import re
 from dateutil.parser import parse
+from unidecode import unidecode
 
 PROPORTION = 1
 
@@ -69,4 +70,7 @@ def _is(val):
         )
     )
 
-    return a or b or c or d or e or f or (is_dateutil_date(val) and not is_float(val))
+    # matches JJ-mmm...mm-AAAA
+    g = bool(re.match(r'^(0[1-9]|[12][0-9]|3[01])[ -/_;.:,](janvier|fevrier|mars|avril|mai|juin|jullet|aout|septembre|octobre|novembre|decembre)[ -/_;.:,]([0-9]{2}$|(19|20)[0-9]{2}$)', unidecode(val)))
+
+    return a or b or c or d or e or f or g or (is_dateutil_date(val) and not is_float(val))

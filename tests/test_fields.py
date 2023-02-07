@@ -279,10 +279,26 @@ def test_do_not_match_year():
 def test_match_date():
     val = "1960-08-07"
     assert date._is(val)
+    val = '12/02/2007'
+    assert date._is(val)
+    val = '15 jan 1985'
+    assert date._is(val)
+    val = '15 décembre 1985'
+    assert date._is(val)
+    val = '02052003'
+    assert date._is(val)
+    val = '1993-12/02'
+    assert date._is(val)
 
 
 def test_do_not_match_date():
     val = "1993-1993-1993"
+    assert not date._is(val)
+    val = '39-10-1993'
+    assert not date._is(val)
+    val = '19-15-1993'
+    assert not date._is(val)
+    val = '15 tambour 1985'
     assert not date._is(val)
 
 
