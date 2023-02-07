@@ -178,18 +178,19 @@ def create_profile(table, dict_cols_fields, sep, encoding, num_rows, skiprows):
                         safe_table[c].std()
                     ),
                 )
+            tops_bruts = safe_table[safe_table[c].notna()][c] \
+                    .value_counts(dropna=True) \
+                    .reset_index() \
+                    .iloc[:10] \
+                    .to_dict(orient="records")
+            tops = []
+            for tb in tops_bruts:
+                top = {}
+                top["count"] = tb[c]
+                top["value"] = tb["index"]
+                tops.append(top)
             profile[c].update(
-                tops=[
-                    None if (isinstance(k, float) and np.isnan(k)) else k
-                    for k in list(
-                        safe_table[safe_table[c].notna()][c]
-                        .value_counts(dropna=False)
-                        .reset_index()
-                        .iloc[:10]
-                        .to_dict()["index"]
-                        .values()
-                    )
-                ],
+                tops=tops,
                 nb_distinct=safe_table[c].nunique(),
                 nb_missing_values=len(safe_table[c].loc[safe_table[c].isna()]),
             )
