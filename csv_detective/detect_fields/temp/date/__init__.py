@@ -71,6 +71,13 @@ def _is(val):
     )
 
     # matches JJ-mmm...mm-AAAA
-    g = bool(re.match(r'^(0[1-9]|[12][0-9]|3[01])[ -/_;.:,](janvier|fevrier|mars|avril|mai|juin|jullet|aout|septembre|octobre|novembre|decembre)[ -/_;.:,]([0-9]{2}$|(19|20)[0-9]{2}$)', unidecode(val)))
+    g = bool(
+        re.match(
+            r'^(0[1-9]|[12][0-9]|3[01])[ -/_;.:,](janvier|fevrier|mars|avril|'
+            r'mai|juin|jullet|aout|septembre|octobre|novembre|decembre)[ -/_;.:,]'
+            r'([0-9]{2}$|(19|20)[0-9]{2}$)',
+            unidecode(val)
+        )
+    )
 
     return a or b or c or d or e or f or g or (is_dateutil_date(val) and not is_float(val))
