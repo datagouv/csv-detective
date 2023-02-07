@@ -42,6 +42,6 @@ def _is(val):
     f = bool(re.match(r'^(0[1-9]|[12][0-9]|3[01])[ -/_;.:,](jan|fev|feb|mar|avr|apr|mai|may|jun|jui|jul|aou|aug|sep|oct|nov|dec)[ -/_;.:,]([0-9]{2}$|(19|20)[0-9]{2}$)', val))
 
     # matches JJ-mmm...mm-AAAA
-    f = bool(re.match(r'^(0[1-9]|[12][0-9]|3[01])[ -/_;.:,](janvier|fevrier|mars|avril|mai|juin|jullet|aout|septembre|octobre|novembre|decembre)[ -/_;.:,]([0-9]{2}$|(19|20)[0-9]{2}$)', unidecode(val)))
+    g = bool(re.match(r'^(0[1-9]|[12][0-9]|3[01])[ -/_;.:,](janvier|fevrier|mars|avril|mai|juin|jullet|aout|septembre|octobre|novembre|decembre)[ -/_;.:,]([0-9]{2}$|(19|20)[0-9]{2}$)', unidecode(val)))
 
-    return a or b or c or d or e or f or (is_dateutil_date(val) and not is_float(val))
+    return a or b or c or d or e or f or g or (is_dateutil_date(val) and not is_float(val))
