@@ -87,16 +87,14 @@ jobs:
           name: Build a distributable package
           command: |
             source venv/bin/activate
-            pip install twine bdist_wheel
+            pip install --upgrade twine setuptools
             # Build a wheel release
             if [[ $CIRCLE_TAG ]]; then
                 # This is a tagged release, version should be handled upstream
-                python setup.py egg_info
-                bdist_wheel
+                python setup.py egg_info bdist_wheel
                 twine check dist/*
             else
-                python setup.py egg_info -b $CIRCLE_BUILD_NUM
-                bdist_wheel
+                python setup.py egg_info -b $CIRCLE_BUILD_NUM bdist_wheel
                 twine check dist/*
             fi
       - store_artifacts:
