@@ -2,6 +2,7 @@ from csv_detective.process_text import _process_text
 
 PROPORTION = 0.55
 
+
 def _is(val):
     '''Repere des adresses'''
     voies = [

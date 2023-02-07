@@ -10,4 +10,3 @@ def _is(val):
         return True
     except ValueError:
         return False
-

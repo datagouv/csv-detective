@@ -3,11 +3,14 @@ import numpy as np
 from cchardet import UniversalDetector
 from ast import literal_eval
 
+
 def detect_continuous_variable(table, continuous_th=0.9):
     """
-    Detects whether a column contains continuous variables. We consider a continuous column one that contains
+    Detects whether a column contains continuous variables. We consider a continuous column
+    one that contains
     a considerable amount of float values.
-    We removed the integers as we then end up with postal codes, insee codes, and all sort of codes and types.
+    We removed the integers as we then end up with postal codes, insee codes, and all sort
+    of codes and types.
     This is not optimal but it will do for now.
     :param table:
     :return:
@@ -25,31 +28,37 @@ def detect_continuous_variable(table, continuous_th=0.9):
         else:
             return False
 
-
     def parses_to_integer(value):
         try:
-            value = value.replace(',', '.')
+            value = value.replace(",", ".")
             value = literal_eval(value)
             return type(value)
-
+        # flake8: noqa
         except:
             return False
-    res = table.apply(lambda serie: check_threshold(serie.apply(parses_to_integer), continuous_th))
+
+    res = table.apply(
+        lambda serie: check_threshold(serie.apply(parses_to_integer), continuous_th)
+    )
     return res.index[res]
 
 
-def detetect_categorical_variable(table, threshold_pct_categorical=0.05, max_number_categorical_values=25):
+def detetect_categorical_variable(
+    table, threshold_pct_categorical=0.05, max_number_categorical_values=25
+):
     """
     Heuristically detects whether a table (df) contains categorical values according to
     the number of unique values contained.
-    As the idea of detecting categorical values is to then try to learn models to predict them, we limit
-    categorical values to at most 25 different modes. Postal code, insee code, code region and so on, may be thus not
+    As the idea of detecting categorical values is to then try to learn models to predict
+    them, we limit categorical values to at most 25 different modes. Postal code, insee code,
+    code region and so on, may be thus not
     considered categorical values.
     :param table:
     :param threshold_pct_categorical:
     :param max_number_categorical_values:
     :return:
     """
+
     def abs_number_different_values(column_values):
         return len(column_values.unique())
 
@@ -70,7 +79,7 @@ def detetect_categorical_variable(table, threshold_pct_categorical=0.05, max_num
 
 
 def detect_separator(file):
-    '''Detects csv separator'''
+    """Detects csv separator"""
     # TODO: add a robust detection:
     # si on a un point virgule comme texte et \t comme séparateur, on renvoit
     # pour l'instant un point virgule
@@ -80,12 +89,11 @@ def detect_separator(file):
     sep_count = dict()
     for sep in possible_separators:
         sep_count[sep] = header.count(sep)
-    return max(sep_count, key = sep_count.get)
+    return max(sep_count, key=sep_count.get)
 
 
 def detect_encoding(the_file):
-    '''Detects file encoding using chardet based on N first lines
-    '''
+    """Detects file encoding using chardet based on N first lines"""
     detector = UniversalDetector()
     for line in the_file.readlines():
         detector.feed(line)
@@ -104,72 +112,93 @@ def parse_table(the_file, encoding, sep, num_rows, skiprows, random_state=42):
         the_file.seek(0)
 
     total_lines = None
-    for encoding in [encoding, 'ISO-8859-1', 'utf-8']:
+    for encoding in [encoding, "ISO-8859-1", "utf-8"]:
         # TODO : modification systematique
         if encoding is None:
             continue
 
-        if 'ISO-8859' in encoding:
-            encoding = 'ISO-8859-1'
+        if "ISO-8859" in encoding:
+            encoding = "ISO-8859-1"
         try:
             table = pd.read_csv(
-                the_file,
-                sep=sep,
-                dtype='unicode',
-                encoding=encoding,
-                skiprows=skiprows
+                the_file, sep=sep, dtype="unicode", encoding=encoding, skiprows=skiprows
             )
             total_lines = len(table)
             nb_duplicates = len(table.loc[table.duplicated()])
-            if num_rows>0:
+            if num_rows > 0:
                 num_rows = min(num_rows - 1, total_lines)
                 table = table.sample(num_rows, random_state=random_state)
-            ## else : table is unchanged
+            # else : table is unchanged
             break
         except TypeError:
-            print('Trying encoding : {encoding}'.format(encoding=encoding))
+            print("Trying encoding : {encoding}".format(encoding=encoding))
 
     if table is None:
-        print('  >> encoding not found')
+        print("  >> encoding not found")
         return table, "NA", "NA"
 
     return table, total_lines, nb_duplicates
 
+
 def create_profile(table, dict_cols_fields, sep, encoding, num_rows, skiprows):
     map_python_types = {
-        'string': str,
-        'int': float,
-        'float': float,
+        "string": str,
+        "int": float,
+        "float": float,
     }
 
     if num_rows > 0:
-        raise Exception('To create profiles num_rows has to be set to -1')
+        raise Exception("To create profiles num_rows has to be set to -1")
     else:
         safe_table = table.copy()
-        dtypes={k: map_python_types.get(v['python_type'], str) for k,v in dict_cols_fields.items()}
+        dtypes = {
+            k: map_python_types.get(v["python_type"], str)
+            for k, v in dict_cols_fields.items()
+        }
         for c in safe_table.columns:
-            safe_table[c] = safe_table[c].astype(dtypes[c])
+            if dtypes[c] == float: safe_table[c] = safe_table[c].astype(dtypes[c])
         profile = {}
         for c in safe_table.columns:
             profile[c] = {}
-            if map_python_types.get(dict_cols_fields[c]['python_type'], str) in [float, int]:
+            if map_python_types.get(dict_cols_fields[c]["python_type"], str) in [
+                float,
+                int,
+            ]:
                 profile[c].update(
-                    min=map_python_types.get(dict_cols_fields[c]['python_type'], str)(safe_table[c].min()),
-                    max=map_python_types.get(dict_cols_fields[c]['python_type'], str)(safe_table[c].max()),
-                    mean=map_python_types.get(dict_cols_fields[c]['python_type'], str)(safe_table[c].mean()),
-                    std=map_python_types.get(dict_cols_fields[c]['python_type'], str)(safe_table[c].std())
+                    min=map_python_types.get(dict_cols_fields[c]["python_type"], str)(
+                        safe_table[c].min()
+                    ),
+                    max=map_python_types.get(dict_cols_fields[c]["python_type"], str)(
+                        safe_table[c].max()
+                    ),
+                    mean=map_python_types.get(dict_cols_fields[c]["python_type"], str)(
+                        safe_table[c].mean()
+                    ),
+                    std=map_python_types.get(dict_cols_fields[c]["python_type"], str)(
+                        safe_table[c].std()
+                    ),
                 )
             profile[c].update(
-                tops=[None if (isinstance(k, float) and np.isnan(k)) else k for k in list(safe_table[c].value_counts(dropna=False).reset_index().iloc[:10].to_dict()['index'].values())],
+                tops=[
+                    None if (isinstance(k, float) and np.isnan(k)) else k
+                    for k in list(
+                        safe_table[safe_table[c].notna()][c]
+                        .value_counts(dropna=False)
+                        .reset_index()
+                        .iloc[:10]
+                        .to_dict()["index"]
+                        .values()
+                    )
+                ],
                 nb_distinct=safe_table[c].nunique(),
-                nb_missing_values=len(safe_table[c].loc[safe_table[c].isna()])
+                nb_missing_values=len(safe_table[c].loc[safe_table[c].isna()]),
             )
         return profile
 
 
 def detect_extra_columns(file, sep):
-    ''' regarde s'il y a des colonnes en trop
-        Attention, file ne doit pas avoir de ligne vide '''
+    """regarde s'il y a des colonnes en trop
+    Attention, file ne doit pas avoir de ligne vide"""
     file.seek(0)
     retour = False
     nb_useless_col = 99999
@@ -197,25 +226,26 @@ def detect_extra_columns(file, sep):
 
 
 def detect_headers(file, sep):
-    ''' Tests 10 first rows for possible header (header not in 1st line)'''
+    """Tests 10 first rows for possible header (header not in 1st line)"""
     file.seek(0)
     for i in range(10):
         header = file.readline()
         position = file.tell()
-        chaine = [c for c in header.replace('\n', '').split(sep) if c]
-        if (chaine[-1] not in ['', '\n'] and
-             all([mot not in ['', '\n'] for mot in chaine[1:-1]])):
+        chaine = [c for c in header.replace("\n", "").split(sep) if c]
+        if chaine[-1] not in ["", "\n"] and all(
+            [mot not in ["", "\n"] for mot in chaine[1:-1]]
+        ):
             next_row = file.readline()
             file.seek(position)
-            if header!=next_row:
+            if header != next_row:
                 return i, chaine
-    return 0,  None
+    return 0, None
 
 
 def detect_heading_columns(file, sep):
-    ''' Tests first 10 lines to see if there are empty heading columns'''
+    """Tests first 10 lines to see if there are empty heading columns"""
     file.seek(0)
-    return_int = float('Inf')
+    return_int = float("Inf")
     for i in range(10):
         line = file.readline()
         return_int = min(return_int, len(line) - len(line.strip(sep)))
@@ -225,12 +255,17 @@ def detect_heading_columns(file, sep):
 
 
 def detect_trailing_columns(file, sep, heading_columns):
-    ''' Tests first 10 lines to see if there are empty trailing columns'''
+    """Tests first 10 lines to see if there are empty trailing columns"""
     file.seek(0)
-    return_int = float('Inf')
+    return_int = float("Inf")
     for i in range(10):
         line = file.readline()
-        return_int = min(return_int, len(line.replace('\n', '')) - len(line.replace('\n', '').strip(sep)) - heading_columns)
+        return_int = min(
+            return_int,
+            len(line.replace("\n", ""))
+            - len(line.replace("\n", "").strip(sep))
+            - heading_columns,
+        )
         if return_int == 0:
             return 0
     return return_int

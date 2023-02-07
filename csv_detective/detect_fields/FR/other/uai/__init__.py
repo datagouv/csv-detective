@@ -1,15 +1,7 @@
-# -*- coding: utf-8 -*-
-"""
-Détection codes UAI (éducation nationale)
-
-@author: cquest
-"""
-
-from os.path import dirname, join
-from csv_detective.process_text import _process_text
 import re
 
 PROPORTION = 1
+
 
 def _is(val):
     '''Repere les codes UAI de l'éducation nationale'''

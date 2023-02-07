@@ -1,13 +1,12 @@
-from typing import IO
 import boto3
 import logging
-import os
 
 from botocore.client import Config
 from botocore.exceptions import ClientError
 
+
 def get_minio_url(netloc: str, bucket: str, key: str) -> str:
-    '''Returns location of given resource in minio once it is saved'''
+    """Returns location of given resource in minio once it is saved"""
     return netloc + "/" + bucket + "/" + key
 
 
@@ -21,7 +20,9 @@ def get_s3_client(url: str, minio_user: str, minio_pwd: str) -> boto3.client:
     )
 
 
-def download_from_minio(netloc: str, bucket: str, key: str, filepath: str, minio_user: str, minio_pwd: str) -> None:
+def download_from_minio(
+    netloc: str, bucket: str, key: str, filepath: str, minio_user: str, minio_pwd: str
+) -> None:
     logging.info("Downloading from minio")
     s3 = get_s3_client(netloc, minio_user, minio_pwd)
     try:
@@ -33,7 +34,9 @@ def download_from_minio(netloc: str, bucket: str, key: str, filepath: str, minio
         logging.error(e)
 
 
-def upload_to_minio(netloc: str, bucket: str, key: str, filepath: str, minio_user: str, minio_pwd: str) -> None:
+def upload_to_minio(
+    netloc: str, bucket: str, key: str, filepath: str, minio_user: str, minio_pwd: str
+) -> None:
     logging.info("Saving to minio")
     s3 = get_s3_client(netloc, minio_user, minio_pwd)
     try:
