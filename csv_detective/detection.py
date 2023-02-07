@@ -161,7 +161,7 @@ def create_profile(table, dict_cols_fields, sep, encoding, num_rows, skiprows):
                 )
             profile[c].update(
                 tops=[None if (isinstance(k, float) and np.isnan(k)) else k for k in list(safe_table[c].value_counts(dropna=False).reset_index().iloc[:10].to_dict()['index'].values())],
-                nb_distinct=len(safe_table[c].unique()),
+                nb_distinct=safe_table[c].nunique(),
                 nb_missing_values=len(safe_table[c].loc[safe_table[c].isna()])
             )
         return profile
