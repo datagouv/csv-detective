@@ -87,7 +87,7 @@ jobs:
           name: Build a distributable package
           command: |
             source venv/bin/activate
-            pip install twine wheel
+            pip install twine bdist_wheel
             # Build a wheel release
             if [[ $CIRCLE_TAG ]]; then
                 # This is a tagged release, version should be handled upstream
