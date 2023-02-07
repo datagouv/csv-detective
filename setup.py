@@ -2,9 +2,11 @@
 
 from setuptools import setup, find_packages
 
+from csv_detective
+
 setup(
     name = 'csv_detective',
-    version = '0.4.6',
+    version = __import__('csv_detective').__version__,
     author = 'Etalab',
     author_email = 'opendatateam@data.gouv.fr',
     classifiers = [

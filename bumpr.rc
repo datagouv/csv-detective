@@ -1,0 +1,23 @@
+[bumpr]
+file = csv_detective/__init__.py
+vcs = git
+commit = true
+tag = true
+tag_format = v{version}
+push = true
+clean = rm -rf dist/*
+tests = pytest tests
+publish = python setup.py bdist_wheel
+
+[bump]
+unsuffix = true
+
+[prepare]
+part = patch
+suffix = dev
+
+[changelog]
+file = CHANGELOG.md
+bump = ## {version} ({date:%Y-%m-%d})
+prepare = ## Current (in progress)
+separator =
