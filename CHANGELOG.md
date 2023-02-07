@@ -2,7 +2,7 @@
 
 ## Current (in progress)
 
-- Nothing yet
+- Add CI and upgrade dependencies [#49](https://github.com/etalab/csv-detective/pull/49)
 
 ## 0.4.7 [#51](https://github.com/etalab/csv-detective/pull/51)
 
