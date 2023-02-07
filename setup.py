@@ -2,7 +2,6 @@
 
 from setuptools import setup, find_packages
 
-from csv_detective
 
 setup(
     name = 'csv_detective',
