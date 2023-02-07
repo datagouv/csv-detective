@@ -66,6 +66,13 @@ def test_col(table, all_tests, num_rows, output_mode):
     # Initialising dict for tests
     test_funcs = dict()
     for test in all_tests:
+        name = test.__name__.split('.')[-1]
+        test_funcs[name] = {
+            'func': test._is,
+            'prop': test.PROPORTION
+        }
+    return_table = pd.DataFrame(columns=table.columns)
+    for key, value in test_funcs.items():
         # When analysis of all file is requested (num_rows = -1) we fix a threshold of 
         # 1000 rows for every checks outside int or float format
         if num_rows == -1:
