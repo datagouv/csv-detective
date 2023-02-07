@@ -54,11 +54,6 @@ setup(
             "csv_detective=csv_detective.cli:run",
         ],
     },
-    extras_require={
-        "test": [
-            "nose",
-        ],
-    },
     include_package_data=True,  # Will read MANIFEST.in
     install_requires=[
         "pandas >= 0.20",
