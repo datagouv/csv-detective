@@ -4,11 +4,11 @@ from setuptools import setup, find_packages
 
 
 setup(
-    name = 'csv_detective',
-    version = __import__('csv_detective').__version__,
-    author = 'Etalab',
-    author_email = 'opendatateam@data.gouv.fr',
-    classifiers = [
+    name="csv_detective",
+    version=__import__("csv_detective").__version__,
+    author="Etalab",
+    author_email="opendatateam@data.gouv.fr",
+    classifiers=[
         "Development Status :: 2 - Pre-Alpha",
         "License :: OSI Approved :: GNU Affero General Public License v3",
         "Operating System :: POSIX",
@@ -42,6 +42,7 @@ setup(
         'cchardet',
     ],
     description="Detect CSV column content",
+    long_description_content_type="text/markdown",
     keywords="CSV data processing encoding guess parser tabular",
     license="http://www.fsf.org/licensing/licenses/agpl-3.0.html",
     url="https://github.com/etalab/csv_detective",
