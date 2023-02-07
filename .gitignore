@@ -1,6 +1,7 @@
 *.txt~
 *.py~
 *.pyc
+.vscode
 .spyderproject
 .gitignore~
 data_gouv_api_download.py
