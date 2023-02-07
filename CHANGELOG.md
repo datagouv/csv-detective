@@ -1,5 +1,9 @@
 # Changelog
 
+## Current (in progress)
+
+- Nothing yet
+
 ## 0.4.7 [#51](https://github.com/etalab/csv-detective/pull/51)
 
 - Allow possibility to analyze entire file instead of a limited number of rows [#48](https://github.com/etalab/csv-detective/pull/48)
@@ -54,7 +58,7 @@ Add detailed output possibility
 Details :
  * two modes now for output report : "LIMITED" and "ALL"
  * "ALL" option give user information on found proportion for each column types and each columns
- 
+
 ## 0.3.0 [#15] (https://github.com/etalab/csv_detective/pull/15)
 
 Fix bugs
