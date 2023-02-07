@@ -1,6 +1,5 @@
 from os.path import dirname, join
 from csv_detective.process_text import _process_text
-import re
 from unidecode import unidecode
 
 PROPORTION = 0.9

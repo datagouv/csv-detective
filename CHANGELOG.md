@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.7 [#51](https://github.com/etalab/csv-detective/pull/51)
+
+- Allow possibility to analyze entire file instead of a limited number of rows [#48](https://github.com/etalab/csv-detective/pull/48)
+- Better boolean detection [#42](https://github.com/etalab/csv-detective/issues/42)
+- Differentiate python types and format for `date` and `datetime` [#43](https://github.com/etalab/csv-detective/issues/43)
+- Better `code_departement` and `code_commune_insee` detection [#44](https://github.com/etalab/csv-detective/issues/44)
+- Fix header line (`header_row_idx`) detection [#44](https://github.com/etalab/csv-detective/issues/44)
+- Allow possibility to get profile of csv [#46](https://github.com/etalab/csv-detective/issues/46)
+
 ## 0.4.6 [#39](https://github.com/etalab/csv-detective/pull/39)
 
 - Fix tests

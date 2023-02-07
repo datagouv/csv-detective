@@ -2,20 +2,22 @@ from re import finditer
 
 
 def camel_case_split(identifier):
-    matches = finditer('.+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)', identifier)
+    matches = finditer(
+        ".+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)", identifier
+    )
     return " ".join([m.group(0) for m in matches])
 
 
-#### Process text
+# Process text
 def _process_text(val):
-    '''Met le unicode val sous sous sa forme normee'''
+    """Met le unicode val sous sous sa forme normee"""
     val = camel_case_split(val)
     val = val.lower()
-    val = val.replace(u'-', u' ')
-    val = val.replace(u'_', u' ')
-    val = val.replace(u"'", u' ')
-    val = val.replace(u',', u' ')
-    val = val.replace(u'  ', u' ')
+    val = val.replace("-", " ")
+    val = val.replace("_", " ")
+    val = val.replace("'", " ")
+    val = val.replace(",", " ")
+    val = val.replace("  ", " ")
     # val = val.replace('\xc3\xa8', 'e')
     # val = val.replace('\xc3\xa9', 'e')
     # val = val.replace('\xc3\xaa', 'e')
@@ -25,16 +27,16 @@ def _process_text(val):
     # val = val.replace('\xc3\xa0', 'a')
     # val = val.replace('\xc3\xa2', 'a')
     # val = val.replace('\xc3\xae', 'i')
-    val = val.replace(u'Ã©', u'e')
-    val = val.replace(u'é', u'e')
-    val = val.replace(u'è', u'e')
-    val = val.replace(u'ê', u'e')
-    val = val.replace(u'î', u'i')
-    val = val.replace(u'ô', u'o')
-    val = val.replace(u'ç', u'c')
-    val = val.replace(u'à', u'a')
-    val = val.replace(u'â', u'a')
-    val = val.replace(u'î', u'i')
+    val = val.replace("Ã©", "e")
+    val = val.replace("é", "e")
+    val = val.replace("è", "e")
+    val = val.replace("ê", "e")
+    val = val.replace("î", "i")
+    val = val.replace("ô", "o")
+    val = val.replace("ç", "c")
+    val = val.replace("à", "a")
+    val = val.replace("â", "a")
+    val = val.replace("î", "i")
 
     val = val.strip()
 
