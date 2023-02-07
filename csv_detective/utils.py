@@ -21,7 +21,7 @@ def test_col_val(
     serie = serie[serie.notnull()]
     ser_len = len(serie)
     if num_rows > 0:
-        num_rows = min(ser_len, num_rows)
+        ser_len = min(ser_len, num_rows)
     _range = range(0, ser_len)
     if ser_len == 0:
         return 0.0
@@ -66,21 +66,26 @@ def test_col(table, all_tests, num_rows, output_mode):
     # Initialising dict for tests
     test_funcs = dict()
     for test in all_tests:
-        name = test.__name__.split(".")[-1]
-
-        test_funcs[name] = {"func": test._is, "prop": test.PROPORTION}
-
-    return_table = pd.DataFrame(columns=table.columns)
-    for key, value in test_funcs.items():
-        return_table.loc[key] = table.apply(
-            lambda serie: test_col_val(
-                serie,
-                value["func"],
-                value["prop"],
-                num_rows=num_rows,
-                output_mode=output_mode,
-            )
-        )
+        # When analysis of all file is requested (num_rows = -1) we fix a threshold of 
+        # 1000 rows for every checks outside int or float format
+        if num_rows == -1:
+            local_num_rows = 1000
+        else:
+            local_num_rows = min(num_rows, 1000)
+        # For checks detecting int or float format, we analyze the whole file (because
+        # error can be generated afterward when exploiting this data into a database)
+        if key in ["int", "float", "longitude", "longitude_l93", "longitude_wgs", 
+            "longitude_wgs_fr_metropole", "latitude", "latitude_l93", "latitude_wgs",
+            "latitude_wgs_fr_metropole", "iso_country_code_numeric"
+        ]:
+            local_num_rows = max(-1, num_rows)
+        return_table.loc[key] = table.apply(lambda serie: test_col_val(
+            serie,
+            value['func'],
+            value['prop'],
+            num_rows = local_num_rows,
+            output_mode=output_mode
+        ))
     return return_table
 
 
@@ -88,9 +93,11 @@ def test_label(table, all_tests, output_mode):
     # Initialising dict for tests
     test_funcs = dict()
     for test in all_tests:
-        name = test.__name__.split(".")[-1]
-
-        test_funcs[name] = {"func": test._is, "prop": test.PROPORTION}
+        name = test.__name__.split('.')[-1]
+        test_funcs[name] = {
+            'func': test._is,
+            'prop': test.PROPORTION
+        }
 
     return_table = pd.DataFrame(columns=table.columns)
     for key, value in test_funcs.items():
