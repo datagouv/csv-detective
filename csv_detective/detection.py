@@ -144,17 +144,7 @@ map_python_types = {
 
 def create_profile(the_file, dict_cols_fields, sep, encoding, num_rows, skiprows):
     if num_rows > 0:
-        return {
-            c : {
-                "min": "NA",
-                "max": "NA",
-                "mean": "NA",
-                "std": "NA",
-                "tops": "NA",
-                "nb_distinct": "NA",
-                "nb_missing_values": "NA"
-            } for c in dict_cols_fields.keys()
-        }
+        raise Exception('To create profiles num_rows has to be set to -1')
     else:
         table = pd.read_csv(
                 the_file,
