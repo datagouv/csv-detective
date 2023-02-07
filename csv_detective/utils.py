@@ -67,7 +67,10 @@ def test_col(table, all_tests, num_rows, output_mode):
     for key, value in test_funcs.items():
         # When analysis of all file is requested (num_rows = -1) we fix a threshold of 
         # 1000 rows for every checks outside int or float format
-        local_num_rows = max(num_rows, 1000)
+        if num_rows == -1:
+            local_num_rows = 1000
+        else:
+            local_num_rows = min(num_rows, 1000)
         # For checks detecting int or float format, we analyze the whole file (because
         # error can be generated afterward when exploiting this data into a database)
         if key in ["int", "float", "longitude", "longitude_l93", "longitude_wgs", 
