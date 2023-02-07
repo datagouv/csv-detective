@@ -23,6 +23,7 @@ from .detection import (
     detect_heading_columns,
     detect_trailing_columns,
     parse_table,
+    create_profile,
     detetect_categorical_variable, detect_continuous_variable)
 
 
@@ -66,12 +67,13 @@ def return_all_tests(user_input_tests, detect_type='detect_fields'):
 
 def routine(
     csv_file_path: str,
-    num_rows: int=50,
+    num_rows: int=500,
     user_input_tests: Union[str, List[str]]='ALL',
     output_mode: Literal['ALL', 'LIMITED']='LIMITED',
     save_results: bool=True,
     encoding: str=None,
-    sep: str=None):
+    sep: str=None,
+    output_profile: bool=False):
     '''Returns a dict with information about the csv table and possible
     column contents.
 
@@ -105,7 +107,7 @@ def routine(
                 return return_dict
         heading_columns = detect_heading_columns(str_file, sep)
         trailing_columns = detect_trailing_columns(str_file, sep, heading_columns)
-        table, total_lines, nb_duplicates = parse_table(str_file, encoding, sep, num_rows)
+        table, total_lines, nb_duplicates = parse_table(str_file, encoding, sep, num_rows, header_row_idx)
 
     if table.empty:
         res_categorical = []
@@ -161,7 +163,6 @@ def routine(
                                                             return_table_labels.loc[formats_with_mandatory_label, :],
                                                             return_table.loc[formats_with_mandatory_label, :],
                                                             0)
-
     return_dict_cols = prepare_output_dict(return_table, output_mode)
     return_dict['columns'] = return_dict_cols
 
@@ -170,6 +171,10 @@ def routine(
         'int': 'int',
         'float': 'float',
         'string': 'string',
+        'json': 'json',
+        'json_geojson': 'json',
+        'datetime': 'datetime',
+        'date': 'date',
         'latitude': 'float',
         'latitude_l93': 'float',
         'latitude_wgs': 'float',
@@ -191,6 +196,9 @@ def routine(
         return_dict['formats'] = { column_metadata['format']: [] for column_metadata in return_dict['columns'].values() }
         for header, col_metadata in return_dict['columns'].items():
             return_dict['formats'][col_metadata['format']].append(header)
+    
+    if output_profile:
+        return_dict['profile'] = create_profile(table, return_dict['columns'], sep, encoding, num_rows, header_row_idx)
 
     if save_results:
         # Write your file as json
@@ -207,7 +215,7 @@ def routine_minio(
     tableschema_minio_location: Dict[str, str],
     minio_user: str,
     minio_pwd: str,
-    num_rows: int=50,
+    num_rows: int=500,
     user_input_tests: Union[str, List[str]]='ALL',
     encoding: str=None,
     sep: str=None):

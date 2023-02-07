@@ -1,6 +1,6 @@
 import pandas as pd
 
-def test_col_val(serie, test_func, proportion=0.9, skipna=True, num_rows=50, output_mode='ALL'):
+def test_col_val(serie, test_func, proportion=0.9, skipna=True, num_rows=-1, output_mode='ALL'):
     ''' Tests values of the serie using test_func.
          - skipna : if True indicates that NaNs are not counted as False
          - proportion :  indicates the proportion of values that have to pass the test
@@ -20,7 +20,7 @@ def test_col_val(serie, test_func, proportion=0.9, skipna=True, num_rows=50, out
 	    num_rows = min(ser_len, num_rows)
     _range = range(0, ser_len)
     if ser_len == 0:
-        return False
+        return 0.0
     if(output_mode == 'ALL'):
         if num_rows>0:
             return apply_test_func(serie, test_func, _range).sum() / num_rows
@@ -51,7 +51,7 @@ def test_col_label(label, test_func, proportion=1, output_mode='ALL') :
         return test_func(label)
     else :
         result = test_func(label)
-        return result if result >= proportion else False
+        return result if result >= proportion else 0
 
 def test_col(table, all_tests, num_rows, output_mode):
     # Initialising dict for tests

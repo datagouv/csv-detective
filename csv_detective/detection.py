@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 from cchardet import UniversalDetector
 from ast import literal_eval
 
@@ -95,7 +96,7 @@ def detect_encoding(the_file):
     return detector.result
 
 
-def parse_table(the_file, encoding, sep, num_rows, random_state=42):
+def parse_table(the_file, encoding, sep, num_rows, skiprows, random_state=42):
     # Takes care of some problems
     table = None
 
@@ -115,7 +116,8 @@ def parse_table(the_file, encoding, sep, num_rows, random_state=42):
                 the_file,
                 sep=sep,
                 dtype='unicode',
-                encoding=encoding
+                encoding=encoding,
+                skiprows=skiprows
             )
             total_lines = len(table)
             nb_duplicates = len(table.loc[table.duplicated()])
@@ -132,6 +134,37 @@ def parse_table(the_file, encoding, sep, num_rows, random_state=42):
         return table, "NA", "NA"
 
     return table, total_lines, nb_duplicates
+
+def create_profile(table, dict_cols_fields, sep, encoding, num_rows, skiprows):
+    map_python_types = {
+        'string': str,
+        'int': float,
+        'float': float,
+    }
+
+    if num_rows > 0:
+        raise Exception('To create profiles num_rows has to be set to -1')
+    else:
+        safe_table = table.copy()
+        dtypes={k: map_python_types.get(v['python_type'], str) for k,v in dict_cols_fields.items()}
+        for c in safe_table.columns:
+            safe_table[c] = safe_table[c].astype(dtypes[c])
+        profile = {}
+        for c in safe_table.columns:
+            profile[c] = {}
+            if map_python_types.get(dict_cols_fields[c]['python_type'], str) in [float, int]:
+                profile[c].update(
+                    min=map_python_types.get(dict_cols_fields[c]['python_type'], str)(safe_table[c].min()),
+                    max=map_python_types.get(dict_cols_fields[c]['python_type'], str)(safe_table[c].max()),
+                    mean=map_python_types.get(dict_cols_fields[c]['python_type'], str)(safe_table[c].mean()),
+                    std=map_python_types.get(dict_cols_fields[c]['python_type'], str)(safe_table[c].std())
+                )
+            profile[c].update(
+                tops=[None if (isinstance(k, float) and np.isnan(k)) else k for k in list(safe_table[c].value_counts(dropna=False).reset_index().iloc[:10].to_dict()['index'].values())],
+                nb_distinct=safe_table[c].nunique(),
+                nb_missing_values=len(safe_table[c].loc[safe_table[c].isna()])
+            )
+        return profile
 
 
 def detect_extra_columns(file, sep):
@@ -168,10 +201,14 @@ def detect_headers(file, sep):
     file.seek(0)
     for i in range(10):
         header = file.readline()
+        position = file.tell()
         chaine = [c for c in header.replace('\n', '').split(sep) if c]
         if (chaine[-1] not in ['', '\n'] and
              all([mot not in ['', '\n'] for mot in chaine[1:-1]])):
-            return i, chaine
+            next_row = file.readline()
+            file.seek(position)
+            if header!=next_row:
+                return i, chaine
     return 0,  None
 
 

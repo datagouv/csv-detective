@@ -2,7 +2,7 @@ import pandas as pd
 from numpy import random
 
 from csv_detective.detect_fields.FR.other import code_csp_insee, csp_insee, sexe, siren, tel_fr, code_rna, code_waldec
-from csv_detective.detect_fields.other import email, url, uuid, mongo_object_id
+from csv_detective.detect_fields.other import email, url, uuid, mongo_object_id, json
 
 from csv_detective.detect_fields.FR.geo import adresse, code_commune_insee, code_postal, commune, departement, pays, region
 from csv_detective.detect_fields.geo import iso_country_code_alpha2, iso_country_code_alpha3, iso_country_code_numeric
@@ -280,3 +280,15 @@ def test_do_not_match_waldec():
     val = "AA751PEE00188854"
     assert not code_waldec._is(val)
 
+# json
+def test_match_json():
+    val = '{"pomme": "fruit", "reponse": 42}'
+    assert json._is(val)
+    val = '[1,2,3,4]'
+    assert json._is(val)
+
+def test_do_not_match_json():
+    val = '{"coordinates": [45.783753, 3.049342], "citycode": "63870"}'
+    assert not json._is(val)
+    val = '666'
+    assert not json._is(val)

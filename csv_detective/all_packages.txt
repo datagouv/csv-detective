@@ -47,6 +47,7 @@ csv_detective.detect_fields.other.booleen
 csv_detective.detect_fields.other.twitter
 csv_detective.detect_fields.other.float
 csv_detective.detect_fields.other.int
+csv_detective.detect_fields.other.json
 csv_detective.detect_fields.FR.geo.latitude_l93
 csv_detective.detect_fields.FR.geo.longitude_l93
 csv_detective.detect_fields.FR.geo.insee_canton
