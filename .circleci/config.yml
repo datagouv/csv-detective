@@ -87,7 +87,7 @@ jobs:
           name: Build a distributable package
           command: |
             source venv/bin/activate
-            pip install --upgrade twine setuptools
+            pip install --upgrade -r requirements-build.txt
             # Build a wheel release
             if [[ $CIRCLE_TAG ]]; then
                 # This is a tagged release, version should be handled upstream

@@ -221,7 +221,11 @@ Organisations such as [data.gouv](http://data.gouv.fr) aggregate huge amounts of
 
 ## Release
 
-The release process uses `bumpr` (included in the dependencies). You also need `setuptools` and `wheel` to test the build locally.
+The release process uses `bumpr`.
+
+```shell
+pip install -r requirements-build.txt
+```
 
 ### Process
 
