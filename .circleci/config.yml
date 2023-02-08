@@ -10,7 +10,7 @@ parameters:
     default: "csv_detective"
   publish-branch:
     type: string
-    default: "main"
+    default: "master"
   cache-prefix:
     type: string
     default: "py-cache"
