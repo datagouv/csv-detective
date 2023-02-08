@@ -40,7 +40,7 @@ with open(file_path.replace('.csv', '.json'), 'w', encoding='utf8') as fp:
 
 ### Output
 
-The program creates a `Python` dictionnary with the following information : 
+The program creates a `Python` dictionnary with the following information :
 
 ```
 {
@@ -77,11 +77,11 @@ The program creates a `Python` dictionnary with the following information :
 
 ### What Formats Can Be Detected
 
-Includes : 
+Includes :
 
 - Communes, Départements, Régions, Pays
 - Codes Communes, Codes Postaux, Codes Departement, ISO Pays
-- Codes CSP, Description CSP, SIREN 
+- Codes CSP, Description CSP, SIREN
 - E-Mails, URLs, Téléphones FR
 - Years, Dates, Jours de la Semaine FR
 - UUIDs, Mongo ObjectIds
@@ -219,7 +219,61 @@ Organisations such as [data.gouv](http://data.gouv.fr) aggregate huge amounts of
 
 [Here](https://github.com/Leobouloc/data.gouv-exploration) is project (just started) that has code to download all csv files from the data.gouv website and analyse them using csv_detective.
 
+## Release
 
+The release process uses `bumpr` (included in the dependencies). You also need `setuptools` and `wheel` to test the build locally.
 
+### Process
 
+1. `bumpr` will handle bumping the version according to your command (patch, minor, major)
+2. It will update the CHANGELOG according to the new version being published
+3. It will push a tag with the given version to github
+4. CircleCI will pickup this tag, build the package and publish it to pypi
+5. `bumpr` will have everything ready for the next version (version, changelog...)
 
+### Dry run
+
+```shell
+bumpr -d -v
+```
+
+### Release
+
+This will release a patch version:
+
+```shell
+bumpr -v
+```
+
+See bumpr options for minor and major:
+
+```
+$ bumpr -h
+usage: bumpr [-h] [--version] [-v] [-c CONFIG] [-d] [-st] [-b | -pr] [-M] [-m] [-p]
+             [-s SUFFIX] [-u] [-pM] [-pm] [-pp] [-ps PREPARE_SUFFIX] [-pu]
+             [--vcs {git,hg}] [-nc] [-P] [-nP]
+             [file] [files ...]
+
+[...]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --version             show program's version number and exit
+  -v, --verbose         Verbose output
+  -c CONFIG, --config CONFIG
+                        Specify a configuration file
+  -d, --dryrun          Do not write anything and display a diff
+  -st, --skip-tests     Skip tests
+  -b, --bump            Only perform the bump
+  -pr, --prepare        Only perform the prepare
+
+bump:
+  -M, --major           Bump major version
+  -m, --minor           Bump minor version
+  -p, --patch           Bump patch version
+  -s SUFFIX, --suffix SUFFIX
+                        Set suffix
+  -u, --unsuffix        Unset suffix
+
+[...]
+```
