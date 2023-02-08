@@ -1,0 +1,4 @@
+bumpr==0.3.8
+setuptools
+wheel
+twine

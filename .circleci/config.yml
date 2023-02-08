@@ -1,0 +1,158 @@
+---
+version: 2.1
+
+parameters:
+  python-version:
+    type: string
+    default: "3.9"
+  python-module:
+    type: string
+    default: "csv_detective"
+  publish-branch:
+    type: string
+    default: "main"
+  cache-prefix:
+    type: string
+    default: "py-cache"
+
+jobs:
+  install:
+    docker:
+      - image: cimg/python:<< pipeline.parameters.python-version >>
+    steps:
+      - checkout
+      - run:
+          name: Get the base reference branch
+          command: export BASE_BRANCH=$(base_branch)
+      - restore_cache:
+          keys:
+            - << pipeline.parameters.cache-prefix >>-{{ arch }}-{{ checksum "requirements.txt" }}
+            - << pipeline.parameters.cache-prefix >>-{{ arch }}-{{ .Branch }}
+            - << pipeline.parameters.cache-prefix >>-{{ arch }}-{{ .Environment.BASE_BRANCH }}
+      - run:
+          name: Install python dependencies
+          command: |
+            virtualenv venv
+            source venv/bin/activate
+            pip install -r requirements.txt
+            pip install -e .
+      - save_cache:
+          key: << pipeline.parameters.cache-prefix >>-{{ arch }}-{{ checksum "requirements.txt" }}
+          paths:
+            - venv
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
+
+  lint:
+    docker:
+      - image: cimg/python:<< pipeline.parameters.python-version >>
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Lint code
+          command: |
+            source venv/bin/activate
+            pip install flake8
+            flake8 << pipeline.parameters.python-module >>
+      - run:
+          name: Lint tests
+          command: |
+            source venv/bin/activate
+            flake8 tests/
+
+  tests:
+    docker:
+      - image: cimg/python:<< pipeline.parameters.python-version >>
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Run tests
+          command: |
+            source venv/bin/activate
+            pytest tests/ --junitxml=reports/python/tests.xml -p no:sugar --color=yes
+      - store_test_results:
+          path: reports/python
+
+  build:
+    docker:
+      - image: cimg/python:<< pipeline.parameters.python-version >>
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Build a distributable package
+          command: |
+            source venv/bin/activate
+            pip install --upgrade -r requirements-build.txt
+            # Build a wheel release
+            if [[ $CIRCLE_TAG ]]; then
+                # This is a tagged release, version should be handled upstream
+                python setup.py bdist_wheel
+                twine check dist/*
+            else
+                python setup.py egg_info -b $CIRCLE_BUILD_NUM bdist_wheel
+                twine check dist/*
+            fi
+      - store_artifacts:
+          path: dist
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
+
+  publish:
+    docker:
+      - image: cimg/python:<< pipeline.parameters.python-version >>
+    steps:
+      - attach_workspace:
+          at: .
+      - deploy:
+          name: Publish on PyPI
+          command: |
+            source venv/bin/activate
+            pip install twine
+            twine upload --username "${PYPI_USERNAME}" --password "${PYPI_PASSWORD}" dist/*.whl
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - install:
+          filters:
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*/
+      - lint:
+          requires:
+            - install
+          filters:
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*/
+      - tests:
+          requires:
+            - install
+          filters:
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*/
+      - build:
+          requires:
+            - tests
+            - lint
+          filters:
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*/
+      - publish:
+          requires:
+            - build
+          filters:
+            branches:
+              only:
+                - << pipeline.parameters.publish-branch >>
+                - /[0-9]+(\.[0-9]+)+/
+                - /rc[0-9]+/
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*/
+          context: org-global
