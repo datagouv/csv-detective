@@ -76,3 +76,15 @@ def test_exception():
             output_profile=True,
             save_results=False,
         )
+
+
+def test_code_dep_reg_on_file():
+    output = explore_csv.routine(
+        csv_file_path="tests/b_test_file.csv",
+        num_rows=-1,
+        output_profile=False,
+        save_results=False,
+    )
+    assert isinstance(output, dict)
+    assert output["columns"]["code_departement"]["format"] == "code_departement"
+    assert output["columns"]["code_region"]["format"] == "code_region"
