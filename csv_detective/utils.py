@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 
 def test_col_val(
@@ -14,7 +15,7 @@ def test_col_val(
     # TODO : change for a cleaner method and only test columns in modules labels
     def apply_test_func(serie, test_func, _range):
         try:
-            return serie.iloc[_range].apply(test_func)
+            return serie.sample(frac=1).iloc[_range].apply(test_func)
         except AttributeError:  # .name n'est pas trouvé
             return test_func(serie.iloc[_range])
 
@@ -26,7 +27,8 @@ def test_col_val(
     if ser_len == 0:
         return 0.0
     if output_mode == "ALL":
-        return apply_test_func(serie, test_func, _range).sum() / ser_len
+        result = apply_test_func(serie, test_func, _range).sum() / ser_len
+        return result if result >= proportion else 0.0
     else:
         if proportion == 1:  # Then try first 1 value, then 5, then all
             for _range in [
