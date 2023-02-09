@@ -26,10 +26,7 @@ def test_col_val(
     if ser_len == 0:
         return 0.0
     if output_mode == "ALL":
-        if num_rows > 0:
-            return apply_test_func(serie, test_func, _range).sum() / num_rows
-        else:
-            return apply_test_func(serie, test_func, _range).sum() / ser_len
+        return apply_test_func(serie, test_func, _range).sum() / ser_len
     else:
         if proportion == 1:  # Then try first 1 value, then 5, then all
             for _range in [
@@ -46,7 +43,7 @@ def test_col_val(
                     return 0.0
             return 1.0
         else:
-            result = apply_test_func(serie, test_func, _range).sum() / len(serie)
+            result = apply_test_func(serie, test_func, _range).sum() / ser_len
             return result if result >= proportion else 0.0
 
 
