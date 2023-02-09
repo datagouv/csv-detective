@@ -1,5 +1,6 @@
 import pandas as pd
 
+
 def test_col_val(
     serie, test_func, proportion=0.9, skipna=True, num_rows=-1, output_mode="ALL"
 ):
