@@ -10,3 +10,5 @@ def _is(val):
         return val >= -180 and val <= 180
     except ValueError:
         return False
+    except OverflowError:
+        return False
