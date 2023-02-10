@@ -26,7 +26,6 @@ import json # for json dump only
 file_path = os.path.join('.', 'tests', 'code_postaux_v201410.csv')
 
 # Open your file and run csv_detective
-```
 inspection_results = routine(
   file_path,
   num_rows=-1, # Value -1 will analyze all lines of your csv, you can change with the number of lines you wish to analyze
@@ -36,7 +35,6 @@ inspection_results = routine(
   output_profile=True, # Default False. If True, returned dict will contain a property "profile" indicating profile (min, max, mean, tops...) of every column of you csv
   output_schema=True, # Default False. If True, returned dict will contain a property "schema" containing basic [tableschema](https://specs.frictionlessdata.io/table-schema/) of your file. This can be use to validate structure of other csv which should match same structure. 
 )
-```
 
 # Write your file as json
 with open(file_path.replace('.csv', '.json'), 'w', encoding='utf8') as fp:
