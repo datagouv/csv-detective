@@ -88,7 +88,10 @@ def get_pattern(format: str) -> str:
             r'{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)$'
         )
     }
-    return format_to_pattern.get(format, None)
+    if format in format_to_pattern:
+        return {"pattern": format_to_pattern[format]}
+    else:
+        return {}
 
 
 def get_validata_type(format: str) -> str:
@@ -175,17 +178,8 @@ def get_example(format: str) -> str:
 
 def get_constraints(format: str) -> dict:
     """Returns the constraints for a given format"""
+    pattern_constraints = get_pattern(format)
     extra_constraints = {}
-    if format == "code_commune_insee":
-        extra_constraints = {"pattern": "^[0-9]{5}$"}
-    if format == "code_departement":
-        extra_constraints = {
-            "pattern": "^(0[13-9]|[1-8][0-9]|9[0-6]|2[a-bA-B]|97[1-6])$"
-        }
-    if format == "code_postal":
-        extra_constraints = {"pattern": "^[0-9]{5}$"}
-    if format == "code_fantoir":
-        extra_constraints = {"pattern": "^[0-9A-Z][0-9]{3}[ABCDEFGHJKLMNPRSTUVWXYZ]$"}
     if format == "latitude_l93":
         extra_constraints = {"minimum": 6037008, "maximum": 7230728}
     if format == "longitude_l93":
@@ -194,11 +188,8 @@ def get_constraints(format: str) -> dict:
         extra_constraints = {"minimum": 41.3, "maximum": 51.3}
     if format == "longitude_wgs_fr_metropole":
         extra_constraints = {"minimum": -5.5, "maximum": 9.8}
-    if format == "siren":
-        extra_constraints = {"pattern": "^[0-9]{9}$"}
-    if format == "siret":
-        extra_constraints = {"pattern": "^[0-9]{14}$"}
-    return {"required": False, **extra_constraints}
+
+    return {"required": False, **pattern_constraints, **extra_constraints}
 
 
 def generate_table_schema(
@@ -231,16 +222,10 @@ def generate_table_schema(
             "example": get_example(field_report["format"]),
             "type": get_validata_type(field_report["format"]),
             "formatFR": field_report["format"],
-            "constraints": {
-                "required": False,
-                "pattern": get_pattern(field_report["format"])
-            },
+            "constraints": get_constraints(field_report["format"])
         }
         for header, field_report in analysis_report["columns"].items()
     ]
-    for field in fields:
-        if field["constraints"]["pattern"] is None:
-            del field["constraints"]["pattern"]
 
     new_version = "0.0.1"
 
