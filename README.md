@@ -2,13 +2,11 @@
 
 This is a package to **automatically detect column content in CSV files**. As of now, the script reads the first few rows of the CSV and performs various checks to see for each column if it matches with various content types. This is currently done through regex and string comparison.
 
-Work is still in progress, and you will surely encounter errors when using csv_detective; you might not even be able to get it run once! When this will happen, please feel free to open an issue or make a pull request with a fix.
-
 ## How To ?
 
 ### Install the package
 
-You need to have python >= 3.4 installed. We recommend using a virtual environement (`pew` or `virtualenvwrapper` for example).
+You need to have python >= 3.7 installed. We recommend using a virtual environement.
 
 ```
 pip install csv-detective
@@ -28,7 +26,17 @@ import json # for json dump only
 file_path = os.path.join('.', 'tests', 'code_postaux_v201410.csv')
 
 # Open your file and run csv_detective
-inspection_results = routine(file_path)
+```
+inspection_results = routine(
+  file_path,
+  num_rows=-1, # Value -1 will analyze all lines of your csv, you can change with the number of lines you wish to analyze
+  output_mode="LIMITED", # By default value is LIMITED, if you want result of analysis of all detections made, you can apply an output_mode="ALL"
+  
+  =False, # Default False. If True, it will save result output into the same directory than the csv analyzed
+  output_profile=True, # Default False. If True, returned dict will contain a property "profile" indicating profile (min, max, mean, tops...) of every column of you csv
+  output_schema=True, # Default False. If True, returned dict will contain a property "schema" containing basic [tableschema](https://specs.frictionlessdata.io/table-schema/) of your file. This can be use to validate structure of other csv which should match same structure. 
+)
+```
 
 # Write your file as json
 with open(file_path.replace('.csv', '.json'), 'w', encoding='utf8') as fp:
@@ -51,26 +59,74 @@ The program creates a `Python` dictionnary with the following information :
     "headers": ['code commune INSEE', 'nom de la commune', 'code postal', "libell\\u00e9 d'acheminement\n"], # Header row
     "separator": ";",						# Detected CSV separator
     "headers_row": 0,						# Number of heading rows
-    "columns_fields": {
-        "nom de la commune": {
+    "columns": { # Property that conciliate detection from labels and content of a column
+        "Code commune": {
             "python_type": "string",
-            "format": "commune",
+            "format": "code_commune_insee",
             "score": 1.0
         },
     },
-    "columns_labels": {
-        "nom de la commune": {
+    "columns_labels": { # Property that return detection from header columns
+        "Code commune": {
             "python_type": "string",
-            "format": "commune",
+            "format": "code_commune_insee",
             "score": 0.5
         },
     },
-    "columns_fields": {
-        "nom de la commune": {
+    "columns_fields": { # Property that return detection from content columns
+        "Code commune": {
             "python_type": "string",
-            "format": "commune",
+            "format": "code_commune_insee",
             "score": 1.25
         },
+    },
+    "profile": {
+      "column_name" : {
+        "min": 1, # only int and float
+        "max: 12, # only int and float
+        "mean": 5, # only int and float
+        "std": 5, # only int and float
+        "tops": [  # limited to 10
+          "xxx",
+          "yyy",
+          "..."
+        ],
+        "nb_distinct": 67,
+        "nb_missing_values": 102
+      }
+    },
+    "schema": {
+      "$schema": "https://frictionlessdata.io/schemas/table-schema.json",
+      "name": "",
+      "title": "",
+      "description": "",
+      "countryCode": "FR",
+      "homepage": "",
+      "path": "https://github.com/etalab/csv-detective",
+      "resources": [],
+      "sources": [
+        {"title": "Spécification Tableschema", "path": "https://specs.frictionlessdata.io/table-schema"},
+        {"title": "schema.data.gouv.fr", "path": "https://schema.data.gouv.fr"}
+      ],
+      "created": "2023-02-10",
+      "lastModified": "2023-02-10",
+      "version": "0.0.1",
+      "contributors": [
+        {"title": "Table schema bot", "email": "schema@data.gouv.fr", "organisation": "data.gouv.fr", "role": "author"}
+      ],
+      "fields": [
+        {
+          "name": "Code commune",
+          "description": "Le code INSEE de la commune",
+          "example": "23150",
+          "type": "string",
+          "formatFR": "code_commune_insee",
+          "constraints": {
+            "required": False,
+            "pattern": "^([013-9]\\d|2[AB1-9])\\d{3}$",
+          }
+        }
+      ]
     }
 }
 ```
@@ -95,24 +151,6 @@ For each column, 3 scores are computed for each format, the higher the score, th
 The overall score computation aims to give more weight to the column contents while
 still leveraging the column header.
 
-### Additional options
-#### `user_input_tests` - Select the tests you want to pass
-This library allows you to select the tests you want to pass. To do so, you have to pass a `user_input_tests` argument to the `routine` function. This variable can be a string or a list of strings and indicates what tests to import. The following rules apply:
-
-- `user_input_tests` defaults to `'ALL'` which means all tests will be passed
-- The tests are referenced by their path, with directories seperated by dots. For example we could have `user_input_tests = 'FR.geo'` which means all tests located in the folder `detect_fields\\FR\\geo` will be run.
-- Input can also be a list of strings : `['FR.geo', 'temp']` will load all tests in `detect_fields\\FR\\geo` and `detect_fields\\temp`
-- When using a list of strings as input, you can also choose to exclude certain test branches by adding a dash before their path : `['ALL', '-FR.geo.code_departement']` will load all tests with the exception of the `code_departement` test.
-
-**Partial code** :
-```
-tests = ['FR.geo', 'other.email', '-FR.geo.code_departement']
-
-# Open your file and run csv_detective
-with open(file_path, 'r') as file:
-	inspection_results = routine(file, user_input_tests = tests)
-```
-
 #### `output_mode` - Select the output mode you want for json report
 
 This option allows you to select the output mode you want to pass. To do so, you have to pass a `output_mode` argument to the `routine` function. This variable has two possible values:
@@ -120,78 +158,6 @@ This option allows you to select the output mode you want to pass. To do so, you
 - `output_mode` defaults to `'LIMITED'` which means report will contain only detected column formats based on a pre-selected threshold proportion in data. Report result is the standard output (an example can be found above in 'Output' section).
 Only the format with highest score is present in the output.
 - `output_mode='ALL'` which means report will contain a full list of all column format possibilities for each input data columns with a value associated which match to the proportion of found column type in data. With this report, user can adjust its rules of detection based on a specific threshold and has a better vision of quality detection for each columns. Results could also be easily transformed into dataframe (columns types in column / column names in rows) for analysis and test.
-
-
-**Partial code** :
-```
-# Open your file and run csv_detective
-with open(file_path, 'r') as file:
-	inspection_results = routine(file, output_mode='ALL')
-```
-**Output for output_mode='ALL'**
-
-```
-{
-  "categorical": [
-    "dispositif",
-    "volet"
-  ],
-  "columns": {
-    "code_departement": [
-      {
-        "colonne": "dep",
-        "score": 0.8
-      },
-      {
-        "colonne": "reg",
-        "score": 0.4
-      },
-      {
-        "colonne": "assoc",
-        "score": 0
-      }
-    ],
-    "code_region": [
-      {
-        "colonne": "dep",
-        "score": 0.6
-      },
-      {
-        "colonne": "reg",
-        "score": 0.8
-      },
-      {
-        "colonne": "assoc",
-        "score": 0
-      }
-    ],
-    "code_rna": [
-      {
-        "colonne": "dep",
-        "score": 0
-      },
-      {
-        "colonne": "reg",
-        "score": 0
-      },
-      {
-        "colonne": "assoc",
-        "score": 0.9
-      }
-    ],
-    #[... same output format for each column types]
-    "header_row_idx": 0,
-    "heading_columns": 0,
-    "ints_as_floats": [
-      "montant_total"
-    ],
-    "separator": ",",
-    "total_lines": 321,
-    "trailing_columns": 0
-  }
-}
-```
-
 
 ## TODO (this list is too long)
 
