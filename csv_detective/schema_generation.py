@@ -200,7 +200,7 @@ def generate_table_schema(
     key: Optional[str] = None,
     minio_user: Optional[str] = None,
     minio_pwd: Optional[str] = None,
-) -> None:
+) -> dict:
     """Generates a table schema from the analysis report
 
     Args:
@@ -267,6 +267,12 @@ def generate_table_schema(
         return schema
 
     if save_file:
+        if not all([netloc, key, bucket, minio_user, minio_pwd]):
+            raise Exception(
+                "To save schema into minio, parameters : netloc, key, bucket, "
+                "minio_user, minio_pwd should be provided"
+            )
+
         # Create bucket if does not exist
         client = get_s3_client(netloc, minio_user, minio_pwd)
         try:

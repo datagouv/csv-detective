@@ -311,15 +311,17 @@ def routine_minio(
     """
 
     if (
-        any(
-            [
-                location_dict is not None
-                for location_dict in [
-                    csv_minio_location,
-                    output_minio_location,
-                    tableschema_minio_location,
+        (
+            any(
+                [
+                    location_dict is not None
+                    for location_dict in [
+                        csv_minio_location,
+                        output_minio_location,
+                        tableschema_minio_location,
+                    ]
                 ]
-            ]
+            )
         )
         and (minio_user is None)
         or (minio_pwd is None)
