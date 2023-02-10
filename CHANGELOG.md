@@ -1,6 +1,6 @@
 # Changelog
 
-## Current (in progress)
+## 0.6.0 (2023-02-10)
 
 - Add CI and upgrade dependencies [#49](https://github.com/etalab/csv-detective/pull/49)
 - Shuffle data before analysis [#56](https://github.com/etalab/csv-detective/pull/56)
