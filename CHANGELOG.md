@@ -3,6 +3,9 @@
 ## Current (in progress)
 
 - Add CI and upgrade dependencies [#49](https://github.com/etalab/csv-detective/pull/49)
+- Shuffle data before analysis [#56](https://github.com/etalab/csv-detective/pull/56)
+- Better discrimination between `code_departement` and `code_region` [#56](https://github.com/etalab/csv-detective/pull/56)
+- Add schema in output analysis [#57](https://github.com/etalab/csv-detective/pull/57)
 
 ## 0.4.7 [#51](https://github.com/etalab/csv-detective/pull/51)
 

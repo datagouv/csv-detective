@@ -83,6 +83,7 @@ def routine(
     encoding: str = None,
     sep: str = None,
     output_profile: bool = False,
+    output_schema: bool = False,
 ):
     """Returns a dict with information about the csv table and possible
     column contents.
@@ -268,6 +269,12 @@ def routine(
         with open(output_path_to_store_minio_file, "w", encoding="utf8") as fp:
             json.dump(return_dict, fp, indent=4, separators=(",", ": "))
 
+    if output_schema and output_mode != "ALL":
+        return_dict["schema"] = generate_table_schema(
+            return_dict,
+            False,
+        )
+
     return return_dict
 
 
@@ -304,15 +311,17 @@ def routine_minio(
     """
 
     if (
-        any(
-            [
-                location_dict is not None
-                for location_dict in [
-                    csv_minio_location,
-                    output_minio_location,
-                    tableschema_minio_location,
+        (
+            any(
+                [
+                    location_dict is not None
+                    for location_dict in [
+                        csv_minio_location,
+                        output_minio_location,
+                        tableschema_minio_location,
+                    ]
                 ]
-            ]
+            )
         )
         and (minio_user is None)
         or (minio_pwd is None)
@@ -373,6 +382,7 @@ def routine_minio(
 
     generate_table_schema(
         return_dict,
+        True,
         netloc=tableschema_minio_location["netloc"],
         bucket=tableschema_minio_location["bucket"],
         key=tableschema_minio_location["key"],

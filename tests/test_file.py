@@ -88,3 +88,29 @@ def test_code_dep_reg_on_file():
     assert isinstance(output, dict)
     assert output["columns"]["code_departement"]["format"] == "code_departement"
     assert output["columns"]["code_region"]["format"] == "code_region"
+
+
+def test_schema_on_file():
+    output = explore_csv.routine(
+        csv_file_path="tests/b_test_file.csv",
+        num_rows=-1,
+        output_schema=True,
+    )
+    assert isinstance(output, dict)
+    is_column_dep = False
+    is_column_reg = False
+    for item in output["schema"]["fields"]:
+        if item["name"] == "code_departement":
+            is_column_dep = True
+            assert item["description"] == "Le code INSEE du département"
+            assert item["type"] == "string"
+            assert item["formatFR"] == "code_departement"
+            assert item["constraints"]["pattern"] == "^(([013-9]\\d|2[AB1-9])$|9\\d{2}$)"
+        if item["name"] == "code_region":
+            is_column_reg = True
+            assert item["description"] == "Le code INSEE de la région"
+            assert item["type"] == "string"
+            assert item["formatFR"] == "code_region"
+            assert item["constraints"]["pattern"] == "^\\d{2}$"
+    assert is_column_dep
+    assert is_column_reg
