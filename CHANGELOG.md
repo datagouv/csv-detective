@@ -1,5 +1,9 @@
 # Changelog
 
+## Current (in progress)
+
+- Nothing yet
+
 ## 0.6.2 (2023-02-10)
 
 - Catch OverflowError for latitude and longitude checks [#58](https://github.com/etalab/csv-detective/pull/58)
