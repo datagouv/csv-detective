@@ -79,6 +79,8 @@ def test_col(table, all_tests, num_rows, output_mode):
         if key in [
             "int",
             "float",
+            "date",
+            "datetime",
             "longitude",
             "longitude_l93",
             "longitude_wgs",
