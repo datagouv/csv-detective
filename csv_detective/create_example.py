@@ -27,16 +27,17 @@ def create_example_csv_file(
         },
         ...
     ]
+    Or from a data schema (JsonSchema or TableSchema)
     '''
 
     assert isinstance(fields, list) or (from_schema and isinstance(schema_path, str))
 
-    basid_year_range = [1900, 2100]
+    basic_year_range = [1900, 2100]
 
-    def make_random_string(length=10, regex=None, from_list=None, seed=None):
+    def make_random_string(length=10, pattern=None, from_list=None, seed=None):
         random.seed(seed)
-        if regex is not None:
-            return rstr.xeger(regex)
+        if pattern is not None:
+            return rstr.xeger(pattern)
         elif from_list is not None:
             return random.choice(from_list)
         else:
@@ -58,7 +59,7 @@ def create_example_csv_file(
         if date_range is None:
             dd = random.randint(1, 28)
             mm = random.randint(1, 12)
-            yyyy = random.randint(basid_year_range[0], basid_year_range[1])
+            yyyy = random.randint(basic_year_range[0], basic_year_range[1])
             return date_format \
                 .replace('DD', f'{"0"*(2-len(str(dd))) + str(dd)}') \
                 .replace('MM', f'{"0"*(2-len(str(mm))) + str(mm)}') \
@@ -163,7 +164,7 @@ def create_example_csv_file(
 
     def build_args_from_constraints(constraints: dict) -> dict:
         if 'pattern' in constraints.keys():
-            return {'regex': constraints['pattern']}
+            return {'pattern': constraints['pattern']}
         if 'enum' in constraints.keys():
             return {'from_list': constraints['enum']}
         if 'minimum' in constraints.keys() and 'maximum' in constraints.keys():
@@ -226,7 +227,7 @@ def create_example_csv_file(
             fields[k]['args']['num_type'] = int
         elif fields[k]['type'] == 'year':
             fields[k]['args']['num_type'] = int
-            fields[k]['args']['num_range'] = basid_year_range
+            fields[k]['args']['num_range'] = basic_year_range
 
     types_to_func = {
         'int': make_random_number,
