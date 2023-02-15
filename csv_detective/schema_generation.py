@@ -4,6 +4,8 @@ import json
 import os
 import tempfile
 from typing import Optional
+import logging
+from time import time
 
 from csv_detective.s3_utils import get_s3_client, download_from_minio, upload_to_minio
 
@@ -200,6 +202,7 @@ def generate_table_schema(
     key: Optional[str] = None,
     minio_user: Optional[str] = None,
     minio_pwd: Optional[str] = None,
+    verbose: bool = False
 ) -> dict:
     """Generates a table schema from the analysis report
 
@@ -215,6 +218,9 @@ def generate_table_schema(
 
     Returns:
     """
+    if verbose:
+        start = time()
+        logging.info("Creating table schema")
     fields = [
         {
             "name": header,
@@ -262,6 +268,9 @@ def generate_table_schema(
         "fields": fields,
         "missingValues": [""],
     }
+
+    if verbose:
+        logging.info(f'Created schema in {round(time() - start, 3)}s')
 
     if not save_file:
         return schema

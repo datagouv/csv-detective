@@ -2,9 +2,13 @@ import pandas as pd
 import numpy as np
 from cchardet import UniversalDetector
 from ast import literal_eval
+import logging
+from time import time
 
 
-def detect_continuous_variable(table, continuous_th=0.9):
+logging.basicConfig(level=logging.INFO)
+
+def detect_continuous_variable(table, continuous_th=0.9, verbose: bool = False):
     """
     Detects whether a column contains continuous variables. We consider a continuous column
     one that contains
@@ -37,14 +41,19 @@ def detect_continuous_variable(table, continuous_th=0.9):
         except:
             return False
 
+    if verbose:
+        start = time()
+        logging.info("Detecting continuous columns")
     res = table.apply(
         lambda serie: check_threshold(serie.apply(parses_to_integer), continuous_th)
     )
+    if verbose:
+        logging.info(f"Detected {sum(res)} continuous columns in {round(time() - start, 3)}s")
     return res.index[res]
 
 
 def detetect_categorical_variable(
-    table, threshold_pct_categorical=0.05, max_number_categorical_values=25
+    table, threshold_pct_categorical=0.05, max_number_categorical_values=25, verbose: bool = False
 ):
     """
     Heuristically detects whether a table (df) contains categorical values according to
@@ -60,10 +69,10 @@ def detetect_categorical_variable(
     """
 
     def abs_number_different_values(column_values):
-        return len(column_values.unique())
+        return column_values.nunique()
 
     def rel_number_different_values(column_values):
-        return len(column_values.unique()) / len(column_values)
+        return column_values.nunique() / len(column_values)
 
     def detect_categorical(column_values):
         is_categorical = False
@@ -74,38 +83,56 @@ def detetect_categorical_variable(
                 is_categorical = True
         return is_categorical
 
+    if verbose:
+        start = time()
+        logging.info("Detecting categorical columns")
     res = table.apply(lambda serie: detect_categorical(serie))
+    if verbose:
+        logging.info(f"Detected {sum(res)} categorical columns out of {len(table.columns)} in {round(time() - start, 3)}s")
     return res.index[res], res
 
 
-def detect_separator(file):
+def detect_separator(file, verbose: bool = False):
     """Detects csv separator"""
     # TODO: add a robust detection:
     # si on a un point virgule comme texte et \t comme séparateur, on renvoit
     # pour l'instant un point virgule
+    if verbose:
+        start = time()
+        logging.info("Detecting separator")
     file.seek(0)
     header = file.readline()
     possible_separators = [";", ",", "|", "\t"]
     sep_count = dict()
     for sep in possible_separators:
         sep_count[sep] = header.count(sep)
-    return max(sep_count, key=sep_count.get)
+    sep = max(sep_count, key=sep_count.get)
+    if verbose:
+        logging.info("Detected separator: " + sep + f" in {round(time() - start, 3)}s")
+    return sep
 
 
-def detect_encoding(the_file):
+def detect_encoding(the_file, verbose: bool = False):
     """Detects file encoding using chardet based on N first lines"""
+    if verbose:
+        start = time()
+        logging.info("Detecting encoding")
     detector = UniversalDetector()
     for line in the_file.readlines():
         detector.feed(line)
         if detector.done:
             break
     detector.close()
-
+    if verbose:
+        logging.info(f'Detected encoding: "{detector.result["encoding"]}" in {round(time() - start, 3)}s')
     return detector.result
 
 
-def parse_table(the_file, encoding, sep, num_rows, skiprows, random_state=42):
+def parse_table(the_file, encoding, sep, num_rows, skiprows, random_state=42, verbose : bool = False):
     # Takes care of some problems
+    if verbose:
+        start = time()
+        logging.info("Parsing table")
     table = None
 
     if not isinstance(the_file, str):
@@ -134,13 +161,17 @@ def parse_table(the_file, encoding, sep, num_rows, skiprows, random_state=42):
             print("Trying encoding : {encoding}".format(encoding=encoding))
 
     if table is None:
-        print("  >> encoding not found")
+        logging.error("  >> encoding not found")
         return table, "NA", "NA"
-
+    if verbose:
+        logging.info(f'Table parsed successfully in {round(time() - start, 3)}s')
     return table, total_lines, nb_duplicates
 
 
-def create_profile(table, dict_cols_fields, sep, encoding, num_rows, skiprows):
+def create_profile(table, dict_cols_fields, sep, encoding, num_rows, skiprows, verbose: bool = False):
+    if verbose:
+        start = time()
+        logging.info("Creating profile")
     map_python_types = {
         "string": str,
         "int": float,
@@ -194,6 +225,8 @@ def create_profile(table, dict_cols_fields, sep, encoding, num_rows, skiprows):
                 nb_distinct=safe_table[c].nunique(),
                 nb_missing_values=len(safe_table[c].loc[safe_table[c].isna()]),
             )
+        if verbose:
+            logging.info(f"Created profile in {round(time() - start, 3)}s")
         return profile
 
 
@@ -226,8 +259,11 @@ def detect_extra_columns(file, sep):
     return nb_useless_col, retour
 
 
-def detect_headers(file, sep):
+def detect_headers(file, sep, verbose: bool = False):
     """Tests 10 first rows for possible header (header not in 1st line)"""
+    if verbose:
+        start = time()
+        logging.info("Detecting headers")
     file.seek(0)
     for i in range(10):
         header = file.readline()
@@ -239,24 +275,38 @@ def detect_headers(file, sep):
             next_row = file.readline()
             file.seek(position)
             if header != next_row:
+                if verbose:
+                    logging.info(f'Detected headers in {round(time() - start, 3)}s')
                 return i, chaine
+    if verbose:
+        logging.info(f'No header detected')
     return 0, None
 
 
-def detect_heading_columns(file, sep):
+def detect_heading_columns(file, sep, verbose : bool = False):
     """Tests first 10 lines to see if there are empty heading columns"""
+    if verbose:
+        start = time()
+        logging.info("Detecting heading columns")
     file.seek(0)
     return_int = float("Inf")
     for i in range(10):
         line = file.readline()
         return_int = min(return_int, len(line) - len(line.strip(sep)))
         if return_int == 0:
+            if verbose:
+                logging.info(f'No heading column detected in {round(time() - start, 3)}s')
             return 0
+    if verbose:
+        logging.info(f'{return_int} heading columns detected in {round(time() - start, 3)}s')
     return return_int
 
 
-def detect_trailing_columns(file, sep, heading_columns):
+def detect_trailing_columns(file, sep, heading_columns, verbose : bool = False):
     """Tests first 10 lines to see if there are empty trailing columns"""
+    if verbose:
+        start = time()
+        logging.info("Detecting trailing columns")
     file.seek(0)
     return_int = float("Inf")
     for i in range(10):
@@ -268,5 +318,9 @@ def detect_trailing_columns(file, sep, heading_columns):
             - heading_columns,
         )
         if return_int == 0:
+            if verbose:
+                logging.info(f'No trailing column detected in {round(time() - start, 3)}s')
             return 0
+    if verbose:
+        logging.info(f'{return_int} trailing columns detected in {round(time() - start, 3)}s')
     return return_int
