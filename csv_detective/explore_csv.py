@@ -10,6 +10,7 @@ import os
 import tempfile
 from pkg_resources import resource_string
 import logging
+from time import time
 
 # flake8: noqa
 from csv_detective import detect_fields
@@ -104,6 +105,8 @@ def routine(
     Returns:
         dict: a dict with information about the csv and possible types for each column
     """
+    if verbose:
+        start_routine = time()
     if csv_file_path is None:
         raise ValueError("csv_file_path is required.")
 
@@ -284,7 +287,8 @@ def routine(
             save_file=False,
             verbose=verbose
         )
-
+    if verbose:
+        logging.info(f'Routine completed in {round(time() - start_routine, 3)}s')
     return return_dict
 
 
