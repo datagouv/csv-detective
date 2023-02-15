@@ -1,8 +1,4 @@
 import pandas as pd
-import logging
-from time import time
-
-logging.basicConfig(level=logging.INFO)
 
 
 def test_col_val(
@@ -64,26 +60,21 @@ def test_col_label(label, test_func, proportion=1, output_mode="ALL"):
         return result if result >= proportion else 0
 
 
-def test_col(table, all_tests, num_rows, output_mode, verbose: bool = False):
+def test_col(table, all_tests, num_rows, output_mode):
     # Initialising dict for tests
-    if verbose:
-        start = time()
-        logging.info("Testing columns to get types")
     test_funcs = dict()
     for test in all_tests:
         name = test.__name__.split(".")[-1]
         test_funcs[name] = {"func": test._is, "prop": test.PROPORTION}
     return_table = pd.DataFrame(columns=table.columns)
-    for idx, (key, value) in enumerate(test_funcs.items()):
-        if verbose:
-            start_type = time()
+    for key, value in test_funcs.items():
         # When analysis of all file is requested (num_rows = -1) we fix a threshold of
         # 1000 rows for every checks outside int or float format
         if num_rows == -1:
             local_num_rows = 1000
         else:
             local_num_rows = min(num_rows, 1000)
-        # For checks detecting dates, int or float format, we analyze the whole file (because
+        # For checks detecting int or float format, we analyze the whole file (because
         # error can be generated afterward when exploiting this data into a database)
         if key in [
             "int",
@@ -110,37 +101,24 @@ def test_col(table, all_tests, num_rows, output_mode, verbose: bool = False):
                 output_mode=output_mode,
             )
         )
-        if verbose:
-            logging.info(f'\t- Done with type "{key}" in {round(time() - start_type, 3)}s ({idx+1}/{len(test_funcs)})')
-    if verbose:
-        logging.info(f"Done testing columns in {round(time() - start, 3)}s")
     return return_table
 
 
-def test_label(table, all_tests, output_mode, verbose: bool = False):
+def test_label(table, all_tests, output_mode):
     # Initialising dict for tests
-    if verbose:
-        start = time()
-        logging.info("Testing labels to get types")
     test_funcs = dict()
     for test in all_tests:
         name = test.__name__.split(".")[-1]
         test_funcs[name] = {"func": test._is, "prop": test.PROPORTION}
 
     return_table = pd.DataFrame(columns=table.columns)
-    for idx, (key, value) in enumerate(test_funcs.items()):
-        if verbose:
-            start_type = time()
+    for key, value in test_funcs.items():
         return_table.loc[key] = [
             test_col_label(
                 col_name, value["func"], value["prop"], output_mode=output_mode
             )
             for col_name in table.columns
         ]
-        if verbose:
-            logging.info(f'\t- Done with type "{key}" in {round(time() - start_type, 3)}s ({idx+1}/{len(test_funcs)})')
-    if verbose:
-        logging.info(f"Done testing labels in {round(time() - start, 3)}s")
     return return_table
 
 
