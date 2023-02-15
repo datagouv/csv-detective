@@ -6,6 +6,7 @@ from typing import List, Union
 import json
 import requests
 import rstr
+import faker
 
 
 def create_example_csv_file(
@@ -199,21 +200,14 @@ def create_example_csv_file(
         else:
             with open(schema_path) as jsonfile:
                 schema = json.load(jsonfile)
-        if 'columns_fields' in schema.keys():
-            fields = [
-                {
-                    'name': k,
-                    # python_type => format
-                    'type': v['python_type'].replace('string', 'str'),
-                    # build from format
-                    'args': {}
-                } for k, v in schema['columns_fields'].items()
-            ]
-        elif 'fields' in schema.keys():
+        if not('fields' in schema.keys()):
+            raise Exception('The schema must have a "fields" key.')
+        else:
             fields = [
                 {
                     'name': f['name'],
                     'type': schema_types_to_python.get(f['type'], 'str'),
+                    # build args from formatFR too
                     'args': build_args_from_constraints(f['constraints']) if 'constraints' in f.keys()
                         else build_args_from_constraints(f['arrayItem']['constraints']) if 'arrayItem' in f.keys() and 'constraints' in f['arrayItem'].keys()
                         else {}
