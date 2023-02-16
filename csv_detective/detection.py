@@ -109,7 +109,7 @@ def detect_separator(file, verbose: bool = False):
         sep_count[sep] = header.count(sep)
     sep = max(sep_count, key=sep_count.get)
     if verbose:
-        print_colored_logs("Detected separator: " + sep + f" in {round(time() - start, 3)}s", time() - start)
+        print_colored_logs(f'Detected separator: "{sep}" in {round(time() - start, 3)}s', time() - start)
     return sep
 
 

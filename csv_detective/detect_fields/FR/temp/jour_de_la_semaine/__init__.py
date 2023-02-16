@@ -4,7 +4,7 @@ PROPORTION = 1
 def _is(val):
     '''Renvoie True si les champs peuvent être des jours de la semaine'''
     val = val.lower()
-    jours = [
+    jours = {
         'lundi',
         'mardi',
         'mercredi',
@@ -19,5 +19,5 @@ def _is(val):
         'ven',
         'sam',
         'dim'
-    ]
+    }
     return val in jours

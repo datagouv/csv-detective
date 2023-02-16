@@ -4,6 +4,9 @@ import re
 PROPORTION = 0.75
 f = open(join(dirname(__file__), 'code_commune_insee.txt'), 'r')
 codes_insee = f.read().split('\n')
+# removing empty str du to additionnal line in file
+del codes_insee[-1]
+codes_insee = set(codes_insee)
 f.close()
 
 

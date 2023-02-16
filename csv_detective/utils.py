@@ -7,7 +7,7 @@ logging.basicConfig(level=logging.INFO)
 
 def print_colored_logs(prompt: str, duration: float):
     '''
-    Print colored logs according to time the operation took.
+    Print colored logs according to the time the operation took.
     '''
     logging.addLevelName(logging.CRITICAL, "\033[1;41m%s\033[1;0m" % logging.getLevelName(logging.CRITICAL))
     logging.addLevelName(logging.WARN, "\033[1;31m%s\033[1;0m" % logging.getLevelName(logging.WARN))
@@ -107,7 +107,8 @@ def test_col(table, all_tests, num_rows, output_mode, verbose: bool = False):
             "int",
             "float",
             "date",
-            "datetime",
+            "datetime_iso",
+            "datetime_rfc822",
             "longitude",
             "longitude_l93",
             "longitude_wgs",
@@ -119,6 +120,8 @@ def test_col(table, all_tests, num_rows, output_mode, verbose: bool = False):
             "iso_country_code_numeric",
         ]:
             local_num_rows = max(-1, num_rows)
+        # improvement lead : put the longest tests behind and make them only if previous tests not satisfactory
+        # => the following needs to change, "apply" means all columns are tested for one type at once
         return_table.loc[key] = table.apply(
             lambda serie: test_col_val(
                 serie,

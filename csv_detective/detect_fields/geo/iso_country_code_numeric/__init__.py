@@ -5,6 +5,7 @@ PROPORTION = 1
 
 with open(join(dirname(__file__), 'iso_country_code_numeric.txt'), 'r') as iofile:
     liste_pays = iofile.read().split('\n')
+liste_pays = set(liste_pays)
 
 
 def _is(val):

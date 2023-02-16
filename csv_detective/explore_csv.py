@@ -101,6 +101,9 @@ def routine(
         output_mode: LIMITED or ALL, whether or not to return all possible types or only
         the most likely one for each column
         save_results: whether or not to save the results in a json file
+        output_profile: whether or not to add the 'profile' field to the output
+        output_schema: whether or not to add the 'schema' field to the output (tableschema)
+        verbose: whether or not to print process logs in console 
 
     Returns:
         dict: a dict with information about the csv and possible types for each column
@@ -138,10 +141,10 @@ def routine(
         # Detects columns that are categorical
         res_categorical, categorical_mask = detetect_categorical_variable(table, verbose=verbose)
         res_categorical = list(res_categorical)
-        # Detect columns that are continuous (we already know the categorical)
-        res_continuous = list(
-            detect_continuous_variable(table.iloc[:, ~categorical_mask.values], verbose=verbose)
-        )
+        # Detect columns that are continuous (we already know the categorical) : we don't need this for now, cuts processing time
+        # res_continuous = list(
+        #     detect_continuous_variable(table.iloc[:, ~categorical_mask.values], verbose=verbose)
+        # )
 
     # Creating return dictionary
     return_dict = dict()
@@ -155,7 +158,7 @@ def routine(
     return_dict["heading_columns"] = heading_columns
     return_dict["trailing_columns"] = trailing_columns
 
-    return_dict["continuous"] = res_continuous
+    # return_dict["continuous"] = res_continuous
     return_dict["categorical"] = res_categorical
 
     # list testing to be performed

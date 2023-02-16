@@ -3,7 +3,10 @@ import re
 
 PROPORTION = 0.9
 f = open(join(dirname(__file__), 'code_postal.txt'), 'r')
-codes_postal = f.read().split('\n')
+codes_postaux = f.read().split('\n')
+# removing empty str du to additionnal line in file
+del codes_postaux[-1]
+codes_postaux = set(codes_postaux)
 f.close()
 
 
@@ -14,4 +17,4 @@ def _is(val):
     if not bool(re.match(regex, val)):
         return False
 
-    return val in codes_postal
+    return val in codes_postaux

@@ -4,7 +4,7 @@ PROPORTION = 1
 
 def _is(val):
     '''Renvoie True si val peut être un code_région, False sinon'''
-    liste_regions = [
+    liste_regions = {
         '01',
         '02',
         '03',
@@ -23,5 +23,5 @@ def _is(val):
         '84',
         '93',
         '94'
-    ]
+    }
     return val in liste_regions

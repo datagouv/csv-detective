@@ -4,6 +4,7 @@ from csv_detective.process_text import _process_text
 PROPORTION = 0.6
 f = open(join(dirname(__file__), 'pays.txt'), 'r')
 pays = f.read().split('\n')
+pays = set(pays)
 f.close()
 
 
