@@ -17,7 +17,7 @@ from csv_detective import detect_fields
 from csv_detective import detect_labels
 from csv_detective.s3_utils import download_from_minio, upload_to_minio
 from csv_detective.schema_generation import generate_table_schema
-from csv_detective.utils import test_col, test_label, prepare_output_dict
+from csv_detective.utils import test_col, test_label, prepare_output_dict, print_colored_logs
 from .detection import (
     detect_separator,
     detect_encoding,
@@ -288,7 +288,7 @@ def routine(
             verbose=verbose
         )
     if verbose:
-        logging.info(f'Routine completed in {round(time() - start_routine, 3)}s')
+        print_colored_logs(f'Routine completed in {round(time() - start_routine, 3)}s', time() - start_routine)
     return return_dict
 
 

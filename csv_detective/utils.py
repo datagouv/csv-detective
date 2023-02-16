@@ -5,6 +5,24 @@ from time import time
 logging.basicConfig(level=logging.INFO)
 
 
+def print_colored_logs(prompt: str, duration: float):
+    '''
+    Print colored logs according to time the operation took.
+    '''
+    logging.addLevelName(logging.CRITICAL, "\033[1;41m%s\033[1;0m" % logging.getLevelName(logging.CRITICAL))
+    logging.addLevelName(logging.WARN, "\033[1;31m%s\033[1;0m" % logging.getLevelName(logging.WARN))
+
+    threshold_warn = 1
+    threshold_critical = 3
+
+    if duration < threshold_warn:
+        logging.info(prompt)
+    elif duration < threshold_critical:
+        logging.warn(prompt)
+    else:
+        logging.critical(prompt)
+
+
 def test_col_val(
     serie, test_func, proportion=0.9, skipna=True, num_rows=-1, output_mode="ALL"
 ):
@@ -111,9 +129,12 @@ def test_col(table, all_tests, num_rows, output_mode, verbose: bool = False):
             )
         )
         if verbose:
-            logging.info(f'\t- Done with type "{key}" in {round(time() - start_type, 3)}s ({idx+1}/{len(test_funcs)})')
+            print_colored_logs(
+                f'\t- Done with type "{key}" in {round(time() - start_type, 3)}s ({idx+1}/{len(test_funcs)})',
+                time() - start_type
+            )
     if verbose:
-        logging.info(f"Done testing columns in {round(time() - start, 3)}s")
+        print_colored_logs(f"Done testing columns in {round(time() - start, 3)}s", time() - start)
     return return_table
 
 
@@ -138,9 +159,12 @@ def test_label(table, all_tests, output_mode, verbose: bool = False):
             for col_name in table.columns
         ]
         if verbose:
-            logging.info(f'\t- Done with type "{key}" in {round(time() - start_type, 3)}s ({idx+1}/{len(test_funcs)})')
+            print_colored_logs(
+                f'\t- Done with type "{key}" in {round(time() - start_type, 3)}s ({idx+1}/{len(test_funcs)})',
+                time() - start_type
+            )
     if verbose:
-        logging.info(f"Done testing labels in {round(time() - start, 3)}s")
+        print_colored_logs(f"Done testing labels in {round(time() - start, 3)}s", time() - start)
     return return_table
 
 

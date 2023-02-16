@@ -8,6 +8,7 @@ import logging
 from time import time
 
 from csv_detective.s3_utils import get_s3_client, download_from_minio, upload_to_minio
+from csv_detective.utils import print_colored_logs
 
 
 def get_description(format: str) -> str:
@@ -270,7 +271,7 @@ def generate_table_schema(
     }
 
     if verbose:
-        logging.info(f'Created schema in {round(time() - start, 3)}s')
+        print_colored_logs(f'Created schema in {round(time() - start, 3)}s', time() - start)
 
     if not save_file:
         return schema
