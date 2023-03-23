@@ -7,10 +7,10 @@ PROPORTION = 1
 def _is(val):
     '''Repère les code csp telles que définies par l'INSEE'''
     val = _process_text(val)
-    if not len(val) == 4:
+    if len(val) != 4:
         return False
     a = bool(re.match(r'^[123456][0-9]{2}[abcdefghijkl]$', val))
-    b = val in [
+    b = val in {
         '7100',
         '7200',
         '7400',
@@ -22,5 +22,5 @@ def _is(val):
         '8400',
         '8500',
         '8600'
-    ]
+    }
     return a or b

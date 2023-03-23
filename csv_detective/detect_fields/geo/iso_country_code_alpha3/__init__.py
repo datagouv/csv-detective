@@ -12,4 +12,4 @@ def _is(val):
     regex = r'[A-Z]{3}$'
     if not bool(re.match(regex, val)):
         return False
-    return val in liste_pays
+    return val in set(liste_pays)

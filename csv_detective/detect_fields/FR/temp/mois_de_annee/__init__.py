@@ -6,7 +6,7 @@ PROPORTION = 1
 def _is(val):
     '''Renvoie True si les champs peuvent être des mois de l'année'''
     val = unidecode(val.lower())
-    mois = [
+    mois = {
         'janvier',
         'fevrier',
         'mars',
@@ -33,5 +33,5 @@ def _is(val):
         'oct',
         'nov',
         'dec'
-    ]
+    }
     return val in mois

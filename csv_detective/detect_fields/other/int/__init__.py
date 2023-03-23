@@ -1,9 +1,13 @@
-import re
-
 PROPORTION = 1
 
 
 def _is(val):
     '''Detects integers'''
-    regex = r'^(\+|-)?[0-9]+(\.0+)?$'
-    return bool(re.match(regex, val))
+    if any([v in val for v in ['.', '_']]):
+        return False
+    try:
+        int(val)
+        return True
+    except ValueError:
+        return False
+    return False
