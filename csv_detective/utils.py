@@ -5,7 +5,7 @@ from time import time
 logging.basicConfig(level=logging.INFO)
 
 
-def print_colored_logs(prompt: str, duration: float):
+def display_logs_depending_process_time(prompt: str, duration: float):
     '''
     Print colored logs according to the time the operation took.
     '''
@@ -132,12 +132,12 @@ def test_col(table, all_tests, num_rows, output_mode, verbose: bool = False):
             )
         )
         if verbose:
-            print_colored_logs(
+            display_logs_depending_process_time(
                 f'\t- Done with type "{key}" in {round(time() - start_type, 3)}s ({idx+1}/{len(test_funcs)})',
                 time() - start_type
             )
     if verbose:
-        print_colored_logs(f"Done testing columns in {round(time() - start, 3)}s", time() - start)
+        display_logs_depending_process_time(f"Done testing columns in {round(time() - start, 3)}s", time() - start)
     return return_table
 
 
@@ -162,12 +162,12 @@ def test_label(table, all_tests, output_mode, verbose: bool = False):
             for col_name in table.columns
         ]
         if verbose:
-            print_colored_logs(
+            display_logs_depending_process_time(
                 f'\t- Done with type "{key}" in {round(time() - start_type, 3)}s ({idx+1}/{len(test_funcs)})',
                 time() - start_type
             )
     if verbose:
-        print_colored_logs(f"Done testing labels in {round(time() - start, 3)}s", time() - start)
+        display_logs_depending_process_time(f"Done testing labels in {round(time() - start, 3)}s", time() - start)
     return return_table
 
 

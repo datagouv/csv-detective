@@ -4,7 +4,7 @@ from cchardet import UniversalDetector
 from ast import literal_eval
 import logging
 from time import time
-from csv_detective.utils import print_colored_logs
+from csv_detective.utils import display_logs_depending_process_time
 
 
 logging.basicConfig(level=logging.INFO)
@@ -49,7 +49,7 @@ def detect_continuous_variable(table, continuous_th=0.9, verbose: bool = False):
         lambda serie: check_threshold(serie.apply(parses_to_integer), continuous_th)
     )
     if verbose:
-        print_colored_logs(f"Detected {sum(res)} continuous columns in {round(time() - start, 3)}s", time() - start)
+        display_logs_depending_process_time(f"Detected {sum(res)} continuous columns in {round(time() - start, 3)}s", time() - start)
     return res.index[res]
 
 
@@ -89,7 +89,7 @@ def detetect_categorical_variable(
         logging.info("Detecting categorical columns")
     res = table.apply(lambda serie: detect_categorical(serie))
     if verbose:
-        print_colored_logs(f"Detected {sum(res)} categorical columns out of {len(table.columns)} in {round(time() - start, 3)}s", time() - start)
+        display_logs_depending_process_time(f"Detected {sum(res)} categorical columns out of {len(table.columns)} in {round(time() - start, 3)}s", time() - start)
     return res.index[res], res
 
 
@@ -109,7 +109,7 @@ def detect_separator(file, verbose: bool = False):
         sep_count[sep] = header.count(sep)
     sep = max(sep_count, key=sep_count.get)
     if verbose:
-        print_colored_logs(f'Detected separator: "{sep}" in {round(time() - start, 3)}s', time() - start)
+        display_logs_depending_process_time(f'Detected separator: "{sep}" in {round(time() - start, 3)}s', time() - start)
     return sep
 
 
@@ -125,7 +125,7 @@ def detect_encoding(the_file, verbose: bool = False):
             break
     detector.close()
     if verbose:
-        print_colored_logs(f'Detected encoding: "{detector.result["encoding"]}" in {round(time() - start, 3)}s', time() - start)
+        display_logs_depending_process_time(f'Detected encoding: "{detector.result["encoding"]}" in {round(time() - start, 3)}s', time() - start)
     return detector.result
 
 
@@ -165,7 +165,7 @@ def parse_table(the_file, encoding, sep, num_rows, skiprows, random_state=42, ve
         logging.error("  >> encoding not found")
         return table, "NA", "NA"
     if verbose:
-        print_colored_logs(f'Table parsed successfully in {round(time() - start, 3)}s', time() - start)
+        display_logs_depending_process_time(f'Table parsed successfully in {round(time() - start, 3)}s', time() - start)
     return table, total_lines, nb_duplicates
 
 
@@ -227,7 +227,7 @@ def create_profile(table, dict_cols_fields, sep, encoding, num_rows, skiprows, v
                 nb_missing_values=len(safe_table[c].loc[safe_table[c].isna()]),
             )
         if verbose:
-            print_colored_logs(f"Created profile in {round(time() - start, 3)}s", time() - start)
+            display_logs_depending_process_time(f"Created profile in {round(time() - start, 3)}s", time() - start)
         return profile
 
 
@@ -277,7 +277,7 @@ def detect_headers(file, sep, verbose: bool = False):
             file.seek(position)
             if header != next_row:
                 if verbose:
-                    print_colored_logs(f'Detected headers in {round(time() - start, 3)}s', time() - start)
+                    display_logs_depending_process_time(f'Detected headers in {round(time() - start, 3)}s', time() - start)
                 return i, chaine
     if verbose:
         logging.info(f'No header detected')
@@ -296,10 +296,10 @@ def detect_heading_columns(file, sep, verbose : bool = False):
         return_int = min(return_int, len(line) - len(line.strip(sep)))
         if return_int == 0:
             if verbose:
-                print_colored_logs(f'No heading column detected in {round(time() - start, 3)}s', time() - start)
+                display_logs_depending_process_time(f'No heading column detected in {round(time() - start, 3)}s', time() - start)
             return 0
     if verbose:
-        print_colored_logs(f'{return_int} heading columns detected in {round(time() - start, 3)}s', time() - start)
+        display_logs_depending_process_time(f'{return_int} heading columns detected in {round(time() - start, 3)}s', time() - start)
     return return_int
 
 
@@ -320,8 +320,8 @@ def detect_trailing_columns(file, sep, heading_columns, verbose : bool = False):
         )
         if return_int == 0:
             if verbose:
-                print_colored_logs(f'No trailing column detected in {round(time() - start, 3)}s', time() - start)
+                display_logs_depending_process_time(f'No trailing column detected in {round(time() - start, 3)}s', time() - start)
             return 0
     if verbose:
-        print_colored_logs(f'{return_int} trailing columns detected in {round(time() - start, 3)}s', time() - start)
+        display_logs_depending_process_time(f'{return_int} trailing columns detected in {round(time() - start, 3)}s', time() - start)
     return return_int
