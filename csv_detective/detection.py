@@ -189,7 +189,9 @@ def create_profile(table, dict_cols_fields, sep, encoding, num_rows, skiprows, v
         }
         for c in safe_table.columns:
             if dtypes[c] == float:
-                safe_table[c] = safe_table[c].apply(lambda s: float(s.replace(' ', '').replace(',', '.')))
+                safe_table[c] = safe_table[c].apply(
+                    lambda s: float(s.replace(' ', '').replace(',', '.')) if isinstance(s, str) else s
+                )
         profile = {}
         for c in safe_table.columns:
             profile[c] = {}
