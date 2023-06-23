@@ -188,7 +188,8 @@ def create_profile(table, dict_cols_fields, sep, encoding, num_rows, skiprows, v
             for k, v in dict_cols_fields.items()
         }
         for c in safe_table.columns:
-            if dtypes[c] == float: safe_table[c] = safe_table[c].astype(dtypes[c])
+            if dtypes[c] == float:
+                safe_table[c] = safe_table[c].apply(lambda s: float(s.replace(' ', '').replace(',', '.')))
         profile = {}
         for c in safe_table.columns:
             profile[c] = {}
