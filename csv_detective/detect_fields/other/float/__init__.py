@@ -7,7 +7,7 @@ def _is(val):
     try:
         if any([k in val for k in ['_', '+', 'e', 'E']]):
             return False
-        float(val.replace(' ', '').replace(',', '.'))
+        float(val.replace(',', '.'))
         return True
     except ValueError:
         return False
