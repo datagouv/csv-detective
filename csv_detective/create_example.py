@@ -15,7 +15,8 @@ def create_example_csv_file(
     file_length: int = 50,
     output_file: bool = True,
     output_name: str = 'example_file.csv',
-    output_sep: str = ';'
+    output_sep: str = ';',
+    encoding: str = 'utf-8'
 ) -> pd.DataFrame:
     '''
     Create an example file based on a list of dicts like follows:
@@ -50,7 +51,7 @@ def create_example_csv_file(
 
     def make_random_date(
         date_range: Union[None, List[str]] = None,
-        date_format='DD-MM-YYYY',
+        date_format='YYYY-MM-DD',
         seed=None
     ):
         date_format = date_format.upper()
@@ -197,7 +198,7 @@ def create_example_csv_file(
         if schema_path.startswith('http'):
             schema = requests.get(schema_path).json()
         else:
-            with open(schema_path) as jsonfile:
+            with open(schema_path, encoding=encoding) as jsonfile:
                 schema = json.load(jsonfile)
         if not ('fields' in schema.keys()):
             raise Exception('The schema must have a "fields" key.')
