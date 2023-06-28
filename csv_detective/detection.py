@@ -5,6 +5,7 @@ from ast import literal_eval
 import logging
 from time import time
 from csv_detective.utils import display_logs_depending_process_time
+from csv_detective.detect_fields.other.float import float_casting
 
 
 logging.basicConfig(level=logging.INFO)
@@ -190,7 +191,7 @@ def create_profile(table, dict_cols_fields, sep, encoding, num_rows, skiprows, v
         for c in safe_table.columns:
             if dtypes[c] == float:
                 safe_table[c] = safe_table[c].apply(
-                    lambda s: float(s.replace(',', '.')) if isinstance(s, str) else s
+                    lambda s: float_casting(s) if isinstance(s, str) else s
                 )
         profile = {}
         for c in safe_table.columns:
