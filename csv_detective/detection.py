@@ -77,13 +77,12 @@ def detetect_categorical_variable(
         return column_values.nunique() / len(column_values)
 
     def detect_categorical(column_values):
-        is_categorical = False
         abs_unique_values = abs_number_different_values(column_values)
         rel_unique_values = rel_number_different_values(column_values)
         if abs_unique_values < max_number_categorical_values:
             if rel_unique_values < threshold_pct_categorical:
-                is_categorical = True
-        return is_categorical
+                return True
+        return False
 
     if verbose:
         start = time()
