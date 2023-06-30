@@ -5,6 +5,7 @@ from ast import literal_eval
 import logging
 from time import time
 from csv_detective.utils import display_logs_depending_process_time
+from csv_detective.detect_fields.other.float import float_casting
 
 
 logging.basicConfig(level=logging.INFO)
@@ -76,13 +77,12 @@ def detetect_categorical_variable(
         return column_values.nunique() / len(column_values)
 
     def detect_categorical(column_values):
-        is_categorical = False
         abs_unique_values = abs_number_different_values(column_values)
         rel_unique_values = rel_number_different_values(column_values)
         if abs_unique_values < max_number_categorical_values:
             if rel_unique_values < threshold_pct_categorical:
-                is_categorical = True
-        return is_categorical
+                return True
+        return False
 
     if verbose:
         start = time()
@@ -188,7 +188,10 @@ def create_profile(table, dict_cols_fields, sep, encoding, num_rows, skiprows, v
             for k, v in dict_cols_fields.items()
         }
         for c in safe_table.columns:
-            if dtypes[c] == float: safe_table[c] = safe_table[c].astype(dtypes[c])
+            if dtypes[c] == float:
+                safe_table[c] = safe_table[c].apply(
+                    lambda s: float_casting(s) if isinstance(s, str) else s
+                )
         profile = {}
         for c in safe_table.columns:
             profile[c] = {}

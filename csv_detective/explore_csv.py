@@ -27,7 +27,7 @@ from .detection import (
     parse_table,
     create_profile,
     detetect_categorical_variable,
-    detect_continuous_variable,
+    # detect_continuous_variable,
 )
 
 
@@ -136,7 +136,7 @@ def routine(
 
     if table.empty:
         res_categorical = []
-        res_continuous = []
+        # res_continuous = []
     else:
         # Detects columns that are categorical
         res_categorical, categorical_mask = detetect_categorical_variable(table, verbose=verbose)
