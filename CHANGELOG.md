@@ -2,11 +2,11 @@
 
 ## Current (in progress)
 
-- Nothing yet
+- Better handling of ints and floats (now not accepting blanks and "+" in string) [#62](https://github.com/etalab/csv-detective/pull/62)
 
 ## 0.6.3 (2023-03-23)
 
-- Nothing yet
+- Faster routine [#59](https://github.com/etalab/csv-detective/pull/59)
 
 ## 0.6.2 (2023-02-10)
 
