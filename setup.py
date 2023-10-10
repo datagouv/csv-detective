@@ -33,7 +33,6 @@ setup(
         "pandas >= 0.20",
         "boto3 >= 1.21.21",
         "unidecode >= 0.4",
-        "cchardet",
     ],
     packages=find_packages(),
 )

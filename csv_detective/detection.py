@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from cchardet import UniversalDetector
+from charset_normalizer import detect
 from ast import literal_eval
 import logging
 from time import time
@@ -50,7 +50,10 @@ def detect_continuous_variable(table, continuous_th=0.9, verbose: bool = False):
         lambda serie: check_threshold(serie.apply(parses_to_integer), continuous_th)
     )
     if verbose:
-        display_logs_depending_process_time(f"Detected {sum(res)} continuous columns in {round(time() - start, 3)}s", time() - start)
+        display_logs_depending_process_time(
+            f"Detected {sum(res)} continuous columns in {round(time() - start, 3)}s",
+            time() - start
+        )
     return res.index[res]
 
 
@@ -89,7 +92,10 @@ def detetect_categorical_variable(
         logging.info("Detecting categorical columns")
     res = table.apply(lambda serie: detect_categorical(serie))
     if verbose:
-        display_logs_depending_process_time(f"Detected {sum(res)} categorical columns out of {len(table.columns)} in {round(time() - start, 3)}s", time() - start)
+        display_logs_depending_process_time(
+            f"Detected {sum(res)} categorical columns out of {len(table.columns)} in {round(time() - start, 3)}s",
+            time() - start
+        )
     return res.index[res], res
 
 
@@ -109,24 +115,43 @@ def detect_separator(file, verbose: bool = False):
         sep_count[sep] = header.count(sep)
     sep = max(sep_count, key=sep_count.get)
     if verbose:
-        display_logs_depending_process_time(f'Detected separator: "{sep}" in {round(time() - start, 3)}s', time() - start)
+        display_logs_depending_process_time(
+            f'Detected separator: "{sep}" in {round(time() - start, 3)}s',
+            time() - start
+        )
     return sep
 
 
-def detect_encoding(the_file, verbose: bool = False):
-    """Detects file encoding using chardet based on N first lines"""
+def detect_encoding(the_file, verbose: bool = False, unwanted=['ascii']):
+    """
+    Detects file encoding using charset_normalizer from lines
+    if feeding a bigger part of the file, detect most likely gets it wrong
+    (tried: detect(b"".join(lines[:min(len(lines), n)])) with n varying)
+    """
     if verbose:
         start = time()
         logging.info("Detecting encoding")
-    detector = UniversalDetector()
-    for line in the_file.readlines():
-        detector.feed(line)
-        if detector.done:
+    lines = the_file.readlines()
+    # checking encoding for two-line batches until we get an agreement
+    for k in range(1, len(lines)):
+        encoding_previous = detect(lines[k-1])['encoding']
+        encoding_this = detect(lines[k])['encoding']
+        if encoding_this not in unwanted and encoding_this == encoding_previous:
             break
-    detector.close()
     if verbose:
-        display_logs_depending_process_time(f'Detected encoding: "{detector.result["encoding"]}" in {round(time() - start, 3)}s', time() - start)
-    return detector.result
+        if encoding_this and encoding_this not in unwanted:
+            display_logs_depending_process_time(
+                f'Detected encoding: "{encoding_this}" in {round(time() - start, 3)}s',
+                time() - start
+            )
+        else:
+            display_logs_depending_process_time(
+                f'Could not determine encoding in {round(time() - start, 3)}s',
+                time() - start
+            )
+            # we return the encoding of the first row (not of the header)
+            encoding_this = detect(lines[1])
+    return encoding_this
 
 
 def parse_table(the_file, encoding, sep, num_rows, skiprows, random_state=42, verbose : bool = False):
@@ -165,7 +190,10 @@ def parse_table(the_file, encoding, sep, num_rows, skiprows, random_state=42, ve
         logging.error("  >> encoding not found")
         return table, "NA", "NA"
     if verbose:
-        display_logs_depending_process_time(f'Table parsed successfully in {round(time() - start, 3)}s', time() - start)
+        display_logs_depending_process_time(
+            f'Table parsed successfully in {round(time() - start, 3)}s',
+            time() - start
+        )
     return table, total_lines, nb_duplicates
 
 
@@ -230,7 +258,10 @@ def create_profile(table, dict_cols_fields, sep, encoding, num_rows, skiprows, v
                 nb_missing_values=len(safe_table[c].loc[safe_table[c].isna()]),
             )
         if verbose:
-            display_logs_depending_process_time(f"Created profile in {round(time() - start, 3)}s", time() - start)
+            display_logs_depending_process_time(
+                f"Created profile in {round(time() - start, 3)}s",
+                time() - start
+            )
         return profile
 
 
@@ -280,7 +311,10 @@ def detect_headers(file, sep, verbose: bool = False):
             file.seek(position)
             if header != next_row:
                 if verbose:
-                    display_logs_depending_process_time(f'Detected headers in {round(time() - start, 3)}s', time() - start)
+                    display_logs_depending_process_time(
+                        f'Detected headers in {round(time() - start, 3)}s',
+                        time() - start
+                    )
                 return i, chaine
     if verbose:
         logging.info(f'No header detected')
@@ -299,10 +333,16 @@ def detect_heading_columns(file, sep, verbose : bool = False):
         return_int = min(return_int, len(line) - len(line.strip(sep)))
         if return_int == 0:
             if verbose:
-                display_logs_depending_process_time(f'No heading column detected in {round(time() - start, 3)}s', time() - start)
+                display_logs_depending_process_time(
+                    f'No heading column detected in {round(time() - start, 3)}s',
+                    time() - start
+                )
             return 0
     if verbose:
-        display_logs_depending_process_time(f'{return_int} heading columns detected in {round(time() - start, 3)}s', time() - start)
+        display_logs_depending_process_time(
+            f'{return_int} heading columns detected in {round(time() - start, 3)}s',
+            time() - start
+        )
     return return_int
 
 
@@ -323,8 +363,14 @@ def detect_trailing_columns(file, sep, heading_columns, verbose : bool = False):
         )
         if return_int == 0:
             if verbose:
-                display_logs_depending_process_time(f'No trailing column detected in {round(time() - start, 3)}s', time() - start)
+                display_logs_depending_process_time(
+                    f'No trailing column detected in {round(time() - start, 3)}s',
+                    time() - start
+                )
             return 0
     if verbose:
-        display_logs_depending_process_time(f'{return_int} trailing columns detected in {round(time() - start, 3)}s', time() - start)
+        display_logs_depending_process_time(
+            f'{return_int} trailing columns detected in {round(time() - start, 3)}s',
+            time() - start
+        )
     return return_int
