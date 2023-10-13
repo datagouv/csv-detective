@@ -110,7 +110,6 @@ def routine(
     """
     if verbose:
         start_routine = time()
-        print("Analysing: ", csv_file_path)
     if csv_file_path is None:
         raise ValueError("csv_file_path is required.")
 
