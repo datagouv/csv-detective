@@ -132,12 +132,17 @@ def detect_encoding(the_file, verbose: bool = False, unwanted=['ascii']):
         start = time()
         logging.info("Detecting encoding")
     lines = the_file.readlines()
+    if len(lines) == 0:
+        raise ValueError("File is empty.")
+    elif len(lines) == 1:
+        encoding_this = detect(lines[0])['encoding']
     # checking encoding for two-line batches until we get an agreement
-    for k in range(1, len(lines)):
-        encoding_previous = detect(lines[k-1])['encoding']
-        encoding_this = detect(lines[k])['encoding']
-        if encoding_this not in unwanted and encoding_this == encoding_previous:
-            break
+    else:
+        for k in range(1, len(lines)):
+            encoding_previous = detect(lines[k-1])['encoding']
+            encoding_this = detect(lines[k])['encoding']
+            if encoding_this not in unwanted and encoding_this == encoding_previous:
+                break
     if verbose:
         if encoding_this and encoding_this not in unwanted:
             display_logs_depending_process_time(
@@ -150,7 +155,8 @@ def detect_encoding(the_file, verbose: bool = False, unwanted=['ascii']):
                 time() - start
             )
             # we return the encoding of the first row (not of the header)
-            encoding_this = detect(lines[1])
+            # if only one row: return the encoding of the header
+            encoding_this = detect(lines[min(len(lines) - 1, 1)])['encoding']
     return encoding_this
 
 
