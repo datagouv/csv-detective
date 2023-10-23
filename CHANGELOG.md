@@ -2,7 +2,7 @@
 
 ## Current (in progress)
 
-- Nothing yet
+- Fix to handle one or two-line files [#64](https://github.com/etalab/csv-detective/pull/64)
 
 ## 0.6.4 (2023-10-18)
 
