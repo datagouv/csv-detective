@@ -1,12 +1,11 @@
 import pandas as pd
 import numpy as np
-from charset_normalizer import detect
+from cchardet import detect
 from ast import literal_eval
 import logging
 from time import time
 from csv_detective.utils import display_logs_depending_process_time
 from csv_detective.detect_fields.other.float import float_casting
-
 
 logging.basicConfig(level=logging.INFO)
 
@@ -122,42 +121,22 @@ def detect_separator(file, verbose: bool = False):
     return sep
 
 
-def detect_encoding(the_file, verbose: bool = False, unwanted=['ascii']):
+def detect_encoding(the_file, verbose: bool = False):
     """
-    Detects file encoding using charset_normalizer from lines
-    if feeding a bigger part of the file, detect most likely gets it wrong
-    (tried: detect(b"".join(lines[:min(len(lines), n)])) with n varying)
+    Detects file encoding using faust-cchardet (forked from the original cchardet)
     """
     if verbose:
         start = time()
         logging.info("Detecting encoding")
-    lines = the_file.readlines()
-    if len(lines) == 0:
-        raise ValueError("File is empty.")
-    elif len(lines) == 1:
-        encoding_this = detect(lines[0])['encoding']
-    # checking encoding for two-line batches until we get an agreement
-    else:
-        for k in range(1, len(lines)):
-            encoding_previous = detect(lines[k-1])['encoding']
-            encoding_this = detect(lines[k])['encoding']
-            if encoding_this not in unwanted and encoding_this == encoding_previous:
-                break
+    encoding_dict = detect(the_file.read())
     if verbose:
-        if encoding_this and encoding_this not in unwanted:
-            display_logs_depending_process_time(
-                f'Detected encoding: "{encoding_this}" in {round(time() - start, 3)}s',
-                time() - start
-            )
-        else:
-            display_logs_depending_process_time(
-                f'Could not determine encoding in {round(time() - start, 3)}s',
-                time() - start
-            )
-            # we return the encoding of the first row (not of the header)
-            # if only one row: return the encoding of the header
-            encoding_this = detect(lines[min(len(lines) - 1, 1)])['encoding']
-    return encoding_this
+        message = f'Detected encoding: "{encoding_dict["encoding"]}"'
+        message += f' in {round(time() - start, 3)}s (confidence: {round(encoding_dict["confidence"]*100)}%)'
+        display_logs_depending_process_time(
+            message,
+            time() - start
+        )
+    return encoding_dict['encoding']
 
 
 def parse_table(the_file, encoding, sep, num_rows, skiprows, random_state=42, verbose : bool = False):

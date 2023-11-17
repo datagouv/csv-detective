@@ -1,5 +1,5 @@
 boto3==1.26.65
-charset-normalizer==3.3.0
+faust-cchardet==2.1.19
 pandas==1.5.3
 pytest==7.2.1
 python-dateutil==2.8.2
