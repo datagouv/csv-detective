@@ -2,7 +2,7 @@
 
 ## Current (in progress)
 
-- Nothing yet
+- Change encoding detection for faust-cchardet (forked from cchardet) [#66](https://github.com/etalab/csv-detective/pull/66)
 
 ## 0.6.4 (2023-10-18)
 
