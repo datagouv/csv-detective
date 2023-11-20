@@ -3,6 +3,11 @@
 from setuptools import setup, find_packages
 
 
+def pip(filename):
+    """Parse pip reqs file and transform it to setuptools requirements."""
+    return open(filename).readlines()
+
+
 setup(
     name="csv_detective",
     version=__import__("csv_detective").__version__,
@@ -29,10 +34,6 @@ setup(
         ],
     },
     include_package_data=True,  # Will read MANIFEST.in
-    install_requires=[
-        "pandas >= 0.20",
-        "boto3 >= 1.21.21",
-        "unidecode >= 0.4",
-    ],
+    install_requires=pip('requirements.txt'),
     packages=find_packages(),
 )
