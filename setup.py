@@ -1,12 +1,11 @@
 #! /usr/bin/env python3
 
 from setuptools import setup, find_packages
-import os
 
 
 def pip(filename):
     """Parse pip reqs file and transform it to setuptools requirements."""
-    return open(os.path.join('requirements', filename)).readlines()
+    return open(filename).readlines()
 
 
 setup(
