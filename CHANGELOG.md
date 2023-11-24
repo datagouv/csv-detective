@@ -2,7 +2,7 @@
 
 ## Current (in progress)
 
-- Nothing yet
+- Change setup.py to better convey dependencies
 
 ## 0.6.5 (2023-11-17)
 
