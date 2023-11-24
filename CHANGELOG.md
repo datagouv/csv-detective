@@ -1,5 +1,9 @@
 # Changelog
 
+## Current (in progress)
+
+- Nothing yet
+
 ## 0.6.6 (2023-11-24)
 
 - Change setup.py to better convey dependencies
