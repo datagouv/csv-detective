@@ -2,6 +2,18 @@
 
 ## Current (in progress)
 
+- Nothing yet
+
+## 0.6.6 (2023-11-24)
+
+- Change setup.py to better convey dependencies
+
+## 0.6.5 (2023-11-17)
+
+- Change encoding detection for faust-cchardet (forked from cchardet) [#66](https://github.com/etalab/csv-detective/pull/66)
+
+## 0.6.4 (2023-10-18)
+
 - Better handling of ints and floats (now not accepting blanks and "+" in string) [#62](https://github.com/etalab/csv-detective/pull/62)
 
 ## 0.6.3 (2023-03-23)

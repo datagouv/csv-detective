@@ -115,7 +115,7 @@ def routine(
 
     if encoding is None:
         binary_file = open(csv_file_path, mode="rb")
-        encoding = detect_encoding(binary_file, verbose=verbose)["encoding"]
+        encoding = detect_encoding(binary_file, verbose=verbose)
 
     with open(csv_file_path, "r", encoding=encoding) as str_file:
         if sep is None:
@@ -291,7 +291,10 @@ def routine(
             verbose=verbose
         )
     if verbose:
-        display_logs_depending_process_time(f'Routine completed in {round(time() - start_routine, 3)}s', time() - start_routine)
+        display_logs_depending_process_time(
+            f'Routine completed in {round(time() - start_routine, 3)}s',
+            time() - start_routine
+        )
     return return_dict
 
 
