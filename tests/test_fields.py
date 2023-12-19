@@ -313,7 +313,6 @@ def test_match_datetime():
     assert datetime_rfc822._is(val)
 
 
-
 # siren
 def test_match_siren():
     val = "552 100 554"
