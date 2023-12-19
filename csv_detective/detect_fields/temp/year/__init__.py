@@ -7,4 +7,4 @@ def _is(val):
         val = int(val)
     except ValueError:
         return False
-    return (1800 >= val) and (val <= 2100)
+    return (1800 <= val) and (val <= 2100)

@@ -1,6 +1,7 @@
 import re
 from dateutil.parser import parse, ParserError
 from csv_detective.detect_fields.other.float import _is as is_float
+from unidecode import unidecode
 
 PROPORTION = 1
 # /!\ this is only for dates, not datetimes which are handled by other utils
@@ -54,7 +55,7 @@ def _is(val):
             r'|mai|may|jun|jui|jul|aou|aug|sep|oct|nov|dec|janvier|fevrier|mars|avril|'
             r'mai|juin|jullet|aout|septembre|octobre|novembre|decembre)[ -/_;.:,]'
             r'([0-9]{2}$|(19|20)[0-9]{2}$)',
-            val
+            unidecode(val)
         )
     )
 
