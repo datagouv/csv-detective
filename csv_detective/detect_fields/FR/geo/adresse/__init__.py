@@ -5,7 +5,7 @@ PROPORTION = 0.55
 
 def _is(val):
     '''Repere des adresses'''
-    if len(val) > 100:
+    if len(val) > 150:
         return False
     # ajouts d'espaces en fin de mots pour s'assurer que le str n'est pas juste une substr d'un mot plus long
     voies = {
@@ -98,4 +98,4 @@ def _is(val):
     }
 
     val = _process_text(val)
-    return any({x in val for x in voies})
+    return any(x in val for x in voies)

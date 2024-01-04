@@ -59,4 +59,4 @@ def _is(val):
         )
     )
 
-    return a or b or c or d or (is_dateutil_date(val) and not is_float(val))
+    return (is_dateutil_date(val) and not is_float(val)) or a or b or c or d
