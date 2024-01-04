@@ -24,7 +24,7 @@ def display_logs_depending_process_time(prompt: str, duration: float):
 
 
 def test_col_val(
-    serie, test_func, proportion=0.9, skipna=True, num_rows=-1, output_mode="ALL"
+    serie, test_func, proportion=0.9, skipna=True, num_rows=-1, output_mode="ALL", verbose=False
 ):
     """Tests values of the serie using test_func.
          - skipna : if True indicates that NaNs are not counted as False
@@ -32,6 +32,8 @@ def test_col_val(
          - num_rows : number of rows to sample from the file for analysis ; -1 for analysis of the whole file
     for the serie to be detected as a certain format
     """
+    if verbose:
+        start = time()
 
     # TODO : change for a cleaner method and only test columns in modules labels
     def apply_test_func(serie, test_func, _range):
@@ -39,35 +41,42 @@ def test_col_val(
             return serie.sample(frac=1).iloc[_range].apply(test_func)
         except AttributeError:  # .name n'est pas trouvé
             return test_func(serie.iloc[_range])
-
-    serie = serie[serie.notnull()]
-    ser_len = len(serie)
-    if num_rows > 0:
-        ser_len = min(ser_len, num_rows)
-    _range = range(0, ser_len)
-    if ser_len == 0:
-        return 0.0
-    if output_mode == "ALL":
-        result = apply_test_func(serie, test_func, _range).sum() / ser_len
-        return result if result >= proportion else 0.0
-    else:
-        if proportion == 1:  # Then try first 1 value, then 5, then all
-            for _range in [
-                range(0, min(1, ser_len)),
-                range(min(1, ser_len), min(5, ser_len)),
-                range(min(5, ser_len), min(num_rows, ser_len))
-                if num_rows > 0
-                else range(min(5, ser_len), ser_len),
-            ]:  # Pour ne pas faire d'opérations inutiles, on commence par 1,
-                # puis 5 puis num_rows valeurs
-                if all(apply_test_func(serie, test_func, _range)):
-                    pass
-                else:
-                    return 0.0
-            return 1.0
-        else:
+    try:
+        serie = serie[serie.notnull()]
+        ser_len = len(serie)
+        if num_rows > 0:
+            ser_len = min(ser_len, num_rows)
+        _range = range(0, ser_len)
+        if ser_len == 0:
+            return 0.0
+        if output_mode == "ALL":
             result = apply_test_func(serie, test_func, _range).sum() / ser_len
             return result if result >= proportion else 0.0
+        else:
+            if proportion == 1:  # Then try first 1 value, then 5, then all
+                for _range in [
+                    range(0, min(1, ser_len)),
+                    range(min(1, ser_len), min(5, ser_len)),
+                    range(min(5, ser_len), min(num_rows, ser_len))
+                    if num_rows > 0
+                    else range(min(5, ser_len), ser_len),
+                ]:  # Pour ne pas faire d'opérations inutiles, on commence par 1,
+                    # puis 5 puis num_rows valeurs
+                    if all(apply_test_func(serie, test_func, _range)):
+                        # print(serie.name, ': check OK')
+                        pass
+                    else:
+                        return 0.0
+                return 1.0
+            else:
+                result = apply_test_func(serie, test_func, _range).sum() / ser_len
+                return result if result >= proportion else 0.0
+    finally:
+        if verbose and time() - start > 3:
+            display_logs_depending_process_time(
+                f"\t/!\\ Column '{serie.name}' took too long ({round(time() - start, 3)}s)",
+                time() - start
+            )
 
 
 def test_col_label(label, test_func, proportion=1, output_mode="ALL"):
@@ -95,6 +104,7 @@ def test_col(table, all_tests, num_rows, output_mode, verbose: bool = False):
     for idx, (key, value) in enumerate(test_funcs.items()):
         if verbose:
             start_type = time()
+            logging.info(f"\t- Starting with type '{key}'")
         # When analysis of all file is requested (num_rows = -1) we fix a threshold of
         # 1000 rows for every checks outside int or float format
         if num_rows == -1:
@@ -129,11 +139,12 @@ def test_col(table, all_tests, num_rows, output_mode, verbose: bool = False):
                 value["prop"],
                 num_rows=local_num_rows,
                 output_mode=output_mode,
+                verbose=verbose,
             )
         )
         if verbose:
             display_logs_depending_process_time(
-                f'\t- Done with type "{key}" in {round(time() - start_type, 3)}s ({idx+1}/{len(test_funcs)})',
+                f'\t> Done with type "{key}" in {round(time() - start_type, 3)}s ({idx+1}/{len(test_funcs)})',
                 time() - start_type
             )
     if verbose:

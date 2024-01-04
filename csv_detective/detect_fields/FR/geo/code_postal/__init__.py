@@ -4,7 +4,7 @@ import re
 PROPORTION = 0.9
 f = open(join(dirname(__file__), 'code_postal.txt'), 'r')
 codes_postaux = f.read().split('\n')
-# removing empty str du to additionnal line in file
+# removing empty str due to additionnal line in file
 del codes_postaux[-1]
 codes_postaux = set(codes_postaux)
 f.close()
