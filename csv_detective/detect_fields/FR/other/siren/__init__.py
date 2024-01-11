@@ -6,8 +6,7 @@ PROPORTION = 0.9
 def _is(val):
     '''Repere les codes SIREN'''
     val = val.replace(' ', '')
-    regex = r'^[0-9]{9}$'
-    if not bool(re.match(regex, val)):
+    if not bool(re.match(r'^[0-9]{9}$', val)):
         return False
     # Vérification par clé propre aux codes siren
     cle = 0

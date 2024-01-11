@@ -10,7 +10,6 @@ def _is(val):
     if len(val) != 8:
         return False
 
-    regex = r'^(0[0-8][0-9]|09[0-5]|9[78][0-9]|[67]20)[0-9]{4}[A-Z]$'
-    if not bool(re.match(regex, val)):
+    if not bool(re.match(r'^(0[0-8][0-9]|09[0-5]|9[78][0-9]|[67]20)[0-9]{4}[A-Z]$', val)):
         return False
     return True

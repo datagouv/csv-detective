@@ -6,8 +6,7 @@ PROPORTION = 0.8
 def _is(val):
     '''Détection des identifiants SIRET (SIRENE)'''
     val = val.replace(' ', '')
-    regex = r'^[0-9]{14}$'
-    if not bool(re.match(regex, val)):
+    if not bool(re.match(r'^[0-9]{14}$', val)):
         return False
 
     # Vérification par clé de luhn du SIREN
