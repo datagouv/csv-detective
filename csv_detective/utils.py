@@ -24,12 +24,11 @@ def display_logs_depending_process_time(prompt: str, duration: float):
 
 
 def test_col_val(
-    serie, test_func, proportion=0.9, skipna=True, num_rows=-1, output_mode="ALL", verbose=False
+    serie, test_func, proportion=0.9, skipna=True, output_mode="ALL", verbose=False
 ):
     """Tests values of the serie using test_func.
          - skipna : if True indicates that NaNs are not counted as False
          - proportion :  indicates the proportion of values that have to pass the test
-         - num_rows : number of rows to sample from the file for analysis ; -1 for analysis of the whole file
     for the serie to be detected as a certain format
     """
     if verbose:
@@ -37,31 +36,24 @@ def test_col_val(
 
     # TODO : change for a cleaner method and only test columns in modules labels
     def apply_test_func(serie, test_func, _range):
-        try:
-            return serie.sample(frac=1).iloc[_range].apply(test_func)
-        except AttributeError:  # .name n'est pas trouvé
-            return test_func(serie.iloc[_range])
+        return serie.sample(n=_range).apply(test_func)
     try:
-        serie = serie[serie.notnull()]
+        if skipna:
+            serie = serie[serie.notnull()]
         ser_len = len(serie)
-        if num_rows > 0:
-            ser_len = min(ser_len, num_rows)
-        _range = range(0, ser_len)
         if ser_len == 0:
             return 0.0
         if output_mode == "ALL":
-            result = apply_test_func(serie, test_func, _range).sum() / ser_len
+            result = apply_test_func(serie, test_func, ser_len).sum() / ser_len
             return result if result >= proportion else 0.0
         else:
             if proportion == 1:  # Then try first 1 value, then 5, then all
                 for _range in [
-                    range(0, min(1, ser_len)),
-                    range(min(1, ser_len), min(5, ser_len)),
-                    range(min(5, ser_len), min(num_rows, ser_len))
-                    if num_rows > 0
-                    else range(min(5, ser_len), ser_len),
+                    min(1, ser_len),
+                    min(5, ser_len),
+                    ser_len,
                 ]:  # Pour ne pas faire d'opérations inutiles, on commence par 1,
-                    # puis 5 puis num_rows valeurs
+                    # puis 5 valeurs puis la serie complète
                     if all(apply_test_func(serie, test_func, _range)):
                         # print(serie.name, ': check OK')
                         pass
@@ -69,7 +61,10 @@ def test_col_val(
                         return 0.0
                 return 1.0
             else:
-                result = apply_test_func(serie, test_func, _range).sum() / ser_len
+                # if we have a proportion, statistically it's OK to analyse up to 10k rows
+                # (arbitrary number) and get a significant result
+                to_analyse = min(ser_len, 10000)
+                result = apply_test_func(serie, test_func, to_analyse).sum() / to_analyse
                 return result if result >= proportion else 0.0
     finally:
         if verbose and time() - start > 3:
@@ -91,7 +86,7 @@ def test_col_label(label, test_func, proportion=1, output_mode="ALL"):
         return result if result >= proportion else 0
 
 
-def test_col(table, all_tests, num_rows, output_mode, verbose: bool = False):
+def test_col(table, all_tests, output_mode, verbose: bool = False):
     # Initialising dict for tests
     if verbose:
         start = time()
@@ -105,31 +100,6 @@ def test_col(table, all_tests, num_rows, output_mode, verbose: bool = False):
         if verbose:
             start_type = time()
             logging.info(f"\t- Starting with type '{key}'")
-        # When analysis of all file is requested (num_rows = -1) we fix a threshold of
-        # 1000 rows for every checks outside int or float format
-        if num_rows == -1:
-            local_num_rows = 1000
-        else:
-            local_num_rows = min(num_rows, 1000)
-        # For checks detecting dates, int or float format, we analyze the whole file (because
-        # error can be generated afterward when exploiting this data into a database)
-        if key in [
-            "int",
-            "float",
-            "date",
-            "datetime_iso",
-            "datetime_rfc822",
-            "longitude",
-            "longitude_l93",
-            "longitude_wgs",
-            "longitude_wgs_fr_metropole",
-            "latitude",
-            "latitude_l93",
-            "latitude_wgs",
-            "latitude_wgs_fr_metropole",
-            "iso_country_code_numeric",
-        ]:
-            local_num_rows = max(-1, num_rows)
         # improvement lead : put the longest tests behind and make them only if previous tests not satisfactory
         # => the following needs to change, "apply" means all columns are tested for one type at once
         return_table.loc[key] = table.apply(
@@ -137,7 +107,6 @@ def test_col(table, all_tests, num_rows, output_mode, verbose: bool = False):
                 serie,
                 value["func"],
                 value["prop"],
-                num_rows=local_num_rows,
                 output_mode=output_mode,
                 verbose=verbose,
             )
