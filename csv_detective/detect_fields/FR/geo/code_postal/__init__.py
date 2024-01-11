@@ -13,8 +13,7 @@ f.close()
 def _is(val):
     '''Renvoie True si val peut être un code postal, False sinon'''
 
-    regex = r'^[0-9]{5}$'
-    if not bool(re.match(regex, val)):
+    if not bool(re.match(r'^[0-9]{5}$', val)):
         return False
 
     return val in codes_postaux

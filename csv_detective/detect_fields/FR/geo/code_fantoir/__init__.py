@@ -9,9 +9,7 @@ f.close()
 
 def _is(val):
     '''Renvoie True si val peut être un code FANTOIR/RIVOLI, False sinon'''
-
-    regex = r'^[0-9A-Z][0-9]{3}[ABCDEFGHJKLMNPRSTUVWXYZ]$'
-    if not bool(re.match(regex, val)):
+    if not bool(re.match(r'^[0-9A-Z][0-9]{3}[ABCDEFGHJKLMNPRSTUVWXYZ]$', val)):
         return False
 
     return val[:4] in codes_fantoir

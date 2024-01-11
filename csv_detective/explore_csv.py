@@ -174,7 +174,7 @@ def routine(
         return return_dict
 
     # Perform testing on fields
-    return_table_fields = test_col(table, all_tests_fields, num_rows, output_mode, verbose=verbose)
+    return_table_fields = test_col(table, all_tests_fields, output_mode, verbose=verbose)
     return_dict_cols_fields = prepare_output_dict(return_table_fields, output_mode)
     return_dict["columns_fields"] = return_dict_cols_fields
 
@@ -282,7 +282,7 @@ def routine(
         # Write your file as json
         output_path_to_store_minio_file = os.path.splitext(csv_file_path)[0] + ".json"
         with open(output_path_to_store_minio_file, "w", encoding="utf8") as fp:
-            json.dump(return_dict, fp, indent=4, separators=(",", ": "))
+            json.dump(return_dict, fp, indent=4, separators=(",", ": "), ensure_ascii=False)
 
     if output_schema and output_mode != "ALL":
         return_dict["schema"] = generate_table_schema(
