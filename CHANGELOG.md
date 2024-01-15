@@ -1,6 +1,6 @@
 # Changelog
 
-## Current (in progress)
+## 0.6.7 (2024-01-15)
 
 - Add logs for columns that would take too much time within a specific test
 - Refactor some tests to improve performances and make detection more accurate
