@@ -10,7 +10,9 @@ def camel_case_split(identifier):
 
 # Process text
 def _process_text(val):
-    """Met le unicode val sous sous sa forme normee"""
+    """Traitement des chaînes de caractères pour les standardiser.
+    Plusieurs alternatives ont été testées : .translate, unidecode.unidecode,
+    des méthodes hybrides, mais aucune ne s'est avérée plus performante."""
     val = camel_case_split(val)
     val = val.lower()
     val = val.replace("-", " ")
@@ -18,15 +20,6 @@ def _process_text(val):
     val = val.replace("'", " ")
     val = val.replace(",", " ")
     val = val.replace("  ", " ")
-    # val = val.replace('\xc3\xa8', 'e')
-    # val = val.replace('\xc3\xa9', 'e')
-    # val = val.replace('\xc3\xaa', 'e')
-    # val = val.replace('\xc3\x8e', 'i')
-    # val = val.replace('\xc3\xb4', 'o')
-    # val = val.replace('\xc3\xa7', 'c')
-    # val = val.replace('\xc3\xa0', 'a')
-    # val = val.replace('\xc3\xa2', 'a')
-    # val = val.replace('\xc3\xae', 'i')
     val = val.replace("à", "a")
     val = val.replace("â", "a")
     val = val.replace("ç", "c")
@@ -42,7 +35,5 @@ def _process_text(val):
     val = val.replace("û", "u")
     val = val.replace("ù", "u")
     val = val.replace("ü", "u")
-
     val = val.strip()
-
     return val
