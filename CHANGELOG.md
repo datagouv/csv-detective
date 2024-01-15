@@ -1,5 +1,9 @@
 # Changelog
 
+## Current (in progress)
+
+- Nothing yet
+
 ## 0.6.7 (2024-01-15)
 
 - Add logs for columns that would take too much time within a specific test
