@@ -4,6 +4,7 @@
 
 - Add logs for columns that would take too much time within a specific test
 - Refactor some tests to improve performances and make detection more accurate
+- Try alternative ways to clean text
 
 ## 0.6.6 (2023-11-24)
 
