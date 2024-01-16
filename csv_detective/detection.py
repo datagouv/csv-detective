@@ -1,5 +1,5 @@
 import pandas as pd
-import numpy as np
+import math
 from cchardet import detect
 from ast import literal_eval
 import logging
@@ -182,6 +182,12 @@ def parse_table(the_file, encoding, sep, num_rows, skiprows, random_state=42, ve
     return table, total_lines, nb_duplicates
 
 
+def prevent_nan(value):
+    if math.isnan(value):
+        return None
+    return value
+
+
 def create_profile(table, dict_cols_fields, sep, encoding, num_rows, skiprows, verbose: bool = False):
     if verbose:
         start = time()
@@ -213,18 +219,18 @@ def create_profile(table, dict_cols_fields, sep, encoding, num_rows, skiprows, v
                 int,
             ]:
                 profile[c].update(
-                    min=map_python_types.get(dict_cols_fields[c]["python_type"], str)(
+                    min=prevent_nan(map_python_types.get(dict_cols_fields[c]["python_type"], str)(
                         safe_table[c].min()
-                    ),
-                    max=map_python_types.get(dict_cols_fields[c]["python_type"], str)(
+                    )),
+                    max=prevent_nan(map_python_types.get(dict_cols_fields[c]["python_type"], str)(
                         safe_table[c].max()
-                    ),
-                    mean=map_python_types.get(dict_cols_fields[c]["python_type"], str)(
+                    )),
+                    mean=prevent_nan(map_python_types.get(dict_cols_fields[c]["python_type"], str)(
                         safe_table[c].mean()
-                    ),
-                    std=map_python_types.get(dict_cols_fields[c]["python_type"], str)(
+                    )),
+                    std=prevent_nan(map_python_types.get(dict_cols_fields[c]["python_type"], str)(
                         safe_table[c].std()
-                    ),
+                    )),
                 )
             tops_bruts = safe_table[safe_table[c].notna()][c] \
                     .value_counts(dropna=True) \
