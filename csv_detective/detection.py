@@ -125,8 +125,8 @@ def detect_separator(file, verbose: bool = False):
         if not row:
             break
         _ = compiled.findall(row)
-        # this is due to to the regex used: all non-empty groups are followed by
-        # an empty one, so we remove the latter to get the right number of columns
+        # this is due to the regex used: all non-empty groups are followed by an
+        # empty one, so we remove the latter to get the right number of columns
         if len(_) - len([k for k in _ if k]) != nb_cols:
             raise ValueError(
                 f'File is not properly structured around the "{sep}" separator.'
