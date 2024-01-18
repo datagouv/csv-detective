@@ -119,7 +119,12 @@ def detect_separator(file, verbose: bool = False):
     # the file (in a weird way) but the process is irrelevant.
     file.seek(0)
     reader = csv.reader(file, delimiter=sep)
-    if len(set([len(next(reader)) for i in range(10)])) > 1:
+    rows_lengths = set()
+    for idx, row in enumerate(reader):
+        if idx > 10:
+            break
+        rows_lengths.add(len(row))
+    if len(rows_lengths) > 1:
         raise ValueError('Number of columns is not even across the first 10 rows.')
 
     if verbose:
