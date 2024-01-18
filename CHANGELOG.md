@@ -1,5 +1,9 @@
 # Changelog
 
+## Current (in progress)
+
+- Nothing yet
+
 ## 0.6.8 (2024-01-18)
 
 - prevent exporting NaN values in profile
