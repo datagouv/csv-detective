@@ -1,6 +1,6 @@
 import pandas as pd
 import math
-import re
+import csv
 from cchardet import detect
 from ast import literal_eval
 import logging
@@ -104,7 +104,6 @@ def detect_separator(file, verbose: bool = False):
     # TODO: add a robust detection:
     # si on a un point virgule comme texte et \t comme séparateur, on renvoit
     # pour l'instant un point virgule
-    pattern = r'[^{}"]*(?:(?:"[^"]*")*[^{}"]*)*'
     if verbose:
         start = time()
         logging.info("Detecting separator")
@@ -115,22 +114,14 @@ def detect_separator(file, verbose: bool = False):
     for sep in possible_separators:
         sep_count[sep] = header.count(sep)
     sep = max(sep_count, key=sep_count.get)
-    nb_cols = sep_count[sep] + 1
-    compiled = re.compile(pattern.format(sep, sep))
     # testing that the first 10 (arbitrary) rows all have the same number of fields
     # as the header. Prevents downstream unwanted behaviour where pandas can load
     # the file (in a weird way) but the process is irrelevant.
-    for i in range(10):
-        row = file.readline()
-        if not row:
-            break
-        _ = compiled.findall(row)
-        # this is due to the regex used: all non-empty groups are followed by an
-        # empty one, so we remove the latter to get the right number of columns
-        if len(_) - len([k for k in _ if k]) != nb_cols:
-            raise ValueError(
-                f'File is not properly structured around the "{sep}" separator.'
-            )
+    file.seek(0)
+    reader = csv.reader(file, delimiter=sep)
+    if len(set([len(next(reader)) for i in range(10)])) > 1:
+        raise ValueError('Number of columns is not even across the first 10 rows.')
+
     if verbose:
         display_logs_depending_process_time(
             f'Detected separator: "{sep}" in {round(time() - start, 3)}s',
