@@ -78,6 +78,19 @@ def test_exception():
         )
 
 
+def test_exception_different_number_of_columns():
+    """
+    A ValueError should be raised if the number of columns differs between the first rows
+    """
+    with pytest.raises(Exception):
+        explore_csv.routine(
+            csv_file_path="tests/c_test_file.csv",
+            num_rows=-1,
+            output_profile=True,
+            save_results=False,
+        )
+
+
 def test_code_dep_reg_on_file():
     output = explore_csv.routine(
         csv_file_path="tests/b_test_file.csv",

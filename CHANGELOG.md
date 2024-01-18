@@ -2,7 +2,8 @@
 
 ## Current (in progress)
 
-- Nothing yet
+- prevent exporting NaN values in profile
+- raise ValueError if analyzed file has various number of columns across first rows
 
 ## 0.6.7 (2024-01-15)
 

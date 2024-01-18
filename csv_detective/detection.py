@@ -1,5 +1,6 @@
 import pandas as pd
-import numpy as np
+import math
+import csv
 from cchardet import detect
 from ast import literal_eval
 import logging
@@ -113,6 +114,19 @@ def detect_separator(file, verbose: bool = False):
     for sep in possible_separators:
         sep_count[sep] = header.count(sep)
     sep = max(sep_count, key=sep_count.get)
+    # testing that the first 10 (arbitrary) rows all have the same number of fields
+    # as the header. Prevents downstream unwanted behaviour where pandas can load
+    # the file (in a weird way) but the process is irrelevant.
+    file.seek(0)
+    reader = csv.reader(file, delimiter=sep)
+    rows_lengths = set()
+    for idx, row in enumerate(reader):
+        if idx > 10:
+            break
+        rows_lengths.add(len(row))
+    if len(rows_lengths) > 1:
+        raise ValueError('Number of columns is not even across the first 10 rows.')
+
     if verbose:
         display_logs_depending_process_time(
             f'Detected separator: "{sep}" in {round(time() - start, 3)}s',
@@ -182,6 +196,12 @@ def parse_table(the_file, encoding, sep, num_rows, skiprows, random_state=42, ve
     return table, total_lines, nb_duplicates
 
 
+def prevent_nan(value):
+    if math.isnan(value):
+        return None
+    return value
+
+
 def create_profile(table, dict_cols_fields, sep, encoding, num_rows, skiprows, verbose: bool = False):
     if verbose:
         start = time()
@@ -213,18 +233,18 @@ def create_profile(table, dict_cols_fields, sep, encoding, num_rows, skiprows, v
                 int,
             ]:
                 profile[c].update(
-                    min=map_python_types.get(dict_cols_fields[c]["python_type"], str)(
+                    min=prevent_nan(map_python_types.get(dict_cols_fields[c]["python_type"], str)(
                         safe_table[c].min()
-                    ),
-                    max=map_python_types.get(dict_cols_fields[c]["python_type"], str)(
+                    )),
+                    max=prevent_nan(map_python_types.get(dict_cols_fields[c]["python_type"], str)(
                         safe_table[c].max()
-                    ),
-                    mean=map_python_types.get(dict_cols_fields[c]["python_type"], str)(
+                    )),
+                    mean=prevent_nan(map_python_types.get(dict_cols_fields[c]["python_type"], str)(
                         safe_table[c].mean()
-                    ),
-                    std=map_python_types.get(dict_cols_fields[c]["python_type"], str)(
+                    )),
+                    std=prevent_nan(map_python_types.get(dict_cols_fields[c]["python_type"], str)(
                         safe_table[c].std()
-                    ),
+                    )),
                 )
             tops_bruts = safe_table[safe_table[c].notna()][c] \
                     .value_counts(dropna=True) \
