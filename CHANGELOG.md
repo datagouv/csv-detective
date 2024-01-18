@@ -1,6 +1,6 @@
 # Changelog
 
-## Current (in progress)
+## 0.6.8 (2024-01-18)
 
 - prevent exporting NaN values in profile
 - raise ValueError if analyzed file has various number of columns across first rows
