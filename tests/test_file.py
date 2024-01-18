@@ -77,6 +77,7 @@ def test_exception():
             save_results=False,
         )
 
+
 def test_exception_different_number_of_columns():
     """
     A ValueError should be raised if the number of columns differs between the first rows
