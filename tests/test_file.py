@@ -1,6 +1,7 @@
 from csv_detective import explore_csv
 from csv_detective.detection import parse_excel
 import pytest
+import responses
 
 
 def test_columns_output_on_file():
@@ -152,3 +153,26 @@ def test_non_csv_files():
     # check if the sheet we consider is the largest
     _, _, _, sheet_name = parse_excel(csv_file_path="tests/file.xlsx")
     assert sheet_name == "REI_1987"
+
+
+@pytest.fixture
+def mocked_responses():
+    with responses.RequestsMock() as rsps:
+        yield rsps
+
+
+def test_urls(mocked_responses):
+    url = 'http://example.com/test.csv'
+    expected_content = 'id,name,first_name\n1,John,Smith\n2,Jane,Doe\n3,Bob,Johnson'
+    mocked_responses.get(
+        url,
+        body=expected_content,
+        status=200,
+    )
+    output = explore_csv.routine(
+        csv_file_path=url,
+        num_rows=-1,
+        output_profile=False,
+        save_results=False,
+    )
+    assert output['header'] == ["id", "name", "first_name"]

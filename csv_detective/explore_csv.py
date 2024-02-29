@@ -11,6 +11,8 @@ import tempfile
 from pkg_resources import resource_string
 import logging
 from time import time
+import requests
+from io import StringIO
 
 # flake8: noqa
 from csv_detective import detect_fields
@@ -29,6 +31,7 @@ from .detection import (
     create_profile,
     detetect_categorical_variable,
     # detect_continuous_variable,
+    is_url,
     XLS_LIKE_EXT,
 )
 
@@ -130,22 +133,33 @@ def routine(
         )
         header = table.columns.to_list()
     else:
-        with open(csv_file_path, "r", encoding=encoding) as str_file:
-            if sep is None:
-                sep = detect_separator(str_file, verbose=verbose)
-            header_row_idx, header = detect_headers(str_file, sep, verbose=verbose)
-            if header is None:
+        if is_url(csv_file_path):
+            if verbose:
+                display_logs_depending_process_time(
+                    "Path recognized as a URL",
+                    0
+                )
+            r = requests.get(csv_file_path)
+            r.raise_for_status()
+            str_file = StringIO(r.text)
+        else:
+            with open(csv_file_path, "r", encoding=encoding) as f:
+                str_file = StringIO(f.read())
+        if sep is None:
+            sep = detect_separator(str_file, verbose=verbose)
+        header_row_idx, header = detect_headers(str_file, sep, verbose=verbose)
+        if header is None:
+            return_dict = {"error": True}
+            return return_dict
+        elif isinstance(header, list):
+            if any([x is None for x in header]):
                 return_dict = {"error": True}
                 return return_dict
-            elif isinstance(header, list):
-                if any([x is None for x in header]):
-                    return_dict = {"error": True}
-                    return return_dict
-            heading_columns = detect_heading_columns(str_file, sep, verbose=verbose)
-            trailing_columns = detect_trailing_columns(str_file, sep, heading_columns, verbose=verbose)
-            table, total_lines, nb_duplicates = parse_table(
-                str_file, encoding, sep, num_rows, header_row_idx, verbose=verbose
-            )
+        heading_columns = detect_heading_columns(str_file, sep, verbose=verbose)
+        trailing_columns = detect_trailing_columns(str_file, sep, heading_columns, verbose=verbose)
+        table, total_lines, nb_duplicates = parse_table(
+            str_file, encoding, sep, num_rows, header_row_idx, verbose=verbose
+        )
 
     if table.empty:
         res_categorical = []
