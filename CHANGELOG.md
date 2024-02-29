@@ -2,7 +2,7 @@
 
 ## Current (in progress)
 
-- Nothing yet
+- Handle other file formats: xls, xlsx, ods (and more)
 
 ## 0.6.8 (2024-01-18)
 
