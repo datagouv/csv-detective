@@ -25,9 +25,11 @@ from .detection import (
     detect_heading_columns,
     detect_trailing_columns,
     parse_table,
+    parse_excel,
     create_profile,
     detetect_categorical_variable,
     # detect_continuous_variable,
+    XLS_LIKE_EXT,
 )
 
 
@@ -88,7 +90,8 @@ def routine(
     sep: str = None,
     output_profile: bool = False,
     output_schema: bool = False,
-    verbose: bool = False
+    verbose: bool = False,
+    sheet_name: Union[str, int] = None,
 ):
     """Returns a dict with information about the csv table and possible
     column contents.
@@ -104,6 +107,7 @@ def routine(
         output_profile: whether or not to add the 'profile' field to the output
         output_schema: whether or not to add the 'schema' field to the output (tableschema)
         verbose: whether or not to print process logs in console 
+        sheet_name: if reading multi-sheet file (xls-like), which sheet to consider
 
     Returns:
         dict: a dict with information about the csv and possible types for each column
@@ -113,26 +117,35 @@ def routine(
     if csv_file_path is None:
         raise ValueError("csv_file_path is required.")
 
-    if encoding is None:
-        binary_file = open(csv_file_path, mode="rb")
-        encoding = detect_encoding(binary_file, verbose=verbose)
-
-    with open(csv_file_path, "r", encoding=encoding) as str_file:
-        if sep is None:
-            sep = detect_separator(str_file, verbose=verbose)
-        header_row_idx, header = detect_headers(str_file, sep, verbose=verbose)
-        if header is None:
-            return_dict = {"error": True}
-            return return_dict
-        elif isinstance(header, list):
-            if any([x is None for x in header]):
+    is_xls_like = False
+    if any([csv_file_path.endswith(k) for k in XLS_LIKE_EXT]):
+        is_xls_like = True
+        encoding, sep, heading_columns, trailing_columns = None, None, None, None
+        header_row_idx = 0
+        table, total_lines, nb_duplicates, sheet_name = parse_excel(
+            csv_file_path=csv_file_path,
+            num_rows=num_rows,
+            sheet_name=sheet_name,
+            verbose=verbose,
+        )
+        header = table.columns.to_list()
+    else:
+        with open(csv_file_path, "r", encoding=encoding) as str_file:
+            if sep is None:
+                sep = detect_separator(str_file, verbose=verbose)
+            header_row_idx, header = detect_headers(str_file, sep, verbose=verbose)
+            if header is None:
                 return_dict = {"error": True}
                 return return_dict
-        heading_columns = detect_heading_columns(str_file, sep, verbose=verbose)
-        trailing_columns = detect_trailing_columns(str_file, sep, heading_columns, verbose=verbose)
-        table, total_lines, nb_duplicates = parse_table(
-            str_file, encoding, sep, num_rows, header_row_idx, verbose=verbose
-        )
+            elif isinstance(header, list):
+                if any([x is None for x in header]):
+                    return_dict = {"error": True}
+                    return return_dict
+            heading_columns = detect_heading_columns(str_file, sep, verbose=verbose)
+            trailing_columns = detect_trailing_columns(str_file, sep, heading_columns, verbose=verbose)
+            table, total_lines, nb_duplicates = parse_table(
+                str_file, encoding, sep, num_rows, header_row_idx, verbose=verbose
+            )
 
     if table.empty:
         res_categorical = []
@@ -280,8 +293,10 @@ def routine(
 
     if save_results:
         # Write your file as json
-        output_path_to_store_minio_file = os.path.splitext(csv_file_path)[0] + ".json"
-        with open(output_path_to_store_minio_file, "w", encoding="utf8") as fp:
+        output_path = os.path.splitext(csv_file_path)[0]
+        if is_xls_like:
+            output_path += "_sheet-" + str(sheet_name)
+        with open(output_path + '.json', "w", encoding="utf8") as fp:
             json.dump(return_dict, fp, indent=4, separators=(",", ": "), ensure_ascii=False)
 
     if output_schema and output_mode != "ALL":
