@@ -203,7 +203,7 @@ def parse_table(the_file, encoding, sep, num_rows, skiprows, random_state=42, ve
     return table, total_lines, nb_duplicates
 
 
-def parse_excel(csv_file_path, num_rows, sheet_name, random_state=42, verbose : bool = False):
+def parse_excel(csv_file_path, num_rows =- 1, sheet_name = None, random_state=42, verbose : bool = False):
     if verbose:
         start = time()
     mapping = {
@@ -243,10 +243,11 @@ def parse_excel(csv_file_path, num_rows, sheet_name, random_state=42, verbose : 
                 # considering the largest sheet if multiple
                 sheet_name = max(sizes, key=sizes.get)
             except xlrd.biffh.XLRDError:
-                display_logs_depending_process_time(
-                    'Could not read file with classic xls reader, trying with ODS',
-                    time() - start
-                )
+                if verbose:
+                    display_logs_depending_process_time(
+                        'Could not read file with classic xls reader, trying with ODS',
+                        time() - start
+                    )
                 engine = "odf"
 
     if any([csv_file_path.endswith(k) for k in OPEN_OFFICE_EXT]) or engine == "odf":
@@ -269,10 +270,11 @@ def parse_excel(csv_file_path, num_rows, sheet_name, random_state=42, verbose : 
             sheet_name = max(sizes, key=sizes.get)
             table = tables[sheet_name]
         else:
-            display_logs_depending_process_time(
-                f'Detected {mapping[engine]} file, reading sheet "{sheet_name}"',
-                time() - start
-            )
+            if verbose:
+                display_logs_depending_process_time(
+                    f'Detected {mapping[engine]} file, reading sheet "{sheet_name}"',
+                    time() - start
+                )
             table = pd.read_excel(
                 csv_file_path,
                 engine="odf",

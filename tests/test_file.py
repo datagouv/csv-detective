@@ -1,4 +1,5 @@
 from csv_detective import explore_csv
+from csv_detective.detection import parse_excel
 import pytest
 
 
@@ -127,3 +128,27 @@ def test_schema_on_file():
             assert item["constraints"]["pattern"] == "^\\d{2}$"
     assert is_column_dep
     assert is_column_reg
+
+
+def test_non_csv_files():
+    explore_csv.routine(
+        csv_file_path="tests/file.ods",
+        num_rows=-1,
+        output_profile=False,
+        save_results=False,
+    )
+    explore_csv.routine(
+        csv_file_path="tests/file.xls",
+        num_rows=-1,
+        output_profile=False,
+        save_results=False,
+    )
+    explore_csv.routine(
+        csv_file_path="tests/file.xlsx",
+        num_rows=-1,
+        output_profile=False,
+        save_results=False,
+    )
+    # check if the sheet we consider is the largest
+    _, _, _, sheet_name = parse_excel(csv_file_path="tests/file.xlsx")
+    assert sheet_name == "REI_1987"
