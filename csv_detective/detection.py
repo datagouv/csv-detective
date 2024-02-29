@@ -204,6 +204,7 @@ def parse_table(the_file, encoding, sep, num_rows, skiprows, random_state=42, ve
 
 
 def parse_excel(csv_file_path, num_rows =- 1, sheet_name = None, random_state=42, verbose : bool = False):
+    """"Excel-like parsing is really slow, could be a good improvement for future development"""
     if verbose:
         start = time()
     mapping = {
@@ -243,6 +244,7 @@ def parse_excel(csv_file_path, num_rows =- 1, sheet_name = None, random_state=42
                 # considering the largest sheet if multiple
                 sheet_name = max(sizes, key=sizes.get)
             except xlrd.biffh.XLRDError:
+                # sometimes a xls file is recognized as ods
                 if verbose:
                     display_logs_depending_process_time(
                         'Could not read file with classic xls reader, trying with ODS',
