@@ -309,7 +309,7 @@ def routine(
     if save_results:
         # Write your file as json
         output_path = os.path.splitext(csv_file_path)[0]
-        if output_path.count('/'):
+        if '/' in output_path:
             output_path = output_path.split('/')[-1]
         if is_xls_like:
             output_path += "_sheet-" + str(sheet_name)
