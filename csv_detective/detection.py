@@ -284,6 +284,11 @@ def parse_excel(csv_file_path, num_rows =- 1, sheet_name = None, random_state=42
             )
             sizes = {sheet_name: len(table) for sheet_name, table in tables.items()}
             sheet_name = max(sizes, key=sizes.get)
+            if verbose:
+                display_logs_depending_process_time(
+                    f'Going forwards with sheet "{sheet_name}"',
+                    time() - start
+                )
             table = tables[sheet_name]
         else:
             if verbose:
