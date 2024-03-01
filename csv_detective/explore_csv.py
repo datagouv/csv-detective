@@ -12,7 +12,7 @@ from pkg_resources import resource_string
 import logging
 from time import time
 import requests
-from io import StringIO
+from io import StringIO, BytesIO
 
 # flake8: noqa
 from csv_detective import detect_fields
@@ -117,6 +117,11 @@ def routine(
     """
     if verbose:
         start_routine = time()
+        if is_url(csv_file_path):
+            display_logs_depending_process_time(
+                "Path recognized as a URL",
+                0
+            )
     if csv_file_path is None:
         raise ValueError("csv_file_path is required.")
 
@@ -133,18 +138,14 @@ def routine(
         )
         header = table.columns.to_list()
     else:
+        if encoding is None:
+            encoding = detect_encoding(csv_file_path, verbose=verbose)
         if is_url(csv_file_path):
-            if verbose:
-                display_logs_depending_process_time(
-                    "Path recognized as a URL",
-                    0
-                )
             r = requests.get(csv_file_path)
             r.raise_for_status()
-            str_file = StringIO(r.text)
+            str_file = StringIO(r.content.decode(encoding=encoding))
         else:
-            with open(csv_file_path, "r", encoding=encoding) as f:
-                str_file = StringIO(f.read())
+            str_file = open(csv_file_path, "r", encoding=encoding)
         if sep is None:
             sep = detect_separator(str_file, verbose=verbose)
         header_row_idx, header = detect_headers(str_file, sep, verbose=verbose)

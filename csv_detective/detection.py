@@ -150,14 +150,20 @@ def detect_separator(file, verbose: bool = False):
     return sep
 
 
-def detect_encoding(the_file, verbose: bool = False):
+def detect_encoding(csv_file_path, verbose: bool = False):
     """
     Detects file encoding using faust-cchardet (forked from the original cchardet)
     """
     if verbose:
         start = time()
         logging.info("Detecting encoding")
-    encoding_dict = detect(the_file.read())
+    if is_url(csv_file_path):
+        r = requests.get(csv_file_path)
+        r.raise_for_status()
+        binary_file = BytesIO(r.content)
+    else:
+        binary_file = open(csv_file_path, mode="rb")
+    encoding_dict = detect(binary_file.read())
     if verbose:
         message = f'Detected encoding: "{encoding_dict["encoding"]}"'
         message += f' in {round(time() - start, 3)}s (confidence: {round(encoding_dict["confidence"]*100)}%)'
@@ -226,11 +232,6 @@ def parse_excel(csv_file_path, num_rows =- 1, sheet_name = None, random_state=42
     if any([csv_file_path.endswith(k) for k in NEW_EXCEL_EXT + OLD_EXCEL_EXT]):
         remote_content = None
         if is_url(csv_file_path):
-            if verbose:
-                display_logs_depending_process_time(
-                    "Path recognized as a URL",
-                    0
-                )
             r = requests.get(csv_file_path)
             r.raise_for_status()
             remote_content = BytesIO(r.content)
