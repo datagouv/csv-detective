@@ -5,10 +5,25 @@ from cchardet import detect
 from ast import literal_eval
 import logging
 from time import time
+import openpyxl
+import xlrd
+import requests
+from io import BytesIO
 from csv_detective.utils import display_logs_depending_process_time
 from csv_detective.detect_fields.other.float import float_casting
 
 logging.basicConfig(level=logging.INFO)
+
+NEW_EXCEL_EXT = ["xlsx", "xlsm", "xltx", "xltm"]
+OLD_EXCEL_EXT = ["xls"]
+OPEN_OFFICE_EXT = ["odf", "ods", "odt"]
+XLS_LIKE_EXT = NEW_EXCEL_EXT + OLD_EXCEL_EXT + OPEN_OFFICE_EXT
+
+
+def is_url(csv_file_path):
+    # could be more sophisticated if needed
+    return csv_file_path.startswith('http')
+
 
 def detect_continuous_variable(table, continuous_th=0.9, verbose: bool = False):
     """
@@ -135,14 +150,20 @@ def detect_separator(file, verbose: bool = False):
     return sep
 
 
-def detect_encoding(the_file, verbose: bool = False):
+def detect_encoding(csv_file_path, verbose: bool = False):
     """
     Detects file encoding using faust-cchardet (forked from the original cchardet)
     """
     if verbose:
         start = time()
         logging.info("Detecting encoding")
-    encoding_dict = detect(the_file.read())
+    if is_url(csv_file_path):
+        r = requests.get(csv_file_path)
+        r.raise_for_status()
+        binary_file = BytesIO(r.content)
+    else:
+        binary_file = open(csv_file_path, mode="rb")
+    encoding_dict = detect(binary_file.read())
     if verbose:
         message = f'Detected encoding: "{encoding_dict["encoding"]}"'
         message += f' in {round(time() - start, 3)}s (confidence: {round(encoding_dict["confidence"]*100)}%)'
@@ -194,6 +215,134 @@ def parse_table(the_file, encoding, sep, num_rows, skiprows, random_state=42, ve
             time() - start
         )
     return table, total_lines, nb_duplicates
+
+
+def parse_excel(csv_file_path, num_rows =- 1, sheet_name = None, random_state=42, verbose : bool = False):
+    """"Excel-like parsing is really slow, could be a good improvement for future development"""
+    if verbose:
+        start = time()
+    mapping = {
+        "openpyxl": "Excel",
+        "xlrd": "old Excel",
+        "odf": "OpenOffice"
+    }
+    no_sheet_specified = sheet_name is None
+    engine = None
+
+    if any([csv_file_path.endswith(k) for k in NEW_EXCEL_EXT + OLD_EXCEL_EXT]):
+        remote_content = None
+        if is_url(csv_file_path):
+            r = requests.get(csv_file_path)
+            r.raise_for_status()
+            remote_content = BytesIO(r.content)
+        if any([csv_file_path.endswith(k) for k in NEW_EXCEL_EXT]):
+            engine = "openpyxl"
+        else:
+            engine = "xlrd"
+        if sheet_name is None:
+            if verbose:
+                display_logs_depending_process_time(
+                    f'Detected {mapping[engine]} file, no sheet specified, reading the largest one',
+                    time() - start
+                )
+            try:
+                if engine == "openpyxl":
+                    # faster than loading all sheets
+                    wb = openpyxl.load_workbook(remote_content or csv_file_path, read_only=True)
+                    sizes = {s.title: s.max_row * s.max_column for s in wb.worksheets}
+                else:
+                    if remote_content:
+                        wb = xlrd.open_workbook(file_contents=remote_content.read())
+                    else:
+                        wb = xlrd.open_workbook(csv_file_path)
+                    sizes = {s.name: s.nrows * s.ncols for s in wb.sheets()}
+                sheet_name = max(sizes, key=sizes.get)
+            except xlrd.biffh.XLRDError:
+                # sometimes a xls file is recognized as ods
+                if verbose:
+                    display_logs_depending_process_time(
+                        'Could not read file with classic xls reader, trying with ODS',
+                        time() - start
+                    )
+                engine = "odf"
+
+    if any([csv_file_path.endswith(k) for k in OPEN_OFFICE_EXT]) or engine == "odf":
+        # for ODS files, no way to get sheets' sizes without loading the file
+        # so all in one
+        engine = "odf"
+        if sheet_name is None:
+            if verbose:
+                display_logs_depending_process_time(
+                    f'Detected {mapping[engine]} file, no sheet specified, reading the largest one',
+                    time() - start
+                )
+            tables = pd.read_excel(
+                csv_file_path,
+                engine="odf",
+                sheet_name=None,
+                dtype="unicode"
+            )
+            sizes = {sheet_name: len(table) for sheet_name, table in tables.items()}
+            sheet_name = max(sizes, key=sizes.get)
+            if verbose:
+                display_logs_depending_process_time(
+                    f'Going forwards with sheet "{sheet_name}"',
+                    time() - start
+                )
+            table = tables[sheet_name]
+        else:
+            if verbose:
+                display_logs_depending_process_time(
+                    f'Detected {mapping[engine]} file, reading sheet "{sheet_name}"',
+                    time() - start
+                )
+            table = pd.read_excel(
+                csv_file_path,
+                engine="odf",
+                sheet_name=sheet_name,
+                dtype="unicode"
+            )
+        total_lines = len(table)
+        nb_duplicates = len(table.loc[table.duplicated()])
+        if num_rows > 0:
+            num_rows = min(num_rows - 1, total_lines)
+            table = table.sample(num_rows, random_state=random_state)
+        if verbose:
+            display_logs_depending_process_time(
+                f'Table parsed successfully in {round(time() - start, 3)}s',
+                time() - start
+            )
+        return table, total_lines, nb_duplicates, sheet_name
+
+    # so here we end up with (old and new) excel files only
+    if verbose:
+        if no_sheet_specified:
+            display_logs_depending_process_time(
+                f'Going forwards with sheet "{sheet_name}"',
+                time() - start
+            )
+        else:
+            display_logs_depending_process_time(
+                f'Detected {mapping[engine]} file, reading sheet "{sheet_name}"',
+                time() - start
+            )
+    table = pd.read_excel(
+        csv_file_path,
+        engine=engine,
+        sheet_name=sheet_name,
+        dtype="unicode"
+    )
+    total_lines = len(table)
+    nb_duplicates = len(table.loc[table.duplicated()])
+    if num_rows > 0:
+        num_rows = min(num_rows - 1, total_lines)
+        table = table.sample(num_rows, random_state=random_state)
+    if verbose:
+        display_logs_depending_process_time(
+            f'Table parsed successfully in {round(time() - start, 3)}s',
+            time() - start
+        )
+    return table, total_lines, nb_duplicates, sheet_name
 
 
 def prevent_nan(value):

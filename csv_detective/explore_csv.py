@@ -11,6 +11,8 @@ import tempfile
 from pkg_resources import resource_string
 import logging
 from time import time
+import requests
+from io import StringIO
 
 # flake8: noqa
 from csv_detective import detect_fields
@@ -25,9 +27,12 @@ from .detection import (
     detect_heading_columns,
     detect_trailing_columns,
     parse_table,
+    parse_excel,
     create_profile,
     detetect_categorical_variable,
     # detect_continuous_variable,
+    is_url,
+    XLS_LIKE_EXT,
 )
 
 
@@ -88,7 +93,8 @@ def routine(
     sep: str = None,
     output_profile: bool = False,
     output_schema: bool = False,
-    verbose: bool = False
+    verbose: bool = False,
+    sheet_name: Union[str, int] = None,
 ):
     """Returns a dict with information about the csv table and possible
     column contents.
@@ -104,20 +110,43 @@ def routine(
         output_profile: whether or not to add the 'profile' field to the output
         output_schema: whether or not to add the 'schema' field to the output (tableschema)
         verbose: whether or not to print process logs in console 
+        sheet_name: if reading multi-sheet file (xls-like), which sheet to consider
 
     Returns:
         dict: a dict with information about the csv and possible types for each column
     """
-    if verbose:
-        start_routine = time()
-    if csv_file_path is None:
+    if not csv_file_path:
         raise ValueError("csv_file_path is required.")
 
-    if encoding is None:
-        binary_file = open(csv_file_path, mode="rb")
-        encoding = detect_encoding(binary_file, verbose=verbose)
+    if verbose:
+        start_routine = time()
+        if is_url(csv_file_path):
+            display_logs_depending_process_time(
+                "Path recognized as a URL",
+                0
+            )
 
-    with open(csv_file_path, "r", encoding=encoding) as str_file:
+    is_xls_like = False
+    if any([csv_file_path.endswith(k) for k in XLS_LIKE_EXT]):
+        is_xls_like = True
+        encoding, sep, heading_columns, trailing_columns = None, None, None, None
+        header_row_idx = 0
+        table, total_lines, nb_duplicates, sheet_name = parse_excel(
+            csv_file_path=csv_file_path,
+            num_rows=num_rows,
+            sheet_name=sheet_name,
+            verbose=verbose,
+        )
+        header = table.columns.to_list()
+    else:
+        if encoding is None:
+            encoding = detect_encoding(csv_file_path, verbose=verbose)
+        if is_url(csv_file_path):
+            r = requests.get(csv_file_path)
+            r.raise_for_status()
+            str_file = StringIO(r.content.decode(encoding=encoding))
+        else:
+            str_file = open(csv_file_path, "r", encoding=encoding)
         if sep is None:
             sep = detect_separator(str_file, verbose=verbose)
         header_row_idx, header = detect_headers(str_file, sep, verbose=verbose)
@@ -280,8 +309,12 @@ def routine(
 
     if save_results:
         # Write your file as json
-        output_path_to_store_minio_file = os.path.splitext(csv_file_path)[0] + ".json"
-        with open(output_path_to_store_minio_file, "w", encoding="utf8") as fp:
+        output_path = os.path.splitext(csv_file_path)[0]
+        if '/' in output_path:
+            output_path = output_path.split('/')[-1]
+        if is_xls_like:
+            output_path += "_sheet-" + str(sheet_name)
+        with open(output_path + '.json', "w", encoding="utf8") as fp:
             json.dump(return_dict, fp, indent=4, separators=(",", ": "), ensure_ascii=False)
 
     if output_schema and output_mode != "ALL":

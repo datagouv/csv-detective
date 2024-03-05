@@ -2,7 +2,8 @@
 
 ## Current (in progress)
 
-- Nothing yet
+- Handle other file formats: xls, xlsx, ods (and more)
+- Handle analysis through URLs
 
 ## 0.6.8 (2024-01-18)
 
