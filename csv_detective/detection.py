@@ -314,7 +314,7 @@ def parse_excel(csv_file_path, num_rows =- 1, sheet_name = None, random_state=42
             )
         return table, total_lines, nb_duplicates, sheet_name
 
-    # so here we end up with (old) excel files only
+    # so here we end up with (old and new) excel files only
     if verbose:
         if no_sheet_specified:
             display_logs_depending_process_time(
