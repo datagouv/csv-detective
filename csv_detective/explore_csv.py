@@ -115,6 +115,9 @@ def routine(
     Returns:
         dict: a dict with information about the csv and possible types for each column
     """
+    if not csv_file_path:
+        raise ValueError("csv_file_path is required.")
+
     if verbose:
         start_routine = time()
         if is_url(csv_file_path):
@@ -122,8 +125,6 @@ def routine(
                 "Path recognized as a URL",
                 0
             )
-    if csv_file_path is None:
-        raise ValueError("csv_file_path is required.")
 
     is_xls_like = False
     if any([csv_file_path.endswith(k) for k in XLS_LIKE_EXT]):
