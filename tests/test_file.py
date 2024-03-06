@@ -1,5 +1,4 @@
 from csv_detective import explore_csv
-from csv_detective.detection import parse_excel
 import pytest
 import responses
 
@@ -155,15 +154,15 @@ def test_non_csv_files():
     )
     assert _['engine'] == 'openpyxl'
     # check if the sheet we consider is the largest
-    _, _, _, sheet_name, _ = parse_excel(csv_file_path="tests/file.xlsx")
-    assert sheet_name == "REI_1987"
+    assert _['sheet_name'] == 'REI_1987'
     _ = explore_csv.routine(
         csv_file_path="tests/csv_file",
         num_rows=-1,
         output_profile=False,
         save_results=False,
     )
-    assert _['engine'] == 'csv'
+    assert not _.get('engine')
+    assert not _.get('sheet_name')
     _ = explore_csv.routine(
         csv_file_path="tests/xlsx_file",
         num_rows=-1,
