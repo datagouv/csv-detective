@@ -9,3 +9,4 @@ xlrd==2.0.1
 odfpy==1.4.1
 requests==2.31.0
 responses==0.25.0
+python-magic==0.4.27
