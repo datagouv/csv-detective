@@ -185,10 +185,15 @@ def routine(
 
     # Creating return dictionary
     return_dict = dict()
-    return_dict["engine"] = engine or "csv"
-    return_dict["encoding"] = encoding
-    return_dict["separator"] = sep
-    return_dict["header_row_idx"] = header_row_idx
+    # this is only relevant for xls-like
+    if engine:
+        return_dict["engine"] = engine
+        return_dict["sheet_name"] = sheet_name
+    # this is only relevant for csv
+    else:
+        return_dict["encoding"] = encoding
+        return_dict["separator"] = sep
+        return_dict["header_row_idx"] = header_row_idx
     return_dict["header"] = header
     return_dict["total_lines"] = total_lines
     return_dict["nb_duplicates"] = nb_duplicates
