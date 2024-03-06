@@ -21,6 +21,7 @@ from csv_detective.s3_utils import download_from_minio, upload_to_minio
 from csv_detective.schema_generation import generate_table_schema
 from csv_detective.utils import test_col, test_label, prepare_output_dict, display_logs_depending_process_time
 from .detection import (
+    detect_engine,
     detect_separator,
     detect_encoding,
     detect_headers,
@@ -126,14 +127,21 @@ def routine(
                 0
             )
 
+    file_name = csv_file_path.split('/')[-1]
+    engine = None
+    if '.' not in file_name:
+        # file has no extension, we'll investigate how to read it
+        engine = detect_engine(csv_file_path, verbose=verbose)
+
     is_xls_like = False
-    if any([csv_file_path.endswith(k) for k in XLS_LIKE_EXT]):
+    if engine or any([csv_file_path.endswith(k) for k in XLS_LIKE_EXT]):
         is_xls_like = True
         encoding, sep, heading_columns, trailing_columns = None, None, None, None
         header_row_idx = 0
         table, total_lines, nb_duplicates, sheet_name = parse_excel(
             csv_file_path=csv_file_path,
             num_rows=num_rows,
+            engine=engine,
             sheet_name=sheet_name,
             verbose=verbose,
         )

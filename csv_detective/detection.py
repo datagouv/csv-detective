@@ -9,15 +9,21 @@ import openpyxl
 import xlrd
 import requests
 from io import BytesIO
+import magic
 from csv_detective.utils import display_logs_depending_process_time
 from csv_detective.detect_fields.other.float import float_casting
 
 logging.basicConfig(level=logging.INFO)
 
-NEW_EXCEL_EXT = ["xlsx", "xlsm", "xltx", "xltm"]
-OLD_EXCEL_EXT = ["xls"]
-OPEN_OFFICE_EXT = ["odf", "ods", "odt"]
+NEW_EXCEL_EXT = [".xlsx", ".xlsm", ".xltx", ".xltm"]
+OLD_EXCEL_EXT = [".xls"]
+OPEN_OFFICE_EXT = [".odf", ".ods", ".odt"]
 XLS_LIKE_EXT = NEW_EXCEL_EXT + OLD_EXCEL_EXT + OPEN_OFFICE_EXT
+engine_to_file = {
+    "openpyxl": "Excel",
+    "xlrd": "old Excel",
+    "odf": "OpenOffice"
+}
 
 
 def is_url(csv_file_path):
@@ -112,6 +118,24 @@ def detetect_categorical_variable(
             time() - start
         )
     return res.index[res], res
+
+
+def detect_engine(csv_file_path, verbose=False):
+    if verbose:
+        start = time()
+    mapping = {
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'openpyxl',
+        'application/vnd.ms-excel': 'xlrd',
+        'application/vnd.oasis.opendocument.spreadsheet': 'odf',
+    }
+    # if none of the above, we move forwards with the csv process
+    engine = mapping.get(magic.from_file(csv_file_path, mime=True))
+    if verbose:
+        display_logs_depending_process_time(
+            f'File has no extension, detected {engine_to_file.get(engine, "csv")}',
+            time() - start
+        )
+    return engine
 
 
 def detect_separator(file, verbose: bool = False):
@@ -217,36 +241,47 @@ def parse_table(the_file, encoding, sep, num_rows, skiprows, random_state=42, ve
     return table, total_lines, nb_duplicates
 
 
-def parse_excel(csv_file_path, num_rows =- 1, sheet_name = None, random_state=42, verbose : bool = False):
+def parse_excel(
+    csv_file_path,
+    num_rows =- 1,
+    engine=None,
+    sheet_name = None,
+    random_state=42,
+    verbose : bool = False
+):
     """"Excel-like parsing is really slow, could be a good improvement for future development"""
     if verbose:
         start = time()
-    mapping = {
-        "openpyxl": "Excel",
-        "xlrd": "old Excel",
-        "odf": "OpenOffice"
-    }
     no_sheet_specified = sheet_name is None
-    engine = None
 
-    if any([csv_file_path.endswith(k) for k in NEW_EXCEL_EXT + OLD_EXCEL_EXT]):
+    if (
+        engine in ['openpyxl', 'xlrd'] or
+        any([csv_file_path.endswith(k) for k in NEW_EXCEL_EXT + OLD_EXCEL_EXT])
+    ):
         remote_content = None
         if is_url(csv_file_path):
             r = requests.get(csv_file_path)
             r.raise_for_status()
             remote_content = BytesIO(r.content)
-        if any([csv_file_path.endswith(k) for k in NEW_EXCEL_EXT]):
-            engine = "openpyxl"
-        else:
-            engine = "xlrd"
+        if not engine:
+            if any([csv_file_path.endswith(k) for k in NEW_EXCEL_EXT]):
+                engine = "openpyxl"
+            else:
+                engine = "xlrd"
         if sheet_name is None:
             if verbose:
                 display_logs_depending_process_time(
-                    f'Detected {mapping[engine]} file, no sheet specified, reading the largest one',
+                    f'Detected {engine_to_file[engine]} file, no sheet specified, reading the largest one',
                     time() - start
                 )
             try:
                 if engine == "openpyxl":
+                    # openpyxl doesn't want to open files that don't have a valid extension
+                    # see: https://foss.heptapod.net/openpyxl/openpyxl/-/issues/2157
+                    # if the file is remote, we have a remote content anyway so it's fine
+                    if not remote_content and '.' not in csv_file_path.split('/')[-1]:
+                        with open(csv_file_path, 'rb') as f:
+                            remote_content = BytesIO(f.read())
                     # faster than loading all sheets
                     wb = openpyxl.load_workbook(remote_content or csv_file_path, read_only=True)
                     sizes = {s.title: s.max_row * s.max_column for s in wb.worksheets}
@@ -266,14 +301,14 @@ def parse_excel(csv_file_path, num_rows =- 1, sheet_name = None, random_state=42
                     )
                 engine = "odf"
 
-    if any([csv_file_path.endswith(k) for k in OPEN_OFFICE_EXT]) or engine == "odf":
+    if engine == "odf" or any([csv_file_path.endswith(k) for k in OPEN_OFFICE_EXT]):
         # for ODS files, no way to get sheets' sizes without loading the file
         # so all in one
         engine = "odf"
         if sheet_name is None:
             if verbose:
                 display_logs_depending_process_time(
-                    f'Detected {mapping[engine]} file, no sheet specified, reading the largest one',
+                    f'Detected {engine_to_file[engine]} file, no sheet specified, reading the largest one',
                     time() - start
                 )
             tables = pd.read_excel(
@@ -293,7 +328,7 @@ def parse_excel(csv_file_path, num_rows =- 1, sheet_name = None, random_state=42
         else:
             if verbose:
                 display_logs_depending_process_time(
-                    f'Detected {mapping[engine]} file, reading sheet "{sheet_name}"',
+                    f'Detected {engine_to_file[engine]} file, reading sheet "{sheet_name}"',
                     time() - start
                 )
             table = pd.read_excel(
@@ -323,7 +358,7 @@ def parse_excel(csv_file_path, num_rows =- 1, sheet_name = None, random_state=42
             )
         else:
             display_logs_depending_process_time(
-                f'Detected {mapping[engine]} file, reading sheet "{sheet_name}"',
+                f'Detected {engine_to_file[engine]} file, reading sheet "{sheet_name}"',
                 time() - start
             )
     table = pd.read_excel(
