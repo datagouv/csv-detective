@@ -347,7 +347,7 @@ def parse_excel(
                 f'Table parsed successfully in {round(time() - start, 3)}s',
                 time() - start
             )
-        return table, total_lines, nb_duplicates, sheet_name
+        return table, total_lines, nb_duplicates, sheet_name, engine
 
     # so here we end up with (old and new) excel files only
     if verbose:
@@ -377,7 +377,7 @@ def parse_excel(
             f'Table parsed successfully in {round(time() - start, 3)}s',
             time() - start
         )
-    return table, total_lines, nb_duplicates, sheet_name
+    return table, total_lines, nb_duplicates, sheet_name, engine
 
 
 def prevent_nan(value):

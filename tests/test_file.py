@@ -132,39 +132,45 @@ def test_schema_on_file():
 
 
 def test_non_csv_files():
-    explore_csv.routine(
+    _ = explore_csv.routine(
         csv_file_path="tests/file.ods",
         num_rows=-1,
         output_profile=False,
         save_results=False,
     )
-    explore_csv.routine(
+    assert _['engine'] == 'odf'
+    _ = explore_csv.routine(
         csv_file_path="tests/file.xls",
         num_rows=-1,
         output_profile=False,
         save_results=False,
     )
-    explore_csv.routine(
+    # this is a "tricked" xls file that is actually read as odf
+    assert _['engine'] == 'odf'
+    _ = explore_csv.routine(
         csv_file_path="tests/file.xlsx",
         num_rows=-1,
         output_profile=False,
         save_results=False,
     )
+    assert _['engine'] == 'openpyxl'
     # check if the sheet we consider is the largest
-    _, _, _, sheet_name = parse_excel(csv_file_path="tests/file.xlsx")
+    _, _, _, sheet_name, _ = parse_excel(csv_file_path="tests/file.xlsx")
     assert sheet_name == "REI_1987"
-    explore_csv.routine(
+    _ = explore_csv.routine(
         csv_file_path="tests/csv_file",
         num_rows=-1,
         output_profile=False,
         save_results=False,
     )
-    explore_csv.routine(
+    assert _['engine'] == 'csv'
+    _ = explore_csv.routine(
         csv_file_path="tests/xlsx_file",
         num_rows=-1,
         output_profile=False,
         save_results=False,
     )
+    assert _['engine'] == 'openpyxl'
 
 
 @pytest.fixture
