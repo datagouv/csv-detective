@@ -153,6 +153,18 @@ def test_non_csv_files():
     # check if the sheet we consider is the largest
     _, _, _, sheet_name = parse_excel(csv_file_path="tests/file.xlsx")
     assert sheet_name == "REI_1987"
+    explore_csv.routine(
+        csv_file_path="tests/csv_file",
+        num_rows=-1,
+        output_profile=False,
+        save_results=False,
+    )
+    explore_csv.routine(
+        csv_file_path="tests/xlsx_file",
+        num_rows=-1,
+        output_profile=False,
+        save_results=False,
+    )
 
 
 @pytest.fixture

@@ -120,7 +120,7 @@ def detetect_categorical_variable(
     return res.index[res], res
 
 
-def detect_engine(file_name, verbose=False):
+def detect_engine(csv_file_path, verbose=False):
     if verbose:
         start = time()
     mapping = {
@@ -129,7 +129,7 @@ def detect_engine(file_name, verbose=False):
         'application/vnd.oasis.opendocument.spreadsheet': 'odf',
     }
     # if none of the above, we move forwards with the csv process
-    engine = mapping.get(magic.from_file(file_name, mime=True))
+    engine = mapping.get(magic.from_file(csv_file_path, mime=True))
     if verbose:
         display_logs_depending_process_time(
             f'File has no extension, detected {engine_to_file.get(engine, "csv")}',

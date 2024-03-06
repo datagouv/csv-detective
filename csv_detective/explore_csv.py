@@ -131,7 +131,7 @@ def routine(
     engine = None
     if '.' not in file_name:
         # file has no extension, we'll investigate how to read it
-        engine = detect_engine(file_name, verbose=verbose)
+        engine = detect_engine(csv_file_path, verbose=verbose)
 
     is_xls_like = False
     if engine or any([csv_file_path.endswith(k) for k in XLS_LIKE_EXT]):
