@@ -138,7 +138,7 @@ def routine(
         is_xls_like = True
         encoding, sep, heading_columns, trailing_columns = None, None, None, None
         header_row_idx = 0
-        table, total_lines, nb_duplicates, sheet_name = parse_excel(
+        table, total_lines, nb_duplicates, sheet_name, engine = parse_excel(
             csv_file_path=csv_file_path,
             num_rows=num_rows,
             engine=engine,
@@ -185,6 +185,7 @@ def routine(
 
     # Creating return dictionary
     return_dict = dict()
+    return_dict["engine"] = engine or "csv"
     return_dict["encoding"] = encoding
     return_dict["separator"] = sep
     return_dict["header_row_idx"] = header_row_idx
