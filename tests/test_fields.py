@@ -1,37 +1,36 @@
 import pandas as pd
 from numpy import random
 
-from csv_detective.detect_fields.FR.other import (
-    code_csp_insee,
-    csp_insee,
-    sexe,
-    siren,
-    tel_fr,
-    code_rna,
-    code_waldec,
-)
-from csv_detective.detect_fields.other import email, url, uuid, mongo_object_id, json
-
 from csv_detective.detect_fields.FR.geo import (
     adresse,
     code_commune_insee,
+    code_departement,
+    code_postal,
     commune,
     departement,
     pays,
     region,
 )
+from csv_detective.detect_fields.FR.other import (
+    code_csp_insee,
+    code_rna,
+    code_waldec,
+    csp_insee,
+    sexe,
+    siren,
+    tel_fr,
+)
+from csv_detective.detect_fields.FR.temp import jour_de_la_semaine
 from csv_detective.detect_fields.geo import (
     iso_country_code_alpha2,
     iso_country_code_alpha3,
     iso_country_code_numeric,
 )
-
-from csv_detective.detect_fields.FR.temp import jour_de_la_semaine
-from csv_detective.detect_fields.temp import year, date, datetime_iso, datetime_rfc822
-
+from csv_detective.detect_fields.other import email, json, mongo_object_id, url, uuid
+from csv_detective.detect_fields.temp import date, datetime_iso, datetime_rfc822, year
 from csv_detective.detection import (
-    detetect_categorical_variable,
     detect_continuous_variable,
+    detetect_categorical_variable,
 )
 
 
@@ -175,6 +174,29 @@ def test_do_not_match_code_commune_insee():
     assert not code_commune_insee._is(val)
 
 
+# code_postal
+def test_match_code_postal():
+    val = "75020"
+    assert code_postal._is(val)
+
+
+def test_do_not_match_code_postal():
+    val = "77777"
+    assert not code_postal._is(val)
+
+
+# code_departement
+def test_match_code_departement():
+    vals = ["75", "2A", "2a", "974"]
+    for val in vals:
+        assert code_departement._is(val)
+
+
+def test_do_not_match_code_departement():
+    val = "00"
+    assert not code_departement._is(val)
+
+
 # commune
 def test_match_commune():
     val = "saint denis"
@@ -279,26 +301,26 @@ def test_do_not_match_year():
 def test_match_date():
     val = "1960-08-07"
     assert date._is(val)
-    val = '12/02/2007'
+    val = "12/02/2007"
     assert date._is(val)
-    val = '15 jan 1985'
+    val = "15 jan 1985"
     assert date._is(val)
-    val = '15 décembre 1985'
+    val = "15 décembre 1985"
     assert date._is(val)
-    val = '02052003'
+    val = "02052003"
     assert date._is(val)
-    val = '1993-12/02'
+    val = "1993-12/02"
     assert date._is(val)
 
 
 def test_do_not_match_date():
     val = "1993-1993-1993"
     assert not date._is(val)
-    val = '39-10-1993'
+    val = "39-10-1993"
     assert not date._is(val)
-    val = '19-15-1993'
+    val = "19-15-1993"
     assert not date._is(val)
-    val = '15 tambour 1985'
+    val = "15 tambour 1985"
     assert not date._is(val)
 
 
