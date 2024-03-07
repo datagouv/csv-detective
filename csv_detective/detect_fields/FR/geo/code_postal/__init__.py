@@ -1,5 +1,5 @@
-from frformat import PostalCode
+from frformat import CodePostal
 
 PROPORTION = 0.9
 
-_is = PostalCode.is_valid
+_is = CodePostal.is_valid

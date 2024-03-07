@@ -1,5 +1,5 @@
-from frformat import InseeCityCode
+from frformat import CodeCommuneInsee
 
 PROPORTION = 0.75
 
-_is = InseeCityCode.is_valid
+_is = CodeCommuneInsee.is_valid
