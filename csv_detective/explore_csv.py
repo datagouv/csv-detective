@@ -122,10 +122,7 @@ def routine(
     if verbose:
         start_routine = time()
         if is_url(csv_file_path):
-            display_logs_depending_process_time(
-                "Path recognized as a URL",
-                0
-            )
+            logging.info("Path recognized as a URL")
 
     file_name = csv_file_path.split('/')[-1]
     engine = None
@@ -137,8 +134,7 @@ def routine(
     if engine or any([csv_file_path.endswith(k) for k in XLS_LIKE_EXT]):
         is_xls_like = True
         encoding, sep, heading_columns, trailing_columns = None, None, None, None
-        header_row_idx = 0
-        table, total_lines, nb_duplicates, sheet_name, engine = parse_excel(
+        table, total_lines, nb_duplicates, sheet_name, engine, header_row_idx = parse_excel(
             csv_file_path=csv_file_path,
             num_rows=num_rows,
             engine=engine,
@@ -193,7 +189,7 @@ def routine(
     else:
         return_dict["encoding"] = encoding
         return_dict["separator"] = sep
-        return_dict["header_row_idx"] = header_row_idx
+    return_dict["header_row_idx"] = header_row_idx
     return_dict["header"] = header
     return_dict["total_lines"] = total_lines
     return_dict["nb_duplicates"] = nb_duplicates
