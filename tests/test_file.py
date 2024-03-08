@@ -138,14 +138,16 @@ def test_non_csv_files():
         save_results=False,
     )
     assert _['engine'] == 'odf'
+
+    # this is a "tricked" xls file that is actually read as odf
     _ = explore_csv.routine(
         csv_file_path="tests/file.xls",
         num_rows=-1,
         output_profile=False,
         save_results=False,
     )
-    # this is a "tricked" xls file that is actually read as odf
     assert _['engine'] == 'odf'
+
     _ = explore_csv.routine(
         csv_file_path="tests/file.xlsx",
         num_rows=-1,
@@ -153,8 +155,11 @@ def test_non_csv_files():
         save_results=False,
     )
     assert _['engine'] == 'openpyxl'
+    # this file has an empty first row
+    assert _['header_row_idx'] == 1
     # check if the sheet we consider is the largest
     assert _['sheet_name'] == 'REI_1987'
+
     _ = explore_csv.routine(
         csv_file_path="tests/csv_file",
         num_rows=-1,
@@ -163,6 +168,7 @@ def test_non_csv_files():
     )
     assert not _.get('engine')
     assert not _.get('sheet_name')
+
     _ = explore_csv.routine(
         csv_file_path="tests/xlsx_file",
         num_rows=-1,

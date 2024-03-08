@@ -127,6 +127,8 @@ def detect_engine(csv_file_path, verbose=False):
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'openpyxl',
         'application/vnd.ms-excel': 'xlrd',
         'application/vnd.oasis.opendocument.spreadsheet': 'odf',
+        # xls(x) files could also be recognized as zip, may need to check all cases then
+        'application/zip': 'odf',
     }
     # if none of the above, we move forwards with the csv process
     engine = mapping.get(magic.from_file(csv_file_path, mime=True))
@@ -241,6 +243,20 @@ def parse_table(the_file, encoding, sep, num_rows, skiprows, random_state=42, ve
     return table, total_lines, nb_duplicates
 
 
+def remove_empty_first_rows(table):
+    """Analog process to detect_headers for csv files, determines how many rows to skip
+    to end up with the header at the right place"""
+    idx = 0
+    if all([c.startswith('Unnamed:') for c in table.columns]):
+        while table.iloc[idx].isna().all():
+            idx += 1
+        cols = table.iloc[idx]
+        table = table.iloc[idx+1:]
+        table.columns = cols.to_list()
+    # +1 here because the columns should count as a row
+    return table, idx + 1
+
+
 def parse_excel(
     csv_file_path,
     num_rows =- 1,
@@ -302,7 +318,8 @@ def parse_excel(
                 engine = "odf"
 
     if engine == "odf" or any([csv_file_path.endswith(k) for k in OPEN_OFFICE_EXT]):
-        # for ODS files, no way to get sheets' sizes without loading the file
+        # for ODS files, no way to get sheets' sizes without
+        # loading the file one way or another (pandas or pure odfpy)
         # so all in one
         engine = "odf"
         if sheet_name is None:
@@ -317,7 +334,7 @@ def parse_excel(
                 sheet_name=None,
                 dtype="unicode"
             )
-            sizes = {sheet_name: len(table) for sheet_name, table in tables.items()}
+            sizes = {sheet_name: table.size for sheet_name, table in tables.items()}
             sheet_name = max(sizes, key=sizes.get)
             if verbose:
                 display_logs_depending_process_time(
@@ -337,6 +354,7 @@ def parse_excel(
                 sheet_name=sheet_name,
                 dtype="unicode"
             )
+        table, header_row_idx = remove_empty_first_rows(table)
         total_lines = len(table)
         nb_duplicates = len(table.loc[table.duplicated()])
         if num_rows > 0:
@@ -347,7 +365,7 @@ def parse_excel(
                 f'Table parsed successfully in {round(time() - start, 3)}s',
                 time() - start
             )
-        return table, total_lines, nb_duplicates, sheet_name, engine
+        return table, total_lines, nb_duplicates, sheet_name, engine, header_row_idx
 
     # so here we end up with (old and new) excel files only
     if verbose:
@@ -367,6 +385,7 @@ def parse_excel(
         sheet_name=sheet_name,
         dtype="unicode"
     )
+    table, header_row_idx = remove_empty_first_rows(table)
     total_lines = len(table)
     nb_duplicates = len(table.loc[table.duplicated()])
     if num_rows > 0:
@@ -377,7 +396,7 @@ def parse_excel(
             f'Table parsed successfully in {round(time() - start, 3)}s',
             time() - start
         )
-    return table, total_lines, nb_duplicates, sheet_name, engine
+    return table, total_lines, nb_duplicates, sheet_name, engine, header_row_idx
 
 
 def prevent_nan(value):
