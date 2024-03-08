@@ -244,14 +244,17 @@ def parse_table(the_file, encoding, sep, num_rows, skiprows, random_state=42, ve
 
 
 def remove_empty_first_rows(table):
+    """Analog process to detect_headers for csv files, determines how many rows to skip
+    to end up with the header at the right place"""
+    idx = 0
     if all([c.startswith('Unnamed:') for c in table.columns]):
-        idx = 0
         while table.iloc[idx].isna().all():
             idx += 1
         cols = table.iloc[idx]
         table = table.iloc[idx+1:]
         table.columns = cols.to_list()
-    return table, idx
+    # +1 here because the columns should count as a row
+    return table, idx + 1
 
 
 def parse_excel(
