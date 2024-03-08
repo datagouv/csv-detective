@@ -248,13 +248,16 @@ def remove_empty_first_rows(table):
     to end up with the header at the right place"""
     idx = 0
     if all([c.startswith('Unnamed:') for c in table.columns]):
-        while table.iloc[idx].isna().all():
+        # there is on offset between the index in the file (idx here)
+        # and the index in the dataframe, because of the header
+        idx = 1
+        while table.iloc[idx - 1].isna().all():
             idx += 1
-        cols = table.iloc[idx]
-        table = table.iloc[idx+1:]
+        cols = table.iloc[idx - 1]
+        table = table.iloc[idx:]
         table.columns = cols.to_list()
     # +1 here because the columns should count as a row
-    return table, idx + 1
+    return table, idx
 
 
 def parse_excel(
