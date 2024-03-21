@@ -1,6 +1,6 @@
 # Changelog
 
-## Current (in progress)
+## 0.7.0 (2024-03-21)
 
 - Handle other file formats: xls, xlsx, ods (and more)
 - Handle analysis through URLs
