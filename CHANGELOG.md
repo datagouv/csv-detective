@@ -1,5 +1,9 @@
 # Changelog
 
+## Current (in progress)
+
+- Nothing yet
+
 ## 0.7.0 (2024-03-21)
 
 - Handle other file formats: xls, xlsx, ods (and more)
