@@ -127,11 +127,15 @@ def detect_engine(csv_file_path, verbose=False):
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'openpyxl',
         'application/vnd.ms-excel': 'xlrd',
         'application/vnd.oasis.opendocument.spreadsheet': 'odf',
-        # xls(x) files could also be recognized as zip, may need to check all cases then
-        'application/zip': 'odf',
+        # all these files could be recognized as zip, may need to check all cases then
+        'application/zip': 'openpyxl',
     }
     # if none of the above, we move forwards with the csv process
-    engine = mapping.get(magic.from_file(csv_file_path, mime=True))
+    if is_url(csv_file_path):
+        remote_content = requests.get(csv_file_path).content
+        engine = mapping.get(magic.from_buffer(remote_content, mime=True))
+    else:
+        engine = mapping.get(magic.from_file(csv_file_path, mime=True))
     if verbose:
         display_logs_depending_process_time(
             f'File has no extension, detected {engine_to_file.get(engine, "csv")}',

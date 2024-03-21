@@ -146,7 +146,7 @@ def routine(
         if encoding is None:
             encoding = detect_encoding(csv_file_path, verbose=verbose)
         if is_url(csv_file_path):
-            r = requests.get(csv_file_path)
+            r = requests.get(csv_file_path, allow_redirects=True)
             r.raise_for_status()
             str_file = StringIO(r.content.decode(encoding=encoding))
         else:
