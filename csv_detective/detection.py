@@ -251,7 +251,7 @@ def remove_empty_first_rows(table):
     """Analog process to detect_headers for csv files, determines how many rows to skip
     to end up with the header at the right place"""
     idx = 0
-    if all([c.startswith('Unnamed:') for c in table.columns]):
+    if all([str(c).startswith('Unnamed:') for c in table.columns]):
         # there is on offset between the index in the file (idx here)
         # and the index in the dataframe, because of the header
         idx = 1
