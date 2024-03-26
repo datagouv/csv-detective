@@ -2,7 +2,7 @@
 
 ## Current (in progress)
 
-- Nothing yet
+- Fixes after production release in hydra
 
 ## 0.7.0 (2024-03-21)
 
