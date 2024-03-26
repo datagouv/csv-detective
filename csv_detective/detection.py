@@ -307,7 +307,14 @@ def parse_excel(
                             remote_content = BytesIO(f.read())
                     # faster than loading all sheets
                     wb = openpyxl.load_workbook(remote_content or csv_file_path, read_only=True)
-                    sizes = {s.title: s.max_row * s.max_column for s in wb.worksheets}
+                    try:
+                        sizes = {s.title: s.max_row * s.max_column for s in wb.worksheets}
+                    except TypeError:
+                        # sometimes read_only can't get the info, so we have to open the file for real
+                        # this takes more time but it's for a limited number of files
+                        # and it's this or nothing
+                        wb = openpyxl.load_workbook(remote_content or csv_file_path)
+                        sizes = {s.title: s.max_row * s.max_column for s in wb.worksheets}
                 else:
                     if remote_content:
                         wb = xlrd.open_workbook(file_contents=remote_content.read())
