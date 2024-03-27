@@ -1,6 +1,6 @@
 # Changelog
 
-## Current (in progress)
+## 0.7.1 (2024-03-27)
 
 - Fixes after production release in hydra
 
