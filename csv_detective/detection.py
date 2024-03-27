@@ -251,7 +251,7 @@ def remove_empty_first_rows(table):
     """Analog process to detect_headers for csv files, determines how many rows to skip
     to end up with the header at the right place"""
     idx = 0
-    if all([c.startswith('Unnamed:') for c in table.columns]):
+    if all([str(c).startswith('Unnamed:') for c in table.columns]):
         # there is on offset between the index in the file (idx here)
         # and the index in the dataframe, because of the header
         idx = 1
@@ -307,7 +307,14 @@ def parse_excel(
                             remote_content = BytesIO(f.read())
                     # faster than loading all sheets
                     wb = openpyxl.load_workbook(remote_content or csv_file_path, read_only=True)
-                    sizes = {s.title: s.max_row * s.max_column for s in wb.worksheets}
+                    try:
+                        sizes = {s.title: s.max_row * s.max_column for s in wb.worksheets}
+                    except TypeError:
+                        # sometimes read_only can't get the info, so we have to open the file for real
+                        # this takes more time but it's for a limited number of files
+                        # and it's this or nothing
+                        wb = openpyxl.load_workbook(remote_content or csv_file_path)
+                        sizes = {s.title: s.max_row * s.max_column for s in wb.worksheets}
                 else:
                     if remote_content:
                         wb = xlrd.open_workbook(file_contents=remote_content.read())
