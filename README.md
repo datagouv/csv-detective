@@ -1,6 +1,10 @@
 # CSV Detective
 
-This is a package to **automatically detect column content in CSV files**. As of now, the script reads the first few rows of the CSV and performs various checks to see for each column if it matches with various content types. This is currently done through regex and string comparison.
+This is a package to **automatically detect column content in tabular files**. The script reads either the whole file or the first few rows and performs various checks to see for each column if it matches with various content types. This is currently done through regex and string comparison.
+
+Currently supported file types: csv, xls, xlsx, ods.
+
+You can also directly feed the URL of a remote file (from data.gouv.fr for instance).
 
 ## How To ?
 
@@ -14,7 +18,7 @@ pip install csv-detective
 
 ### Detect some columns
 
-Say you have a CSV file located in `file_path`. This is how you could use `csv_detective`:
+Say you have a tabular file located at `file_path`. This is how you could use `csv_detective`:
 
 ```
 # Import the csv_detective package
@@ -27,19 +31,12 @@ file_path = os.path.join('.', 'tests', 'code_postaux_v201410.csv')
 
 # Open your file and run csv_detective
 inspection_results = routine(
-  file_path,
+  file_path, # or file URL
   num_rows=-1, # Value -1 will analyze all lines of your csv, you can change with the number of lines you wish to analyze
-  output_mode="LIMITED", # By default value is LIMITED, if you want result of analysis of all detections made, you can apply an output_mode="ALL"
-  save_results=False, # Default False. If True, it will save result output into the same directory than the csv analyzed
+  save_results=False, # Default False. If True, it will save result output into the same directory as the csv analyzed, using the same name as your file and .json extension
   output_profile=True, # Default False. If True, returned dict will contain a property "profile" indicating profile (min, max, mean, tops...) of every column of you csv
   output_schema=True, # Default False. If True, returned dict will contain a property "schema" containing basic [tableschema](https://specs.frictionlessdata.io/table-schema/) of your file. This can be use to validate structure of other csv which should match same structure. 
 )
-
-
-# Write your file as json
-with open(file_path.replace('.csv', '.json'), 'w', encoding='utf8') as fp:
-    json.dump(inspection_results, fp, indent=4, separators=(',', ': '))
-
 ```
 
 ## So What Do You Get ?
@@ -50,13 +47,15 @@ The program creates a `Python` dictionnary with the following information :
 
 ```
 {
-    "heading_columns": 0, 					# Number of heading columns
     "encoding": "windows-1252", 			        # Encoding detected
-    "ints_as_floats": [],					# Columns where integers may be represented as floats
-    "trailing_columns": 0,					# Number of trailing columns
-    "headers": ['code commune INSEE', 'nom de la commune', 'code postal', "libell\\u00e9 d'acheminement\n"], # Header row
     "separator": ";",						# Detected CSV separator
-    "headers_row": 0,						# Number of heading rows
+    "header_row_idx": 0					# Index of the header (aka how many lines to skip to get it)
+    "headers": ['code commune INSEE', 'nom de la commune', 'code postal', "libell\\u00e9 d'acheminement\n"], # Header row
+    "total_lines": 42,					# Number of rows (excluding header)
+    "nb_duplicates": 0,					# Number of exact duplicates in rows
+    "heading_columns": 0,					# Number of heading columns
+    "trailing_columns": 0,					# Number of trailing columns
+    "categorical": ['Code commune']         # Columns that contain less than 25 different values (arbitrary threshold)
     "columns": { # Property that conciliate detection from labels and content of a column
         "Code commune": {
             "python_type": "string",
@@ -100,7 +99,7 @@ The program creates a `Python` dictionnary with the following information :
       "description": "",
       "countryCode": "FR",
       "homepage": "",
-      "path": "https://github.com/etalab/csv-detective",
+      "path": "https://github.com/datagouv/csv-detective",
       "resources": [],
       "sources": [
         {"title": "Spécification Tableschema", "path": "https://specs.frictionlessdata.io/table-schema"},
@@ -128,6 +127,10 @@ The program creates a `Python` dictionnary with the following information :
     }
 }
 ```
+
+The output slightly differs depending on the file format:
+- csv files have `encoding` and `separator`
+- xls, xls, ods files have `engine` and `sheet_name`
 
 ### What Formats Can Be Detected
 
@@ -157,16 +160,12 @@ This option allows you to select the output mode you want to pass. To do so, you
 Only the format with highest score is present in the output.
 - `output_mode='ALL'` which means report will contain a full list of all column format possibilities for each input data columns with a value associated which match to the proportion of found column type in data. With this report, user can adjust its rules of detection based on a specific threshold and has a better vision of quality detection for each columns. Results could also be easily transformed into dataframe (columns types in column / column names in rows) for analysis and test.
 
-## TODO (this list is too long)
+## Improvement suggestions
 
-- Clean up
-- Make more robust
-- Batch analyse
-- Command line interface
-- Improve output format
+- Smarter refactors
+- Improve performances
 - Improve testing structure to make modular searches (search only for cities for example)
-- Get rid of `pandas` dependency
-- Improve pre-processing and pre-processing tracing (removing heading rows for example)
+- Test other ways to load and process data (`pandas` alternatives)
 - Make differentiated pre-processing (no lower case for country codes for example)
 - Give a sense of probability in the prediction
 - Add more and more detection modules...
@@ -179,9 +178,11 @@ Related ideas:
 
 ## Why Could This Be of Any Use ?
 
-Organisations such as [data.gouv](http://data.gouv.fr) aggregate huge amounts of un-normalised data. Performing cross-examination across datasets can be difficult. This tool could help enrich the datasets metadata and facilitate linking them together.
+Organisations such as [data.gouv.fr](http://data.gouv.fr) aggregate huge amounts of un-normalised data. Performing cross-examination across datasets can be difficult. This tool could help enrich the datasets metadata and facilitate linking them together.
 
-[Here](https://github.com/Leobouloc/data.gouv-exploration) is project (just started) that has code to download all csv files from the data.gouv website and analyse them using csv_detective.
+[`udata-hydra`](https://github.com/etalab/udata-hydra) is a crawler that checks, analyzes (using `csv-detective`) and APIfies all tabular files from [data.gouv.fr](http://data.gouv.fr).
+
+An early version of this analysis of all resources on data.gouv.fr can be found [here](https://github.com/Leobouloc/data.gouv-exploration).
 
 ## Release
 
