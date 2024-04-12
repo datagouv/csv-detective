@@ -12,7 +12,7 @@ def create_example_csv_file(
     fields: Union[dict, None] = None,
     from_schema: bool = False,
     schema_path: Union[str, None] = None,
-    file_length: int = 50,
+    file_length: int = 10,
     output_file: bool = True,
     output_name: str = 'example_file.csv',
     output_sep: str = ';',
@@ -28,32 +28,44 @@ def create_example_csv_file(
         },
         ...
     ]
-    Or from a data schema (JsonSchema or TableSchema)
+    Or from a TableSchema
     '''
 
     assert isinstance(fields, list) or (from_schema and isinstance(schema_path, str))
 
     basic_year_range = [1900, 2100]
 
-    def make_random_string(length=10, pattern=None, from_list=None, seed=None):
+    def potential_skip(required):
+        if not required:
+            return random.randint(0, 100) > 30
+
+    def make_random_string(length=10, required=True, pattern=None, enum=None, seed=None):
+        if potential_skip(required):
+            return ''
         random.seed(seed)
         if pattern is not None:
             return rstr.xeger(pattern)
-        elif from_list is not None:
-            return random.choice(from_list)
+        elif enum is not None:
+            return random.choice(enum)
         else:
             letters = string.ascii_lowercase
             return ''.join(random.choice(letters) for i in range(length))
 
-    def make_random_id(seed=None):
+    def make_random_id(required=True, seed=None):
+        if potential_skip(required):
+            return ''
         random.seed(seed)
         return uuid.uuid4()
 
     def make_random_date(
         date_range: Union[None, List[str]] = None,
         date_format='YYYY-MM-DD',
+        required=True,
         seed=None
     ):
+        if potential_skip(required):
+            return ''
+        # these need to change
         date_format = date_format.upper()
         assert all([k in date_format for k in ['DD', 'MM', 'YYYY']])
         random.seed(seed)
@@ -90,8 +102,11 @@ def create_example_csv_file(
     def make_random_time(
         time_range: Union[None, List[str]] = None,
         time_format='HH-MM-SS',
+        required=True,
         seed=None
     ):
+        if potential_skip(required):
+            return ''
         time_format = time_format.upper()
         assert all([k in time_format for k in ['HH', 'MM', 'SS']])
         random.seed(seed)
@@ -130,24 +145,35 @@ def create_example_csv_file(
         date_range: Union[None, List[str]] = None,
         time_format='HH-MM-SS',
         date_format='DD-MM-YYYY',
+        required=True,
         seed=None
     ):
+        if potential_skip(required):
+            return ''
         random.seed(seed)
         return make_random_date(date_range=date_range, date_format=date_format, seed=seed) \
             + make_random_time(time_range=time_range, time_format=time_format, seed=seed) \
             + 'Z'
 
-    def make_random_url(length=10, seed=None):
+    def make_random_url(length=10, required=True, seed=None):
+        if potential_skip(required):
+            return ''
         random.seed(seed)
         return 'http://'+make_random_string(length=length, seed=seed) + '.' + random.choice(['example'])
 
     def make_random_number(
         num_type: Union[int, float] = int,
         num_range: Union[None, List[float]] = None,
+        enum: Union[None, list] = None,
+        required=True,
         seed=None
     ):
+        if potential_skip(required):
+            return ''
         assert num_range is None or len(num_range) == 2
         random.seed(seed)
+        if enum:
+            return random.choice(enum)
         if num_range is None:
             num_range = [0, 1000]
         if num_type == int:
@@ -155,31 +181,37 @@ def create_example_csv_file(
         else:
             return round(random.uniform(num_range[0], num_range[1]), 1)
 
-    def make_random_bool(seed=None):
+    def make_random_bool(required=True, seed=None):
+        if potential_skip(required):
+            return ''
         random.seed(seed)
         return random.randint(0, 1) == 0
 
-    def make_random_array(from_list: List[str], seed=None):
+    def make_random_array(enum: List[str], required=True, seed=None):
+        if potential_skip(required):
+            return ''
         random.seed(seed)
-        return ','.join(random.sample(from_list, random.randint(1, len(from_list))))
+        return f"[{','.join(random.sample(enum, random.randint(1, len(enum))))}]"
 
     def build_args_from_constraints(constraints: dict) -> dict:
+        args = {}
+        args['required'] = constraints.get('required', False)
         if 'pattern' in constraints.keys():
-            return {'pattern': constraints['pattern']}
+            args['pattern'] = constraints['pattern']
         if 'enum' in constraints.keys():
-            return {'from_list': constraints['enum']}
+            args['enum'] = constraints['enum']
         if 'minimum' in constraints.keys() and 'maximum' in constraints.keys():
-            return {'num_range': [constraints['minimum'], constraints['maximum']]}
+            args['num_range'] = [constraints['minimum'], constraints['maximum']]
         # changer pour de meilleures valeurs ?
         elif 'minimum' in constraints.keys():
-            return {'num_range': [constraints['minimum'], 10*constraints['minimum']]}
+            args['num_range'] = [constraints['minimum'], 10 + constraints['minimum']]
         elif 'maximum' in constraints.keys():
-            return {'num_range': [0, constraints['maximum']]}
+            args['num_range'] = [constraints['maximum'] - 10, constraints['maximum']]
         if 'minLength' in constraints.keys():
-            return {'length': constraints['minLength']}
+            args['length'] = constraints['minLength']
         if 'maxLength' in constraints.keys():
-            return {'length': constraints['maxLength']}
-        return {}
+            args['length'] = constraints['maxLength']
+        return args
 
     schema_types_to_python = {
         'number': 'float',
@@ -208,9 +240,12 @@ def create_example_csv_file(
                     'name': f['name'],
                     'type': schema_types_to_python.get(f['type'], 'str'),
                     # build args from format(FR) too
-                    'args': build_args_from_constraints(f['constraints']) if 'constraints' in f.keys()
-                            else build_args_from_constraints(f['arrayItem']['constraints']) if 'arrayItem' in f.keys() and 'constraints' in f['arrayItem'].keys()
-                            else {}
+                    'args': (
+                        build_args_from_constraints(f['constraints']) if 'constraints' in f.keys()
+                        else build_args_from_constraints(f['arrayItem']['constraints'])
+                        if 'arrayItem' in f.keys() and 'constraints' in f['arrayItem'].keys()
+                        else {}
+                    )
                 } for f in schema['fields']
             ]
 
