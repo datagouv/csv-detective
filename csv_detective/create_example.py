@@ -16,7 +16,8 @@ def create_example_csv_file(
     output_file: bool = True,
     output_name: str = 'example_file.csv',
     output_sep: str = ';',
-    encoding: str = 'utf-8'
+    encoding: str = 'utf-8',
+    ignore_required: bool = False,
 ) -> pd.DataFrame:
     '''
     Create an example file based on a list of dicts like follows:
@@ -30,12 +31,15 @@ def create_example_csv_file(
     ]
     Or from a TableSchema
     '''
+    # need to make a CLI command
 
     assert isinstance(fields, list) or (from_schema and isinstance(schema_path, str))
 
     basic_year_range = [1900, 2100]
 
     def potential_skip(required):
+        if ignore_required:
+            return False
         if not required:
             return random.randint(0, 100) > 30
 
