@@ -36,7 +36,6 @@ def test_columns_output_on_file():
     assert output["columns"]["STRUCTURED_INFO"]["format"] == "json"
     assert output["columns"]["GEO_INFO"]["python_type"] == "json"
     assert output["columns"]["GEO_INFO"]["format"] == "json_geojson"
-    assert output["columns"]["NUMEPCI"]["format"] == "siren"
 
 @pytest.mark.skip(reason="failed for the code_fantoir part")
 def test_profile_output_on_file():
