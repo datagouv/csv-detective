@@ -10,6 +10,7 @@ from csv_detective.detect_fields.FR.geo import (
     code_region,
     commune,
     departement,
+    insee_canton,
     pays,
     region,
 )
@@ -240,6 +241,15 @@ def test_do_not_match_departement():
     val = "new york"
     assert not departement._is(val)
 
+# insee_canton
+def test_match_canton():
+    val = "nantua"
+    assert insee_canton._is(val)
+
+
+def test_do_not_match_canton():
+    val = "new york"
+    assert not departement._is(val)
 
 # pays
 def test_match_pays():
