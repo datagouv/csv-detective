@@ -1,6 +1,7 @@
 from csv_detective import explore_csv
 import pytest
 import responses
+#import json
 
 
 def test_columns_output_on_file():
@@ -45,6 +46,9 @@ def test_profile_output_on_file():
         output_profile=True,
         save_results=False,
     )
+    #print(json.dumps(output, indent=2))
+    
+    #this test failed (WIP)
     assert all(
         [
             c in list(output["profile"]["NUMCOM"].keys())

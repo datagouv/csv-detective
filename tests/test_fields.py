@@ -5,6 +5,7 @@ from csv_detective.detect_fields.FR.geo import (
     adresse,
     code_commune_insee,
     code_departement,
+    code_fantoir,
     code_postal,
     commune,
     departement,
@@ -195,6 +196,17 @@ def test_match_code_departement():
 def test_do_not_match_code_departement():
     val = "00"
     assert not code_departement._is(val)
+
+# code_fantoir
+def test_match_code_fantoir():
+    vals = ["7755", "B150", "ZA04","ZB03"]
+    for val in vals:
+        assert code_fantoir._is(val)
+
+
+def test_do_not_match_code_fantoir():
+    val = "ZA99"
+    assert not code_fantoir._is(val)
 
 
 # commune
