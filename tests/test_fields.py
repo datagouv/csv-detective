@@ -7,6 +7,7 @@ from csv_detective.detect_fields.FR.geo import (
     code_departement,
     code_fantoir,
     code_postal,
+    code_region,
     commune,
     departement,
     pays,
@@ -208,6 +209,15 @@ def test_do_not_match_code_fantoir():
     val = "ZA99"
     assert not code_fantoir._is(val)
 
+# code_region
+def test_match_code_region():
+    val= "32"
+    assert code_region._is(val)
+
+
+def test_do_not_match_code_region():
+    val = "55"
+    assert not code_region._is(val)
 
 # commune
 def test_match_commune():
