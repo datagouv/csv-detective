@@ -201,14 +201,15 @@ def test_do_not_match_code_departement():
 
 # code_fantoir
 def test_match_code_fantoir():
-    vals = ["7755", "B150", "ZA04","ZB03"]
+    vals = ["7755A", "B150B", "ZA04C","ZB03D"]
     for val in vals:
         assert code_fantoir._is(val)
 
 
 def test_do_not_match_code_fantoir():
-    val = "ZA99"
-    assert not code_fantoir._is(val)
+    vals = ["7755", "ZA99A"]
+    for val in vals:
+        assert not code_fantoir._is(val)
 
 # code_region
 def test_match_code_region():

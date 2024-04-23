@@ -2,4 +2,6 @@ from frformat import CodeFantoir
 
 PROPORTION = 1
 
-_is = CodeFantoir.is_valid
+def _is (val):
+    instance = CodeFantoir()
+    return instance.is_valid(val)

@@ -36,7 +36,7 @@ def test_columns_output_on_file():
     assert output["columns"]["GEO_INFO"]["python_type"] == "json"
     assert output["columns"]["GEO_INFO"]["format"] == "json_geojson"
 
-@pytest.mark.skip(reason="failed for the code_fantoir part")
+#@pytest.mark.skip(reason="failed for the code_fantoir part")
 def test_profile_output_on_file():
     output = explore_csv.routine(
         csv_file_path="tests/a_test_file.csv",
