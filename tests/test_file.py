@@ -1,6 +1,7 @@
-from csv_detective import explore_csv
 import pytest
 import responses
+
+from csv_detective import explore_csv
 
 
 def test_columns_output_on_file():
@@ -36,13 +37,14 @@ def test_columns_output_on_file():
     assert output["columns"]["GEO_INFO"]["python_type"] == "json"
     assert output["columns"]["GEO_INFO"]["format"] == "json_geojson"
 
+
 def test_profile_output_on_file():
     output = explore_csv.routine(
         csv_file_path="tests/a_test_file.csv",
         num_rows=-1,
         output_profile=True,
         save_results=False,
-    )        
+    )
     assert all(
         [
             c in list(output["profile"]["NUMCOM"].keys())
@@ -117,7 +119,9 @@ def test_schema_on_file():
             assert item["description"] == "Le code INSEE du département"
             assert item["type"] == "string"
             assert item["formatFR"] == "code_departement"
-            assert item["constraints"]["pattern"] == "^(([013-9]\\d|2[AB1-9])$|9\\d{2}$)"
+            assert (
+                item["constraints"]["pattern"] == "^(([013-9]\\d|2[AB1-9])$|9\\d{2}$)"
+            )
         if item["name"] == "code_region":
             is_column_reg = True
             assert item["description"] == "Le code INSEE de la région"
@@ -135,7 +139,7 @@ def test_non_csv_files():
         output_profile=False,
         save_results=False,
     )
-    assert _['engine'] == 'odf'
+    assert _["engine"] == "odf"
     _ = explore_csv.routine(
         csv_file_path="tests/file.xls",
         num_rows=-1,
@@ -143,31 +147,31 @@ def test_non_csv_files():
         save_results=False,
     )
     # this is a "tricked" xls file that is actually read as odf
-    assert _['engine'] == 'odf'
+    assert _["engine"] == "odf"
     _ = explore_csv.routine(
         csv_file_path="tests/file.xlsx",
         num_rows=-1,
         output_profile=False,
         save_results=False,
     )
-    assert _['engine'] == 'openpyxl'
+    assert _["engine"] == "openpyxl"
     # check if the sheet we consider is the largest
-    assert _['sheet_name'] == 'REI_1987'
+    assert _["sheet_name"] == "REI_1987"
     _ = explore_csv.routine(
         csv_file_path="tests/csv_file",
         num_rows=-1,
         output_profile=False,
         save_results=False,
     )
-    assert not _.get('engine')
-    assert not _.get('sheet_name')
+    assert not _.get("engine")
+    assert not _.get("sheet_name")
     _ = explore_csv.routine(
         csv_file_path="tests/xlsx_file",
         num_rows=-1,
         output_profile=False,
         save_results=False,
     )
-    assert _['engine'] == 'openpyxl'
+    assert _["engine"] == "openpyxl"
 
 
 @pytest.fixture
@@ -177,8 +181,8 @@ def mocked_responses():
 
 
 def test_urls(mocked_responses):
-    url = 'http://example.com/test.csv'
-    expected_content = 'id,name,first_name\n1,John,Smith\n2,Jane,Doe\n3,Bob,Johnson'
+    url = "http://example.com/test.csv"
+    expected_content = "id,name,first_name\n1,John,Smith\n2,Jane,Doe\n3,Bob,Johnson"
     mocked_responses.get(
         url,
         body=expected_content,
@@ -190,4 +194,4 @@ def test_urls(mocked_responses):
         output_profile=False,
         save_results=False,
     )
-    assert output['header'] == ["id", "name", "first_name"]
+    assert output["header"] == ["id", "name", "first_name"]
