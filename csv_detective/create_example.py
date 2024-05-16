@@ -35,7 +35,7 @@ def create_example_csv_file(
 
     assert isinstance(fields, list) or (from_schema and isinstance(schema_path, str))
 
-    basic_year_range = [1900, 2100]
+    basic_year_range = [1990, 2050]
 
     def potential_skip(required):
         if ignore_required:
@@ -159,11 +159,11 @@ def create_example_csv_file(
             + make_random_time(time_range=time_range, time_format=time_format, seed=seed) \
             + 'Z'
 
-    def make_random_url(length=10, required=True, seed=None):
+    def make_random_url(required=True, seed=None):
         if potential_skip(required):
             return ''
         random.seed(seed)
-        return 'http://'+make_random_string(length=length, seed=seed) + '.' + random.choice(['example'])
+        return f'http://{rstr.domainsafe()}.{rstr.letters(3)}/{rstr.urlsafe()}/?{rstr.urlsafe()}'
 
     def make_random_number(
         num_type: Union[int, float] = int,
@@ -198,6 +198,7 @@ def create_example_csv_file(
         return f"[{','.join(random.sample(enum, random.randint(1, len(enum))))}]"
 
     def build_args_from_constraints(constraints: dict) -> dict:
+        # need to handle formats
         args = {}
         args['required'] = constraints.get('required', False)
         if 'pattern' in constraints.keys():
