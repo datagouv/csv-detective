@@ -24,6 +24,8 @@ engine_to_file = {
     "xlrd": "old Excel",
     "odf": "OpenOffice"
 }
+tested_separators = [";", ",", "|", "\t"]
+sample_for_test = 10
 
 
 def is_url(csv_file_path):
@@ -144,40 +146,85 @@ def detect_engine(csv_file_path, verbose=False):
     return engine
 
 
-def detect_separator(file, verbose: bool = False):
-    """Detects csv separator"""
-    # TODO: add a robust detection:
-    # si on a un point virgule comme texte et \t comme séparateur, on renvoit
-    # pour l'instant un point virgule
-    if verbose:
+def detect_separator_and_header(
+    file,
+    sep=None,
+    verbose: bool = False,
+    possible_separators=tested_separators,
+    start=None,
+    _first_call=True,
+):
+    """Detects csv separator if not specified and header"""
+    sep_specified = sep is not None and _first_call
+    if verbose and (len(possible_separators) == len(tested_separators) or sep):
         start = time()
-        logging.info("Detecting separator")
-    file.seek(0)
-    header = file.readline()
-    possible_separators = [";", ",", "|", "\t"]
-    sep_count = dict()
-    for sep in possible_separators:
-        sep_count[sep] = header.count(sep)
-    sep = max(sep_count, key=sep_count.get)
-    # testing that the first 10 (arbitrary) rows all have the same number of fields
+        logging.info(f"Detecting {'separator and ' if not sep_specified else ''}header")
+    if not sep:
+        exception = Exception(
+            "Could not determine a suitable separator. "
+            f"Number of columns is not even across the first {sample_for_test} rows "
+            f"for all separators tested: {tested_separators}."
+        )
+        if not possible_separators:
+            raise exception
+        file.seek(0)
+        # it can be that the first row is not the header, so we consider
+        # the first sample_for_test rows to assess the separator
+        sample = ''.join([file.readline() for _ in range(sample_for_test)])
+        sep_count = {
+            sep: sample.count(sep) for sep in possible_separators
+        }
+        if max(sep_count.values()) == 0:
+            raise exception
+        sep = max(sep_count, key=sep_count.get)
+    # testing that the first sample_for_test (arbitrary) rows all have the same number of fields
     # as the header. Prevents downstream unwanted behaviour where pandas can load
     # the file (in a weird way) but the process is irrelevant.
     file.seek(0)
     reader = csv.reader(file, delimiter=sep)
-    rows_lengths = set()
+    rows_lengths = []
+    rows = []
     for idx, row in enumerate(reader):
-        if idx > 10:
+        if idx > sample_for_test:
             break
-        rows_lengths.add(len(row))
-    if len(rows_lengths) > 1:
-        raise ValueError('Number of columns is not even across the first 10 rows.')
-
-    if verbose:
-        display_logs_depending_process_time(
-            f'Detected separator: "{sep}" in {round(time() - start, 3)}s',
-            time() - start
+        rows_lengths.append(len(row))
+        rows.append(row)
+    # if at least the second half of the first sample_for_test rows have the same number of columns, we move on
+    if len(set(rows_lengths[len(rows_lengths)//2:])) > 1 or rows_lengths[-1] == 1:
+        if sep_specified:
+            # should not try another separator if specified
+            raise Exception(f"The specified separator '{sep}' did not prove successful.")
+        # else we try again with a different separator
+        return detect_separator_and_header(
+            file,
+            possible_separators=[s for s in possible_separators if s != sep],
+            verbose=verbose,
+            start=start,
+            _first_call=False,
         )
-    return sep
+    # get the index of first row that the right number of columns
+    header_row_idx = next(idx for idx, x in enumerate(rows_lengths) if x == rows_lengths[-1])
+    # get the first row that has the right number of columns and handle duplicated headers
+    for i in range(header_row_idx, sample_for_test-1):
+        if rows[i][-1] not in ["", "\n"] and all(
+            [mot not in ["", "\n"] for mot in rows[i][1:-1]]
+        ) and rows[i] != rows[i+1]:
+            # it appears we found a suitable separator, header and header_row_idx
+            if verbose:
+                display_logs_depending_process_time(
+                    f'Detected separator: "{sep}" and header in {round(time() - start, 3)}s',
+                    time() - start
+                )
+            return sep, rows[i], i
+    if sep_specified:
+        raise Exception(f"The specified separator '{sep}' did not prove successful.")
+    return detect_separator_and_header(
+        file,
+        possible_separators=[s for s in possible_separators if s != sep],
+        verbose=verbose,
+        start=start,
+        _first_call=False,
+    )
 
 
 def detect_encoding(csv_file_path, verbose: bool = False):
@@ -205,7 +252,6 @@ def detect_encoding(csv_file_path, verbose: bool = False):
 
 
 def parse_table(the_file, encoding, sep, num_rows, skiprows, random_state=42, verbose : bool = False):
-    # Takes care of some problems
     if verbose:
         start = time()
         logging.info("Parsing table")
@@ -516,41 +562,14 @@ def detect_extra_columns(file, sep):
     return nb_useless_col, retour
 
 
-def detect_headers(file, sep, verbose: bool = False):
-    """Tests 10 first rows for possible header (header not in 1st line)"""
-    if verbose:
-        start = time()
-        logging.info("Detecting headers")
-    file.seek(0)
-    for i in range(10):
-        header = file.readline()
-        position = file.tell()
-        chaine = [c for c in header.replace("\n", "").split(sep) if c]
-        if chaine[-1] not in ["", "\n"] and all(
-            [mot not in ["", "\n"] for mot in chaine[1:-1]]
-        ):
-            next_row = file.readline()
-            file.seek(position)
-            if header != next_row:
-                if verbose:
-                    display_logs_depending_process_time(
-                        f'Detected headers in {round(time() - start, 3)}s',
-                        time() - start
-                    )
-                return i, chaine
-    if verbose:
-        logging.info(f'No header detected')
-    return 0, None
-
-
 def detect_heading_columns(file, sep, verbose : bool = False):
-    """Tests first 10 lines to see if there are empty heading columns"""
+    """Tests first sample_for_test lines to see if there are empty heading columns"""
     if verbose:
         start = time()
         logging.info("Detecting heading columns")
     file.seek(0)
     return_int = float("Inf")
-    for i in range(10):
+    for i in range(sample_for_test):
         line = file.readline()
         return_int = min(return_int, len(line) - len(line.strip(sep)))
         if return_int == 0:
@@ -569,13 +588,13 @@ def detect_heading_columns(file, sep, verbose : bool = False):
 
 
 def detect_trailing_columns(file, sep, heading_columns, verbose : bool = False):
-    """Tests first 10 lines to see if there are empty trailing columns"""
+    """Tests first sample_for_test lines to see if there are empty trailing columns"""
     if verbose:
         start = time()
         logging.info("Detecting trailing columns")
     file.seek(0)
     return_int = float("Inf")
-    for i in range(10):
+    for i in range(sample_for_test):
         line = file.readline()
         return_int = min(
             return_int,

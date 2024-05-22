@@ -22,9 +22,8 @@ from csv_detective.schema_generation import generate_table_schema
 from csv_detective.utils import test_col, test_label, prepare_output_dict, display_logs_depending_process_time
 from .detection import (
     detect_engine,
-    detect_separator,
+    detect_separator_and_header,
     detect_encoding,
-    detect_headers,
     detect_heading_columns,
     detect_trailing_columns,
     parse_table,
@@ -152,15 +151,9 @@ def routine(
         else:
             str_file = open(csv_file_path, "r", encoding=encoding)
         if sep is None:
-            sep = detect_separator(str_file, verbose=verbose)
-        header_row_idx, header = detect_headers(str_file, sep, verbose=verbose)
-        if header is None:
-            return_dict = {"error": True}
-            return return_dict
-        elif isinstance(header, list):
-            if any([x is None for x in header]):
-                return_dict = {"error": True}
-                return return_dict
+            sep, header, header_row_idx = detect_separator_and_header(str_file, verbose=verbose)
+        else:
+            _, header, header_row_idx = detect_separator_and_header(str_file, sep=sep, verbose=verbose)
         heading_columns = detect_heading_columns(str_file, sep, verbose=verbose)
         trailing_columns = detect_trailing_columns(str_file, sep, heading_columns, verbose=verbose)
         table, total_lines, nb_duplicates = parse_table(

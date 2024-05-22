@@ -2,7 +2,7 @@
 
 ## Current (in progress)
 
-- Nothing yet
+- Better detection of separator, intricated with header detection
 
 ## 0.7.1 (2024-03-27)
 
