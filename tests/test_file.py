@@ -208,7 +208,6 @@ def test_doc_in_header_and_wrong_sep():
         explore_csv.routine(
             csv_file_path="tests/d_test_file.csv",
             sep=',',
-            output_profile=True,
             save_results=False,
         )
 
