@@ -70,6 +70,7 @@ def test_profile_output_on_file():
 
 
 def test_exception():
+    """Can't create profile if num_rows != -1"""
     with pytest.raises(Exception):
         explore_csv.routine(
             csv_file_path="tests/a_test_file.csv",
@@ -199,3 +200,21 @@ def test_urls(mocked_responses):
         save_results=False,
     )
     assert output['header'] == ["id", "name", "first_name"]
+
+
+def test_doc_in_header_and_wrong_sep():
+    """d_test_file.csv has two misplaced rows in the beginning and ";" as separator"""
+    with pytest.raises(Exception):
+        explore_csv.routine(
+            csv_file_path="tests/d_test_file.csv",
+            sep=',',
+            output_profile=True,
+            save_results=False,
+        )
+
+    _ = explore_csv.routine(
+        csv_file_path="tests/d_test_file.csv",
+        save_results=False,
+    )
+    assert _["separator"] == ";"
+    assert _["header_row_idx"] == 2
