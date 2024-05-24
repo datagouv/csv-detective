@@ -11,6 +11,7 @@ from csv_detective.detect_fields.FR.geo import (
     commune,
     departement,
     insee_canton,
+    latitude_l93,
     pays,
     region,
 )
@@ -199,9 +200,10 @@ def test_do_not_match_code_departement():
     val = "00"
     assert not code_departement._is(val)
 
+
 # code_fantoir
 def test_match_code_fantoir():
-    vals = ["7755A", "B150B", "ZA04C","ZB03D"]
+    vals = ["7755A", "B150B", "ZA04C", "ZB03D"]
     for val in vals:
         assert code_fantoir._is(val)
 
@@ -210,6 +212,7 @@ def test_do_not_match_code_fantoir():
     vals = ["7755", "ZA99A"]
     for val in vals:
         assert not code_fantoir._is(val)
+
 
 # code_region
 def test_match_code_region():
@@ -220,6 +223,7 @@ def test_match_code_region():
 def test_do_not_match_code_region():
     val = "55"
     assert not code_region._is(val)
+
 
 # commune
 def test_match_commune():
@@ -242,6 +246,7 @@ def test_do_not_match_departement():
     val = "new york"
     assert not departement._is(val)
 
+
 # insee_canton
 def test_match_canton():
     val = "nantua"
@@ -251,6 +256,20 @@ def test_match_canton():
 def test_do_not_match_canton():
     val = "new york"
     assert not departement._is(val)
+
+
+# latitude_l93
+def test_match_latitude_l93():
+    vals = [6037008, 7123528.5, "7124528,5"]
+    for val in vals:
+        assert latitude_l93._is(val)
+
+
+def test_do_not_match_latitude_93():
+    vals = [0, -6734529.6, 7245669.8, "3422674,78", "32_34"]
+    for val in vals:
+        assert not latitude_l93._is(val)
+
 
 # pays
 def test_match_pays():
