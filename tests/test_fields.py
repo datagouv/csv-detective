@@ -419,8 +419,9 @@ def test_match_rna():
 
 
 def test_do_not_match_rna():
-    val = "W111111111111111111111111111111111111"
-    assert not code_rna._is(val)
+    vals = ["W111111111111111111111111111111111111", "w143788974", "W12", "678W23456", "165789325", "Wa1#89sf&h"]
+    for val in vals:
+        assert not code_rna._is(val)
 
 
 def test_match_waldec():
