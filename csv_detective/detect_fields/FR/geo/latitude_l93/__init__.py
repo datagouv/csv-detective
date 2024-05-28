@@ -16,7 +16,5 @@ def _is(val):
 
         return False
 
-    except ValueError:
-        return False
-    except OverflowError:
+    except (ValueError, OverflowError):
         return False
