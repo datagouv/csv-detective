@@ -11,8 +11,7 @@ def _is(val):
         if type(val) is float or type(val) is int:
             return LatitudeL93.is_valid(val)
 
-        elif type(val) is str:
-            if is_float(val):
+        elif type(val) is str and is_float(val):
                 return LatitudeL93.is_valid(float_casting(val))
 
         return False
