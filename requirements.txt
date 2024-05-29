@@ -10,4 +10,4 @@ odfpy==1.4.1
 requests==2.31.0
 responses==0.25.0
 python-magic==0.4.27
-frformat==0.2.2
+frformat==0.3.0
