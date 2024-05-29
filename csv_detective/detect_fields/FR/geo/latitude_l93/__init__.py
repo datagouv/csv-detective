@@ -12,7 +12,7 @@ def _is(val):
             return LatitudeL93.is_valid(val)
 
         elif type(val) is str and is_float(val):
-                return LatitudeL93.is_valid(float_casting(val))
+            return LatitudeL93.is_valid(float_casting(val))
 
         return False
 
