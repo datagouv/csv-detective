@@ -8,10 +8,10 @@ PROPORTION = 0.9
 
 def _is(val):
     try:
-        if type(val) is float or type(val) is int:
+        if isinstance(val, (float, int)):
             return LongitudeL93.is_valid(val)
 
-        elif type(val) is str and is_float(val):
+        elif isinstance(val, str) and is_float(val):
             return LongitudeL93.is_valid(float_casting(val))
 
         return False
