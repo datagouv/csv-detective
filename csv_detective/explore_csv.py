@@ -9,25 +9,35 @@ import numpy as np
 import os
 import tempfile
 from pkg_resources import resource_string
+import logging
+from time import time
+import requests
+from io import StringIO
 
 # flake8: noqa
 from csv_detective import detect_fields
 from csv_detective import detect_labels
 from csv_detective.s3_utils import download_from_minio, upload_to_minio
 from csv_detective.schema_generation import generate_table_schema
-from csv_detective.utils import test_col, test_label, prepare_output_dict
+from csv_detective.utils import test_col, test_label, prepare_output_dict, display_logs_depending_process_time
 from .detection import (
+    detect_engine,
     detect_separator,
     detect_encoding,
     detect_headers,
     detect_heading_columns,
     detect_trailing_columns,
     parse_table,
+    parse_excel,
     create_profile,
     detetect_categorical_variable,
-    detect_continuous_variable,
+    # detect_continuous_variable,
+    is_url,
+    XLS_LIKE_EXT,
 )
 
+
+logging.basicConfig(level=logging.INFO)
 
 def return_all_tests(user_input_tests, detect_type="detect_fields"):
     """
@@ -84,6 +94,8 @@ def routine(
     sep: str = None,
     output_profile: bool = False,
     output_schema: bool = False,
+    verbose: bool = False,
+    sheet_name: Union[str, int] = None,
 ):
     """Returns a dict with information about the csv table and possible
     column contents.
@@ -96,21 +108,52 @@ def routine(
         output_mode: LIMITED or ALL, whether or not to return all possible types or only
         the most likely one for each column
         save_results: whether or not to save the results in a json file
+        output_profile: whether or not to add the 'profile' field to the output
+        output_schema: whether or not to add the 'schema' field to the output (tableschema)
+        verbose: whether or not to print process logs in console 
+        sheet_name: if reading multi-sheet file (xls-like), which sheet to consider
 
     Returns:
         dict: a dict with information about the csv and possible types for each column
     """
-    if csv_file_path is None:
+    if not csv_file_path:
         raise ValueError("csv_file_path is required.")
 
-    if encoding is None:
-        binary_file = open(csv_file_path, mode="rb")
-        encoding = detect_encoding(binary_file)["encoding"]
+    if verbose:
+        start_routine = time()
+        if is_url(csv_file_path):
+            logging.info("Path recognized as a URL")
 
-    with open(csv_file_path, "r", encoding=encoding) as str_file:
+    file_name = csv_file_path.split('/')[-1]
+    engine = None
+    if '.' not in file_name:
+        # file has no extension, we'll investigate how to read it
+        engine = detect_engine(csv_file_path, verbose=verbose)
+
+    is_xls_like = False
+    if engine or any([csv_file_path.endswith(k) for k in XLS_LIKE_EXT]):
+        is_xls_like = True
+        encoding, sep, heading_columns, trailing_columns = None, None, None, None
+        table, total_lines, nb_duplicates, sheet_name, engine, header_row_idx = parse_excel(
+            csv_file_path=csv_file_path,
+            num_rows=num_rows,
+            engine=engine,
+            sheet_name=sheet_name,
+            verbose=verbose,
+        )
+        header = table.columns.to_list()
+    else:
+        if encoding is None:
+            encoding = detect_encoding(csv_file_path, verbose=verbose)
+        if is_url(csv_file_path):
+            r = requests.get(csv_file_path, allow_redirects=True)
+            r.raise_for_status()
+            str_file = StringIO(r.content.decode(encoding=encoding))
+        else:
+            str_file = open(csv_file_path, "r", encoding=encoding)
         if sep is None:
-            sep = detect_separator(str_file)
-        header_row_idx, header = detect_headers(str_file, sep)
+            sep = detect_separator(str_file, verbose=verbose)
+        header_row_idx, header = detect_headers(str_file, sep, verbose=verbose)
         if header is None:
             return_dict = {"error": True}
             return return_dict
@@ -118,28 +161,34 @@ def routine(
             if any([x is None for x in header]):
                 return_dict = {"error": True}
                 return return_dict
-        heading_columns = detect_heading_columns(str_file, sep)
-        trailing_columns = detect_trailing_columns(str_file, sep, heading_columns)
+        heading_columns = detect_heading_columns(str_file, sep, verbose=verbose)
+        trailing_columns = detect_trailing_columns(str_file, sep, heading_columns, verbose=verbose)
         table, total_lines, nb_duplicates = parse_table(
-            str_file, encoding, sep, num_rows, header_row_idx
+            str_file, encoding, sep, num_rows, header_row_idx, verbose=verbose
         )
 
     if table.empty:
         res_categorical = []
-        res_continuous = []
+        # res_continuous = []
     else:
         # Detects columns that are categorical
-        res_categorical, categorical_mask = detetect_categorical_variable(table)
+        res_categorical, categorical_mask = detetect_categorical_variable(table, verbose=verbose)
         res_categorical = list(res_categorical)
-        # Detect columns that are continuous (we already know the categorical)
-        res_continuous = list(
-            detect_continuous_variable(table.iloc[:, ~categorical_mask.values])
-        )
+        # Detect columns that are continuous (we already know the categorical) : we don't need this for now, cuts processing time
+        # res_continuous = list(
+        #     detect_continuous_variable(table.iloc[:, ~categorical_mask.values], verbose=verbose)
+        # )
 
     # Creating return dictionary
     return_dict = dict()
-    return_dict["encoding"] = encoding
-    return_dict["separator"] = sep
+    # this is only relevant for xls-like
+    if engine:
+        return_dict["engine"] = engine
+        return_dict["sheet_name"] = sheet_name
+    # this is only relevant for csv
+    else:
+        return_dict["encoding"] = encoding
+        return_dict["separator"] = sep
     return_dict["header_row_idx"] = header_row_idx
     return_dict["header"] = header
     return_dict["total_lines"] = total_lines
@@ -148,7 +197,7 @@ def routine(
     return_dict["heading_columns"] = heading_columns
     return_dict["trailing_columns"] = trailing_columns
 
-    return_dict["continuous"] = res_continuous
+    # return_dict["continuous"] = res_continuous
     return_dict["categorical"] = res_categorical
 
     # list testing to be performed
@@ -164,12 +213,12 @@ def routine(
         return return_dict
 
     # Perform testing on fields
-    return_table_fields = test_col(table, all_tests_fields, num_rows, output_mode)
+    return_table_fields = test_col(table, all_tests_fields, output_mode, verbose=verbose)
     return_dict_cols_fields = prepare_output_dict(return_table_fields, output_mode)
     return_dict["columns_fields"] = return_dict_cols_fields
 
     # Perform testing on labels
-    return_table_labels = test_label(table, all_tests_labels, output_mode)
+    return_table_labels = test_label(table, all_tests_labels, output_mode, verbose=verbose)
     return_dict_cols_labels = prepare_output_dict(return_table_labels, output_mode)
     return_dict["columns_labels"] = return_dict_cols_labels
 
@@ -260,21 +309,35 @@ def routine(
 
     if output_profile:
         return_dict["profile"] = create_profile(
-            table, return_dict["columns"], sep, encoding, num_rows, header_row_idx
+            table, return_dict["columns"], 
+            sep, 
+            encoding, 
+            num_rows, 
+            header_row_idx, 
+            verbose=verbose
         )
 
     if save_results:
         # Write your file as json
-        output_path_to_store_minio_file = os.path.splitext(csv_file_path)[0] + ".json"
-        with open(output_path_to_store_minio_file, "w", encoding="utf8") as fp:
-            json.dump(return_dict, fp, indent=4, separators=(",", ": "))
+        output_path = os.path.splitext(csv_file_path)[0]
+        if '/' in output_path:
+            output_path = output_path.split('/')[-1]
+        if is_xls_like:
+            output_path += "_sheet-" + str(sheet_name)
+        with open(output_path + '.json', "w", encoding="utf8") as fp:
+            json.dump(return_dict, fp, indent=4, separators=(",", ": "), ensure_ascii=False)
 
     if output_schema and output_mode != "ALL":
         return_dict["schema"] = generate_table_schema(
             return_dict,
-            False,
+            save_file=False,
+            verbose=verbose
         )
-
+    if verbose:
+        display_logs_depending_process_time(
+            f'Routine completed in {round(time() - start_routine, 3)}s',
+            time() - start_routine
+        )
     return return_dict
 
 

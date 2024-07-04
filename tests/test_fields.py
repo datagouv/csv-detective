@@ -27,7 +27,7 @@ from csv_detective.detect_fields.geo import (
 )
 
 from csv_detective.detect_fields.FR.temp import jour_de_la_semaine
-from csv_detective.detect_fields.temp import year, date
+from csv_detective.detect_fields.temp import year, date, datetime_iso, datetime_rfc822
 
 from csv_detective.detection import (
     detetect_categorical_variable,
@@ -300,6 +300,17 @@ def test_do_not_match_date():
     assert not date._is(val)
     val = '15 tambour 1985'
     assert not date._is(val)
+
+
+# datetime
+def test_match_datetime():
+    val = "2021-06-22T10:20:10"
+    assert datetime_iso._is(val)
+    val = "2021-06-22T30:20:10"
+    assert not datetime_iso._is(val)
+
+    val = "Sun, 06 Nov 1994 08:49:37 GMT"
+    assert datetime_rfc822._is(val)
 
 
 # siren

@@ -1,5 +1,6 @@
 from csv_detective import explore_csv
 import pytest
+import responses
 
 
 def test_columns_output_on_file():
@@ -78,6 +79,19 @@ def test_exception():
         )
 
 
+def test_exception_different_number_of_columns():
+    """
+    A ValueError should be raised if the number of columns differs between the first rows
+    """
+    with pytest.raises(Exception):
+        explore_csv.routine(
+            csv_file_path="tests/c_test_file.csv",
+            num_rows=-1,
+            output_profile=True,
+            save_results=False,
+        )
+
+
 def test_code_dep_reg_on_file():
     output = explore_csv.routine(
         csv_file_path="tests/b_test_file.csv",
@@ -114,3 +128,74 @@ def test_schema_on_file():
             assert item["constraints"]["pattern"] == "^\\d{2}$"
     assert is_column_dep
     assert is_column_reg
+
+
+def test_non_csv_files():
+    _ = explore_csv.routine(
+        csv_file_path="tests/file.ods",
+        num_rows=-1,
+        output_profile=False,
+        save_results=False,
+    )
+    assert _['engine'] == 'odf'
+
+    # this is a "tricked" xls file that is actually read as odf
+    _ = explore_csv.routine(
+        csv_file_path="tests/file.xls",
+        num_rows=-1,
+        output_profile=False,
+        save_results=False,
+    )
+    assert _['engine'] == 'odf'
+
+    _ = explore_csv.routine(
+        csv_file_path="tests/file.xlsx",
+        num_rows=-1,
+        output_profile=False,
+        save_results=False,
+    )
+    assert _['engine'] == 'openpyxl'
+    # this file has an empty first row
+    assert _['header_row_idx'] == 1
+    # check if the sheet we consider is the largest
+    assert _['sheet_name'] == 'REI_1987'
+
+    _ = explore_csv.routine(
+        csv_file_path="tests/csv_file",
+        num_rows=-1,
+        output_profile=False,
+        save_results=False,
+    )
+    assert not _.get('engine')
+    assert not _.get('sheet_name')
+
+    _ = explore_csv.routine(
+        csv_file_path="tests/xlsx_file",
+        num_rows=-1,
+        output_profile=False,
+        save_results=False,
+    )
+    assert _['engine'] == 'openpyxl'
+
+
+@pytest.fixture
+def mocked_responses():
+    with responses.RequestsMock() as rsps:
+        yield rsps
+
+
+def test_urls(mocked_responses):
+    url = 'http://example.com/test.csv'
+    expected_content = 'id,name,first_name\n1,John,Smith\n2,Jane,Doe\n3,Bob,Johnson'
+    mocked_responses.get(
+        url,
+        body=expected_content,
+        status=200,
+    )
+    output = explore_csv.routine(
+        csv_file_path=url,
+        num_rows=-1,
+        output_profile=False,
+        save_results=False,
+    )
+    assert output['header'] == ["id", "name", "first_name"]

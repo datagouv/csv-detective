@@ -1,51 +1,77 @@
 import pandas as pd
+import logging
+from time import time
+
+logging.basicConfig(level=logging.INFO)
+
+
+def display_logs_depending_process_time(prompt: str, duration: float):
+    '''
+    Print colored logs according to the time the operation took.
+    '''
+    logging.addLevelName(logging.CRITICAL, "\033[1;41m%s\033[1;0m" % logging.getLevelName(logging.CRITICAL))
+    logging.addLevelName(logging.WARN, "\033[1;31m%s\033[1;0m" % logging.getLevelName(logging.WARN))
+
+    threshold_warn = 1
+    threshold_critical = 3
+
+    if duration < threshold_warn:
+        logging.info(prompt)
+    elif duration < threshold_critical:
+        logging.warn(prompt)
+    else:
+        logging.critical(prompt)
 
 
 def test_col_val(
-    serie, test_func, proportion=0.9, skipna=True, num_rows=-1, output_mode="ALL"
+    serie, test_func, proportion=0.9, skipna=True, output_mode="ALL", verbose=False
 ):
     """Tests values of the serie using test_func.
          - skipna : if True indicates that NaNs are not counted as False
          - proportion :  indicates the proportion of values that have to pass the test
-         - num_rows : number of rows to sample from the file for analysis ; -1 for analysis of the whole file
     for the serie to be detected as a certain format
     """
+    if verbose:
+        start = time()
 
     # TODO : change for a cleaner method and only test columns in modules labels
     def apply_test_func(serie, test_func, _range):
-        try:
-            return serie.sample(frac=1).iloc[_range].apply(test_func)
-        except AttributeError:  # .name n'est pas trouvé
-            return test_func(serie.iloc[_range])
-
-    serie = serie[serie.notnull()]
-    ser_len = len(serie)
-    if num_rows > 0:
-        ser_len = min(ser_len, num_rows)
-    _range = range(0, ser_len)
-    if ser_len == 0:
-        return 0.0
-    if output_mode == "ALL":
-        result = apply_test_func(serie, test_func, _range).sum() / ser_len
-        return result if result >= proportion else 0.0
-    else:
-        if proportion == 1:  # Then try first 1 value, then 5, then all
-            for _range in [
-                range(0, min(1, ser_len)),
-                range(min(1, ser_len), min(5, ser_len)),
-                range(min(5, ser_len), min(num_rows, ser_len))
-                if num_rows > 0
-                else range(min(5, ser_len), ser_len),
-            ]:  # Pour ne pas faire d'opérations inutiles, on commence par 1,
-                # puis 5 puis num_rows valeurs
-                if all(apply_test_func(serie, test_func, _range)):
-                    pass
-                else:
-                    return 0.0
-            return 1.0
-        else:
-            result = apply_test_func(serie, test_func, _range).sum() / ser_len
+        return serie.sample(n=_range).apply(test_func)
+    try:
+        if skipna:
+            serie = serie[serie.notnull()]
+        ser_len = len(serie)
+        if ser_len == 0:
+            return 0.0
+        if output_mode == "ALL":
+            result = apply_test_func(serie, test_func, ser_len).sum() / ser_len
             return result if result >= proportion else 0.0
+        else:
+            if proportion == 1:  # Then try first 1 value, then 5, then all
+                for _range in [
+                    min(1, ser_len),
+                    min(5, ser_len),
+                    ser_len,
+                ]:  # Pour ne pas faire d'opérations inutiles, on commence par 1,
+                    # puis 5 valeurs puis la serie complète
+                    if all(apply_test_func(serie, test_func, _range)):
+                        # print(serie.name, ': check OK')
+                        pass
+                    else:
+                        return 0.0
+                return 1.0
+            else:
+                # if we have a proportion, statistically it's OK to analyse up to 10k rows
+                # (arbitrary number) and get a significant result
+                to_analyse = min(ser_len, 10000)
+                result = apply_test_func(serie, test_func, to_analyse).sum() / to_analyse
+                return result if result >= proportion else 0.0
+    finally:
+        if verbose and time() - start > 3:
+            display_logs_depending_process_time(
+                f"\t/!\\ Column '{serie.name}' took too long ({round(time() - start, 3)}s)",
+                time() - start
+            )
 
 
 def test_col_label(label, test_func, proportion=1, output_mode="ALL"):
@@ -60,63 +86,68 @@ def test_col_label(label, test_func, proportion=1, output_mode="ALL"):
         return result if result >= proportion else 0
 
 
-def test_col(table, all_tests, num_rows, output_mode):
+def test_col(table, all_tests, output_mode, verbose: bool = False):
     # Initialising dict for tests
+    if verbose:
+        start = time()
+        logging.info("Testing columns to get types")
     test_funcs = dict()
     for test in all_tests:
         name = test.__name__.split(".")[-1]
         test_funcs[name] = {"func": test._is, "prop": test.PROPORTION}
     return_table = pd.DataFrame(columns=table.columns)
-    for key, value in test_funcs.items():
-        # When analysis of all file is requested (num_rows = -1) we fix a threshold of
-        # 1000 rows for every checks outside int or float format
-        if num_rows == -1:
-            local_num_rows = 1000
-        else:
-            local_num_rows = min(num_rows, 1000)
-        # For checks detecting int or float format, we analyze the whole file (because
-        # error can be generated afterward when exploiting this data into a database)
-        if key in [
-            "int",
-            "float",
-            "longitude",
-            "longitude_l93",
-            "longitude_wgs",
-            "longitude_wgs_fr_metropole",
-            "latitude",
-            "latitude_l93",
-            "latitude_wgs",
-            "latitude_wgs_fr_metropole",
-            "iso_country_code_numeric",
-        ]:
-            local_num_rows = max(-1, num_rows)
+    for idx, (key, value) in enumerate(test_funcs.items()):
+        if verbose:
+            start_type = time()
+            logging.info(f"\t- Starting with type '{key}'")
+        # improvement lead : put the longest tests behind and make them only if previous tests not satisfactory
+        # => the following needs to change, "apply" means all columns are tested for one type at once
         return_table.loc[key] = table.apply(
             lambda serie: test_col_val(
                 serie,
                 value["func"],
                 value["prop"],
-                num_rows=local_num_rows,
                 output_mode=output_mode,
+                verbose=verbose,
             )
         )
+        if verbose:
+            display_logs_depending_process_time(
+                f'\t> Done with type "{key}" in {round(time() - start_type, 3)}s ({idx+1}/{len(test_funcs)})',
+                time() - start_type
+            )
+    if verbose:
+        display_logs_depending_process_time(f"Done testing columns in {round(time() - start, 3)}s", time() - start)
     return return_table
 
 
-def test_label(table, all_tests, output_mode):
+def test_label(table, all_tests, output_mode, verbose: bool = False):
     # Initialising dict for tests
+    if verbose:
+        start = time()
+        logging.info("Testing labels to get types")
     test_funcs = dict()
     for test in all_tests:
         name = test.__name__.split(".")[-1]
         test_funcs[name] = {"func": test._is, "prop": test.PROPORTION}
 
     return_table = pd.DataFrame(columns=table.columns)
-    for key, value in test_funcs.items():
+    for idx, (key, value) in enumerate(test_funcs.items()):
+        if verbose:
+            start_type = time()
         return_table.loc[key] = [
             test_col_label(
                 col_name, value["func"], value["prop"], output_mode=output_mode
             )
             for col_name in table.columns
         ]
+        if verbose:
+            display_logs_depending_process_time(
+                f'\t- Done with type "{key}" in {round(time() - start_type, 3)}s ({idx+1}/{len(test_funcs)})',
+                time() - start_type
+            )
+    if verbose:
+        display_logs_depending_process_time(f"Done testing labels in {round(time() - start, 3)}s", time() - start)
     return return_table
 
 

@@ -4,6 +4,42 @@
 
 - Nothing yet
 
+## 0.7.1 (2024-03-27)
+
+- Fixes after production release in hydra
+
+## 0.7.0 (2024-03-21)
+
+- Handle other file formats: xls, xlsx, ods (and more)
+- Handle analysis through URLs
+
+## 0.6.8 (2024-01-18)
+
+- prevent exporting NaN values in profile
+- raise ValueError if analyzed file has various number of columns across first rows
+
+## 0.6.7 (2024-01-15)
+
+- Add logs for columns that would take too much time within a specific test
+- Refactor some tests to improve performances and make detection more accurate
+- Try alternative ways to clean text
+
+## 0.6.6 (2023-11-24)
+
+- Change setup.py to better convey dependencies
+
+## 0.6.5 (2023-11-17)
+
+- Change encoding detection for faust-cchardet (forked from cchardet) [#66](https://github.com/etalab/csv-detective/pull/66)
+
+## 0.6.4 (2023-10-18)
+
+- Better handling of ints and floats (now not accepting blanks and "+" in string) [#62](https://github.com/etalab/csv-detective/pull/62)
+
+## 0.6.3 (2023-03-23)
+
+- Faster routine [#59](https://github.com/etalab/csv-detective/pull/59)
+
 ## 0.6.2 (2023-02-10)
 
 - Catch OverflowError for latitude and longitude checks [#58](https://github.com/etalab/csv-detective/pull/58)

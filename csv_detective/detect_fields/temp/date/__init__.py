@@ -1,39 +1,32 @@
 import re
-from dateutil.parser import parse
+from dateutil.parser import parse, ParserError
+from csv_detective.detect_fields.other.float import _is as is_float
 from unidecode import unidecode
 
 PROPORTION = 1
+# /!\ this is only for dates, not datetimes which are handled by other utils
 
 
 def is_dateutil_date(val: str) -> bool:
-    try:
-        parse(val, fuzzy=False)
-        return True
-    except (ValueError, TypeError, OverflowError):
+    # we don't want to get datetimes here, so length restriction
+    # longest date string expected here is DD-septembre-YYYY, so 17 characters
+    if len(val) > 17:
         return False
-
-
-def is_float(val: str) -> bool:
     try:
-        float(val)
+        res = parse(val, fuzzy=False)
+        if res.hour or res.minute or res.second:
+            return False
         return True
-    except ValueError:
+    except (ParserError, ValueError, TypeError, OverflowError):
         return False
 
 
 def _is(val):
-    '''Renvoie True si val peut être une date, False sinon'''
-    # matches 1993-12/02
-    a = bool(
-        re.match(
-            r'^(19|20)\d\d[ -/_;.:,](0[1-9]|1[012])[ -/_;.:,]'
-            r'(0[1-9]|[12][0-9]|3[01])$',
-            val
-        )
-    )
+    '''Renvoie True si val peut être une date, False sinon
+    On ne garde que les regex pour les cas où parse() ne convient pas'''
 
     # matches 02/12 03 and 02_12 2003
-    b = bool(
+    a = bool(
         re.match(
             r'^(0[1-9]|[12][0-9]|3[01])[ -/_](0[1-9]|1[012])[ -/_]'
             r'([0-9]{2}|(19|20)[0-9]{2}$)',
@@ -42,7 +35,7 @@ def _is(val):
     )
 
     # matches 02052003
-    c = bool(
+    b = bool(
         re.match(
             r'^(0[1-9]|[12][0-9]|3[01])(0[1-9]|1[012])([0-9]{2}|'
             r'(19|20){2}$)',
@@ -50,34 +43,20 @@ def _is(val):
         )
     )
 
-    # matches 19931202
-    d = bool(
-        re.match(
-            r'^(19|20)\d\d(0[1-9]|1[012])(0[1-9]$|[12][0-9]$|3[01]$)', val))
-
     # matches JJ*MM*AAAA
-    e = bool(
+    c = bool(
         re.match(
             r'^(0[1-9]|[12][0-9]|3[01]).?(0[1-9]|1[012]).?(19|20)?\d\d$', val))
 
-    # matches JJ-mmm-AAAA
-    f = bool(
+    # matches JJ-mmm-AAAA and matches JJ-mmm...mm-AAAA
+    d = bool(
         re.match(
             r'^(0[1-9]|[12][0-9]|3[01])[ -/_;.:,](jan|fev|feb|mar|avr|apr'
-            r'|mai|may|jun|jui|jul|aou|aug|sep|oct|nov|dec)[ -/_;.:,]'
-            r'([0-9]{2}$|(19|20)[0-9]{2}$)',
-            val
-        )
-    )
-
-    # matches JJ-mmm...mm-AAAA
-    g = bool(
-        re.match(
-            r'^(0[1-9]|[12][0-9]|3[01])[ -/_;.:,](janvier|fevrier|mars|avril|'
+            r'|mai|may|jun|jui|jul|aou|aug|sep|oct|nov|dec|janvier|fevrier|mars|avril|'
             r'mai|juin|jullet|aout|septembre|octobre|novembre|decembre)[ -/_;.:,]'
             r'([0-9]{2}$|(19|20)[0-9]{2}$)',
             unidecode(val)
         )
     )
 
-    return a or b or c or d or e or f or g or (is_dateutil_date(val) and not is_float(val))
+    return (is_dateutil_date(val) and not is_float(val)) or a or b or c or d

@@ -11,6 +11,5 @@ def _is(val):
 
     val = val.replace('.', '').replace('-', '').replace(' ', '')
 
-    regex = r'^(0|\+33|0033)?[0-9]{9}$'
-    match_1 = bool(re.match(regex, val))
+    match_1 = bool(re.match(r'^(0|\+33|0033)?[0-9]{9}$', val))
     return match_1

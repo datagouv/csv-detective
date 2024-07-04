@@ -10,7 +10,7 @@ def _is(header):
     else 0
     '''
     # 'dep': Possible confusion with dep name?
-    words_combinations_list = ['code departement', 'dep', 'departement']
+    words_combinations_list = ['code departement', 'code_departement', 'dep', 'departement', 'dept']
     processed_header = _process_text(header)
 
     header_matches_words_combination = float(
