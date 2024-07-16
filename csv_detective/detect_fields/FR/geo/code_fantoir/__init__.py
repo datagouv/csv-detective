@@ -1,7 +1,10 @@
-from frformat import CodeFantoir
+from frformat import CodeFantoir, Options
 
 PROPORTION = 1
 
-def _is (val):
+_code_fontoir = CodeFantoir(Options())
 
-    return CodeFantoir.is_valid(val)
+
+def _is(val):
+
+    return _code_fontoir.is_valid(val)

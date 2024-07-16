@@ -1,5 +1,10 @@
-from frformat import CodePostal
+from frformat import CodePostal, Options
 
 PROPORTION = 0.9
 
-_is = CodePostal.is_valid
+_code_postal = CodePostal(Options())
+
+
+def _is(val):
+
+    return _code_postal.is_valid(val)

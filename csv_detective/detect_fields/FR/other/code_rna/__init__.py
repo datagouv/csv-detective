@@ -1,5 +1,10 @@
-from frformat import CodeRNA
+from frformat import CodeRNA, Options
 
 PROPORTION = 0.9
 
-_is = CodeRNA.is_valid
+_code_rna = CodeRNA(Options())
+
+
+def _is(val):
+
+    return _code_rna.is_valid(val)

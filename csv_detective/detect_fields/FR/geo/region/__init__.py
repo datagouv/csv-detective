@@ -1,11 +1,8 @@
 from frformat import Region, Options
 
 PROPORTION = 1
-
-
-def _is(val):
-    '''Match avec le nom des regions'''
-    lenient_region_set = {
+ 
+_lenient_region_set = {
         "alsace",
         "aquitaine",
         "ara",
@@ -54,11 +51,17 @@ def _is(val):
         "rhone alpes",
         }
 
-    options = Options(
-        ignore_case=True,
-        ignore_non_alphanumeric=True,
-        ignore_extra_white_space=True,
-        ignore_accents=True,
-        extra_valid_values=lenient_region_set
-    )
-    return Region.is_valid(val, options)
+
+_options = Options(
+    ignore_case=True,
+    ignore_accents=True,
+    replace_non_alphanumeric_with_space=True,
+    ignore_extra_whitespace=True,
+    extra_valid_values=_lenient_region_set
+)
+_region = Region(_options)
+
+
+def _is(val):
+    '''Match avec le nom des regions'''
+    return _region.is_valid(val)
