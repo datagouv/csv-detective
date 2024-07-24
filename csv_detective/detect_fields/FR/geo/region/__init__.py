@@ -2,7 +2,7 @@ from frformat import Region, Options
 
 PROPORTION = 1
  
-_lenient_region_set = {
+_extra_valid_values_set = {
         "alsace",
         "aquitaine",
         "ara",
@@ -57,7 +57,7 @@ _options = Options(
     ignore_accents=True,
     replace_non_alphanumeric_with_space=True,
     ignore_extra_whitespace=True,
-    extra_valid_values=_lenient_region_set
+    extra_valid_values=_extra_valid_values_set
 )
 _region = Region(_options)
 
