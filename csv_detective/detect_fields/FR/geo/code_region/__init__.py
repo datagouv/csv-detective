@@ -1,8 +1,8 @@
-from frformat import CodeRegion, Options
+from frformat import CodeRegion
 
 PROPORTION = 1
 
-_code_region = CodeRegion(Options())
+_code_region = CodeRegion()
 
 
 def _is(val):

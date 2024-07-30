@@ -1,8 +1,8 @@
-from frformat import CodeCommuneInsee, Options
+from frformat import CodeCommuneInsee
 
 PROPORTION = 0.75
 
-_code_commune_insee = CodeCommuneInsee(Options())
+_code_commune_insee = CodeCommuneInsee()
 
 
 def _is(val):

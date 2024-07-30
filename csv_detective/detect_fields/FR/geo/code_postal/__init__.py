@@ -1,8 +1,8 @@
-from frformat import CodePostal, Options
+from frformat import CodePostal
 
 PROPORTION = 0.9
 
-_code_postal = CodePostal(Options())
+_code_postal = CodePostal()
 
 
 def _is(val):

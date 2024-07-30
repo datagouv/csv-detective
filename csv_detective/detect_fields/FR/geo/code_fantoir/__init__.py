@@ -1,8 +1,8 @@
-from frformat import CodeFantoir, Options
+from frformat import CodeFantoir
 
 PROPORTION = 1
 
-_code_fantoir = CodeFantoir(Options())
+_code_fantoir = CodeFantoir()
 
 
 def _is(val):

@@ -1,8 +1,8 @@
-from frformat import CodeRNA, Options
+from frformat import CodeRNA
 
 PROPORTION = 0.9
 
-_code_rna = CodeRNA(Options())
+_code_rna = CodeRNA()
 
 
 def _is(val):
