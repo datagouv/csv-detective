@@ -1,19 +1,17 @@
-from os.path import dirname, join
-from csv_detective.process_text import _process_text
+from frformat import Departement, Options
 
 PROPORTION = 0.9
-f = open(join(dirname(__file__), 'departement.txt'), 'r')
-departement = f.read().split('\n')
-# removing empty str due to additionnal line in file
-del departement[-1]
-departement = set(departement)
-max_len = max({len(p) for p in departement})
-f.close()
+
+_options = Options(
+    ignore_case=True,
+    ignore_accents=True,
+    replace_non_alphanumeric_with_space=True,
+    ignore_extra_whitespace=True
+)
+_departement = Departement(_options)
 
 
 def _is(val):
     '''Match avec le nom des departements'''
-    if len(val) > max_len:
-        return False
-    val = _process_text(val)
-    return val in departement
+
+    return _departement.is_valid(val)

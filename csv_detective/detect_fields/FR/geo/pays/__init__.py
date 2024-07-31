@@ -1,17 +1,16 @@
-from os.path import dirname, join
-from csv_detective.process_text import _process_text
+from frformat import Pays, Options
 
 PROPORTION = 0.6
-f = open(join(dirname(__file__), 'pays.txt'), 'r')
-pays = f.read().split('\n')
-pays = set(pays)
-max_len = max({len(p) for p in pays})
-f.close()
+
+_options = Options(
+        ignore_case=True,
+        ignore_accents=True,
+        replace_non_alphanumeric_with_space=True,
+        ignore_extra_whitespace=True
+    )
+_pays = Pays(_options)
 
 
 def _is(val):
     '''Match avec le nom des pays'''
-    if len(val) > max_len:
-        return False
-    val = _process_text(val)
-    return val in pays
+    return _pays.is_valid(val)
