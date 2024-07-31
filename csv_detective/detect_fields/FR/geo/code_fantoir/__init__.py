@@ -2,6 +2,9 @@ from frformat import CodeFantoir
 
 PROPORTION = 1
 
-def _is (val):
+_code_fantoir = CodeFantoir()
 
-    return CodeFantoir.is_valid(val)
+
+def _is(val):
+
+    return _code_fantoir.is_valid(val)
