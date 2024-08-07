@@ -5,6 +5,8 @@
 - Better date detection
 - Update dependencies to make tests pass
 - Update readme
+- Hint type
+- Minor refactors
 
 ## 0.7.1 (2024-03-27)
 
