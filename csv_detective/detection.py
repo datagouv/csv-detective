@@ -43,6 +43,7 @@ def detect_continuous_variable(table: pd.DataFrame, continuous_th: float = 0.9, 
     :param table:
     :return:
     """
+    # if we need this again in the future, could be first based on columns detected as int/float to cut time
 
     def check_threshold(serie: pd.Series, continuous_th: float):
         count = serie.value_counts().to_dict()
@@ -89,9 +90,8 @@ def detetect_categorical_variable(
     Heuristically detects whether a table (df) contains categorical values according to
     the number of unique values contained.
     As the idea of detecting categorical values is to then try to learn models to predict
-    them, we limit categorical values to at most 25 different modes. Postal code, insee code,
-    code region and so on, may be thus not
-    considered categorical values.
+    them, we limit categorical values to at most 25 different modes or at most 5% disparity.
+    Postal code, insee code, code region and so on, may be thus not considered categorical values.
     :param table:
     :param threshold_pct_categorical:
     :param max_number_categorical_values:
@@ -107,9 +107,11 @@ def detetect_categorical_variable(
     def detect_categorical(column_values: pd.Series):
         abs_unique_values = abs_number_different_values(column_values)
         rel_unique_values = rel_number_different_values(column_values)
-        if abs_unique_values < max_number_categorical_values:
-            if rel_unique_values < threshold_pct_categorical:
-                return True
+        if (
+            abs_unique_values <= max_number_categorical_values
+            or rel_unique_values <= threshold_pct_categorical
+        ):
+            return True
         return False
 
     if verbose:
