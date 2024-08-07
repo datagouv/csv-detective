@@ -15,6 +15,8 @@ import requests
 from io import StringIO
 
 # flake8: noqa
+from csv_detective import detect_fields
+from csv_detective import detect_labels
 from csv_detective.s3_utils import download_from_minio, upload_to_minio
 from csv_detective.schema_generation import generate_table_schema
 from csv_detective.utils import test_col, test_label, prepare_output_dict, display_logs_depending_process_time
@@ -307,12 +309,10 @@ def routine(
 
     if output_profile:
         return_dict["profile"] = create_profile(
-            table, return_dict["columns"], 
-            sep, 
-            encoding, 
-            num_rows, 
-            header_row_idx, 
-            verbose=verbose
+            table,
+            return_dict["columns"],
+            num_rows,
+            verbose=verbose,
         )
 
     if save_results:
