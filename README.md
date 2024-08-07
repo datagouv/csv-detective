@@ -151,13 +151,13 @@ For each column, 3 scores are computed for each format, the higher the score, th
 The overall score computation aims to give more weight to the column contents while
 still leveraging the column header.
 
-#### `output_mode` - Select the output mode you want for json report
+#### `limited_output` - Select the output mode you want for json report
 
-This option allows you to select the output mode you want to pass. To do so, you have to pass a `output_mode` argument to the `routine` function. This variable has two possible values:
+This option allows you to select the output mode you want to pass. To do so, you have to pass a `limited_output` argument to the `routine` function. This variable has two possible values:
 
-- `output_mode` defaults to `'LIMITED'` which means report will contain only detected column formats based on a pre-selected threshold proportion in data. Report result is the standard output (an example can be found above in 'Output' section).
+- `limited_output` defaults to `True` which means report will contain only detected column formats based on a pre-selected threshold proportion in data. Report result is the standard output (an example can be found above in 'Output' section).
 Only the format with highest score is present in the output.
-- `output_mode='ALL'` which means report will contain a full list of all column format possibilities for each input data columns with a value associated which match to the proportion of found column type in data. With this report, user can adjust its rules of detection based on a specific threshold and has a better vision of quality detection for each columns. Results could also be easily transformed into dataframe (columns types in column / column names in rows) for analysis and test.
+- `limited_output=False` means report will contain a full list of all column format possibilities for each input data columns with a value associated which match to the proportion of found column type in data. With this report, user can adjust its rules of detection based on a specific threshold and has a better vision of quality detection for each columns. Results could also be easily transformed into a dataframe (columns types in column / column names in rows) for analysis and test.
 
 ## Improvement suggestions
 
