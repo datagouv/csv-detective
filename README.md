@@ -24,7 +24,6 @@ Say you have a tabular file located at `file_path`. This is how you could use `c
 # Import the csv_detective package
 from csv_detective.explore_csv import routine
 import os # for this example only
-import json # for json dump only
 
 # Replace by your file path
 file_path = os.path.join('.', 'tests', 'code_postaux_v201410.csv')
@@ -50,7 +49,7 @@ The program creates a `Python` dictionnary with the following information :
     "encoding": "windows-1252", 			        # Encoding detected
     "separator": ";",						# Detected CSV separator
     "header_row_idx": 0					# Index of the header (aka how many lines to skip to get it)
-    "headers": ['code commune INSEE', 'nom de la commune', 'code postal', "libell\\u00e9 d'acheminement\n"], # Header row
+    "headers": ['code commune INSEE', 'nom de la commune', 'code postal', "libellé d'acheminement"], # Header row
     "total_lines": 42,					# Number of rows (excluding header)
     "nb_duplicates": 0,					# Number of exact duplicates in rows
     "heading_columns": 0,					# Number of heading columns
@@ -83,16 +82,16 @@ The program creates a `Python` dictionnary with the following information :
         "max: 12, # only int and float
         "mean": 5, # only int and float
         "std": 5, # only int and float
-        "tops": [  # limited to 10
+        "tops": [  # 10 most frequent values in the column
           "xxx",
           "yyy",
           "..."
         ],
-        "nb_distinct": 67,
-        "nb_missing_values": 102
+        "nb_distinct": 67, # number of distinct values
+        "nb_missing_values": 102 # number of empty cells in the column
       }
     },
-    "schema": {
+    "schema": { # TableSchema of the file if `output_schema` was set to `True`
       "$schema": "https://frictionlessdata.io/schemas/table-schema.json",
       "name": "",
       "title": "",
