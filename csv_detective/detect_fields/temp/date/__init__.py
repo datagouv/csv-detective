@@ -31,7 +31,7 @@ letters = (
     r'^(0[1-9]|[12][0-9]|3[01])SEP(jan|fev|feb|mar|avr|apr'
     r'|mai|may|jun|jui|jul|aou|aug|sep|oct|nov|dec|janvier|fevrier|mars|avril|'
     r'mai|juin|jullet|aout|septembre|octobre|novembre|decembre)SEP'
-    r'([0-9]{2}$|(19|20)[0-9]{2}$)'
+    r'(\d{2}|\d{4})$'
 ).replace('SEP', seps + '?')
 
 
