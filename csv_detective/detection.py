@@ -435,6 +435,7 @@ def create_profile(
     table: pd.DataFrame,
     dict_cols_fields: dict,
     num_rows: int,
+    limited_output: bool = True,
     verbose: bool = False,
 ):
     if verbose:
@@ -448,60 +449,64 @@ def create_profile(
 
     if num_rows > 0:
         raise Exception("To create profiles num_rows has to be set to -1")
-    else:
-        safe_table = table.copy()
-        dtypes = {
-            k: map_python_types.get(v["python_type"], str)
+    safe_table = table.copy()
+    if not limited_output:
+        dict_cols_fields = {
+            k: v[0] if v else {'python_type': 'string', 'format': 'string', 'score': 1.0}
             for k, v in dict_cols_fields.items()
         }
-        for c in safe_table.columns:
-            if dtypes[c] == float:
-                safe_table[c] = safe_table[c].apply(
-                    lambda s: float_casting(s) if isinstance(s, str) else s
-                )
-        profile = {}
-        for c in safe_table.columns:
-            profile[c] = {}
-            if map_python_types.get(dict_cols_fields[c]["python_type"], str) in [
-                float,
-                int,
-            ]:
-                profile[c].update(
-                    min=prevent_nan(map_python_types.get(dict_cols_fields[c]["python_type"], str)(
-                        safe_table[c].min()
-                    )),
-                    max=prevent_nan(map_python_types.get(dict_cols_fields[c]["python_type"], str)(
-                        safe_table[c].max()
-                    )),
-                    mean=prevent_nan(map_python_types.get(dict_cols_fields[c]["python_type"], str)(
-                        safe_table[c].mean()
-                    )),
-                    std=prevent_nan(map_python_types.get(dict_cols_fields[c]["python_type"], str)(
-                        safe_table[c].std()
-                    )),
-                )
-            tops_bruts = safe_table[safe_table[c].notna()][c] \
-                    .value_counts(dropna=True) \
-                    .reset_index() \
-                    .iloc[:10] \
-                    .to_dict(orient="records")
-            tops = []
-            for tb in tops_bruts:
-                top = {}
-                top["count"] = tb[c]
-                top["value"] = tb["count"]
-                tops.append(top)
+    dtypes = {
+        k: map_python_types.get(v["python_type"], str)
+        for k, v in dict_cols_fields.items()
+    }
+    for c in safe_table.columns:
+        if dtypes[c] == float:
+            safe_table[c] = safe_table[c].apply(
+                lambda s: float_casting(s) if isinstance(s, str) else s
+            )
+    profile = {}
+    for c in safe_table.columns:
+        profile[c] = {}
+        if map_python_types.get(dict_cols_fields[c]["python_type"], str) in [
+            float,
+            int,
+        ]:
             profile[c].update(
-                tops=tops,
-                nb_distinct=safe_table[c].nunique(),
-                nb_missing_values=len(safe_table[c].loc[safe_table[c].isna()]),
+                min=prevent_nan(map_python_types.get(dict_cols_fields[c]["python_type"], str)(
+                    safe_table[c].min()
+                )),
+                max=prevent_nan(map_python_types.get(dict_cols_fields[c]["python_type"], str)(
+                    safe_table[c].max()
+                )),
+                mean=prevent_nan(map_python_types.get(dict_cols_fields[c]["python_type"], str)(
+                    safe_table[c].mean()
+                )),
+                std=prevent_nan(map_python_types.get(dict_cols_fields[c]["python_type"], str)(
+                    safe_table[c].std()
+                )),
             )
-        if verbose:
-            display_logs_depending_process_time(
-                f"Created profile in {round(time() - start, 3)}s",
-                time() - start
-            )
-        return profile
+        tops_bruts = safe_table[safe_table[c].notna()][c] \
+                .value_counts(dropna=True) \
+                .reset_index() \
+                .iloc[:10] \
+                .to_dict(orient="records")
+        tops = []
+        for tb in tops_bruts:
+            top = {}
+            top["count"] = tb[c]
+            top["value"] = tb["count"]
+            tops.append(top)
+        profile[c].update(
+            tops=tops,
+            nb_distinct=safe_table[c].nunique(),
+            nb_missing_values=len(safe_table[c].loc[safe_table[c].isna()]),
+        )
+    if verbose:
+        display_logs_depending_process_time(
+            f"Created profile in {round(time() - start, 3)}s",
+            time() - start
+        )
+    return profile
 
 
 def detect_extra_columns(file: TextIO, sep: str):

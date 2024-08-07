@@ -88,7 +88,7 @@ def routine(
     csv_file_path: str,
     num_rows: int = 500,
     user_input_tests: Union[str, List[str]] = "ALL",
-    output_mode: Literal["ALL", "LIMITED"] = "LIMITED",
+    limited_output: bool = True,
     save_results: bool = True,
     encoding: str = None,
     sep: str = None,
@@ -105,8 +105,7 @@ def routine(
         num_rows: number of rows to sample from the file for analysis ; -1 for analysis
         of the whole file
         user_input_tests: tests to run on the file
-        output_mode: LIMITED or ALL, whether or not to return all possible types or only
-        the most likely one for each column
+        limited_output: whether or not to return all possible types or only the most likely one for each column
         save_results: whether or not to save the results in a json file
         output_profile: whether or not to add the 'profile' field to the output
         output_schema: whether or not to add the 'schema' field to the output (tableschema)
@@ -213,13 +212,13 @@ def routine(
         return return_dict
 
     # Perform testing on fields
-    return_table_fields = test_col(table, all_tests_fields, output_mode, verbose=verbose)
-    return_dict_cols_fields = prepare_output_dict(return_table_fields, output_mode)
+    return_table_fields = test_col(table, all_tests_fields, limited_output, verbose=verbose)
+    return_dict_cols_fields = prepare_output_dict(return_table_fields, limited_output)
     return_dict["columns_fields"] = return_dict_cols_fields
 
     # Perform testing on labels
-    return_table_labels = test_label(table, all_tests_labels, output_mode, verbose=verbose)
-    return_dict_cols_labels = prepare_output_dict(return_table_labels, output_mode)
+    return_table_labels = test_label(table, all_tests_labels, limited_output, verbose=verbose)
+    return_dict_cols_labels = prepare_output_dict(return_table_labels, limited_output)
     return_dict["columns_labels"] = return_dict_cols_labels
 
     # Multiply the results of the fields by 1 + 0.5 * the results of the labels.
@@ -251,7 +250,7 @@ def routine(
         return_table.loc[formats_with_mandatory_label, :],
         0,
     )
-    return_dict_cols = prepare_output_dict(return_table, output_mode)
+    return_dict_cols = prepare_output_dict(return_table, limited_output)
     return_dict["columns"] = return_dict_cols
 
     metier_to_python_type = {
@@ -273,7 +272,7 @@ def routine(
         "longitude_wgs_fr_metropole": "float",
     }
 
-    if output_mode == "ALL":
+    if not limited_output:
         for detection_method in ["columns_fields", "columns_labels", "columns"]:
             return_dict[detection_method] = {
                 col_name: [
@@ -287,7 +286,7 @@ def routine(
                 ]
                 for col_name, detections in return_dict[detection_method].items()
             }
-    if output_mode == "LIMITED":
+    else:
         for detection_method in ["columns_fields", "columns_labels", "columns"]:
             return_dict[detection_method] = {
                 col_name: {
@@ -309,9 +308,10 @@ def routine(
 
     if output_profile:
         return_dict["profile"] = create_profile(
-            table,
-            return_dict["columns"],
-            num_rows,
+            table=table,
+            dict_cols_fields=return_dict["columns"],
+            num_rows=num_rows,
+            limited_output=limited_output,
             verbose=verbose,
         )
 
@@ -325,7 +325,7 @@ def routine(
         with open(output_path + '.json', "w", encoding="utf8") as fp:
             json.dump(return_dict, fp, indent=4, separators=(",", ": "), ensure_ascii=False)
 
-    if output_schema and output_mode != "ALL":
+    if output_schema:
         return_dict["schema"] = generate_table_schema(
             return_dict,
             save_file=False,
