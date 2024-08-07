@@ -38,13 +38,18 @@ from csv_detective.detection import (
 # categorical
 def test_detetect_categorical_variable():
     categorical_col = ["type_a"] * 33 + ["type_b"] * 33 + ["type_c"] * 34
+    categorical_col2 = [str(k // 20) for k in range(100)]
     not_categorical_col = [i for i in range(100)]
 
-    df_dict = {"cat": categorical_col, "not_cat": not_categorical_col}
+    df_dict = {
+        "cat": categorical_col,
+        "cat2": categorical_col2,
+        "not_cat": not_categorical_col,
+    }
     df = pd.DataFrame(df_dict, dtype="unicode")
 
     res, _ = detetect_categorical_variable(df)
-    assert res.values and res.values[0] == "cat"
+    assert len(res.values) and all(k in res.values for k in ["cat", "cat2"])
 
 
 # continuous
