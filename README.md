@@ -31,8 +31,8 @@ file_path = os.path.join('.', 'tests', 'code_postaux_v201410.csv')
 # Open your file and run csv_detective
 inspection_results = routine(
   file_path, # or file URL
-  num_rows=-1, # Value -1 will analyze all lines of your csv, you can change with the number of lines you wish to analyze
-  save_results=False, # Default False. If True, it will save result output into the same directory as the csv analyzed, using the same name as your file and .json extension
+  num_rows=-1, # Value -1 will analyze all lines of your file, you can change with the number of lines you wish to analyze
+  save_results=False, # Default False. If True, it will save result output into the same directory as the analyzed file, using the same name as your file and .json extension
   output_profile=True, # Default False. If True, returned dict will contain a property "profile" indicating profile (min, max, mean, tops...) of every column of you csv
   output_schema=True, # Default False. If True, returned dict will contain a property "schema" containing basic [tableschema](https://specs.frictionlessdata.io/table-schema/) of your file. This can be use to validate structure of other csv which should match same structure. 
 )
