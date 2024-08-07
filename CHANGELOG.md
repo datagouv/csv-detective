@@ -4,6 +4,7 @@
 
 - Better date detection
 - Update dependencies to make tests pass
+- Update readme
 
 ## 0.7.1 (2024-03-27)
 
