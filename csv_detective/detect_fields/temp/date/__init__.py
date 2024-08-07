@@ -21,42 +21,26 @@ def is_dateutil_date(val: str) -> bool:
         return False
 
 
+seps = r'[\s/\-\*_\|;.,]'
+# matches JJ-MM-AAAA with any of the listed separators
+pat = r'^(0[1-9]|[12][0-9]|3[01])SEP(0[1-9]|1[0-2])SEP((19|20)\d{2})$'.replace('SEP', seps)
+# matches AAAA-MM-JJ with any of the listed separators OR NO SEPARATOR
+tap = r'^((19|20)\d{2})SEP(0[1-9]|1[0-2])SEP(0[1-9]|[12][0-9]|3[01])$'.replace('SEP', seps + '?')
+# matches JJ-mmm-AAAA and JJ-mmm...mm-AAAA with any of the listed separators OR NO SEPARATOR
+letters = (
+    r'^(0[1-9]|[12][0-9]|3[01])SEP(jan|fev|feb|mar|avr|apr'
+    r'|mai|may|jun|jui|jul|aou|aug|sep|oct|nov|dec|janvier|fevrier|mars|avril|'
+    r'mai|juin|jullet|aout|septembre|octobre|novembre|decembre)SEP'
+    r'([0-9]{2}$|(19|20)[0-9]{2}$)'
+).replace('SEP', seps + '?')
+
+
 def _is(val):
     '''Renvoie True si val peut être une date, False sinon
     On ne garde que les regex pour les cas où parse() ne convient pas'''
-
-    # matches 02/12 03 and 02_12 2003
-    a = bool(
-        re.match(
-            r'^(0[1-9]|[12][0-9]|3[01])[ -/_](0[1-9]|1[012])[ -/_]'
-            r'([0-9]{2}|(19|20)[0-9]{2}$)',
-            val
-        )
+    return (
+        (is_dateutil_date(val) and not is_float(val))
+        or bool(re.match(letters, unidecode(val)))
+        or bool(re.match(pat, val))
+        or bool(re.match(tap, val))
     )
-
-    # matches 02052003
-    b = bool(
-        re.match(
-            r'^(0[1-9]|[12][0-9]|3[01])(0[1-9]|1[012])([0-9]{2}|'
-            r'(19|20){2}$)',
-            val
-        )
-    )
-
-    # matches JJ*MM*AAAA
-    c = bool(
-        re.match(
-            r'^(0[1-9]|[12][0-9]|3[01]).?(0[1-9]|1[012]).?(19|20)?\d\d$', val))
-
-    # matches JJ-mmm-AAAA and matches JJ-mmm...mm-AAAA
-    d = bool(
-        re.match(
-            r'^(0[1-9]|[12][0-9]|3[01])[ -/_;.:,](jan|fev|feb|mar|avr|apr'
-            r'|mai|may|jun|jui|jul|aou|aug|sep|oct|nov|dec|janvier|fevrier|mars|avril|'
-            r'mai|juin|jullet|aout|septembre|octobre|novembre|decembre)[ -/_;.:,]'
-            r'([0-9]{2}$|(19|20)[0-9]{2}$)',
-            unidecode(val)
-        )
-    )
-
-    return (is_dateutil_date(val) and not is_float(val)) or a or b or c or d
