@@ -472,7 +472,7 @@ def create_profile(table, dict_cols_fields, sep, encoding, num_rows, skiprows, v
             for tb in tops_bruts:
                 top = {}
                 top["count"] = tb[c]
-                top["value"] = tb["index"]
+                top["value"] = tb["count"]
                 tops.append(top)
             profile[c].update(
                 tops=tops,
