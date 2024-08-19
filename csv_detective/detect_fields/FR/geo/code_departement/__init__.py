@@ -4,5 +4,4 @@ PROPORTION = 1
 
 
 def _is(val):
-
-    return NumeroDepartement.is_valid(val, strict = False) 
+    return NumeroDepartement.is_valid(val, strict=False)
