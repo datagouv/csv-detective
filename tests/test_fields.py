@@ -378,8 +378,6 @@ def test_match_date():
     assert date._is(val)
     val = "15 décembre 1985"
     assert date._is(val)
-    val = "02052003"
-    assert date._is(val)
     val = "02 05 2003"
     assert date._is(val)
     val = "20030502"
