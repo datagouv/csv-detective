@@ -42,13 +42,18 @@ from csv_detective.detection import (
 # categorical
 def test_detetect_categorical_variable():
     categorical_col = ["type_a"] * 33 + ["type_b"] * 33 + ["type_c"] * 34
+    categorical_col2 = [str(k // 20) for k in range(100)]
     not_categorical_col = [i for i in range(100)]
 
-    df_dict = {"cat": categorical_col, "not_cat": not_categorical_col}
+    df_dict = {
+        "cat": categorical_col,
+        "cat2": categorical_col2,
+        "not_cat": not_categorical_col,
+    }
     df = pd.DataFrame(df_dict, dtype="unicode")
 
     res, _ = detetect_categorical_variable(df)
-    assert res.values and res.values[0] == "cat"
+    assert len(res.values) and all(k in res.values for k in ["cat", "cat2"])
 
 
 # continuous
@@ -217,7 +222,7 @@ def test_do_not_match_code_fantoir():
 
 # code_region
 def test_match_code_region():
-    val= "32"
+    val = "32"
     assert code_region._is(val)
 
 
@@ -375,6 +380,10 @@ def test_match_date():
     assert date._is(val)
     val = "02052003"
     assert date._is(val)
+    val = "02 05 2003"
+    assert date._is(val)
+    val = "20030502"
+    assert date._is(val)
     val = "1993-12/02"
     assert date._is(val)
 
@@ -387,6 +396,12 @@ def test_do_not_match_date():
     val = "19-15-1993"
     assert not date._is(val)
     val = "15 tambour 1985"
+    assert not date._is(val)
+    val = "12152003"
+    assert not date._is(val)
+    val = "20031512"
+    assert not date._is(val)
+    val = "02052003"
     assert not date._is(val)
 
 
@@ -419,7 +434,14 @@ def test_match_rna():
 
 
 def test_do_not_match_rna():
-    vals = ["W111111111111111111111111111111111111", "w143788974", "W12", "678W23456", "165789325", "Wa1#89sf&h"]
+    vals = [
+        "W111111111111111111111111111111111111",
+        "w143788974",
+        "W12",
+        "678W23456",
+        "165789325",
+        "Wa1#89sf&h",
+    ]
     for val in vals:
         assert not code_rna._is(val)
 

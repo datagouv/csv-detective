@@ -1,3 +1,4 @@
+from typing import TextIO, Optional
 import pandas as pd
 import math
 import csv
@@ -26,12 +27,12 @@ engine_to_file = {
 }
 
 
-def is_url(csv_file_path):
+def is_url(csv_file_path: str):
     # could be more sophisticated if needed
     return csv_file_path.startswith('http')
 
 
-def detect_continuous_variable(table, continuous_th=0.9, verbose: bool = False):
+def detect_continuous_variable(table: pd.DataFrame, continuous_th: float = 0.9, verbose: bool = False):
     """
     Detects whether a column contains continuous variables. We consider a continuous column
     one that contains
@@ -42,8 +43,9 @@ def detect_continuous_variable(table, continuous_th=0.9, verbose: bool = False):
     :param table:
     :return:
     """
+    # if we need this again in the future, could be first based on columns detected as int/float to cut time
 
-    def check_threshold(serie, continuous_th):
+    def check_threshold(serie: pd.Series, continuous_th: float):
         count = serie.value_counts().to_dict()
         total_nb = len(serie)
         if float in count:
@@ -55,7 +57,7 @@ def detect_continuous_variable(table, continuous_th=0.9, verbose: bool = False):
         else:
             return False
 
-    def parses_to_integer(value):
+    def parses_to_integer(value: str):
         try:
             value = value.replace(",", ".")
             value = literal_eval(value)
@@ -79,33 +81,37 @@ def detect_continuous_variable(table, continuous_th=0.9, verbose: bool = False):
 
 
 def detetect_categorical_variable(
-    table, threshold_pct_categorical=0.05, max_number_categorical_values=25, verbose: bool = False
+    table: pd.DataFrame,
+    threshold_pct_categorical: float = 0.05,
+    max_number_categorical_values: int = 25,
+    verbose: bool = False,
 ):
     """
     Heuristically detects whether a table (df) contains categorical values according to
     the number of unique values contained.
     As the idea of detecting categorical values is to then try to learn models to predict
-    them, we limit categorical values to at most 25 different modes. Postal code, insee code,
-    code region and so on, may be thus not
-    considered categorical values.
+    them, we limit categorical values to at most 25 different modes or at most 5% disparity.
+    Postal code, insee code, code region and so on, may be thus not considered categorical values.
     :param table:
     :param threshold_pct_categorical:
     :param max_number_categorical_values:
     :return:
     """
 
-    def abs_number_different_values(column_values):
+    def abs_number_different_values(column_values: pd.Series):
         return column_values.nunique()
 
-    def rel_number_different_values(column_values):
+    def rel_number_different_values(column_values: pd.Series):
         return column_values.nunique() / len(column_values)
 
-    def detect_categorical(column_values):
+    def detect_categorical(column_values: pd.Series):
         abs_unique_values = abs_number_different_values(column_values)
         rel_unique_values = rel_number_different_values(column_values)
-        if abs_unique_values < max_number_categorical_values:
-            if rel_unique_values < threshold_pct_categorical:
-                return True
+        if (
+            abs_unique_values <= max_number_categorical_values
+            or rel_unique_values <= threshold_pct_categorical
+        ):
+            return True
         return False
 
     if verbose:
@@ -120,7 +126,7 @@ def detetect_categorical_variable(
     return res.index[res], res
 
 
-def detect_engine(csv_file_path, verbose=False):
+def detect_engine(csv_file_path: str, verbose=False):
     if verbose:
         start = time()
     mapping = {
@@ -144,10 +150,10 @@ def detect_engine(csv_file_path, verbose=False):
     return engine
 
 
-def detect_separator(file, verbose: bool = False):
+def detect_separator(file: TextIO, verbose: bool = False):
     """Detects csv separator"""
     # TODO: add a robust detection:
-    # si on a un point virgule comme texte et \t comme séparateur, on renvoit
+    # si on a un point virgule comme texte et \t comme séparateur, on renvoie
     # pour l'instant un point virgule
     if verbose:
         start = time()
@@ -180,7 +186,7 @@ def detect_separator(file, verbose: bool = False):
     return sep
 
 
-def detect_encoding(csv_file_path, verbose: bool = False):
+def detect_encoding(csv_file_path: str, verbose: bool = False):
     """
     Detects file encoding using faust-cchardet (forked from the original cchardet)
     """
@@ -204,7 +210,15 @@ def detect_encoding(csv_file_path, verbose: bool = False):
     return encoding_dict['encoding']
 
 
-def parse_table(the_file, encoding, sep, num_rows, skiprows, random_state=42, verbose : bool = False):
+def parse_table(
+    the_file: TextIO,
+    encoding: str,
+    sep: str,
+    num_rows: int,
+    skiprows: int,
+    random_state: int = 42,
+    verbose : bool = False,
+):
     # Takes care of some problems
     if verbose:
         start = time()
@@ -247,7 +261,7 @@ def parse_table(the_file, encoding, sep, num_rows, skiprows, random_state=42, ve
     return table, total_lines, nb_duplicates
 
 
-def remove_empty_first_rows(table):
+def remove_empty_first_rows(table: pd.DataFrame):
     """Analog process to detect_headers for csv files, determines how many rows to skip
     to end up with the header at the right place"""
     idx = 0
@@ -265,12 +279,12 @@ def remove_empty_first_rows(table):
 
 
 def parse_excel(
-    csv_file_path,
-    num_rows =- 1,
-    engine=None,
-    sheet_name = None,
-    random_state=42,
-    verbose : bool = False
+    csv_file_path: str,
+    num_rows: int = -1,
+    engine: Optional[str] = None,
+    sheet_name: Optional[str] = None,
+    random_state: int = 42,
+    verbose : bool = False,
 ):
     """"Excel-like parsing is really slow, could be a good improvement for future development"""
     if verbose:
@@ -413,13 +427,19 @@ def parse_excel(
     return table, total_lines, nb_duplicates, sheet_name, engine, header_row_idx
 
 
-def prevent_nan(value):
+def prevent_nan(value: float):
     if math.isnan(value):
         return None
     return value
 
 
-def create_profile(table, dict_cols_fields, sep, encoding, num_rows, skiprows, verbose: bool = False):
+def create_profile(
+    table: pd.DataFrame,
+    dict_cols_fields: dict,
+    num_rows: int,
+    limited_output: bool = True,
+    verbose: bool = False,
+):
     if verbose:
         start = time()
         logging.info("Creating profile")
@@ -431,63 +451,67 @@ def create_profile(table, dict_cols_fields, sep, encoding, num_rows, skiprows, v
 
     if num_rows > 0:
         raise Exception("To create profiles num_rows has to be set to -1")
-    else:
-        safe_table = table.copy()
-        dtypes = {
-            k: map_python_types.get(v["python_type"], str)
+    safe_table = table.copy()
+    if not limited_output:
+        dict_cols_fields = {
+            k: v[0] if v else {'python_type': 'string', 'format': 'string', 'score': 1.0}
             for k, v in dict_cols_fields.items()
         }
-        for c in safe_table.columns:
-            if dtypes[c] == float:
-                safe_table[c] = safe_table[c].apply(
-                    lambda s: float_casting(s) if isinstance(s, str) else s
-                )
-        profile = {}
-        for c in safe_table.columns:
-            profile[c] = {}
-            if map_python_types.get(dict_cols_fields[c]["python_type"], str) in [
-                float,
-                int,
-            ]:
-                profile[c].update(
-                    min=prevent_nan(map_python_types.get(dict_cols_fields[c]["python_type"], str)(
-                        safe_table[c].min()
-                    )),
-                    max=prevent_nan(map_python_types.get(dict_cols_fields[c]["python_type"], str)(
-                        safe_table[c].max()
-                    )),
-                    mean=prevent_nan(map_python_types.get(dict_cols_fields[c]["python_type"], str)(
-                        safe_table[c].mean()
-                    )),
-                    std=prevent_nan(map_python_types.get(dict_cols_fields[c]["python_type"], str)(
-                        safe_table[c].std()
-                    )),
-                )
-            tops_bruts = safe_table[safe_table[c].notna()][c] \
-                    .value_counts(dropna=True) \
-                    .reset_index() \
-                    .iloc[:10] \
-                    .to_dict(orient="records")
-            tops = []
-            for tb in tops_bruts:
-                top = {}
-                top["count"] = tb[c]
-                top["value"] = tb["index"]
-                tops.append(top)
+    dtypes = {
+        k: map_python_types.get(v["python_type"], str)
+        for k, v in dict_cols_fields.items()
+    }
+    for c in safe_table.columns:
+        if dtypes[c] == float:
+            safe_table[c] = safe_table[c].apply(
+                lambda s: float_casting(s) if isinstance(s, str) else s
+            )
+    profile = {}
+    for c in safe_table.columns:
+        profile[c] = {}
+        if map_python_types.get(dict_cols_fields[c]["python_type"], str) in [
+            float,
+            int,
+        ]:
             profile[c].update(
-                tops=tops,
-                nb_distinct=safe_table[c].nunique(),
-                nb_missing_values=len(safe_table[c].loc[safe_table[c].isna()]),
+                min=prevent_nan(map_python_types.get(dict_cols_fields[c]["python_type"], str)(
+                    safe_table[c].min()
+                )),
+                max=prevent_nan(map_python_types.get(dict_cols_fields[c]["python_type"], str)(
+                    safe_table[c].max()
+                )),
+                mean=prevent_nan(map_python_types.get(dict_cols_fields[c]["python_type"], str)(
+                    safe_table[c].mean()
+                )),
+                std=prevent_nan(map_python_types.get(dict_cols_fields[c]["python_type"], str)(
+                    safe_table[c].std()
+                )),
             )
-        if verbose:
-            display_logs_depending_process_time(
-                f"Created profile in {round(time() - start, 3)}s",
-                time() - start
-            )
-        return profile
+        tops_bruts = safe_table[safe_table[c].notna()][c] \
+                .value_counts(dropna=True) \
+                .reset_index() \
+                .iloc[:10] \
+                .to_dict(orient="records")
+        tops = []
+        for tb in tops_bruts:
+            top = {}
+            top["count"] = tb[c]
+            top["value"] = tb["count"]
+            tops.append(top)
+        profile[c].update(
+            tops=tops,
+            nb_distinct=safe_table[c].nunique(),
+            nb_missing_values=len(safe_table[c].loc[safe_table[c].isna()]),
+        )
+    if verbose:
+        display_logs_depending_process_time(
+            f"Created profile in {round(time() - start, 3)}s",
+            time() - start
+        )
+    return profile
 
 
-def detect_extra_columns(file, sep):
+def detect_extra_columns(file: TextIO, sep: str):
     """regarde s'il y a des colonnes en trop
     Attention, file ne doit pas avoir de ligne vide"""
     file.seek(0)
@@ -516,7 +540,7 @@ def detect_extra_columns(file, sep):
     return nb_useless_col, retour
 
 
-def detect_headers(file, sep, verbose: bool = False):
+def detect_headers(file: TextIO, sep: str, verbose: bool = False):
     """Tests 10 first rows for possible header (header not in 1st line)"""
     if verbose:
         start = time()
@@ -543,7 +567,7 @@ def detect_headers(file, sep, verbose: bool = False):
     return 0, None
 
 
-def detect_heading_columns(file, sep, verbose : bool = False):
+def detect_heading_columns(file: TextIO, sep: str, verbose : bool = False):
     """Tests first 10 lines to see if there are empty heading columns"""
     if verbose:
         start = time()
@@ -568,7 +592,7 @@ def detect_heading_columns(file, sep, verbose : bool = False):
     return return_int
 
 
-def detect_trailing_columns(file, sep, heading_columns, verbose : bool = False):
+def detect_trailing_columns(file: TextIO, sep: str, heading_columns: int, verbose : bool = False):
     """Tests first 10 lines to see if there are empty trailing columns"""
     if verbose:
         start = time()

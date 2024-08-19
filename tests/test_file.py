@@ -108,6 +108,7 @@ def test_schema_on_file():
         csv_file_path="tests/b_test_file.csv",
         num_rows=-1,
         output_schema=True,
+        save_results=False,
     )
     assert isinstance(output, dict)
     is_column_dep = False

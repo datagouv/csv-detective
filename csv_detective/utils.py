@@ -1,3 +1,4 @@
+from typing import Callable
 import pandas as pd
 import logging
 from time import time
@@ -24,7 +25,12 @@ def display_logs_depending_process_time(prompt: str, duration: float):
 
 
 def test_col_val(
-    serie, test_func, proportion=0.9, skipna=True, output_mode="ALL", verbose=False
+    serie: pd.Series,
+    test_func: Callable,
+    proportion: float = 0.9,
+    skipna: bool = True,
+    limited_output: bool = False,
+    verbose: bool = False,
 ):
     """Tests values of the serie using test_func.
          - skipna : if True indicates that NaNs are not counted as False
@@ -35,7 +41,7 @@ def test_col_val(
         start = time()
 
     # TODO : change for a cleaner method and only test columns in modules labels
-    def apply_test_func(serie, test_func, _range):
+    def apply_test_func(serie: pd.Series, test_func: Callable, _range: int):
         return serie.sample(n=_range).apply(test_func)
     try:
         if skipna:
@@ -43,7 +49,7 @@ def test_col_val(
         ser_len = len(serie)
         if ser_len == 0:
             return 0.0
-        if output_mode == "ALL":
+        if not limited_output:
             result = apply_test_func(serie, test_func, ser_len).sum() / ser_len
             return result if result >= proportion else 0.0
         else:
@@ -74,19 +80,19 @@ def test_col_val(
             )
 
 
-def test_col_label(label, test_func, proportion=1, output_mode="ALL"):
+def test_col_label(label: str, test_func: Callable, proportion: float = 1, limited_output: bool = False):
     """Tests label (from header) using test_func.
     - proportion :  indicates the minimum score to pass the test for the serie
     to be detected as a certain format
     """
-    if output_mode == "ALL":
+    if not limited_output:
         return test_func(label)
     else:
         result = test_func(label)
         return result if result >= proportion else 0
 
 
-def test_col(table, all_tests, output_mode, verbose: bool = False):
+def test_col(table: pd.DataFrame, all_tests: list, limited_output: bool, verbose: bool = False):
     # Initialising dict for tests
     if verbose:
         start = time()
@@ -107,7 +113,7 @@ def test_col(table, all_tests, output_mode, verbose: bool = False):
                 serie,
                 value["func"],
                 value["prop"],
-                output_mode=output_mode,
+                limited_output=limited_output,
                 verbose=verbose,
             )
         )
@@ -121,7 +127,7 @@ def test_col(table, all_tests, output_mode, verbose: bool = False):
     return return_table
 
 
-def test_label(table, all_tests, output_mode, verbose: bool = False):
+def test_label(table: pd.DataFrame, all_tests: list, limited_output: bool, verbose: bool = False):
     # Initialising dict for tests
     if verbose:
         start = time()
@@ -137,7 +143,7 @@ def test_label(table, all_tests, output_mode, verbose: bool = False):
             start_type = time()
         return_table.loc[key] = [
             test_col_label(
-                col_name, value["func"], value["prop"], output_mode=output_mode
+                col_name, value["func"], value["prop"], limited_output=limited_output
             )
             for col_name in table.columns
         ]
@@ -151,7 +157,7 @@ def test_label(table, all_tests, output_mode, verbose: bool = False):
     return return_table
 
 
-def prepare_output_dict(return_table, output_mode):
+def prepare_output_dict(return_table: pd.DataFrame, limited_output: bool):
     return_dict_cols = return_table.to_dict("dict")
     return_dict_cols_intermediary = {}
     for column_name in return_dict_cols:
@@ -189,9 +195,9 @@ def prepare_output_dict(return_table, output_mode):
 
         detections = return_dict_cols_intermediary[column_name]
         detections = [x for x in detections if x["format"] in formats_to_keep]
-        if output_mode == "ALL":
+        if not limited_output:
             return_dict_cols_intermediary[column_name] = detections
-        if output_mode == "LIMITED":
+        else:
             return_dict_cols_intermediary[column_name] = (
                 max(detections, key=lambda x: x["score"])
                 if len(detections) > 0
@@ -201,7 +207,7 @@ def prepare_output_dict(return_table, output_mode):
     return return_dict_cols_intermediary
 
 
-def full_word_strictly_inside_string(word, string):
+def full_word_strictly_inside_string(word: str, string: str):
     return (
         (" " + word + " " in string)
         or (string.startswith(word + " "))
