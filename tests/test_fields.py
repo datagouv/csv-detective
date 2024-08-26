@@ -1,37 +1,41 @@
 import pandas as pd
 from numpy import random
 
+from csv_detective.detect_fields.FR.geo import (
+    adresse,
+    code_commune_insee,
+    code_departement,
+    code_fantoir,
+    code_postal,
+    code_region,
+    commune,
+    departement,
+    insee_canton,
+    latitude_l93,
+    longitude_l93,
+    pays,
+    region,
+)
 from csv_detective.detect_fields.FR.other import (
     code_csp_insee,
+    code_rna,
+    code_waldec,
     csp_insee,
     sexe,
     siren,
     tel_fr,
-    code_rna,
-    code_waldec,
 )
-from csv_detective.detect_fields.other import email, url, uuid, mongo_object_id, json
-
-from csv_detective.detect_fields.FR.geo import (
-    adresse,
-    code_commune_insee,
-    commune,
-    departement,
-    pays,
-    region,
-)
+from csv_detective.detect_fields.FR.temp import jour_de_la_semaine
 from csv_detective.detect_fields.geo import (
     iso_country_code_alpha2,
     iso_country_code_alpha3,
     iso_country_code_numeric,
 )
-
-from csv_detective.detect_fields.FR.temp import jour_de_la_semaine
-from csv_detective.detect_fields.temp import year, date, datetime_iso, datetime_rfc822
-
+from csv_detective.detect_fields.other import email, json, mongo_object_id, url, uuid
+from csv_detective.detect_fields.temp import date, datetime_iso, datetime_rfc822, year
 from csv_detective.detection import (
-    detetect_categorical_variable,
     detect_continuous_variable,
+    detetect_categorical_variable,
 )
 
 
@@ -180,6 +184,53 @@ def test_do_not_match_code_commune_insee():
     assert not code_commune_insee._is(val)
 
 
+# code_postal
+def test_match_code_postal():
+    val = "75020"
+    assert code_postal._is(val)
+
+
+def test_do_not_match_code_postal():
+    val = "77777"
+    assert not code_postal._is(val)
+
+
+# code_departement
+def test_match_code_departement():
+    vals = ["75", "2A", "2a", "974"]
+    for val in vals:
+        assert code_departement._is(val)
+
+
+def test_do_not_match_code_departement():
+    val = "00"
+    assert not code_departement._is(val)
+
+
+# code_fantoir
+def test_match_code_fantoir():
+    vals = ["7755A", "B150B", "ZA04C", "ZB03D"]
+    for val in vals:
+        assert code_fantoir._is(val)
+
+
+def test_do_not_match_code_fantoir():
+    vals = ["7755", "ZA99A"]
+    for val in vals:
+        assert not code_fantoir._is(val)
+
+
+# code_region
+def test_match_code_region():
+    val = "32"
+    assert code_region._is(val)
+
+
+def test_do_not_match_code_region():
+    val = "55"
+    assert not code_region._is(val)
+
+
 # commune
 def test_match_commune():
     val = "saint denis"
@@ -200,6 +251,43 @@ def test_match_departement():
 def test_do_not_match_departement():
     val = "new york"
     assert not departement._is(val)
+
+
+# insee_canton
+def test_match_canton():
+    val = "nantua"
+    assert insee_canton._is(val)
+
+
+def test_do_not_match_canton():
+    val = "new york"
+    assert not departement._is(val)
+
+
+# latitude_l93
+def test_match_latitude_l93():
+    vals = [6037008, 7123528.5, "7124528,5"]
+    for val in vals:
+        assert latitude_l93._is(val)
+
+
+def test_do_not_match_latitude_93():
+    vals = [0, -6734529.6, 7245669.8, "3422674,78", "32_34"]
+    for val in vals:
+        assert not latitude_l93._is(val)
+
+
+# longitude_l93
+def test_match_longitude_l93():
+    vals = [0, -154, "1265783,45", 34723.4]
+    for val in vals:
+        assert longitude_l93._is(val)
+
+
+def test_do_not_match_longitude_93():
+    vals = [1456669.8, "-776225", "346_3214"]
+    for val in vals:
+        assert not longitude_l93._is(val)
 
 
 # pays
@@ -284,34 +372,34 @@ def test_do_not_match_year():
 def test_match_date():
     val = "1960-08-07"
     assert date._is(val)
-    val = '12/02/2007'
+    val = "12/02/2007"
     assert date._is(val)
-    val = '15 jan 1985'
+    val = "15 jan 1985"
     assert date._is(val)
-    val = '15 décembre 1985'
+    val = "15 décembre 1985"
     assert date._is(val)
-    val = '02 05 2003'
+    val = "02 05 2003"
     assert date._is(val)
-    val = '20030502'
+    val = "20030502"
     assert date._is(val)
-    val = '1993-12/02'
+    val = "1993-12/02"
     assert date._is(val)
 
 
 def test_do_not_match_date():
     val = "1993-1993-1993"
     assert not date._is(val)
-    val = '39-10-1993'
+    val = "39-10-1993"
     assert not date._is(val)
-    val = '19-15-1993'
+    val = "19-15-1993"
     assert not date._is(val)
-    val = '15 tambour 1985'
+    val = "15 tambour 1985"
     assert not date._is(val)
-    val = '12152003'
+    val = "12152003"
     assert not date._is(val)
-    val = '20031512'
+    val = "20031512"
     assert not date._is(val)
-    val = '02052003'
+    val = "02052003"
     assert not date._is(val)
 
 
@@ -344,8 +432,16 @@ def test_match_rna():
 
 
 def test_do_not_match_rna():
-    val = "W111111111111111111111111111111111111"
-    assert not code_rna._is(val)
+    vals = [
+        "W111111111111111111111111111111111111",
+        "w143788974",
+        "W12",
+        "678W23456",
+        "165789325",
+        "Wa1#89sf&h",
+    ]
+    for val in vals:
+        assert not code_rna._is(val)
 
 
 def test_match_waldec():
