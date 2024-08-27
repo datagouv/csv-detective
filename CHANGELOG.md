@@ -1,5 +1,9 @@
 # Changelog
 
+## Current (in progress)
+
+- Nothing yet
+
 ## 0.7.2 (2024-08-27)
 
 - Outsource many formats to fr-format library
