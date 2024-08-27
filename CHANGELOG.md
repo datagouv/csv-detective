@@ -1,6 +1,6 @@
 # Changelog
 
-## Current (in progress)
+## 0.7.2 (2024-08-27)
 
 - Outsource many formats to fr-format library
 - Better date detection
