@@ -2,6 +2,7 @@
 
 ## Current (in progress)
 
+- Outsource many formats to fr-format library
 - Better date detection
 - Update dependencies to make tests pass
 - Update readme
