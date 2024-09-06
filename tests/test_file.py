@@ -69,7 +69,7 @@ def test_profile_output_on_file():
 
 
 def test_exception():
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         explore_csv.routine(
             csv_file_path="tests/a_test_file.csv",
             num_rows=50,
@@ -82,7 +82,7 @@ def test_exception_different_number_of_columns():
     """
     A ValueError should be raised if the number of columns differs between the first rows
     """
-    with pytest.raises(Exception):
+    with pytest.raises(ValueError):
         explore_csv.routine(
             csv_file_path="tests/c_test_file.csv",
             num_rows=-1,
