@@ -45,7 +45,10 @@ def get_all_packages(detect_type):
         for filename in filenames:
             file = os.path.join(dirpath, filename).replace(root_dir, "")
             if file.endswith("__init__.py"):
-                module = file.replace("__init__.py", "").replace("\\", ".")[:-1]
+                module = (
+                    file.replace("__init__.py", "")
+                    .replace("/", ".").replace("\\", ".")[:-1]
+                )
                 if module:
                     modules.append(detect_type + module)
     return modules
