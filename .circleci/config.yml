@@ -73,7 +73,7 @@ jobs:
           name: Run tests
           command: |
             source venv/bin/activate
-            pytest tests/ --junitxml=reports/python/tests.xml -p no:sugar --color=yes
+            pytest -s tests/ --junitxml=reports/python/tests.xml -p no:sugar --color=yes
       - store_test_results:
           path: reports/python
 
