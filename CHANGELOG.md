@@ -2,7 +2,7 @@
 
 ## Current (in progress)
 
-- Nothing yet
+- Refactor tests import, now using folder arborescence instead of pre-made file
 
 ## 0.7.2 (2024-08-27)
 
