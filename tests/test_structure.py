@@ -1,4 +1,5 @@
 import os
+# flake8: noqa
 from csv_detective import detect_fields, detect_labels
 
 
