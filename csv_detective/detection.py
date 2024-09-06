@@ -450,7 +450,7 @@ def create_profile(
     }
 
     if num_rows > 0:
-        raise Exception("To create profiles num_rows has to be set to -1")
+        raise ValueError("To create profiles num_rows has to be set to -1")
     safe_table = table.copy()
     if not limited_output:
         dict_cols_fields = {
