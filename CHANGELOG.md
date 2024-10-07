@@ -1,5 +1,9 @@
 # Changelog
 
+## Current (in progress)
+
+- Nothing yet
+
 ## 0.7.3 (2024-10-07)
 
 - Refactor tests import, now using folder arborescence instead of pre-made file
