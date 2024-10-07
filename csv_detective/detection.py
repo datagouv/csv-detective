@@ -495,8 +495,8 @@ def create_profile(
         tops = []
         for tb in tops_bruts:
             top = {}
-            top["count"] = tb[c]
-            top["value"] = tb["count"]
+            top["count"] = tb["count"]
+            top["value"] = tb[c]
             tops.append(top)
         profile[c].update(
             tops=tops,
