@@ -3,6 +3,7 @@
 ## Current (in progress)
 
 - Refactor tests import, now using folder arborescence instead of pre-made file
+- Fix inversion (count<=>value) in profile
 
 ## 0.7.2 (2024-08-27)
 
