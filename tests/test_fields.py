@@ -45,6 +45,15 @@ from csv_detective.detection import (
     detect_continuous_variable,
     detetect_categorical_variable,
 )
+from csv_detective.explore_csv import return_all_tests
+
+
+def test_all_tests_return_bool():
+    for tests_cat in ["detect_fields", "detect_labels"]:
+        all_tests = return_all_tests("ALL", tests_cat)
+        for test in all_tests:
+            for tmp in ["a", "9", "3.14", "[]", float("nan")]:
+                assert isinstance(test._is(tmp), bool)
 
 
 # categorical
