@@ -12,5 +12,7 @@ f.close()
 
 def _is(val):
     '''Repère les codes APE700 de l'INSEE'''
+    if not isinstance(val, str):
+        return False
     val = _process_text(val).upper()
     return val in condes_insee_ape

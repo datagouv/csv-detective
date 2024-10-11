@@ -19,5 +19,7 @@ jours = {
 
 def _is(val):
     '''Renvoie True si les champs peuvent être des jours de la semaine'''
+    if not isinstance(val, str):
+        return False
     val = val.lower()
     return val in jours

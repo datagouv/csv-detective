@@ -9,4 +9,4 @@ regex = (
 
 def _is(val):
     '''Repere le code Waldec'''
-    return bool(re.match(regex, val))
+    return isinstance(val, str) and bool(re.match(regex, val))

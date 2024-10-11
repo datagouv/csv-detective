@@ -4,4 +4,4 @@ PROPORTION = 1
 
 
 def _is(val):
-    return CodeFantoir.is_valid(val)
+    return isinstance(val, str) and CodeFantoir.is_valid(val)

@@ -9,4 +9,4 @@ regex = (
 
 def _is(val):
     '''Repere les dates textuelles FR'''
-    return bool(re.match(regex, val))
+    return isinstance(val, str) and bool(re.match(regex, val))

@@ -38,7 +38,7 @@ letters = (
 def _is(val):
     '''Renvoie True si val peut être une date, False sinon
     On ne garde que les regex pour les cas où parse() ne convient pas'''
-    return (
+    return isinstance(val, str) and (
         (is_dateutil_date(val) and not is_float(val))
         or bool(re.match(letters, unidecode(val)))
         or bool(re.match(pat, val))

@@ -20,5 +20,5 @@ def _is(val):
             return True
         else:
             return False
-    except JSONDecodeError:
+    except (JSONDecodeError, TypeError):
         return False
