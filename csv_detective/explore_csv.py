@@ -105,6 +105,7 @@ def routine(
     save_results: bool = True,
     encoding: str = None,
     sep: str = None,
+    skipna: bool = True,
     output_profile: bool = False,
     output_schema: bool = False,
     verbose: bool = False,
@@ -124,6 +125,7 @@ def routine(
         output_schema: whether or not to add the 'schema' field to the output (tableschema)
         verbose: whether or not to print process logs in console 
         sheet_name: if reading multi-sheet file (xls-like), which sheet to consider
+        skipna: whether to keep NaN (empty cells) for tests
 
     Returns:
         dict: a dict with information about the csv and possible types for each column
@@ -225,7 +227,7 @@ def routine(
         return return_dict
 
     # Perform testing on fields
-    return_table_fields = test_col(table, all_tests_fields, limited_output, verbose=verbose)
+    return_table_fields = test_col(table, all_tests_fields, limited_output, skipna=skipna, verbose=verbose)
     return_dict_cols_fields = prepare_output_dict(return_table_fields, limited_output)
     return_dict["columns_fields"] = return_dict_cols_fields
 

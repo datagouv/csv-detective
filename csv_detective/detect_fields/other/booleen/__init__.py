@@ -18,4 +18,4 @@ liste_bool = {
 
 def _is(val):
     '''Détection les booléens'''
-    return val.lower() in liste_bool
+    return isinstance(val, str) and val.lower() in liste_bool

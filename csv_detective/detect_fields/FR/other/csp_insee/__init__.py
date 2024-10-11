@@ -12,5 +12,7 @@ f.close()
 
 def _is(val):
     '''Repère les csp telles que définies par l'INSEE'''
+    if not isinstance(val, str):
+        return False
     val = _process_text(val)
     return val in codes_insee
