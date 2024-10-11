@@ -94,7 +94,7 @@ voies = {
 
 def _is(val):
     '''Repere des adresses'''
-    if len(val) > 150:
+    if not isinstance(val, str) or len(val) > 150:
         return False
     val = _process_text(val)
     return any(x in val for x in voies)

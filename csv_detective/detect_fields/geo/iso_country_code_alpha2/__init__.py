@@ -10,6 +10,6 @@ liste_pays = set(liste_pays)
 
 def _is(val):
     '''Renvoie True si val peut etre un code iso pays alpha-2, False sinon'''
-    if not bool(re.match(r'[A-Z]{2}$', val)):
+    if not isinstance(val, str) or not bool(re.match(r'[A-Z]{2}$', val)):
         return False
     return val in liste_pays
