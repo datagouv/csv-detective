@@ -2,7 +2,7 @@
 
 ## Current (in progress)
 
-- Nothing yet
+- Enable calling main functions from base [#97](https://github.com/datagouv/csv-detective/pull/97)
 
 ## 0.7.3 (2024-10-07)
 
