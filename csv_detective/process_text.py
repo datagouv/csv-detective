@@ -1,7 +1,7 @@
 from re import finditer
 
 
-def camel_case_split(identifier):
+def camel_case_split(identifier: str):
     matches = finditer(
         ".+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)", identifier
     )
@@ -9,7 +9,7 @@ def camel_case_split(identifier):
 
 
 # Process text
-def _process_text(val):
+def _process_text(val: str):
     """Traitement des chaînes de caractères pour les standardiser.
     Plusieurs alternatives ont été testées : .translate, unidecode.unidecode,
     des méthodes hybrides, mais aucune ne s'est avérée plus performante."""

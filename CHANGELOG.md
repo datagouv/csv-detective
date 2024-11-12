@@ -4,6 +4,20 @@
 
 - Nothing yet
 
+## 0.7.3 (2024-10-07)
+
+- Refactor tests import, now using folder arborescence instead of pre-made file
+- Fix inversion (count<=>value) in profile
+
+## 0.7.2 (2024-08-27)
+
+- Outsource many formats to fr-format library
+- Better date detection
+- Update dependencies to make tests pass
+- Update readme
+- Hint type
+- Minor refactors
+
 ## 0.7.1 (2024-03-27)
 
 - Fixes after production release in hydra

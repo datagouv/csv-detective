@@ -1,5 +1,6 @@
 from frformat import LongitudeL93
 from csv_detective.detect_fields.other.float import _is as is_float
+
 from csv_detective.detect_fields.other.float import float_casting
 
 
