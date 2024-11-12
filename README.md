@@ -22,7 +22,7 @@ Say you have a tabular file located at `file_path`. This is how you could use `c
 
 ```
 # Import the csv_detective package
-from csv_detective.explore_csv import routine
+from csv_detective import routine
 import os # for this example only
 
 # Replace by your file path
