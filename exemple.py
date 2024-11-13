@@ -3,7 +3,7 @@ import os
 import json
 from pathlib import Path
 
-from csv_detective.explore_csv import routine
+from csv_detective import routine
 
 # Replace by your file path
 input_folder = Path() / "tests" / "data"
