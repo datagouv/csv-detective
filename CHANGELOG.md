@@ -4,6 +4,7 @@
 
 - Enable calling main functions from base [#97](https://github.com/datagouv/csv-detective/pull/97)
 - Better detection of ints and floats [#94](https://github.com/datagouv/csv-detective/pull/94)
+- Better handle NaN values [#96](https://github.com/datagouv/csv-detective/pull/96)
 
 ## 0.7.3 (2024-10-07)
 

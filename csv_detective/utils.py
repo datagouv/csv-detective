@@ -92,7 +92,7 @@ def test_col_label(label: str, test_func: Callable, proportion: float = 1, limit
         return result if result >= proportion else 0
 
 
-def test_col(table: pd.DataFrame, all_tests: list, limited_output: bool, verbose: bool = False):
+def test_col(table: pd.DataFrame, all_tests: list, limited_output: bool, skipna: bool = True, verbose: bool = False):
     # Initialising dict for tests
     if verbose:
         start = time()
@@ -113,6 +113,7 @@ def test_col(table: pd.DataFrame, all_tests: list, limited_output: bool, verbose
                 serie,
                 value["func"],
                 value["prop"],
+                skipna=skipna,
                 limited_output=limited_output,
                 verbose=verbose,
             )

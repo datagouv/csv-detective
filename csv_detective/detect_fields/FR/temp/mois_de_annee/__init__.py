@@ -33,5 +33,7 @@ mois = {
 
 def _is(val):
     '''Renvoie True si les champs peuvent être des mois de l'année'''
+    if not isinstance(val, str):
+        return False
     val = unidecode(val.lower())
     return val in mois

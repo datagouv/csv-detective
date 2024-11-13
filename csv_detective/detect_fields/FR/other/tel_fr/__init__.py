@@ -5,6 +5,8 @@ PROPORTION = 0.7
 
 def _is(val):
     '''Repère les numeros de telephone francais'''
+    if not isinstance(val, str):
+        return False
 
     if len(val) < 10:
         return False
