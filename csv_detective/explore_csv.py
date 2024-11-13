@@ -197,25 +197,24 @@ def routine(
         # )
 
     # Creating return dictionary
-    return_dict = dict()
+    return_dict = {
+        "header_row_idx": header_row_idx,
+        "header": header,
+        "total_lines": total_lines,
+        "nb_duplicates": nb_duplicates,
+        "heading_columns": heading_columns,
+        "trailing_columns": trailing_columns,
+        "categorical": res_categorical,
+        # "continuous": res_continuous,
+    }
     # this is only relevant for xls-like
-    if engine:
+    if is_xls_like:
         return_dict["engine"] = engine
         return_dict["sheet_name"] = sheet_name
     # this is only relevant for csv
     else:
         return_dict["encoding"] = encoding
         return_dict["separator"] = sep
-    return_dict["header_row_idx"] = header_row_idx
-    return_dict["header"] = header
-    return_dict["total_lines"] = total_lines
-    return_dict["nb_duplicates"] = nb_duplicates
-
-    return_dict["heading_columns"] = heading_columns
-    return_dict["trailing_columns"] = trailing_columns
-
-    # return_dict["continuous"] = res_continuous
-    return_dict["categorical"] = res_categorical
 
     # list testing to be performed
     all_tests_fields = return_all_tests(
@@ -231,13 +230,11 @@ def routine(
 
     # Perform testing on fields
     return_table_fields = test_col(table, all_tests_fields, limited_output, skipna=skipna, verbose=verbose)
-    return_dict_cols_fields = prepare_output_dict(return_table_fields, limited_output)
-    return_dict["columns_fields"] = return_dict_cols_fields
+    return_dict["columns_fields"] = prepare_output_dict(return_table_fields, limited_output)
 
     # Perform testing on labels
     return_table_labels = test_label(table, all_tests_labels, limited_output, verbose=verbose)
-    return_dict_cols_labels = prepare_output_dict(return_table_labels, limited_output)
-    return_dict["columns_labels"] = return_dict_cols_labels
+    return_dict["columns_labels"] = prepare_output_dict(return_table_labels, limited_output)
 
     # Multiply the results of the fields by 1 + 0.5 * the results of the labels.
     # This is because the fields are more important than the labels and yields a max
@@ -268,8 +265,7 @@ def routine(
         return_table.loc[formats_with_mandatory_label, :],
         0,
     )
-    return_dict_cols = prepare_output_dict(return_table, limited_output)
-    return_dict["columns"] = return_dict_cols
+    return_dict["columns"] = prepare_output_dict(return_table, limited_output)
 
     metier_to_python_type = {
         "booleen": "bool",
