@@ -9,7 +9,7 @@ def _is(val):
     '''Detects floats, assuming that tables will not have scientific
     notations (3e6) or "+" in the string. "-" is still accepted.'''
     try:
-        if any([k in val for k in ['_', '+', 'e', 'E']]):
+        if any([k in val for k in ['_', '+', 'e', 'E']]) or (val.startswith('0') and len(val) > 1):
             return False
         float_casting(val)
         return True
