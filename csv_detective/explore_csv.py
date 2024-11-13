@@ -102,7 +102,7 @@ def routine(
     num_rows: int = 500,
     user_input_tests: Union[str, List[str]] = "ALL",
     limited_output: bool = True,
-    save_results: bool = True,
+    save_results: Union[bool, str] = True,
     encoding: str = None,
     sep: str = None,
     skipna: bool = True,
@@ -120,7 +120,7 @@ def routine(
         of the whole file
         user_input_tests: tests to run on the file
         limited_output: whether or not to return all possible types or only the most likely one for each column
-        save_results: whether or not to save the results in a json file
+        save_results: whether or not to save the results in a json file, or the path where to dump the output
         output_profile: whether or not to add the 'profile' field to the output
         output_schema: whether or not to add the 'schema' field to the output (tableschema)
         verbose: whether or not to print process logs in console 
@@ -132,6 +132,9 @@ def routine(
     """
     if not csv_file_path:
         raise ValueError("csv_file_path is required.")
+    
+    if not (isinstance(save_results, bool) or (isinstance(save_results, str) and save_results.endswith(".json"))):
+        raise ValueError("`save_results` must be a bool or a valid path to a json file.")
 
     if verbose:
         start_routine = time()
@@ -331,13 +334,16 @@ def routine(
         )
 
     if save_results:
-        # Write your file as json
-        output_path = os.path.splitext(csv_file_path)[0]
-        if '/' in output_path:
-            output_path = output_path.split('/')[-1]
-        if is_xls_like:
-            output_path += "_sheet-" + str(sheet_name)
-        with open(output_path + '.json', "w", encoding="utf8") as fp:
+        if isinstance(save_results, str):
+            output_path = save_results
+        else:
+            output_path = os.path.splitext(csv_file_path)[0]
+            if is_url(output_path):
+                output_path = output_path.split('/')[-1]
+            if is_xls_like:
+                output_path += "_sheet-" + str(sheet_name)
+            output_path += ".json"
+        with open(output_path, "w", encoding="utf8") as fp:
             json.dump(return_dict, fp, indent=4, separators=(",", ": "), ensure_ascii=False)
 
     if output_schema:
