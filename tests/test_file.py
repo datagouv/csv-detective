@@ -199,3 +199,22 @@ def test_urls(mocked_responses):
         save_results=False,
     )
     assert output['header'] == ["id", "name", "first_name"]
+
+
+@pytest.mark.parametrize(
+    "expected_type",
+    (
+        (True, "int"),
+        (False, "string"),
+    ),
+)
+def test_nan_values(expected_type):
+    # if skipping NaN, the column contains only ints
+    skipna, expected_type = expected_type
+    output = routine(
+        csv_file_path="tests/b_test_file.csv",
+        num_rows=-1,
+        save_results=False,
+        skipna=skipna,
+    )
+    assert output["columns"]["partly_empty"]["python_type"] == expected_type
