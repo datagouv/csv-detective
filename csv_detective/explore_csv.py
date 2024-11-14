@@ -102,7 +102,7 @@ def routine(
     num_rows: int = 500,
     user_input_tests: Union[str, List[str]] = "ALL",
     limited_output: bool = True,
-    save_results: bool = True,
+    save_results: Union[bool, str] = True,
     encoding: str = None,
     sep: str = None,
     skipna: bool = True,
@@ -120,7 +120,7 @@ def routine(
         of the whole file
         user_input_tests: tests to run on the file
         limited_output: whether or not to return all possible types or only the most likely one for each column
-        save_results: whether or not to save the results in a json file
+        save_results: whether or not to save the results in a json file, or the path where to dump the output
         output_profile: whether or not to add the 'profile' field to the output
         output_schema: whether or not to add the 'schema' field to the output (tableschema)
         verbose: whether or not to print process logs in console 
@@ -132,6 +132,9 @@ def routine(
     """
     if not csv_file_path:
         raise ValueError("csv_file_path is required.")
+    
+    if not (isinstance(save_results, bool) or (isinstance(save_results, str) and save_results.endswith(".json"))):
+        raise ValueError("`save_results` must be a bool or a valid path to a json file.")
 
     if verbose:
         start_routine = time()
@@ -194,25 +197,24 @@ def routine(
         # )
 
     # Creating return dictionary
-    return_dict = dict()
+    return_dict = {
+        "header_row_idx": header_row_idx,
+        "header": header,
+        "total_lines": total_lines,
+        "nb_duplicates": nb_duplicates,
+        "heading_columns": heading_columns,
+        "trailing_columns": trailing_columns,
+        "categorical": res_categorical,
+        # "continuous": res_continuous,
+    }
     # this is only relevant for xls-like
-    if engine:
+    if is_xls_like:
         return_dict["engine"] = engine
         return_dict["sheet_name"] = sheet_name
     # this is only relevant for csv
     else:
         return_dict["encoding"] = encoding
         return_dict["separator"] = sep
-    return_dict["header_row_idx"] = header_row_idx
-    return_dict["header"] = header
-    return_dict["total_lines"] = total_lines
-    return_dict["nb_duplicates"] = nb_duplicates
-
-    return_dict["heading_columns"] = heading_columns
-    return_dict["trailing_columns"] = trailing_columns
-
-    # return_dict["continuous"] = res_continuous
-    return_dict["categorical"] = res_categorical
 
     # list testing to be performed
     all_tests_fields = return_all_tests(
@@ -228,13 +230,11 @@ def routine(
 
     # Perform testing on fields
     return_table_fields = test_col(table, all_tests_fields, limited_output, skipna=skipna, verbose=verbose)
-    return_dict_cols_fields = prepare_output_dict(return_table_fields, limited_output)
-    return_dict["columns_fields"] = return_dict_cols_fields
+    return_dict["columns_fields"] = prepare_output_dict(return_table_fields, limited_output)
 
     # Perform testing on labels
     return_table_labels = test_label(table, all_tests_labels, limited_output, verbose=verbose)
-    return_dict_cols_labels = prepare_output_dict(return_table_labels, limited_output)
-    return_dict["columns_labels"] = return_dict_cols_labels
+    return_dict["columns_labels"] = prepare_output_dict(return_table_labels, limited_output)
 
     # Multiply the results of the fields by 1 + 0.5 * the results of the labels.
     # This is because the fields are more important than the labels and yields a max
@@ -265,8 +265,7 @@ def routine(
         return_table.loc[formats_with_mandatory_label, :],
         0,
     )
-    return_dict_cols = prepare_output_dict(return_table, limited_output)
-    return_dict["columns"] = return_dict_cols
+    return_dict["columns"] = prepare_output_dict(return_table, limited_output)
 
     metier_to_python_type = {
         "booleen": "bool",
@@ -331,13 +330,16 @@ def routine(
         )
 
     if save_results:
-        # Write your file as json
-        output_path = os.path.splitext(csv_file_path)[0]
-        if '/' in output_path:
-            output_path = output_path.split('/')[-1]
-        if is_xls_like:
-            output_path += "_sheet-" + str(sheet_name)
-        with open(output_path + '.json', "w", encoding="utf8") as fp:
+        if isinstance(save_results, str):
+            output_path = save_results
+        else:
+            output_path = os.path.splitext(csv_file_path)[0]
+            if is_url(output_path):
+                output_path = output_path.split('/')[-1]
+            if is_xls_like:
+                output_path += "_sheet-" + str(sheet_name)
+            output_path += ".json"
+        with open(output_path, "w", encoding="utf8") as fp:
             json.dump(return_dict, fp, indent=4, separators=(",", ": "), ensure_ascii=False)
 
     if output_schema:

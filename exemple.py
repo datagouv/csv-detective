@@ -1,24 +1,19 @@
-# Import the csv_detective package
+# Analysis of a batch of tabular files
 import os
-import json
-from pathlib import Path
-
 from csv_detective import routine
 
-# Replace by your file path
-input_folder = Path() / "tests" / "data"
-output_folder = Path() / 'tests' / 'output_data'
+# replace with your file structure
+input_folder = "analysis/source"
+output_folder = "analysis/output"
 
-for folder in os.listdir(input_folder):
-    for file in os.listdir(input_folder / folder):
-        # Open your file and run csv_detective
-        file_path = input_folder / folder / file
-        inspection_results = routine(file_path)
+if not os.path.exists(output_folder):
+    os.makedirs(output_folder)
 
-        # Write your file as json
-        output_folder_file = output_folder / folder
-        if not output_folder_file.exists():
-            os.makedirs(output_folder_file)
-        output_file_path = output_folder_file / file
-        with open(output_file_path.with_suffix('.json'), 'w',  encoding="utf8") as fp:
-            json.dump(inspection_results, fp, indent=4, separators=(',', ': '))
+for file in os.listdir(input_folder):
+    file_path = f"{input_folder}/{file}"
+    # open your file and run csv_detective
+    inspection_results = routine(
+        file_path,
+        save_results=f"{output_folder}/{os.path.splitext(file)[0]}.json",
+        verbose=True,  # if you want to see what's happening
+    )
