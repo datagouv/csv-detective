@@ -163,10 +163,7 @@ Only the format with highest score is present in the output.
 
 - Smarter refactors
 - Improve performances
-- Improve testing structure to make modular searches (search only for cities for example)
 - Test other ways to load and process data (`pandas` alternatives)
-- Make differentiated pre-processing (no lower case for country codes for example)
-- Give a sense of probability in the prediction
 - Add more and more detection modules...
 
 Related ideas:
