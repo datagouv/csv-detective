@@ -1,6 +1,6 @@
 # Changelog
 
-## Current (in progress)
+## 0.7.4 (2024-11-15)
 
 - Enable calling main functions from base [#97](https://github.com/datagouv/csv-detective/pull/97)
 - Better detection of ints and floats [#94](https://github.com/datagouv/csv-detective/pull/94)
