@@ -5,6 +5,8 @@ PROPORTION = 0.8
 
 def _is(val):
     '''Détection des identifiants SIRET (SIRENE)'''
+    if not isinstance(val, str):
+        return False
     val = val.replace(' ', '')
     if not bool(re.match(r'^[0-9]{14}$', val)):
         return False

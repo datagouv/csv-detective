@@ -9,6 +9,6 @@ with open(join(dirname(__file__), 'iso_country_code_alpha3.txt'), 'r') as iofile
 
 def _is(val):
     '''Renvoie True si val peut etre un code iso pays alpha-3, False sinon'''
-    if not bool(re.match(r'[A-Z]{3}$', val)):
+    if not isinstance(val, str) or not bool(re.match(r'[A-Z]{3}$', val)):
         return False
     return val in set(liste_pays)

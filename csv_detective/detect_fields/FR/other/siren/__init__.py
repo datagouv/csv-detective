@@ -5,6 +5,8 @@ PROPORTION = 0.9
 
 def _is(val):
     '''Repere les codes SIREN'''
+    if not isinstance(val, str):
+        return False
     val = val.replace(' ', '')
     if not bool(re.match(r'^[0-9]{9}$', val)):
         return False

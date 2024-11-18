@@ -3,20 +3,18 @@ Ce script analyse les premières lignes d'un CSV pour essayer de déterminer le
 contenu possible des champs
 """
 
-from typing import Dict, List, Literal, Union
+from typing import Dict, List, Union
 import json
 import numpy as np
 import os
 import tempfile
-from pkg_resources import resource_string
 import logging
 from time import time
 import requests
 from io import StringIO
 
 # flake8: noqa
-from csv_detective import detect_fields
-from csv_detective import detect_labels
+from csv_detective import detect_fields, detect_labels
 from csv_detective.s3_utils import download_from_minio, upload_to_minio
 from csv_detective.schema_generation import generate_table_schema
 from csv_detective.utils import test_col, test_label, prepare_output_dict, display_logs_depending_process_time
@@ -39,48 +37,63 @@ from .detection import (
 
 logging.basicConfig(level=logging.INFO)
 
-def return_all_tests(user_input_tests, detect_type="detect_fields"):
+
+def get_all_packages(detect_type):
+    root_dir = os.path.dirname(os.path.abspath(__file__)) + "/" + detect_type
+    modules = []
+    for dirpath, _, filenames in os.walk(root_dir):
+        for filename in filenames:
+            file = os.path.join(dirpath, filename).replace(root_dir, "")
+            if file.endswith("__init__.py"):
+                module = (
+                    file.replace("__init__.py", "")
+                    .replace("/", ".").replace("\\", ".")[:-1]
+                )
+                if module:
+                    modules.append(detect_type + module)
+    return modules
+
+
+def return_all_tests(
+    user_input_tests: Union[str, list],
+    detect_type: str,
+):
     """
     returns all tests that have a method _is and are listed in the user_input_tests
     the function can select a sub_package from csv_detective
+    user_input_tests may look like this:
+        - "ALL": all possible tests are made
+        - "FR.other.siren" (or any other path-like string to one of the tests, or a group of tests, like "FR.geo"):
+        this specifc (group of) test(s) only
+        - ["FR.temp.mois_de_annee", "geo", ...]: only the specified tests will be made ; you may also skip
+        specific (groups of) tests by add "-" at the start (e.g "-temp.date")
     """
-    all_packages = resource_string(__name__, "all_packages.txt")
-    all_packages = all_packages.decode().split("\n")
-    all_packages.remove("")
-    all_packages.remove("csv_detective")
-    all_packages = [x.replace("csv_detective.", "") for x in all_packages]
-
-    if user_input_tests is None:
-        return []
+    assert detect_type in ["detect_fields", "detect_labels"]
+    all_packages = get_all_packages(detect_type=detect_type)
 
     if isinstance(user_input_tests, str):
-        assert user_input_tests[0] != "-"
-        if user_input_tests == "ALL":
-            tests_to_do = [detect_type]
-        else:
-            tests_to_do = [detect_type + "." + user_input_tests]
-        tests_to_not_do = []
-    elif isinstance(user_input_tests, list):
-        if "ALL" in user_input_tests:
-            tests_to_do = [detect_type]
-        else:
-            tests_to_do = [
-                detect_type + "." + x for x in user_input_tests if x[0] != "-"
-            ]
-        tests_to_not_do = [
-            detect_type + "." + x[1:] for x in user_input_tests if x[0] == "-"
+        user_input_tests = [user_input_tests]
+    if "ALL" in user_input_tests:
+        tests_to_do = [detect_type]
+    else:
+        # can't require to only skip tests
+        assert not all(x[0] == "-" for x in user_input_tests)
+        tests_to_do = [
+            detect_type + "." + x for x in user_input_tests if x[0] != "-"
         ]
-
-    all_fields = [
-        x
-        for x in all_packages
-        if any([y == x[: len(y)] for y in tests_to_do])
-        and all([y != x[: len(y)] for y in tests_to_not_do])
+    tests_skipped = [
+        detect_type + "." + x[1:] for x in user_input_tests if x[0] == "-"
     ]
-    all_tests = [eval(field) for field in all_fields]
+    all_tests = [
+        # this is why we need to import detect_fields/labels
+        eval(x) for x in all_packages
+        if any([y == x[: len(y)] for y in tests_to_do])
+        and all([y != x[: len(y)] for y in tests_skipped])
+    ]
+    # to remove groups of tests
     all_tests = [
         test for test in all_tests if "_is" in dir(test)
-    ]  # TODO : Fix this shit
+    ]
     return all_tests
 
 
@@ -88,10 +101,11 @@ def routine(
     csv_file_path: str,
     num_rows: int = 500,
     user_input_tests: Union[str, List[str]] = "ALL",
-    output_mode: Literal["ALL", "LIMITED"] = "LIMITED",
-    save_results: bool = True,
+    limited_output: bool = True,
+    save_results: Union[bool, str] = True,
     encoding: str = None,
     sep: str = None,
+    skipna: bool = True,
     output_profile: bool = False,
     output_schema: bool = False,
     verbose: bool = False,
@@ -105,19 +119,22 @@ def routine(
         num_rows: number of rows to sample from the file for analysis ; -1 for analysis
         of the whole file
         user_input_tests: tests to run on the file
-        output_mode: LIMITED or ALL, whether or not to return all possible types or only
-        the most likely one for each column
-        save_results: whether or not to save the results in a json file
+        limited_output: whether or not to return all possible types or only the most likely one for each column
+        save_results: whether or not to save the results in a json file, or the path where to dump the output
         output_profile: whether or not to add the 'profile' field to the output
         output_schema: whether or not to add the 'schema' field to the output (tableschema)
         verbose: whether or not to print process logs in console 
         sheet_name: if reading multi-sheet file (xls-like), which sheet to consider
+        skipna: whether to keep NaN (empty cells) for tests
 
     Returns:
         dict: a dict with information about the csv and possible types for each column
     """
     if not csv_file_path:
         raise ValueError("csv_file_path is required.")
+    
+    if not (isinstance(save_results, bool) or (isinstance(save_results, str) and save_results.endswith(".json"))):
+        raise ValueError("`save_results` must be a bool or a valid path to a json file.")
 
     if verbose:
         start_routine = time()
@@ -180,25 +197,24 @@ def routine(
         # )
 
     # Creating return dictionary
-    return_dict = dict()
+    return_dict = {
+        "header_row_idx": header_row_idx,
+        "header": header,
+        "total_lines": total_lines,
+        "nb_duplicates": nb_duplicates,
+        "heading_columns": heading_columns,
+        "trailing_columns": trailing_columns,
+        "categorical": res_categorical,
+        # "continuous": res_continuous,
+    }
     # this is only relevant for xls-like
-    if engine:
+    if is_xls_like:
         return_dict["engine"] = engine
         return_dict["sheet_name"] = sheet_name
     # this is only relevant for csv
     else:
         return_dict["encoding"] = encoding
         return_dict["separator"] = sep
-    return_dict["header_row_idx"] = header_row_idx
-    return_dict["header"] = header
-    return_dict["total_lines"] = total_lines
-    return_dict["nb_duplicates"] = nb_duplicates
-
-    return_dict["heading_columns"] = heading_columns
-    return_dict["trailing_columns"] = trailing_columns
-
-    # return_dict["continuous"] = res_continuous
-    return_dict["categorical"] = res_categorical
 
     # list testing to be performed
     all_tests_fields = return_all_tests(
@@ -213,14 +229,12 @@ def routine(
         return return_dict
 
     # Perform testing on fields
-    return_table_fields = test_col(table, all_tests_fields, output_mode, verbose=verbose)
-    return_dict_cols_fields = prepare_output_dict(return_table_fields, output_mode)
-    return_dict["columns_fields"] = return_dict_cols_fields
+    return_table_fields = test_col(table, all_tests_fields, limited_output, skipna=skipna, verbose=verbose)
+    return_dict["columns_fields"] = prepare_output_dict(return_table_fields, limited_output)
 
     # Perform testing on labels
-    return_table_labels = test_label(table, all_tests_labels, output_mode, verbose=verbose)
-    return_dict_cols_labels = prepare_output_dict(return_table_labels, output_mode)
-    return_dict["columns_labels"] = return_dict_cols_labels
+    return_table_labels = test_label(table, all_tests_labels, limited_output, verbose=verbose)
+    return_dict["columns_labels"] = prepare_output_dict(return_table_labels, limited_output)
 
     # Multiply the results of the fields by 1 + 0.5 * the results of the labels.
     # This is because the fields are more important than the labels and yields a max
@@ -251,8 +265,7 @@ def routine(
         return_table.loc[formats_with_mandatory_label, :],
         0,
     )
-    return_dict_cols = prepare_output_dict(return_table, output_mode)
-    return_dict["columns"] = return_dict_cols
+    return_dict["columns"] = prepare_output_dict(return_table, limited_output)
 
     metier_to_python_type = {
         "booleen": "bool",
@@ -273,7 +286,7 @@ def routine(
         "longitude_wgs_fr_metropole": "float",
     }
 
-    if output_mode == "ALL":
+    if not limited_output:
         for detection_method in ["columns_fields", "columns_labels", "columns"]:
             return_dict[detection_method] = {
                 col_name: [
@@ -287,7 +300,7 @@ def routine(
                 ]
                 for col_name, detections in return_dict[detection_method].items()
             }
-    if output_mode == "LIMITED":
+    else:
         for detection_method in ["columns_fields", "columns_labels", "columns"]:
             return_dict[detection_method] = {
                 col_name: {
@@ -309,25 +322,27 @@ def routine(
 
     if output_profile:
         return_dict["profile"] = create_profile(
-            table, return_dict["columns"], 
-            sep, 
-            encoding, 
-            num_rows, 
-            header_row_idx, 
-            verbose=verbose
+            table=table,
+            dict_cols_fields=return_dict["columns"],
+            num_rows=num_rows,
+            limited_output=limited_output,
+            verbose=verbose,
         )
 
     if save_results:
-        # Write your file as json
-        output_path = os.path.splitext(csv_file_path)[0]
-        if '/' in output_path:
-            output_path = output_path.split('/')[-1]
-        if is_xls_like:
-            output_path += "_sheet-" + str(sheet_name)
-        with open(output_path + '.json', "w", encoding="utf8") as fp:
+        if isinstance(save_results, str):
+            output_path = save_results
+        else:
+            output_path = os.path.splitext(csv_file_path)[0]
+            if is_url(output_path):
+                output_path = output_path.split('/')[-1]
+            if is_xls_like:
+                output_path += "_sheet-" + str(sheet_name)
+            output_path += ".json"
+        with open(output_path, "w", encoding="utf8") as fp:
             json.dump(return_dict, fp, indent=4, separators=(",", ": "), ensure_ascii=False)
 
-    if output_schema and output_mode != "ALL":
+    if output_schema:
         return_dict["schema"] = generate_table_schema(
             return_dict,
             save_file=False,
