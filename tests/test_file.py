@@ -1,10 +1,10 @@
-from csv_detective import explore_csv
+from csv_detective import routine
 import pytest
 import responses
 
 
 def test_columns_output_on_file():
-    output = explore_csv.routine(
+    output = routine(
         csv_file_path="tests/a_test_file.csv",
         num_rows=-1,
         output_profile=False,
@@ -38,7 +38,7 @@ def test_columns_output_on_file():
 
 
 def test_profile_output_on_file():
-    output = explore_csv.routine(
+    output = routine(
         csv_file_path="tests/a_test_file.csv",
         num_rows=-1,
         output_profile=True,
@@ -70,7 +70,7 @@ def test_profile_output_on_file():
 
 def test_exception():
     with pytest.raises(ValueError):
-        explore_csv.routine(
+        routine(
             csv_file_path="tests/a_test_file.csv",
             num_rows=50,
             output_profile=True,
@@ -83,7 +83,7 @@ def test_exception_different_number_of_columns():
     A ValueError should be raised if the number of columns differs between the first rows
     """
     with pytest.raises(ValueError):
-        explore_csv.routine(
+        routine(
             csv_file_path="tests/c_test_file.csv",
             num_rows=-1,
             output_profile=True,
@@ -92,7 +92,7 @@ def test_exception_different_number_of_columns():
 
 
 def test_code_dep_reg_on_file():
-    output = explore_csv.routine(
+    output = routine(
         csv_file_path="tests/b_test_file.csv",
         num_rows=-1,
         output_profile=False,
@@ -104,7 +104,7 @@ def test_code_dep_reg_on_file():
 
 
 def test_schema_on_file():
-    output = explore_csv.routine(
+    output = routine(
         csv_file_path="tests/b_test_file.csv",
         num_rows=-1,
         output_schema=True,
@@ -131,7 +131,7 @@ def test_schema_on_file():
 
 
 def test_non_csv_files():
-    _ = explore_csv.routine(
+    _ = routine(
         csv_file_path="tests/file.ods",
         num_rows=-1,
         output_profile=False,
@@ -140,7 +140,7 @@ def test_non_csv_files():
     assert _['engine'] == 'odf'
 
     # this is a "tricked" xls file that is actually read as odf
-    _ = explore_csv.routine(
+    _ = routine(
         csv_file_path="tests/file.xls",
         num_rows=-1,
         output_profile=False,
@@ -148,7 +148,7 @@ def test_non_csv_files():
     )
     assert _['engine'] == 'odf'
 
-    _ = explore_csv.routine(
+    _ = routine(
         csv_file_path="tests/file.xlsx",
         num_rows=-1,
         output_profile=False,
@@ -160,7 +160,7 @@ def test_non_csv_files():
     # check if the sheet we consider is the largest
     assert _['sheet_name'] == 'REI_1987'
 
-    _ = explore_csv.routine(
+    _ = routine(
         csv_file_path="tests/csv_file",
         num_rows=-1,
         output_profile=False,
@@ -169,7 +169,7 @@ def test_non_csv_files():
     assert not _.get('engine')
     assert not _.get('sheet_name')
 
-    _ = explore_csv.routine(
+    _ = routine(
         csv_file_path="tests/xlsx_file",
         num_rows=-1,
         output_profile=False,
@@ -192,10 +192,29 @@ def test_urls(mocked_responses):
         body=expected_content,
         status=200,
     )
-    output = explore_csv.routine(
+    output = routine(
         csv_file_path=url,
         num_rows=-1,
         output_profile=False,
         save_results=False,
     )
     assert output['header'] == ["id", "name", "first_name"]
+
+
+@pytest.mark.parametrize(
+    "expected_type",
+    (
+        (True, "int"),
+        (False, "string"),
+    ),
+)
+def test_nan_values(expected_type):
+    # if skipping NaN, the column contains only ints
+    skipna, expected_type = expected_type
+    output = routine(
+        csv_file_path="tests/b_test_file.csv",
+        num_rows=-1,
+        save_results=False,
+        skipna=skipna,
+    )
+    assert output["columns"]["partly_empty"]["python_type"] == expected_type

@@ -12,5 +12,5 @@ _pays = Pays(Millesime.LATEST, _options)
 
 
 def _is(val):
-    '''Match avec le nom des pays'''
-    return _pays.is_valid(val)
+    """Match avec le nom des pays"""
+    return isinstance(val, str) and _pays.is_valid(val)

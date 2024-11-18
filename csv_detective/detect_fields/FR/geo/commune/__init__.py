@@ -12,6 +12,5 @@ _commune = Commune(Millesime.LATEST, _options)
 
 
 def _is(val):
-    '''Match avec le nom des communes'''
-
-    return _commune.is_valid(val)
+    """Match avec le nom des communes"""
+    return isinstance(val, str) and _commune.is_valid(val)

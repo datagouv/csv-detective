@@ -4,43 +4,50 @@
 
 - Nothing yet
 
+## 0.7.4 (2024-11-15)
+
+- Enable calling main functions from base [#97](https://github.com/datagouv/csv-detective/pull/97)
+- Better detection of ints and floats [#94](https://github.com/datagouv/csv-detective/pull/94)
+- Better handle NaN values [#96](https://github.com/datagouv/csv-detective/pull/96)
+- Reshape exemple.py, clean up code and improve changelog [#98](https://github.com/datagouv/csv-detective/pull/98)
+
 ## 0.7.3 (2024-10-07)
 
-- Refactor tests import, now using folder arborescence instead of pre-made file
-- Fix inversion (count<=>value) in profile
+- Refactor tests import, now using folder arborescence instead of pre-made file [#93](https://github.com/datagouv/csv-detective/pull/93)
+- Fix inversion (count<=>value) in profile [#95](https://github.com/datagouv/csv-detective/pull/95)
 
 ## 0.7.2 (2024-08-27)
 
-- Outsource many formats to fr-format library
-- Better date detection
-- Update dependencies to make tests pass
-- Update readme
-- Hint type
-- Minor refactors
+- Outsource many formats to fr-format library [#87](https://github.com/datagouv/csv-detective/pull/87)
+- Better date detection [#89](https://github.com/datagouv/csv-detective/pull/89)
+- Update dependencies to make tests pass [#81](https://github.com/datagouv/csv-detective/pull/81)
+- Update readme [#81](https://github.com/datagouv/csv-detective/pull/81)
+- Hint type [#81](https://github.com/datagouv/csv-detective/pull/81)
+- Minor refactors [#81](https://github.com/datagouv/csv-detective/pull/81)
 
 ## 0.7.1 (2024-03-27)
 
-- Fixes after production release in hydra
+- Fixes after production release in hydra [#80](https://github.com/datagouv/csv-detective/pull/80)
 
 ## 0.7.0 (2024-03-21)
 
-- Handle other file formats: xls, xlsx, ods (and more)
-- Handle analysis through URLs
+- Handle other file formats: xls, xlsx, ods (and more) and analysis through URLs [#73](https://github.com/datagouv/csv-detective/pull/73)
+- Handle files with no extension (cc hydra) [#79](https://github.com/datagouv/csv-detective/pull/79)
 
 ## 0.6.8 (2024-01-18)
 
-- prevent exporting NaN values in profile
-- raise ValueError if analyzed file has various number of columns across first rows
+- prevent exporting NaN values in profile [#72](https://github.com/datagouv/csv-detective/pull/72)
+- raise ValueError if analyzed file has various number of columns across first rows [#72](https://github.com/datagouv/csv-detective/pull/72)
 
 ## 0.6.7 (2024-01-15)
 
-- Add logs for columns that would take too much time within a specific test
-- Refactor some tests to improve performances and make detection more accurate
-- Try alternative ways to clean text
+- Add logs for columns that would take too much time within a specific test [#70](https://github.com/datagouv/csv-detective/pull/70)
+- Refactor some tests to improve performances and make detection more accurate [#69](https://github.com/datagouv/csv-detective/pull/69)
+- Try alternative ways to clean text [#71](https://github.com/datagouv/csv-detective/pull/71)
 
 ## 0.6.6 (2023-11-24)
 
-- Change setup.py to better convey dependencies
+- Change setup.py to better convey dependencies [#67](https://github.com/datagouv/csv-detective/pull/67)
 
 ## 0.6.5 (2023-11-17)
 

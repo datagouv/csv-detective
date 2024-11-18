@@ -11,6 +11,5 @@ _canton = Canton(Millesime.LATEST, _options)
 
 
 def _is(val):
-    '''Match avec le nom des cantons'''
-
-    return _canton.is_valid(val)
+    """Match avec le nom des cantons"""
+    return isinstance(val, str) and _canton.is_valid(val)

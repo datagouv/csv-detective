@@ -6,6 +6,8 @@ PROPORTION = 1
 
 def _is(val):
     '''Repère les code csp telles que définies par l'INSEE'''
+    if not isinstance(val, str):
+        return False
     val = _process_text(val)
     if len(val) != 4:
         return False

@@ -6,5 +6,4 @@ _code_fantoir = CodeFantoir()
 
 
 def _is(val):
-
-    return _code_fantoir.is_valid(val)
+    return isinstance(val, str) and _code_fantoir.is_valid(val)

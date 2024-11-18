@@ -22,7 +22,7 @@ Say you have a tabular file located at `file_path`. This is how you could use `c
 
 ```
 # Import the csv_detective package
-from csv_detective.explore_csv import routine
+from csv_detective import routine
 import os # for this example only
 
 # Replace by your file path
@@ -163,10 +163,7 @@ Only the format with highest score is present in the output.
 
 - Smarter refactors
 - Improve performances
-- Improve testing structure to make modular searches (search only for cities for example)
 - Test other ways to load and process data (`pandas` alternatives)
-- Make differentiated pre-processing (no lower case for country codes for example)
-- Give a sense of probability in the prediction
 - Add more and more detection modules...
 
 Related ideas:

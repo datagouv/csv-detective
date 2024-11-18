@@ -12,6 +12,5 @@ _departement = Departement(Millesime.LATEST, _options)
 
 
 def _is(val):
-    '''Match avec le nom des departements'''
-
-    return _departement.is_valid(val)
+    """Match avec le nom des departements"""
+    return isinstance(val, str) and _departement.is_valid(val)

@@ -12,5 +12,4 @@ _numero_departement = NumeroDepartement(Millesime.LATEST, _options)
 
 
 def _is(val):
-
-    return _numero_departement.is_valid(val)
+    return isinstance(val, str) and _numero_departement.is_valid(val)

@@ -31,12 +31,28 @@ from csv_detective.detect_fields.geo import (
     iso_country_code_alpha3,
     iso_country_code_numeric,
 )
-from csv_detective.detect_fields.other import email, json, mongo_object_id, url, uuid
+from csv_detective.detect_fields.other import (
+    email,
+    json,
+    mongo_object_id,
+    url,
+    uuid,
+    int as test_int,
+    float as test_float,
+)
 from csv_detective.detect_fields.temp import date, datetime_iso, datetime_rfc822, year
 from csv_detective.detection import (
     detect_continuous_variable,
     detetect_categorical_variable,
 )
+from csv_detective.explore_csv import return_all_tests
+
+
+def test_all_tests_return_bool():
+    all_tests = return_all_tests("ALL", "detect_fields")
+    for test in all_tests:
+        for tmp in ["a", "9", "3.14", "[]", float("nan")]:
+            assert isinstance(test._is(tmp), bool)
 
 
 # categorical
@@ -466,3 +482,25 @@ def test_do_not_match_json():
     assert not json._is(val)
     val = "666"
     assert not json._is(val)
+
+
+# int
+def test_match_int():
+    for val in ["1", "0", "1764", "-24"]:
+        assert test_int._is(val)
+
+
+def test_not_match_int():
+    for val in ["01053", "1.2", "123_456", "+35"]:
+        assert not test_int._is(val)
+
+
+# float
+def test_match_float():
+    for val in ["1", "0", "1764", "-24", "1.2", "1863.23", "-12.7"]:
+        assert test_float._is(val)
+
+
+def test_not_match_float():
+    for val in ["01053", "01053.89", "1e3", "123_456", "123_456.78", "+35", "+35.9"]:
+        assert not test_float._is(val)
