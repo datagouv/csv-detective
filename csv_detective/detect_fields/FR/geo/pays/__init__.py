@@ -1,4 +1,4 @@
-from frformat import Pays, Options
+from frformat import Pays, Options, Millesime
 
 PROPORTION = 0.6
 
@@ -8,7 +8,7 @@ _options = Options(
         replace_non_alphanumeric_with_space=True,
         ignore_extra_whitespace=True
     )
-_pays = Pays(_options)
+_pays = Pays(Millesime.LATEST, _options)
 
 
 def _is(val):

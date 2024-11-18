@@ -1,4 +1,4 @@
-from frformat import Commune, Options
+from frformat import Commune, Options, Millesime
 
 PROPORTION = 0.9
 
@@ -8,7 +8,7 @@ _options = Options(
     replace_non_alphanumeric_with_space=True,
     ignore_extra_whitespace=True
 )
-_commune = Commune(_options)
+_commune = Commune(Millesime.LATEST, _options)
 
 
 def _is(val):

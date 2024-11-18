@@ -1,4 +1,4 @@
-from frformat import Canton, Options
+from frformat import Canton, Options, Millesime
 
 PROPORTION = 0.9
 _options = Options(
@@ -7,7 +7,7 @@ _options = Options(
     replace_non_alphanumeric_with_space=True,
     ignore_extra_whitespace=True
 )
-_canton = Canton(_options)
+_canton = Canton(Millesime.LATEST, _options)
 
 
 def _is(val):

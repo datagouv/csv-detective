@@ -1,8 +1,8 @@
-from frformat import CodeCommuneInsee
+from frformat import CodeCommuneInsee, Millesime
 
 PROPORTION = 0.75
 
-_code_commune_insee = CodeCommuneInsee()
+_code_commune_insee = CodeCommuneInsee(Millesime.LATEST)
 
 
 def _is(val):

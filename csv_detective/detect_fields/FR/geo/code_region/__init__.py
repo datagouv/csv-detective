@@ -1,8 +1,8 @@
-from frformat import CodeRegion
+from frformat import CodeRegion, Millesime
 
 PROPORTION = 1
 
-_code_region = CodeRegion()
+_code_region = CodeRegion(Millesime.LATEST)
 
 
 def _is(val):
