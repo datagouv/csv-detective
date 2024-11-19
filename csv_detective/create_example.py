@@ -10,7 +10,6 @@ import rstr
 
 def create_example_csv_file(
     fields: Union[dict, None] = None,
-    from_schema: bool = False,
     schema_path: Union[str, None] = None,
     file_length: int = 10,
     output_file: bool = True,
@@ -33,7 +32,8 @@ def create_example_csv_file(
     '''
     # need to make a CLI command
 
-    assert isinstance(fields, list) or (from_schema and isinstance(schema_path, str))
+    if not (fields or schema_path):
+        raise ValueError("At least fields or schema_path must be specified.")
 
     basic_year_range = [1990, 2050]
 
@@ -231,14 +231,14 @@ def create_example_csv_file(
         'array': 'array'
     }
 
-    if from_schema:
+    if schema_path:
         if schema_path.startswith('http'):
             schema = requests.get(schema_path).json()
         else:
             with open(schema_path, encoding=encoding) as jsonfile:
                 schema = json.load(jsonfile)
         if not ('fields' in schema.keys()):
-            raise Exception('The schema must have a "fields" key.')
+            raise ValueError('The schema must have a "fields" key.')
         else:
             fields = [
                 {
