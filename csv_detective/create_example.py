@@ -3,7 +3,7 @@ import uuid
 import string
 from dateutil.parser import parse
 import pandas as pd
-from typing import List, Union
+from typing import List, Union, Optional, Any
 import json
 import requests
 import rstr
@@ -13,8 +13,8 @@ fake = Faker()
 
 
 def create_example_csv_file(
-    fields: Union[dict, None] = None,
-    schema_path: Union[str, None] = None,
+    fields: Optional[dict] = None,
+    schema_path: Optional[str] = None,
     file_length: int = 10,
     output_file: bool = True,
     output_name: str = 'example_file.csv',
@@ -39,17 +39,21 @@ def create_example_csv_file(
     if not (fields or schema_path):
         raise ValueError("At least fields or schema_path must be specified.")
 
-    def potential_skip(required):
+    def potential_skip(required: bool) -> bool:
         if ignore_required:
             return False
         if not required:
             # for now 30% chance to have an optional value, this could go as an argument
             return random.randint(0, 100) < 30
 
-    def make_random_string(length=10, required=True, pattern=None, enum=None, seed=None):
+    def make_random_string(
+        length: int = 10,
+        required: bool = True,
+        pattern: Optional[str] = None,
+        enum: Optional[str] = None,
+    ) -> str:
         if potential_skip(required):
             return ''
-        random.seed(seed)
         if pattern is not None:
             return rstr.xeger(pattern)
         elif enum is not None:
@@ -58,17 +62,18 @@ def create_example_csv_file(
             letters = string.ascii_lowercase
             return ''.join(random.choice(letters) for i in range(length))
 
-    def make_random_id(required=True, seed=None):
+    def make_random_id(
+        required: bool = True,
+    ) -> str:
         if potential_skip(required):
             return ''
-        random.seed(seed)
-        return uuid.uuid4()
+        return str(uuid.uuid4())
 
     def make_random_date(
         date_range: Union[None, List[str]] = None,
-        format='%Y-%m-%d',
-        required=True,
-    ):
+        format: str = '%Y-%m-%d',
+        required: bool = True,
+    ) -> str:
         if potential_skip(required):
             return ''
         assert all([k in format for k in ['%d', '%m', '%Y']])
@@ -83,9 +88,9 @@ def create_example_csv_file(
             ).strftime(format)
 
     def make_random_time(
-        format='%H:%M:%S',
-        required=True,
-    ):
+        format: str = '%H:%M:%S',
+        required: bool = True,
+    ) -> str:
         if potential_skip(required):
             return ''
         assert all([k in format for k in ['%H', '%M', '%S']])
@@ -93,10 +98,10 @@ def create_example_csv_file(
         return fake.time(format)
 
     def make_random_datetime(
-        datetime_range: Union[None, List[str]] = None,
-        format='%Y-%m-%d %H-%M-%S',
-        required=True,
-    ):
+        datetime_range: Optional[List[str]] = None,
+        format: str = '%Y-%m-%d %H-%M-%S',
+        required: bool = True,
+    ) -> str:
         if potential_skip(required):
             return ''
         assert all([k in format for k in ['%d', '%m', '%Y', '%H', '%M', '%S']])
@@ -110,23 +115,20 @@ def create_example_csv_file(
                 parse(datetime_range[1])
             ).strftime(format)
 
-    def make_random_url(required=True, seed=None):
+    def make_random_url(required: bool = True) -> str:
         if potential_skip(required):
             return ''
-        random.seed(seed)
-        return f'http://{rstr.domainsafe()}.{rstr.letters(3)}/{rstr.urlsafe()}/?{rstr.urlsafe()}'
+        return f'http://{rstr.domainsafe()}.{rstr.letters(3)}/{rstr.urlsafe()}'
 
     def make_random_number(
         num_type: Union[int, float] = int,
-        num_range: Union[None, List[float]] = None,
-        enum: Union[None, list] = None,
-        required=True,
-        seed=None
-    ):
+        num_range: Optional[List[float]] = None,
+        enum: Optional[list] = None,
+        required: bool = True,
+    ) -> Union[int, float]:
         if potential_skip(required):
             return ''
         assert num_range is None or len(num_range) == 2
-        random.seed(seed)
         if enum:
             return random.choice(enum)
         if num_range is None:
@@ -136,16 +138,14 @@ def create_example_csv_file(
         else:
             return round(random.uniform(num_range[0], num_range[1]), 1)
 
-    def make_random_bool(required=True, seed=None):
+    def make_random_bool(required: bool = True) -> bool:
         if potential_skip(required):
             return ''
-        random.seed(seed)
         return random.randint(0, 1) == 0
 
-    def make_random_array(enum: List[str], required=True, seed=None):
+    def make_random_array(enum: List[Any], required: bool = True) -> str:
         if potential_skip(required):
             return ''
-        random.seed(seed)
         return f"[{','.join(random.sample(enum, random.randint(1, len(enum))))}]"
 
     def build_args_from_constraints(constraints: dict) -> dict:
