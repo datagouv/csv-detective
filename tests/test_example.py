@@ -61,3 +61,11 @@ def test_example_creation():
     assert all(_.startswith("http") for _ in df["url_produit"])
     assert all(isinstance(_, int) for _ in df["nb_produits"])
     assert all(_ >= 1 and _ <= 20 for _ in df["note"])
+
+
+def test_example_from_tableschema():
+    df = create_example_csv_file(
+        schema_path="https://schema.data.gouv.fr/schemas/etalab/schema-irve-statique/2.3.1/schema-statique.json",
+        output_name="",
+    )
+    assert len(df) == 10
