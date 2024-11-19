@@ -41,7 +41,8 @@ def create_example_csv_file(
         if ignore_required:
             return False
         if not required:
-            return random.randint(0, 100) > 30
+            # for now 30% chance to have an optional value, this could go as an argument
+            return random.randint(0, 100) < 30
 
     def make_random_string(length=10, required=True, pattern=None, enum=None, seed=None):
         if potential_skip(required):
