@@ -226,13 +226,16 @@ def create_example_csv_file(
         'array': make_random_array,
     }
 
-    output = pd.DataFrame(columns=[f["name"] for f in fields])
     # would it be better to create by column or by row (as for now)?
-    for k in range(file_length):
-        new = [
-            types_to_func.get(f['type'], str)(**f['args']) for f in fields
-        ]
-        output = pd.concat([output, pd.Series(new, index=output.columns).to_frame().T], axis=0)
+    output = pd.DataFrame(
+        [
+            [
+                types_to_func.get(f['type'], str)(**f['args'])
+                for f in fields
+            ] for _ in range(file_length)
+        ],
+        columns=[f["name"] for f in fields],
+    )
 
     if output_file:
         output.to_csv(output_name, sep=output_sep, index=False)
