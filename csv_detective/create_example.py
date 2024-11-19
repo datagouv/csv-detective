@@ -43,9 +43,9 @@ def create_example_csv_file(
             return False
         if not required:
             # for now 30% chance to have an optional value, this could go as an argument
-            return random.randint(0, 100) < 30
+            return random.randint(1, 100) <= 30
 
-    def make_random_string(
+    def _string(
         length: int = 10,
         required: bool = True,
         pattern: Optional[str] = None,
@@ -61,14 +61,14 @@ def create_example_csv_file(
             letters = string.ascii_lowercase
             return ''.join(random.choice(letters) for i in range(length))
 
-    def make_random_id(
+    def _id(
         required: bool = True,
     ) -> str:
         if potential_skip(required):
             return ''
         return str(uuid.uuid4())
 
-    def make_random_date(
+    def _date(
         date_range: Union[None, List[str]] = None,
         format: str = '%Y-%m-%d',
         required: bool = True,
@@ -86,7 +86,7 @@ def create_example_csv_file(
                 parse(date_range[1])
             ).strftime(format)
 
-    def make_random_time(
+    def _time(
         format: str = '%H:%M:%S',
         required: bool = True,
     ) -> str:
@@ -96,7 +96,7 @@ def create_example_csv_file(
         # maybe add a time_range argument?
         return fake.time(format)
 
-    def make_random_datetime(
+    def _datetime(
         datetime_range: Optional[List[str]] = None,
         format: str = '%Y-%m-%d %H-%M-%S',
         required: bool = True,
@@ -114,12 +114,12 @@ def create_example_csv_file(
                 parse(datetime_range[1])
             ).strftime(format)
 
-    def make_random_url(required: bool = True) -> str:
+    def _url(required: bool = True) -> str:
         if potential_skip(required):
             return ''
         return f'http://{rstr.domainsafe()}.{rstr.letters(3)}/{rstr.urlsafe()}'
 
-    def make_random_number(
+    def _number(
         num_type: Union[int, float] = int,
         num_range: Optional[List[float]] = None,
         enum: Optional[list] = None,
@@ -137,12 +137,12 @@ def create_example_csv_file(
         else:
             return round(random.uniform(num_range[0], num_range[1]), 1)
 
-    def make_random_bool(required: bool = True) -> bool:
+    def _bool(required: bool = True) -> bool:
         if potential_skip(required):
             return ''
         return random.randint(0, 1) == 0
 
-    def make_random_array(enum: List[Any], required: bool = True) -> str:
+    def _array(enum: List[Any], required: bool = True) -> str:
         if potential_skip(required):
             return ''
         return f"[{','.join(random.sample(enum, random.randint(1, len(enum))))}]"
@@ -214,17 +214,17 @@ def create_example_csv_file(
             fields[k]['args']['num_range'] = [1990, 2050]
 
     types_to_func = {
-        'int': make_random_number,
-        'float': make_random_number,
-        'date': make_random_date,
-        'time': make_random_time,
-        'str': make_random_string,
-        'url': make_random_url,
-        'id': make_random_id,
-        'year': make_random_number,
-        'bool': make_random_bool,
-        'datetime': make_random_datetime,
-        'array': make_random_array,
+        'int': _number,
+        'float': _number,
+        'date': _date,
+        'time': _time,
+        'str': _string,
+        'url': _url,
+        'id': _id,
+        'year': _number,
+        'bool': _bool,
+        'datetime': _datetime,
+        'array': _array,
     }
 
     # would it be better to create by column or by row (as for now)?
