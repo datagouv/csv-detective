@@ -55,7 +55,7 @@ def test_example_creation():
     assert len(df) == 5
     assert all(UUID(_) for _ in df["id_unique"])
     assert all(len(_) == 20 for _ in df["nom_modele"])
-    assert all(re.match("^\\d{14}$'", _) for _ in df["siret"])
+    assert all(re.match("^\\d{14}$", _) for _ in df["siret"])
     assert all(_ in ['privé', 'public', 'association'] for _ in df["type_producteur"])
     assert all(_ >= '2001-01-23' and _ <= '2002-04-22' for _ in df["date_creation"])
     assert all(_.startswith("http") for _ in df["url_produit"])
