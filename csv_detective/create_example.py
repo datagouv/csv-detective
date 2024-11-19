@@ -27,7 +27,7 @@ def create_example_csv_file(
         {
             "name": "column_name",
             "type": "column_type",
-            "args": {dict_of_args}
+            "args": {dict_of_args}  # optional
         },
         ...
     ]
@@ -203,6 +203,8 @@ def create_example_csv_file(
             ]
 
     for k in range(len(fields)):
+        if 'args' not in fields[k]:
+            fields[k]['args'] = {}
         if fields[k]['type'] == 'float':
             fields[k]['args']['num_type'] = float
         elif fields[k]['type'] == 'int':
