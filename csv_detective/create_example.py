@@ -155,7 +155,7 @@ def create_example_csv_file(
                 args[_] = constraints[_]
         if 'minimum' in constraints and 'maximum' in constraints:
             args['num_range'] = [constraints['minimum'], constraints['maximum']]
-        # changer pour de meilleures valeurs ?
+        # maybe there are better values than these?
         elif 'minimum' in constraints:
             args['num_range'] = [constraints['minimum'], 10 + constraints['minimum']]
         elif 'maximum' in constraints:
@@ -192,7 +192,8 @@ def create_example_csv_file(
                 {
                     'name': f['name'],
                     'type': schema_types_to_python.get(f['type'], 'str'),
-                    # build args from format(FR) too
+                    # when frformat is supported in TableSchema, we can build args for French standards
+                    # linked to https://github.com/datagouv/fr-format/issues/26
                     'args': (
                         build_args_from_constraints(f['constraints']) if 'constraints' in f.keys()
                         else build_args_from_constraints(f['arrayItem']['constraints'])
