@@ -30,7 +30,7 @@ def test_example_creation():
             "type": "date",
             "args": {
                 'date_range': ['23-01-2001', '24-04-2002'],
-                'format': '%Y-%m-%D',
+                'format': '%Y-%m-%d',
             },
         },
         {
