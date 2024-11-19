@@ -16,7 +16,6 @@ def create_example_csv_file(
     fields: Optional[dict] = None,
     schema_path: Optional[str] = None,
     file_length: int = 10,
-    output_file: bool = True,
     output_name: str = 'example_file.csv',
     output_sep: str = ';',
     encoding: str = 'utf-8',
@@ -237,7 +236,7 @@ def create_example_csv_file(
         columns=[f["name"] for f in fields],
     )
 
-    if output_file:
+    if output_name:
         output.to_csv(output_name, sep=output_sep, index=False)
 
     return output
