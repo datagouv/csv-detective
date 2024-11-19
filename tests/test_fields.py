@@ -282,26 +282,26 @@ def test_do_not_match_canton():
 
 # latitude_l93
 def test_match_latitude_l93():
-    vals = [6037008, 7123528.5, "7124528,5"]
+    vals = ["6037008", "7123528.5", "7124528,5"]
     for val in vals:
         assert latitude_l93._is(val)
 
 
 def test_do_not_match_latitude_93():
-    vals = [0, -6734529.6, 7245669.8, "3422674,78", "32_34"]
+    vals = ["0", "-6734529.6", "7245669.8", "3422674,78", "32_34"]
     for val in vals:
         assert not latitude_l93._is(val)
 
 
 # longitude_l93
 def test_match_longitude_l93():
-    vals = [0, -154, "1265783,45", 34723.4]
+    vals = ["0", "-154", "1265783,45", "34723.4"]
     for val in vals:
         assert longitude_l93._is(val)
 
 
 def test_do_not_match_longitude_93():
-    vals = [1456669.8, "-776225", "346_3214"]
+    vals = ["1456669.8", "-776225", "346_3214"]
     for val in vals:
         assert not longitude_l93._is(val)
 

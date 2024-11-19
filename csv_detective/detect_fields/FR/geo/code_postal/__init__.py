@@ -2,4 +2,9 @@ from frformat import CodePostal
 
 PROPORTION = 0.9
 
-_is = CodePostal.is_valid
+_code_postal = CodePostal()
+
+
+def _is(val):
+
+    return _code_postal.is_valid(val)
