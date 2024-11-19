@@ -1,11 +1,15 @@
 import random
 import uuid
 import string
+from dateutil.parser import parse
 import pandas as pd
 from typing import List, Union
 import json
 import requests
 import rstr
+from faker import Faker
+
+fake = Faker()
 
 
 def create_example_csv_file(
@@ -35,8 +39,6 @@ def create_example_csv_file(
     if not (fields or schema_path):
         raise ValueError("At least fields or schema_path must be specified.")
 
-    basic_year_range = [1990, 2050]
-
     def potential_skip(required):
         if ignore_required:
             return False
@@ -64,101 +66,49 @@ def create_example_csv_file(
 
     def make_random_date(
         date_range: Union[None, List[str]] = None,
-        date_format='YYYY-MM-DD',
+        format='%Y-%m-%d',
         required=True,
-        seed=None
     ):
         if potential_skip(required):
             return ''
-        # these need to change
-        date_format = date_format.upper()
-        assert all([k in date_format for k in ['DD', 'MM', 'YYYY']])
-        random.seed(seed)
+        assert all([k in format for k in ['%d', '%m', '%Y']])
         if date_range is None:
-            dd = random.randint(1, 28)
-            mm = random.randint(1, 12)
-            yyyy = random.randint(basic_year_range[0], basic_year_range[1])
-            return date_format \
-                .replace('DD', f'{"0"*(2-len(str(dd))) + str(dd)}') \
-                .replace('MM', f'{"0"*(2-len(str(mm))) + str(mm)}') \
-                .replace('YYYY', f'{yyyy}')
+            return fake.date(format)
         else:
-            assert len(date_range) == 2
-            start = {
-                'DD': date_range[0][date_format.rfind('DD'):date_format.rfind('DD')+2],
-                'MM': date_range[0][date_format.rfind('MM'):date_format.rfind('MM')+2],
-                'YYYY': date_range[0][date_format.rfind('YYYY'):date_format.rfind('YYYY')+4],
-            }
-            end = {
-                'DD': date_range[1][date_format.rfind('DD'):date_format.rfind('DD')+2],
-                'MM': date_range[1][date_format.rfind('MM'):date_format.rfind('MM')+2],
-                'YYYY': date_range[1][date_format.rfind('YYYY'):date_format.rfind('YYYY')+4],
-            }
-
-            dd = random.randint(int(start['DD']), int(end['DD']))
-            mm = random.randint(int(start['MM']), int(end['MM']))
-            yyyy = random.randint(int(start['YYYY']), int(end['YYYY']))
-
-        return date_format \
-            .replace('DD', f'{"0"*(2-len(str(dd))) + str(dd)}') \
-            .replace('MM', f'{"0"*(2-len(str(mm))) + str(mm)}') \
-            .replace('YYYY', f'{yyyy}')
+            if len(date_range) != 2:
+                raise ValueError('"date_range" must have exactly two elements.')
+            return fake.date_between_dates(
+                parse(date_range[0]),
+                parse(date_range[1])
+            ).strftime(format)
 
     def make_random_time(
-        time_range: Union[None, List[str]] = None,
-        time_format='HH-MM-SS',
+        format='%H:%M:%S',
         required=True,
-        seed=None
     ):
         if potential_skip(required):
             return ''
-        time_format = time_format.upper()
-        assert all([k in time_format for k in ['HH', 'MM', 'SS']])
-        random.seed(seed)
-        if time_range is None:
-            hh = random.randint(0, 23)
-            mm = random.randint(0, 59)
-            ss = random.randint(0, 59)
-            return time_format \
-                .replace('HH', f'{"0"*(2-len(str(hh))) + str(hh)}') \
-                .replace('MM', f'{"0"*(2-len(str(mm))) + str(mm)}') \
-                .replace('SS', f'{"0"*(2-len(str(ss))) + str(ss)}')
-        else:
-            assert len(time_range) == 2
-            start = {
-                'HH': time_range[0][time_format.rfind('HH'):time_format.rfind('HH')+2],
-                'MM': time_range[0][time_format.rfind('MM'):time_format.rfind('MM')+2],
-                'SS': time_range[0][time_format.rfind('SS'):time_format.rfind('SS')+2],
-            }
-            end = {
-                'HH': time_range[1][time_format.rfind('HH'):time_format.rfind('HH')+2],
-                'MM': time_range[1][time_format.rfind('MM'):time_format.rfind('MM')+2],
-                'SS': time_range[1][time_format.rfind('SS'):time_format.rfind('SS')+2],
-            }
-
-            hh = random.randint(int(start['HH']), int(end['HH']))
-            mm = random.randint(int(start['MM']), int(end['MM']))
-            ss = random.randint(int(start['SS']), int(end['SS']))
-
-        return time_format \
-            .replace('HH', f'{"0"*(2-len(str(hh))) + str(hh)}') \
-            .replace('MM', f'{"0"*(2-len(str(mm))) + str(mm)}') \
-            .replace('SS', f'{"0"*(2-len(str(ss))) + str(ss)}')
+        assert all([k in format for k in ['%H', '%M', '%S']])
+        # maybe add a time_range argument?
+        return fake.time(format)
 
     def make_random_datetime(
-        time_range: Union[None, List[str]] = None,
-        date_range: Union[None, List[str]] = None,
-        time_format='HH-MM-SS',
-        date_format='DD-MM-YYYY',
+        datetime_range: Union[None, List[str]] = None,
+        format='%Y-%m-%d %H-%M-%S',
         required=True,
-        seed=None
     ):
         if potential_skip(required):
             return ''
-        random.seed(seed)
-        return make_random_date(date_range=date_range, date_format=date_format, seed=seed) \
-            + make_random_time(time_range=time_range, time_format=time_format, seed=seed) \
-            + 'Z'
+        assert all([k in format for k in ['%d', '%m', '%Y', '%H', '%M', '%S']])
+        if datetime_range is None:
+            return fake.date_time().strftime(format)
+        else:
+            if len(datetime_range) != 2:
+                raise ValueError('"date_range" must have exactly two elements.')
+            return fake.date_time_between(
+                parse(datetime_range[0]),
+                parse(datetime_range[1])
+            ).strftime(format)
 
     def make_random_url(required=True, seed=None):
         if potential_skip(required):
@@ -199,23 +149,21 @@ def create_example_csv_file(
         return f"[{','.join(random.sample(enum, random.randint(1, len(enum))))}]"
 
     def build_args_from_constraints(constraints: dict) -> dict:
-        # need to handle formats
         args = {}
         args['required'] = constraints.get('required', False)
-        if 'pattern' in constraints.keys():
-            args['pattern'] = constraints['pattern']
-        if 'enum' in constraints.keys():
-            args['enum'] = constraints['enum']
-        if 'minimum' in constraints.keys() and 'maximum' in constraints.keys():
+        for _ in ['pattern', 'enum', 'format']:
+            if _ in constraints:
+                args[_] = constraints[_]
+        if 'minimum' in constraints and 'maximum' in constraints:
             args['num_range'] = [constraints['minimum'], constraints['maximum']]
         # changer pour de meilleures valeurs ?
-        elif 'minimum' in constraints.keys():
+        elif 'minimum' in constraints:
             args['num_range'] = [constraints['minimum'], 10 + constraints['minimum']]
-        elif 'maximum' in constraints.keys():
+        elif 'maximum' in constraints:
             args['num_range'] = [constraints['maximum'] - 10, constraints['maximum']]
-        if 'minLength' in constraints.keys():
+        if 'minLength' in constraints:
             args['length'] = constraints['minLength']
-        if 'maxLength' in constraints.keys():
+        if 'maxLength' in constraints:
             args['length'] = constraints['maxLength']
         return args
 
@@ -262,7 +210,7 @@ def create_example_csv_file(
             fields[k]['args']['num_type'] = int
         elif fields[k]['type'] == 'year':
             fields[k]['args']['num_type'] = int
-            fields[k]['args']['num_range'] = basic_year_range
+            fields[k]['args']['num_range'] = [1990, 2050]
 
     types_to_func = {
         'int': make_random_number,
