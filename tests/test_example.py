@@ -29,7 +29,7 @@ def test_example_creation():
             "name": "date_creation",
             "type": "date",
             "args": {
-                'date_range': ['23-01-2001', '24-04-2002'],
+                'date_range': ['1996-02-13', '2000-01-28'],
                 'format': '%Y-%m-%d',
             },
         },
@@ -57,7 +57,7 @@ def test_example_creation():
     assert all(len(_) == 20 for _ in df["nom_modele"])
     assert all(re.match("^\\d{14}$", _) for _ in df["siret"])
     assert all(_ in ['privé', 'public', 'association'] for _ in df["type_producteur"])
-    assert all(_ >= '2001-01-23' and _ <= '2002-04-22' for _ in df["date_creation"])
+    assert all(_ >= '1996-02-13' and _ <= '2000-01-28' for _ in df["date_creation"])
     assert all(_.startswith("http") for _ in df["url_produit"])
     assert all(isinstance(_, int) for _ in df["nb_produits"])
     assert all(_ >= 1 and _ <= 20 for _ in df["note"])
