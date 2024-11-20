@@ -1,7 +1,7 @@
 import random
 import uuid
 import string
-from dateutil.parser import parse
+from datetime import datetime
 import pandas as pd
 from typing import List, Union, Optional, Any, Type
 import json
@@ -73,6 +73,7 @@ def create_example_csv_file(
         format: str = '%Y-%m-%d',
         required: bool = True,
     ) -> str:
+        # the bounds specified in date_range are expected in the same format as the desired output format
         assert all([k in format for k in ['%d', '%m', '%Y']])
         if potential_skip(required):
             return ''
@@ -82,8 +83,8 @@ def create_example_csv_file(
             if len(date_range) != 2:
                 raise ValueError('"date_range" must have exactly two elements.')
             return fake.date_between_dates(
-                parse(date_range[0]),
-                parse(date_range[1])
+                datetime.strptime(date_range[0], format),
+                datetime.strptime(date_range[1], format),
             ).strftime(format)
 
     def _time(
@@ -101,6 +102,7 @@ def create_example_csv_file(
         format: str = '%Y-%m-%d %H-%M-%S',
         required: bool = True,
     ) -> str:
+        # the bounds specified in datetime_range are expected in the same format as the desired output format
         assert all([k in format for k in ['%d', '%m', '%Y', '%H', '%M', '%S']])
         if potential_skip(required):
             return ''
@@ -110,8 +112,8 @@ def create_example_csv_file(
             if len(datetime_range) != 2:
                 raise ValueError('"date_range" must have exactly two elements.')
             return fake.date_time_between(
-                parse(datetime_range[0]),
-                parse(datetime_range[1])
+                datetime.strptime(datetime_range[0], format),
+                datetime.strptime(datetime_range[1], format),
             ).strftime(format)
 
     def _url(required: bool = True) -> str:
