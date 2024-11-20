@@ -2,7 +2,7 @@
 
 ## Current (in progress)
 
-- New function that creates a csv from a list of fields and constraints, or from a TableSchema [#100](https://github.com/datagouv/csv-detective/pull/100)
+- New function that creates a csv from a list of fields and constraints, or from a TableSchema [#101](https://github.com/datagouv/csv-detective/pull/101)
 
 ## 0.7.4 (2024-11-15)
 
