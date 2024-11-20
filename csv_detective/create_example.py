@@ -3,7 +3,7 @@ import uuid
 import string
 from dateutil.parser import parse
 import pandas as pd
-from typing import List, Union, Optional, Any
+from typing import List, Union, Optional, Any, Type
 import json
 import requests
 import rstr
@@ -73,9 +73,9 @@ def create_example_csv_file(
         format: str = '%Y-%m-%d',
         required: bool = True,
     ) -> str:
+        assert all([k in format for k in ['%d', '%m', '%Y']])
         if potential_skip(required):
             return ''
-        assert all([k in format for k in ['%d', '%m', '%Y']])
         if date_range is None:
             return fake.date(format)
         else:
@@ -90,9 +90,9 @@ def create_example_csv_file(
         format: str = '%H:%M:%S',
         required: bool = True,
     ) -> str:
+        assert all([k in format for k in ['%H', '%M', '%S']])
         if potential_skip(required):
             return ''
-        assert all([k in format for k in ['%H', '%M', '%S']])
         # maybe add a time_range argument?
         return fake.time(format)
 
@@ -101,9 +101,9 @@ def create_example_csv_file(
         format: str = '%Y-%m-%d %H-%M-%S',
         required: bool = True,
     ) -> str:
+        assert all([k in format for k in ['%d', '%m', '%Y', '%H', '%M', '%S']])
         if potential_skip(required):
             return ''
-        assert all([k in format for k in ['%d', '%m', '%Y', '%H', '%M', '%S']])
         if datetime_range is None:
             return fake.date_time().strftime(format)
         else:
@@ -120,14 +120,14 @@ def create_example_csv_file(
         return f'http://{rstr.domainsafe()}.{rstr.letters(3)}/{rstr.urlsafe()}'
 
     def _number(
-        num_type: Union[int, float] = int,
+        num_type: Type[Union[int, float]] = int,
         num_range: Optional[List[float]] = None,
         enum: Optional[list] = None,
         required: bool = True,
     ) -> Union[int, float]:
+        assert num_range is None or len(num_range) == 2
         if potential_skip(required):
             return ''
-        assert num_range is None or len(num_range) == 2
         if enum:
             return random.choice(enum)
         if num_range is None:
@@ -232,7 +232,7 @@ def create_example_csv_file(
     output = pd.DataFrame(
         [
             [
-                types_to_func.get(f['type'], str)(**f['args'])
+                types_to_func.get(f['type'], 'str')(**f['args'])
                 for f in fields
             ] for _ in range(file_length)
         ],
