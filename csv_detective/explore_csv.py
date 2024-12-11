@@ -12,6 +12,7 @@ import logging
 from time import time
 import requests
 from io import StringIO
+import pandas as pd
 
 # flake8: noqa
 from csv_detective import detect_fields, detect_labels
@@ -108,9 +109,10 @@ def routine(
     skipna: bool = True,
     output_profile: bool = False,
     output_schema: bool = False,
+    output_df: bool = False,
     verbose: bool = False,
     sheet_name: Union[str, int] = None,
-):
+) -> Union[dict, tuple[dict, pd.DataFrame]]:
     """Returns a dict with information about the csv table and possible
     column contents.
 
@@ -123,6 +125,7 @@ def routine(
         save_results: whether or not to save the results in a json file, or the path where to dump the output
         output_profile: whether or not to add the 'profile' field to the output
         output_schema: whether or not to add the 'schema' field to the output (tableschema)
+        output_df: whether or not to return the loaded DataFrame along with the analysis report
         verbose: whether or not to print process logs in console 
         sheet_name: if reading multi-sheet file (xls-like), which sheet to consider
         skipna: whether to keep NaN (empty cells) for tests
@@ -353,6 +356,8 @@ def routine(
             f'Routine completed in {round(time() - start_routine, 3)}s',
             time() - start_routine
         )
+    if output_df:
+        return return_dict, table
     return return_dict
 
 
