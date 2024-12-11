@@ -1,6 +1,7 @@
 from csv_detective import routine
 import pytest
 import responses
+import pandas as pd
 
 
 def test_columns_output_on_file():
@@ -218,3 +219,16 @@ def test_nan_values(expected_type):
         skipna=skipna,
     )
     assert output["columns"]["partly_empty"]["python_type"] == expected_type
+
+
+def test_output_df():
+    output, df = routine(
+        csv_file_path="tests/b_test_file.csv",
+        num_rows=-1,
+        output_profile=False,
+        save_results=False,
+        output_df=True,
+    )
+    assert isinstance(output, dict)
+    assert isinstance(df, pd.DataFrame)
+    assert len(df) == 6
