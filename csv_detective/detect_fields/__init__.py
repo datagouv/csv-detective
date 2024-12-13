@@ -54,4 +54,4 @@ from .geo import (
 )
 
 from .FR.temp import jour_de_la_semaine, mois_de_annee
-from .temp import year, date, datetime_iso, datetime_rfc822
+from .temp import year, date, datetime, datetime_iso, datetime_rfc822
