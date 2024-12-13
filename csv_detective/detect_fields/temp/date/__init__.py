@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 
 from dateparser import parse as date_parser
 from dateutil.parser import parse as dateutil_parser, ParserError
@@ -7,7 +8,7 @@ PROPORTION = 1
 # /!\ this is only for dates, not datetimes which are handled by other utils
 
 
-def date_casting(val: str) -> datetime | None:
+def date_casting(val: str) -> Optional[datetime]:
     """For performance reasons, we try first with dateutil and fallback on dateparser"""
     try:
         return dateutil_parser(val)
