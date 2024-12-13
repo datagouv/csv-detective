@@ -223,14 +223,12 @@ def full_word_strictly_inside_string(word: str, string: str):
     )
 
 
-def cast(value: str, _type: str) -> Optional[Union[str, float, int, bool, date, datetime]]:
+def cast(value: str, _type: str) -> Optional[Union[str, float, bool, date, datetime]]:
     if not isinstance(value, str) or not value:
         # None is the current default value in hydra, should we keep this?
         return None
     if _type == "float":
         return float_casting(value)
-    if _type == "int":
-        return int(value)
     if _type == "bool":
         return bool_casting(value)
     if _type == "json":
@@ -252,6 +250,9 @@ def cast_df(df: pd.DataFrame, columns: dict, verbose: bool = False) -> pd.DataFr
         if detection["python_type"] == "string":
             # no change if detected type is string
             output_df[col_name] = df[col_name].copy()
+        elif detection["python_type"] == "int":
+            # to allow having ints and NaN in the same column
+            output_df[col_name] = df[col_name].copy().astype(pd.Int64Dtype())
         else:
             output_df[col_name] = df[col_name].apply(
                 lambda col: cast(col, _type=detection["python_type"])
