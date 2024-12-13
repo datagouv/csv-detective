@@ -1,19 +1,25 @@
 PROPORTION = 1
-liste_bool = {
-    '0',
-    '1',
-    'vrai',
-    'faux',
-    'true',
-    'false',
-    'oui',
-    'non',
-    'yes',
-    'no',
-    'y',
-    'n',
-    'o'
+bool_mapping = {
+    "1": True,
+    "0": False,
+    "vrai": True,
+    "faux": False,
+    "true": True,
+    "false": False,
+    "oui": True,
+    "non": False,
+    "yes": True,
+    "no": False,
+    "y": True,
+    "n": False,
+    "o": True,
 }
+
+liste_bool = set(bool_mapping.keys())
+
+
+def bool_casting(val):
+    return bool_mapping.get(val)
 
 
 def _is(val):
