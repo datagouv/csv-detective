@@ -1,5 +1,7 @@
 import pandas as pd
 from numpy import random
+import pytest
+from datetime import date as _date, datetime as _datetime
 
 from csv_detective.detect_fields.FR.geo import (
     adresse,
@@ -46,6 +48,7 @@ from csv_detective.detection import (
     detetect_categorical_variable,
 )
 from csv_detective.explore_csv import return_all_tests
+from csv_detective.utils import cast
 
 
 def test_all_tests_return_bool():
@@ -504,3 +507,20 @@ def test_match_float():
 def test_not_match_float():
     for val in ["01053", "01053.89", "1e3", "123_456", "123_456.78", "+35", "+35.9"]:
         assert not test_float._is(val)
+
+
+@pytest.mark.parametrize(
+    "args",
+    (
+        ("1.9", "float", float),
+        ("213", "int", int),
+        ("oui", "bool", bool),
+        ("[1, 2]", "json", list),
+        ('{"a": 1}', "json", dict),
+        ("2022-08-01", "date", _date),
+        ("2024-09-23 17:32:07", "datetime", _datetime),
+    ),
+)
+def test_cast(args):
+    value, detected_type, cast_type = args
+    assert isinstance(cast(value, detected_type), cast_type)
