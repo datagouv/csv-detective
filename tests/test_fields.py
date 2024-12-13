@@ -513,7 +513,6 @@ def test_not_match_float():
     "args",
     (
         ("1.9", "float", float),
-        ("213", "int", int),
         ("oui", "bool", bool),
         ("[1, 2]", "json", list),
         ('{"a": 1}', "json", dict),

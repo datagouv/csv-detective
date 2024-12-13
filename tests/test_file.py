@@ -232,3 +232,4 @@ def test_output_df():
     assert isinstance(output, dict)
     assert isinstance(df, pd.DataFrame)
     assert len(df) == 6
+    assert df["partly_empty"].dtype == pd.Int64Dtype()
