@@ -27,7 +27,9 @@ def _is(header):
         'dateouv',
         'date der maj',
         'dmaj',
-        'jour'
+        'jour',
+        'yyyymmdd',
+        'aaaammjj',
     ]
     processed_header = _process_text(header)
 
