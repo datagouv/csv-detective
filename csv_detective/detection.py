@@ -1,4 +1,5 @@
-from typing import TextIO, Optional
+from typing import TextIO, Optional, Union
+from collections import defaultdict
 import pandas as pd
 import math
 import csv
@@ -27,7 +28,7 @@ engine_to_file = {
 }
 
 
-def is_url(csv_file_path: str):
+def is_url(csv_file_path: str) -> bool:
     # could be more sophisticated if needed
     return csv_file_path.startswith('http')
 
@@ -35,17 +36,14 @@ def is_url(csv_file_path: str):
 def detect_continuous_variable(table: pd.DataFrame, continuous_th: float = 0.9, verbose: bool = False):
     """
     Detects whether a column contains continuous variables. We consider a continuous column
-    one that contains
-    a considerable amount of float values.
+    one that contains a considerable amount of float values.
     We removed the integers as we then end up with postal codes, insee codes, and all sort
     of codes and types.
     This is not optimal but it will do for now.
-    :param table:
-    :return:
     """
     # if we need this again in the future, could be first based on columns detected as int/float to cut time
 
-    def check_threshold(serie: pd.Series, continuous_th: float):
+    def check_threshold(serie: pd.Series, continuous_th: float) -> bool:
         count = serie.value_counts().to_dict()
         total_nb = len(serie)
         if float in count:
@@ -75,7 +73,7 @@ def detect_continuous_variable(table: pd.DataFrame, continuous_th: float = 0.9, 
     if verbose:
         display_logs_depending_process_time(
             f"Detected {sum(res)} continuous columns in {round(time() - start, 3)}s",
-            time() - start
+            time() - start,
         )
     return res.index[res]
 
@@ -121,12 +119,12 @@ def detetect_categorical_variable(
     if verbose:
         display_logs_depending_process_time(
             f"Detected {sum(res)} categorical columns out of {len(table.columns)} in {round(time() - start, 3)}s",
-            time() - start
+            time() - start,
         )
     return res.index[res], res
 
 
-def detect_engine(csv_file_path: str, verbose=False):
+def detect_engine(csv_file_path: str, verbose=False) -> Optional[str]:
     if verbose:
         start = time()
     mapping = {
@@ -145,12 +143,12 @@ def detect_engine(csv_file_path: str, verbose=False):
     if verbose:
         display_logs_depending_process_time(
             f'File has no extension, detected {engine_to_file.get(engine, "csv")}',
-            time() - start
+            time() - start,
         )
     return engine
 
 
-def detect_separator(file: TextIO, verbose: bool = False):
+def detect_separator(file: TextIO, verbose: bool = False) -> str:
     """Detects csv separator"""
     # TODO: add a robust detection:
     # si on a un point virgule comme texte et \t comme séparateur, on renvoie
@@ -181,12 +179,12 @@ def detect_separator(file: TextIO, verbose: bool = False):
     if verbose:
         display_logs_depending_process_time(
             f'Detected separator: "{sep}" in {round(time() - start, 3)}s',
-            time() - start
+            time() - start,
         )
     return sep
 
 
-def detect_encoding(csv_file_path: str, verbose: bool = False):
+def detect_encoding(csv_file_path: str, verbose: bool = False) -> str:
     """
     Detects file encoding using faust-cchardet (forked from the original cchardet)
     """
@@ -205,7 +203,7 @@ def detect_encoding(csv_file_path: str, verbose: bool = False):
         message += f' in {round(time() - start, 3)}s (confidence: {round(encoding_dict["confidence"]*100)}%)'
         display_logs_depending_process_time(
             message,
-            time() - start
+            time() - start,
         )
     return encoding_dict['encoding']
 
@@ -218,8 +216,7 @@ def parse_table(
     skiprows: int,
     random_state: int = 42,
     verbose : bool = False,
-):
-    # Takes care of some problems
+) -> tuple[pd.DataFrame, int, int]:
     if verbose:
         start = time()
         logging.info("Parsing table")
@@ -230,7 +227,6 @@ def parse_table(
 
     total_lines = None
     for encoding in [encoding, "ISO-8859-1", "utf-8"]:
-        # TODO : modification systematique
         if encoding is None:
             continue
 
@@ -251,17 +247,16 @@ def parse_table(
             print("Trying encoding : {encoding}".format(encoding=encoding))
 
     if table is None:
-        logging.error("  >> encoding not found")
-        return table, "NA", "NA"
+        raise ValueError("Could not load file")
     if verbose:
         display_logs_depending_process_time(
             f'Table parsed successfully in {round(time() - start, 3)}s',
-            time() - start
+            time() - start,
         )
     return table, total_lines, nb_duplicates
 
 
-def remove_empty_first_rows(table: pd.DataFrame):
+def remove_empty_first_rows(table: pd.DataFrame) -> tuple[pd.DataFrame, int]:
     """Analog process to detect_headers for csv files, determines how many rows to skip
     to end up with the header at the right place"""
     idx = 0
@@ -274,7 +269,7 @@ def remove_empty_first_rows(table: pd.DataFrame):
         cols = table.iloc[idx - 1]
         table = table.iloc[idx:]
         table.columns = cols.to_list()
-    # +1 here because the columns should count as a row
+    # +1 here because the headers should count as a row
     return table, idx
 
 
@@ -285,7 +280,7 @@ def parse_excel(
     sheet_name: Optional[str] = None,
     random_state: int = 42,
     verbose : bool = False,
-):
+) -> tuple[pd.DataFrame, int, int, str, str, int]:
     """"Excel-like parsing is really slow, could be a good improvement for future development"""
     if verbose:
         start = time()
@@ -309,7 +304,7 @@ def parse_excel(
             if verbose:
                 display_logs_depending_process_time(
                     f'Detected {engine_to_file[engine]} file, no sheet specified, reading the largest one',
-                    time() - start
+                    time() - start,
                 )
             try:
                 if engine == "openpyxl":
@@ -341,7 +336,7 @@ def parse_excel(
                 if verbose:
                     display_logs_depending_process_time(
                         'Could not read file with classic xls reader, trying with ODS',
-                        time() - start
+                        time() - start,
                     )
                 engine = "odf"
 
@@ -354,33 +349,33 @@ def parse_excel(
             if verbose:
                 display_logs_depending_process_time(
                     f'Detected {engine_to_file[engine]} file, no sheet specified, reading the largest one',
-                    time() - start
+                    time() - start,
                 )
             tables = pd.read_excel(
                 csv_file_path,
                 engine="odf",
                 sheet_name=None,
-                dtype="unicode"
+                dtype="unicode",
             )
             sizes = {sheet_name: table.size for sheet_name, table in tables.items()}
             sheet_name = max(sizes, key=sizes.get)
             if verbose:
                 display_logs_depending_process_time(
                     f'Going forwards with sheet "{sheet_name}"',
-                    time() - start
+                    time() - start,
                 )
             table = tables[sheet_name]
         else:
             if verbose:
                 display_logs_depending_process_time(
                     f'Detected {engine_to_file[engine]} file, reading sheet "{sheet_name}"',
-                    time() - start
+                    time() - start,
                 )
             table = pd.read_excel(
                 csv_file_path,
                 engine="odf",
                 sheet_name=sheet_name,
-                dtype="unicode"
+                dtype="unicode",
             )
         table, header_row_idx = remove_empty_first_rows(table)
         total_lines = len(table)
@@ -391,7 +386,7 @@ def parse_excel(
         if verbose:
             display_logs_depending_process_time(
                 f'Table parsed successfully in {round(time() - start, 3)}s',
-                time() - start
+                time() - start,
             )
         return table, total_lines, nb_duplicates, sheet_name, engine, header_row_idx
 
@@ -400,18 +395,18 @@ def parse_excel(
         if no_sheet_specified:
             display_logs_depending_process_time(
                 f'Going forwards with sheet "{sheet_name}"',
-                time() - start
+                time() - start,
             )
         else:
             display_logs_depending_process_time(
                 f'Detected {engine_to_file[engine]} file, reading sheet "{sheet_name}"',
-                time() - start
+                time() - start,
             )
     table = pd.read_excel(
         csv_file_path,
         engine=engine,
         sheet_name=sheet_name,
-        dtype="unicode"
+        dtype="unicode",
     )
     table, header_row_idx = remove_empty_first_rows(table)
     total_lines = len(table)
@@ -422,12 +417,12 @@ def parse_excel(
     if verbose:
         display_logs_depending_process_time(
             f'Table parsed successfully in {round(time() - start, 3)}s',
-            time() - start
+            time() - start,
         )
     return table, total_lines, nb_duplicates, sheet_name, engine, header_row_idx
 
 
-def prevent_nan(value: float):
+def prevent_nan(value: float) -> Optional[float]:
     if math.isnan(value):
         return None
     return value
@@ -439,7 +434,7 @@ def create_profile(
     num_rows: int,
     limited_output: bool = True,
     verbose: bool = False,
-):
+) -> dict:
     if verbose:
         start = time()
         logging.info("Creating profile")
@@ -466,9 +461,8 @@ def create_profile(
             safe_table[c] = safe_table[c].apply(
                 lambda s: float_casting(s) if isinstance(s, str) else s
             )
-    profile = {}
+    profile = defaultdict(dict)
     for c in safe_table.columns:
-        profile[c] = {}
         if map_python_types.get(dict_cols_fields[c]["python_type"], str) in [
             float,
             int,
@@ -494,10 +488,10 @@ def create_profile(
                 .to_dict(orient="records")
         tops = []
         for tb in tops_bruts:
-            top = {}
-            top["count"] = tb["count"]
-            top["value"] = tb[c]
-            tops.append(top)
+            tops.append({
+                "count": tb["count"],
+                "value": tb[c],
+            })
         profile[c].update(
             tops=tops,
             nb_distinct=safe_table[c].nunique(),
@@ -506,7 +500,7 @@ def create_profile(
     if verbose:
         display_logs_depending_process_time(
             f"Created profile in {round(time() - start, 3)}s",
-            time() - start
+            time() - start,
         )
     return profile
 
@@ -540,7 +534,7 @@ def detect_extra_columns(file: TextIO, sep: str):
     return nb_useless_col, retour
 
 
-def detect_headers(file: TextIO, sep: str, verbose: bool = False):
+def detect_headers(file: TextIO, sep: str, verbose: bool = False) -> tuple[int, Optional[list]]:
     """Tests 10 first rows for possible header (header not in 1st line)"""
     if verbose:
         start = time()
@@ -559,7 +553,7 @@ def detect_headers(file: TextIO, sep: str, verbose: bool = False):
                 if verbose:
                     display_logs_depending_process_time(
                         f'Detected headers in {round(time() - start, 3)}s',
-                        time() - start
+                        time() - start,
                     )
                 return i, chaine
     if verbose:
@@ -567,7 +561,7 @@ def detect_headers(file: TextIO, sep: str, verbose: bool = False):
     return 0, None
 
 
-def detect_heading_columns(file: TextIO, sep: str, verbose : bool = False):
+def detect_heading_columns(file: TextIO, sep: str, verbose : bool = False) -> int:
     """Tests first 10 lines to see if there are empty heading columns"""
     if verbose:
         start = time()
@@ -581,18 +575,18 @@ def detect_heading_columns(file: TextIO, sep: str, verbose : bool = False):
             if verbose:
                 display_logs_depending_process_time(
                     f'No heading column detected in {round(time() - start, 3)}s',
-                    time() - start
+                    time() - start,
                 )
             return 0
     if verbose:
         display_logs_depending_process_time(
             f'{return_int} heading columns detected in {round(time() - start, 3)}s',
-            time() - start
+            time() - start,
         )
     return return_int
 
 
-def detect_trailing_columns(file: TextIO, sep: str, heading_columns: int, verbose : bool = False):
+def detect_trailing_columns(file: TextIO, sep: str, heading_columns: int, verbose : bool = False) -> int:
     """Tests first 10 lines to see if there are empty trailing columns"""
     if verbose:
         start = time()
@@ -611,12 +605,12 @@ def detect_trailing_columns(file: TextIO, sep: str, heading_columns: int, verbos
             if verbose:
                 display_logs_depending_process_time(
                     f'No trailing column detected in {round(time() - start, 3)}s',
-                    time() - start
+                    time() - start,
                 )
             return 0
     if verbose:
         display_logs_depending_process_time(
             f'{return_int} trailing columns detected in {round(time() - start, 3)}s',
-            time() - start
+            time() - start,
         )
     return return_int

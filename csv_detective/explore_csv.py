@@ -4,6 +4,7 @@ contenu possible des champs
 """
 
 from typing import Dict, List, Union
+from collections import defaultdict
 import json
 import numpy as np
 import os
@@ -39,7 +40,7 @@ from .detection import (
 logging.basicConfig(level=logging.INFO)
 
 
-def get_all_packages(detect_type):
+def get_all_packages(detect_type) -> list:
     root_dir = os.path.dirname(os.path.abspath(__file__)) + "/" + detect_type
     modules = []
     for dirpath, _, filenames in os.walk(root_dir):
@@ -58,7 +59,7 @@ def get_all_packages(detect_type):
 def return_all_tests(
     user_input_tests: Union[str, list],
     detect_type: str,
-):
+) -> list:
     """
     returns all tests that have a method _is and are listed in the user_input_tests
     the function can select a sub_package from csv_detective
@@ -175,12 +176,10 @@ def routine(
             sep = detect_separator(str_file, verbose=verbose)
         header_row_idx, header = detect_headers(str_file, sep, verbose=verbose)
         if header is None:
-            return_dict = {"error": True}
-            return return_dict
+            return {"error": True}
         elif isinstance(header, list):
             if any([x is None for x in header]):
-                return_dict = {"error": True}
-                return return_dict
+                return {"error": True}
         heading_columns = detect_heading_columns(str_file, sep, verbose=verbose)
         trailing_columns = detect_trailing_columns(str_file, sep, heading_columns, verbose=verbose)
         table, total_lines, nb_duplicates = parse_table(
@@ -200,7 +199,7 @@ def routine(
         # )
 
     # Creating return dictionary
-    return_dict = {
+    analysis = {
         "header_row_idx": header_row_idx,
         "header": header,
         "total_lines": total_lines,
@@ -212,12 +211,12 @@ def routine(
     }
     # this is only relevant for xls-like
     if is_xls_like:
-        return_dict["engine"] = engine
-        return_dict["sheet_name"] = sheet_name
+        analysis["engine"] = engine
+        analysis["sheet_name"] = sheet_name
     # this is only relevant for csv
     else:
-        return_dict["encoding"] = encoding
-        return_dict["separator"] = sep
+        analysis["encoding"] = encoding
+        analysis["separator"] = sep
 
     # list testing to be performed
     all_tests_fields = return_all_tests(
@@ -229,25 +228,24 @@ def routine(
 
     # if no testing then return
     if not all_tests_fields and not all_tests_labels:
-        return return_dict
+        return analysis
 
     # Perform testing on fields
-    return_table_fields = test_col(table, all_tests_fields, limited_output, skipna=skipna, verbose=verbose)
-    return_dict["columns_fields"] = prepare_output_dict(return_table_fields, limited_output)
+    scores_table_fields = test_col(table, all_tests_fields, limited_output, skipna=skipna, verbose=verbose)
+    analysis["columns_fields"] = prepare_output_dict(scores_table_fields, limited_output)
 
     # Perform testing on labels
-    return_table_labels = test_label(table, all_tests_labels, limited_output, verbose=verbose)
-    return_dict["columns_labels"] = prepare_output_dict(return_table_labels, limited_output)
+    scores_table_labels = test_label(table, all_tests_labels, limited_output, verbose=verbose)
+    analysis["columns_labels"] = prepare_output_dict(scores_table_labels, limited_output)
 
     # Multiply the results of the fields by 1 + 0.5 * the results of the labels.
     # This is because the fields are more important than the labels and yields a max
     # of 1.5 for the final score.
-    return_table = return_table_fields * (
+    scores_table = scores_table_fields * (
         1
-        + return_table_labels.reindex(
-            index=return_table_fields.index, fill_value=0
-        ).values
-        / 2
+        + scores_table_labels.reindex(
+            index=scores_table_fields.index, fill_value=0
+        ).values / 2
     )
 
     # To reduce false positives: ensure these formats are detected only if the label yields
@@ -263,12 +261,12 @@ def routine(
         "latitude_l93",
         "longitude_l93",
     ]
-    return_table.loc[formats_with_mandatory_label, :] = np.where(
-        return_table_labels.loc[formats_with_mandatory_label, :],
-        return_table.loc[formats_with_mandatory_label, :],
+    scores_table.loc[formats_with_mandatory_label, :] = np.where(
+        scores_table_labels.loc[formats_with_mandatory_label, :],
+        scores_table.loc[formats_with_mandatory_label, :],
         0,
     )
-    return_dict["columns"] = prepare_output_dict(return_table, limited_output)
+    analysis["columns"] = prepare_output_dict(scores_table, limited_output)
 
     metier_to_python_type = {
         "booleen": "bool",
@@ -291,7 +289,7 @@ def routine(
 
     if not limited_output:
         for detection_method in ["columns_fields", "columns_labels", "columns"]:
-            return_dict[detection_method] = {
+            analysis[detection_method] = {
                 col_name: [
                     {
                         "python_type": metier_to_python_type.get(
@@ -301,32 +299,29 @@ def routine(
                     }
                     for detection in detections
                 ]
-                for col_name, detections in return_dict[detection_method].items()
+                for col_name, detections in analysis[detection_method].items()
             }
     else:
         for detection_method in ["columns_fields", "columns_labels", "columns"]:
-            return_dict[detection_method] = {
+            analysis[detection_method] = {
                 col_name: {
                     "python_type": metier_to_python_type.get(
                         detection["format"], "string"
                     ),
                     **detection,
                 }
-                for col_name, detection in return_dict[detection_method].items()
+                for col_name, detection in analysis[detection_method].items()
             }
 
         # Add detection with formats as keys
-        return_dict["formats"] = {
-            column_metadata["format"]: []
-            for column_metadata in return_dict["columns"].values()
-        }
-        for header, col_metadata in return_dict["columns"].items():
-            return_dict["formats"][col_metadata["format"]].append(header)
+        analysis["formats"] = defaultdict(list)
+        for header, col_metadata in analysis["columns"].items():
+            analysis["formats"][col_metadata["format"]].append(header)
 
     if output_profile:
-        return_dict["profile"] = create_profile(
+        analysis["profile"] = create_profile(
             table=table,
-            dict_cols_fields=return_dict["columns"],
+            dict_cols_fields=analysis["columns"],
             num_rows=num_rows,
             limited_output=limited_output,
             verbose=verbose,
@@ -343,11 +338,11 @@ def routine(
                 output_path += "_sheet-" + str(sheet_name)
             output_path += ".json"
         with open(output_path, "w", encoding="utf8") as fp:
-            json.dump(return_dict, fp, indent=4, separators=(",", ": "), ensure_ascii=False)
+            json.dump(analysis, fp, indent=4, separators=(",", ": "), ensure_ascii=False)
 
     if output_schema:
-        return_dict["schema"] = generate_table_schema(
-            return_dict,
+        analysis["schema"] = generate_table_schema(
+            analysis,
             save_file=False,
             verbose=verbose
         )
@@ -357,8 +352,8 @@ def routine(
             time() - start_routine
         )
     if output_df:
-        return return_dict, table
-    return return_dict
+        return analysis, table
+    return analysis
 
 
 def routine_minio(
@@ -436,7 +431,7 @@ def routine_minio(
         minio_pwd=minio_pwd,
     )
 
-    return_dict = routine(
+    analysis = routine(
         csv_file_path,
         num_rows,
         user_input_tests,
@@ -449,7 +444,7 @@ def routine_minio(
     # Write report JSON file.
     output_path_to_store_minio_file = os.path.splitext(csv_file_path)[0] + ".json"
     with open(output_path_to_store_minio_file, "w", encoding="utf8") as fp:
-        json.dump(return_dict, fp, indent=4, separators=(",", ": "))
+        json.dump(analysis, fp, indent=4, separators=(",", ": "))
 
     upload_to_minio(
         netloc=output_minio_location["netloc"],
@@ -464,7 +459,7 @@ def routine_minio(
     os.remove(csv_file_path)
 
     generate_table_schema(
-        return_dict,
+        analysis,
         True,
         netloc=tableschema_minio_location["netloc"],
         bucket=tableschema_minio_location["bucket"],
@@ -473,4 +468,4 @@ def routine_minio(
         minio_pwd=minio_pwd,
     )
 
-    return return_dict
+    return analysis
