@@ -216,7 +216,8 @@ def prepare_output_dict(return_table: pd.DataFrame, limited_output: bool):
 
 def full_word_strictly_inside_string(word: str, string: str):
     return (
-        (" " + word + " " in string)
+        word == string
+        or (" " + word + " " in string)
         or (string.startswith(word + " "))
         or (string.endswith(" " + word))
     )
