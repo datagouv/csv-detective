@@ -19,7 +19,13 @@ import pandas as pd
 from csv_detective import detect_fields, detect_labels
 from csv_detective.s3_utils import download_from_minio, upload_to_minio
 from csv_detective.schema_generation import generate_table_schema
-from csv_detective.utils import test_col, test_label, prepare_output_dict, display_logs_depending_process_time
+from csv_detective.utils import (
+    cast_df,
+    display_logs_depending_process_time,
+    prepare_output_dict,
+    test_col,
+    test_label,
+)
 from .detection import (
     detect_engine,
     detect_separator,
@@ -352,7 +358,7 @@ def routine(
             time() - start_routine
         )
     if output_df:
-        return analysis, table
+        return analysis, cast_df(table, analysis["columns"], verbose=verbose)
     return analysis
 
 
