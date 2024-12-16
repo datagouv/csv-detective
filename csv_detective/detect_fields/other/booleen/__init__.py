@@ -22,6 +22,6 @@ def bool_casting(val: str) -> bool:
     return bool_mapping.get(val)
 
 
-def _is(val):
-    '''Détection les booléens'''
+def _is(val: str) -> bool:
+    '''Détecte les booléens'''
     return isinstance(val, str) and val.lower() in liste_bool
