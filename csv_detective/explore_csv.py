@@ -117,6 +117,7 @@ def routine(
     output_profile: bool = False,
     output_schema: bool = False,
     output_df: bool = False,
+    cast_json: bool = True,
     verbose: bool = False,
     sheet_name: Union[str, int] = None,
 ) -> Union[dict, tuple[dict, pd.DataFrame]]:
@@ -133,6 +134,7 @@ def routine(
         output_profile: whether or not to add the 'profile' field to the output
         output_schema: whether or not to add the 'schema' field to the output (tableschema)
         output_df: whether or not to return the loaded DataFrame along with the analysis report
+        cast_json: whether or not to cast json columns into objects (otherwise they are returned as strings)
         verbose: whether or not to print process logs in console 
         sheet_name: if reading multi-sheet file (xls-like), which sheet to consider
         skipna: whether to keep NaN (empty cells) for tests
@@ -360,7 +362,12 @@ def routine(
             time() - start_routine
         )
     if output_df:
-        return analysis, cast_df(table, analysis["columns"], verbose=verbose)
+        return analysis, cast_df(
+            df=table,
+            columns=analysis["columns"],
+            cast_json=cast_json,
+            verbose=verbose,
+        )
     return analysis
 
 

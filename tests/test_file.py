@@ -233,3 +233,30 @@ def test_output_df():
     assert isinstance(df, pd.DataFrame)
     assert len(df) == 6
     assert df["partly_empty"].dtype == pd.Int64Dtype()
+
+
+@pytest.mark.parametrize(
+    "cast_json",
+    (
+        (True, dict),
+        (False, str),
+    ),
+)
+def test_cast_json(mocked_responses, cast_json):
+    cast_json, expected_type = cast_json
+    expected_content = 'id,a_simple_dict\n1,{"a": 1}\n2,{"b": 2}\n3,{"c": 3}\n'
+    mocked_responses.get(
+        'http://example.com/test.csv',
+        body=expected_content,
+        status=200,
+    )
+    analysis, df = routine(
+        csv_file_path='http://example.com/test.csv',
+        num_rows=-1,
+        output_profile=False,
+        save_results=False,
+        output_df=True,
+        cast_json=cast_json,
+    )
+    assert analysis['columns']["a_simple_dict"]["python_type"] == "json"
+    assert isinstance(df["a_simple_dict"][0], expected_type)

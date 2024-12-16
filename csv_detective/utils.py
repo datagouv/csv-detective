@@ -242,12 +242,12 @@ def cast(value: str, _type: str) -> Optional[Union[str, float, bool, date, datet
     raise ValueError(f"Unknown type `{_type}`")
 
 
-def cast_df(df: pd.DataFrame, columns: dict, verbose: bool = False) -> pd.DataFrame:
+def cast_df(df: pd.DataFrame, columns: dict, cast_json: bool = True, verbose: bool = False) -> pd.DataFrame:
     if verbose:
         start = time()
     output_df = pd.DataFrame()
     for col_name, detection in columns.items():
-        if detection["python_type"] == "string":
+        if detection["python_type"] == "string" or (detection["python_type"] == "json" and not cast_json):
             # no change if detected type is string
             output_df[col_name] = df[col_name].copy()
         elif detection["python_type"] == "int":
