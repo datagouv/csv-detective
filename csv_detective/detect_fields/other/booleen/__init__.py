@@ -18,7 +18,7 @@ bool_mapping = {
 liste_bool = set(bool_mapping.keys())
 
 
-def bool_casting(val):
+def bool_casting(val: str) -> bool:
     return bool_mapping.get(val)
 
 
