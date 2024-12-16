@@ -1,7 +1,7 @@
 PROPORTION = 1
 
 
-def float_casting(val):
+def float_casting(val: str) -> float:
     return float(val.replace(',', '.'))
 
 
