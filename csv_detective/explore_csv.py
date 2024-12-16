@@ -19,7 +19,13 @@ import pandas as pd
 from csv_detective import detect_fields, detect_labels
 from csv_detective.s3_utils import download_from_minio, upload_to_minio
 from csv_detective.schema_generation import generate_table_schema
-from csv_detective.utils import test_col, test_label, prepare_output_dict, display_logs_depending_process_time
+from csv_detective.utils import (
+    cast_df,
+    display_logs_depending_process_time,
+    prepare_output_dict,
+    test_col,
+    test_label,
+)
 from .detection import (
     detect_engine,
     detect_separator,
@@ -111,6 +117,7 @@ def routine(
     output_profile: bool = False,
     output_schema: bool = False,
     output_df: bool = False,
+    cast_json: bool = True,
     verbose: bool = False,
     sheet_name: Union[str, int] = None,
 ) -> Union[dict, tuple[dict, pd.DataFrame]]:
@@ -127,6 +134,7 @@ def routine(
         output_profile: whether or not to add the 'profile' field to the output
         output_schema: whether or not to add the 'schema' field to the output (tableschema)
         output_df: whether or not to return the loaded DataFrame along with the analysis report
+        cast_json: whether or not to cast json columns into objects (otherwise they are returned as strings)
         verbose: whether or not to print process logs in console 
         sheet_name: if reading multi-sheet file (xls-like), which sheet to consider
         skipna: whether to keep NaN (empty cells) for tests
@@ -276,6 +284,8 @@ def routine(
         "json": "json",
         "json_geojson": "json",
         "datetime": "datetime",
+        "datetime_iso": "datetime",
+        "datetime_rfc822": "datetime",
         "date": "date",
         "latitude": "float",
         "latitude_l93": "float",
@@ -352,7 +362,12 @@ def routine(
             time() - start_routine
         )
     if output_df:
-        return analysis, table
+        return analysis, cast_df(
+            df=table,
+            columns=analysis["columns"],
+            cast_json=cast_json,
+            verbose=verbose,
+        )
     return analysis
 
 
