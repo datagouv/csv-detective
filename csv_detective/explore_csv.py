@@ -282,6 +282,8 @@ def routine(
         "json": "json",
         "json_geojson": "json",
         "datetime": "datetime",
+        "datetime_iso": "datetime",
+        "datetime_rfc822": "datetime",
         "date": "date",
         "latitude": "float",
         "latitude_l93": "float",
