@@ -12,8 +12,23 @@ You can also directly feed the URL of a remote file (from data.gouv.fr for insta
 
 You need to have python >= 3.7 installed. We recommend using a virtual environement.
 
-```
+```shell
 pip install csv-detective
+```
+
+### Create a lock file
+
+If you want to ensure reproducible installations, you can create a lock file from the `pyproject.toml`:
+
+Using pip:
+```shell
+pip install pip-tools
+pip-compile pyproject.toml --output-file requirements.txt
+```
+
+Using uv:
+```shell
+uv pip compile pyproject.toml -o requirements.txt
 ```
 
 ### Detect some columns
@@ -44,7 +59,7 @@ inspection_results = routine(
 
 The program creates a `Python` dictionnary with the following information :
 
-```
+```python
 {
     "encoding": "windows-1252", 			        # Encoding detected
     "separator": ";",						# Detected CSV separator
@@ -183,9 +198,18 @@ An early version of this analysis of all resources on data.gouv.fr can be found 
 ## Release
 
 The release process uses `bumpr`.
+`bumpr` will be installed as a build dependency.
 
+### Install build dependencies
+
+Using pip:
 ```shell
-pip install -r requirements-build.txt
+pip install build
+```
+
+Using uv:
+```shell
+uv pip install build
 ```
 
 ### Process
@@ -212,7 +236,7 @@ bumpr -v
 
 See bumpr options for minor and major:
 
-```
+```shell
 $ bumpr -h
 usage: bumpr [-h] [--version] [-v] [-c CONFIG] [-d] [-st] [-b | -pr] [-M] [-m] [-p]
              [-s SUFFIX] [-u] [-pM] [-pm] [-pp] [-ps PREPARE_SUFFIX] [-pu]
