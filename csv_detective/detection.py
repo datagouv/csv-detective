@@ -198,6 +198,8 @@ def detect_encoding(csv_file_path: str, verbose: bool = False) -> str:
     else:
         binary_file = open(csv_file_path, mode="rb")
     encoding_dict = detect(binary_file.read())
+    if not encoding_dict["encoding"]:
+        raise ValueError("Could not detect the file's encoding. Consider specifying it in the routine call.")
     if verbose:
         message = f'Detected encoding: "{encoding_dict["encoding"]}"'
         message += f' in {round(time() - start, 3)}s (confidence: {round(encoding_dict["confidence"]*100)}%)'
