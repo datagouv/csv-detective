@@ -174,7 +174,9 @@ def detect_separator(file: TextIO, verbose: bool = False) -> str:
             break
         rows_lengths.add(len(row))
     if len(rows_lengths) > 1:
-        raise ValueError('Number of columns is not even across the first 10 rows.')
+        raise ValueError(
+            f"Number of columns is not even across the first 10 rows (detected separator: {sep})."
+        )
 
     if verbose:
         display_logs_depending_process_time(
