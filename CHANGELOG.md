@@ -7,6 +7,7 @@
 - Better naming, hint types and minor refactors [#103](https://github.com/datagouv/csv-detective/pull/103)
 - The returned dataframe has its columns properly cast to the detected types [#104](https://github.com/datagouv/csv-detective/pull/104)
 - Raise an error if the encoding could not be guessed [#106](https://github.com/datagouv/csv-detective/pull/106)
+- Fix CLI and minio routine [#107](https://github.com/datagouv/csv-detective/pull/107)
 
 ## 0.7.4 (2024-11-15)
 
