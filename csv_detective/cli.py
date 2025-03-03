@@ -20,7 +20,7 @@ def run():
         dest='num_rows',
         type=int,
         nargs='?',
-        help='Number of rows to use for detection (default)'
+        help='Number of rows to use for detection (default 500)'
     )
     explorer.add_argument(
         '-s',
