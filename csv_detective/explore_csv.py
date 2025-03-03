@@ -3,7 +3,7 @@ Ce script analyse les premières lignes d'un CSV pour essayer de déterminer le
 contenu possible des champs
 """
 
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, Union
 from collections import defaultdict
 import json
 import numpy as np
@@ -46,7 +46,7 @@ from .detection import (
 logging.basicConfig(level=logging.INFO)
 
 
-def get_all_packages(detect_type) -> list:
+def get_all_packages(detect_type: str) -> list:
     root_dir = os.path.dirname(os.path.abspath(__file__)) + "/" + detect_type
     modules = []
     for dirpath, _, filenames in os.walk(root_dir):
@@ -111,15 +111,15 @@ def routine(
     user_input_tests: Union[str, List[str]] = "ALL",
     limited_output: bool = True,
     save_results: Union[bool, str] = True,
-    encoding: str = None,
-    sep: str = None,
+    encoding: Optional[str] = None,
+    sep: Optional[str] = None,
     skipna: bool = True,
     output_profile: bool = False,
     output_schema: bool = False,
     output_df: bool = False,
     cast_json: bool = True,
     verbose: bool = False,
-    sheet_name: Union[str, int] = None,
+    sheet_name: Optional[Union[str, int]] = None,
 ) -> Union[dict, tuple[dict, pd.DataFrame]]:
     """Returns a dict with information about the csv table and possible
     column contents.
