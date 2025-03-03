@@ -255,7 +255,7 @@ def routine(
     )
 
     # To reduce false positives: ensure these formats are detected only if the label yields
-    # a detection.
+    # a detection (skipping the ones that have been excluded by the users).
     formats_with_mandatory_label = [
         f for f in [
             "code_departement",
@@ -267,7 +267,7 @@ def routine(
             "longitude_wgs_fr_metropole",
             "latitude_l93",
             "longitude_l93",
-        ] if f in scores_table.columns
+        ] if f in scores_table.index
     ]
     scores_table.loc[formats_with_mandatory_label, :] = np.where(
         scores_table_labels.loc[formats_with_mandatory_label, :],
