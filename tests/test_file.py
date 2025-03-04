@@ -69,7 +69,7 @@ def test_profile_output_on_file():
     assert output["profile"]["GEO_INFO"]["nb_distinct"] == 1
 
 
-def test_exception():
+def test_profile_with_num_rows():
     with pytest.raises(ValueError):
         routine(
             csv_file_path="tests/a_test_file.csv",
