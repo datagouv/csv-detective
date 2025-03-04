@@ -178,6 +178,17 @@ def test_non_csv_files():
     )
     assert _['engine'] == 'openpyxl'
 
+    _ = routine(
+        csv_file_path="tests/file.csv.gz",
+        num_rows=-1,
+        output_profile=False,
+        save_results=False,
+    )
+    assert not _.get('engine')
+    assert not _.get('sheet_name')
+    assert _["separator"] == ","
+    assert len(_["columns"]) == 3
+
 
 @pytest.fixture
 def mocked_responses():
