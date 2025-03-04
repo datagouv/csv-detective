@@ -81,16 +81,14 @@ def return_all_tests(
 
     if isinstance(user_input_tests, str):
         user_input_tests = [user_input_tests]
-    if "ALL" in user_input_tests:
+    if "ALL" in user_input_tests or all(x[0] == "-" for x in user_input_tests):
         tests_to_do = [detect_type]
     else:
-        # can't require to only skip tests
-        assert not all(x[0] == "-" for x in user_input_tests)
         tests_to_do = [
-            detect_type + "." + x for x in user_input_tests if x[0] != "-"
+            f"{detect_type}.{x}" for x in user_input_tests if x[0] != "-"
         ]
     tests_skipped = [
-        detect_type + "." + x[1:] for x in user_input_tests if x[0] == "-"
+        f"{detect_type}.{x[1:]}" for x in user_input_tests if x[0] == "-"
     ]
     all_tests = [
         # this is why we need to import detect_fields/labels
@@ -257,17 +255,19 @@ def routine(
     )
 
     # To reduce false positives: ensure these formats are detected only if the label yields
-    # a detection.
+    # a detection (skipping the ones that have been excluded by the users).
     formats_with_mandatory_label = [
-        "code_departement",
-        "code_commune_insee",
-        "code_postal",
-        "latitude_wgs",
-        "longitude_wgs",
-        "latitude_wgs_fr_metropole",
-        "longitude_wgs_fr_metropole",
-        "latitude_l93",
-        "longitude_l93",
+        f for f in [
+            "code_departement",
+            "code_commune_insee",
+            "code_postal",
+            "latitude_wgs",
+            "longitude_wgs",
+            "latitude_wgs_fr_metropole",
+            "longitude_wgs_fr_metropole",
+            "latitude_l93",
+            "longitude_l93",
+        ] if f in scores_table.index
     ]
     scores_table.loc[formats_with_mandatory_label, :] = np.where(
         scores_table_labels.loc[formats_with_mandatory_label, :],
