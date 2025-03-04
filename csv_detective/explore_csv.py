@@ -12,7 +12,7 @@ import tempfile
 import logging
 from time import time
 import requests
-from io import StringIO
+from io import BytesIO, StringIO
 import pandas as pd
 
 # flake8: noqa
@@ -39,7 +39,10 @@ from .detection import (
     detetect_categorical_variable,
     # detect_continuous_variable,
     is_url,
+    unzip,
     XLS_LIKE_EXT,
+    EXCEL_ENGINES,
+    COMPRESSION_ENGINES,
 )
 
 
@@ -155,12 +158,12 @@ def routine(
 
     file_name = csv_file_path.split('/')[-1]
     engine = None
-    if '.' not in file_name:
+    if '.' not in file_name or not file_name.endswith("csv"):
         # file has no extension, we'll investigate how to read it
         engine = detect_engine(csv_file_path, verbose=verbose)
 
     is_xls_like = False
-    if engine or any([csv_file_path.endswith(k) for k in XLS_LIKE_EXT]):
+    if engine in EXCEL_ENGINES or any([csv_file_path.endswith(k) for k in XLS_LIKE_EXT]):
         is_xls_like = True
         encoding, sep, heading_columns, trailing_columns = None, None, None, None
         table, total_lines, nb_duplicates, sheet_name, engine, header_row_idx = parse_excel(
@@ -172,12 +175,23 @@ def routine(
         )
         header = table.columns.to_list()
     else:
-        if encoding is None:
-            encoding = detect_encoding(csv_file_path, verbose=verbose)
+        # fecthing or reading file as binary
         if is_url(csv_file_path):
             r = requests.get(csv_file_path, allow_redirects=True)
             r.raise_for_status()
-            str_file = StringIO(r.content.decode(encoding=encoding))
+            binary_file = BytesIO(r.content)
+        else:
+            binary_file = open(csv_file_path, "rb")
+        # handling compression
+        if engine in COMPRESSION_ENGINES:
+            binary_file: BytesIO = unzip(binary_file=binary_file, engine=engine)
+        # detecting encoding if not specified
+        if encoding is None:
+            encoding: str = detect_encoding(binary_file, verbose=verbose)
+            binary_file.seek(0)
+        # decoding and reading file
+        if is_url(csv_file_path) or engine in COMPRESSION_ENGINES:
+            str_file = StringIO(binary_file.read().decode(encoding=encoding))
         else:
             str_file = open(csv_file_path, "r", encoding=encoding)
         if sep is None:
