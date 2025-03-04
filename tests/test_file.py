@@ -131,63 +131,35 @@ def test_schema_on_file():
     assert is_column_reg
 
 
-def test_non_csv_files():
+@pytest.mark.parametrize(
+    "params",
+    (
+        ("file.ods", {"engine": "odf"}),
+        # this is a "tricked" xls file that is actually read as odf
+        ("file.xls", {"engine": "odf"}),
+        # this file has an empty first row; check if the sheet we consider is the largest
+        ("file.xlsx", {"engine": "openpyxl", "header_row_idx": 1, "sheet_name": "REI_1987"}),
+        ("csv_file", {"engine": None, "sheet_name": None}),
+        ("xlsx_file", {"engine": "openpyxl"}),
+        ("file.csv.gz", {"engine": None, "sheet_name": None, "separator": ",", "columns.len": 3}),
+    ),
+)
+def test_non_csv_files(params):
+    file_name, checks = params
     _ = routine(
-        csv_file_path="tests/file.ods",
+        csv_file_path=f"tests/{file_name}",
         num_rows=-1,
         output_profile=False,
         save_results=False,
     )
-    assert _['engine'] == 'odf'
-
-    # this is a "tricked" xls file that is actually read as odf
-    _ = routine(
-        csv_file_path="tests/file.xls",
-        num_rows=-1,
-        output_profile=False,
-        save_results=False,
-    )
-    assert _['engine'] == 'odf'
-
-    _ = routine(
-        csv_file_path="tests/file.xlsx",
-        num_rows=-1,
-        output_profile=False,
-        save_results=False,
-    )
-    assert _['engine'] == 'openpyxl'
-    # this file has an empty first row
-    assert _['header_row_idx'] == 1
-    # check if the sheet we consider is the largest
-    assert _['sheet_name'] == 'REI_1987'
-
-    _ = routine(
-        csv_file_path="tests/csv_file",
-        num_rows=-1,
-        output_profile=False,
-        save_results=False,
-    )
-    assert not _.get('engine')
-    assert not _.get('sheet_name')
-
-    _ = routine(
-        csv_file_path="tests/xlsx_file",
-        num_rows=-1,
-        output_profile=False,
-        save_results=False,
-    )
-    assert _['engine'] == 'openpyxl'
-
-    _ = routine(
-        csv_file_path="tests/file.csv.gz",
-        num_rows=-1,
-        output_profile=False,
-        save_results=False,
-    )
-    assert not _.get('engine')
-    assert not _.get('sheet_name')
-    assert _["separator"] == ","
-    assert len(_["columns"]) == 3
+    for k, v in checks.items():
+        if v is None:
+            assert not _.get(k)
+        elif "." in k:
+            key, func = k.split(".")
+            assert eval(func)(_[key]) == v
+        else:
+            assert _[k] == v
 
 
 @pytest.fixture
