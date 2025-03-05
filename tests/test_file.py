@@ -170,7 +170,7 @@ def mocked_responses():
 
 def test_urls(mocked_responses):
     url = 'http://example.com/test.csv'
-    expected_content = 'id,name,first_name\n1,John,Smith\n2,Jane,Doe\n3,Bob,Johnson'
+    expected_content = b'id,name,first_name\n1,John,Smith\n2,Jane,Doe\n3,Bob,Johnson'
     mocked_responses.get(
         url,
         body=expected_content,
