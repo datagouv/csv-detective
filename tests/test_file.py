@@ -131,19 +131,19 @@ def test_schema_on_file():
     assert is_column_reg
 
 
-@pytest.mark.parametrize(
-    "params",
-    (
-        ("file.ods", {"engine": "odf"}),
-        # this is a "tricked" xls file that is actually read as odf
-        ("file.xls", {"engine": "odf"}),
-        # this file has an empty first row; check if the sheet we consider is the largest
-        ("file.xlsx", {"engine": "openpyxl", "header_row_idx": 1, "sheet_name": "REI_1987"}),
-        ("csv_file", {"engine": None, "sheet_name": None}),
-        ("xlsx_file", {"engine": "openpyxl"}),
-        ("file.csv.gz", {"engine": None, "sheet_name": None, "separator": ",", "columns.len": 3}),
-    ),
+params = (
+    ("file.ods", {"engine": "odf"}),
+    # this is a "tricked" xls file that is actually read as odf
+    ("file.xls", {"engine": "odf"}),
+    # this file has an empty first row; check if the sheet we consider is the largest
+    ("file.xlsx", {"engine": "openpyxl", "header_row_idx": 1, "sheet_name": "REI_1987"}),
+    ("csv_file", {"engine": None, "sheet_name": None}),
+    ("xlsx_file", {"engine": "openpyxl"}),
+    ("file.csv.gz", {"engine": None, "sheet_name": None, "separator": ",", "columns.len": 3}),
 )
+
+
+@pytest.mark.parametrize("params", params)
 def test_non_csv_files(params):
     file_name, checks = params
     _ = routine(
