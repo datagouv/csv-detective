@@ -147,8 +147,12 @@ def detect_engine(csv_file_path: str, verbose=False) -> Optional[str]:
     else:
         engine = mapping.get(magic.from_file(csv_file_path, mime=True))
     if verbose:
+        message = (
+            f"File is not csv, detected {engine_to_file.get(engine, 'csv')}"
+            if engine else "Processing the file as a csv"
+        )
         display_logs_depending_process_time(
-            f'File is not csv, detected {engine_to_file.get(engine, "csv")}',
+            message,
             time() - start,
         )
     return engine
