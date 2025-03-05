@@ -131,19 +131,21 @@ def test_schema_on_file():
     assert is_column_reg
 
 
-params = (
+params_csv = [
+    ("csv_file", {"engine": None, "sheet_name": None}),
+    ("file.csv.gz", {"engine": None, "sheet_name": None, "separator": ",", "columns.len": 3}),
+]
+params_others = [
     ("file.ods", {"engine": "odf"}),
     # this is a "tricked" xls file that is actually read as odf
     ("file.xls", {"engine": "odf"}),
     # this file has an empty first row; check if the sheet we consider is the largest
     ("file.xlsx", {"engine": "openpyxl", "header_row_idx": 1, "sheet_name": "REI_1987"}),
-    ("csv_file", {"engine": None, "sheet_name": None}),
     ("xlsx_file", {"engine": "openpyxl"}),
-    ("file.csv.gz", {"engine": None, "sheet_name": None, "separator": ",", "columns.len": 3}),
-)
+]
 
 
-@pytest.mark.parametrize("params", params)
+@pytest.mark.parametrize("params", params_csv + params_others)
 def test_non_csv_files(params):
     file_name, checks = params
     _ = routine(
@@ -168,21 +170,34 @@ def mocked_responses():
         yield rsps
 
 
-def test_urls(mocked_responses):
-    url = 'http://example.com/test.csv'
-    expected_content = b'id,name,first_name\n1,John,Smith\n2,Jane,Doe\n3,Bob,Johnson'
+@pytest.mark.parametrize(
+    "params",
+    # ideally we'd like to do the same with params_others but pandas.read_excel uses urllib
+    # which doesn't support the way we mock the response, TBC
+    params_csv + [("a_test_file.csv", {"separator": ";", "header_row_idx": 2, "total_lines": 414})]
+)
+def test_urls(mocked_responses, params):
+    file_name, checks = params
+    url = f"http://example.com/{file_name}"
     mocked_responses.get(
         url,
-        body=expected_content,
+        body=open(f"tests/{file_name}", "rb").read(),
         status=200,
     )
-    output = routine(
+    _ = routine(
         csv_file_path=url,
         num_rows=-1,
         output_profile=False,
         save_results=False,
     )
-    assert output['header'] == ["id", "name", "first_name"]
+    for k, v in checks.items():
+        if v is None:
+            assert not _.get(k)
+        elif "." in k:
+            key, func = k.split(".")
+            assert eval(func)(_[key]) == v
+        else:
+            assert _[k] == v
 
 
 @pytest.mark.parametrize(
