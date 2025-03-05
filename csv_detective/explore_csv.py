@@ -173,7 +173,7 @@ def routine(
         )
         header = table.columns.to_list()
     else:
-        # fecthing or reading file as binary
+        # fetching or reading file as binary
         if is_url(csv_file_path):
             r = requests.get(csv_file_path, allow_redirects=True)
             r.raise_for_status()
