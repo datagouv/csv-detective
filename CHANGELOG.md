@@ -9,6 +9,8 @@
 - Raise an error if the encoding could not be guessed [#106](https://github.com/datagouv/csv-detective/pull/106)
 - Allow to only specify tests to skip ("all but...") [#108](https://github.com/datagouv/csv-detective/pull/108)
 - Fix bool casting [#109](https://github.com/datagouv/csv-detective/pull/109)
+- Handle csv.gz files [#110](https://github.com/datagouv/csv-detective/pull/110)
+- Refactor file tests [#110](https://github.com/datagouv/csv-detective/pull/110)
 
 ## 0.7.4 (2024-11-15)
 
