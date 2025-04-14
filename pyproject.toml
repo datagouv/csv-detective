@@ -1,0 +1,63 @@
+[project]
+name = "csv_detective"
+dynamic = ["version"]
+requires-python = ">=3.7, <3.13"
+authors = [
+    {name = "data.gouv.fr", email = "opendatateam@data.gouv.fr"},
+]
+description = "Detect CSV column content"
+readme = "README.md"
+license = {text = "GNU Affero General Public License v3"}
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "License :: OSI Approved :: GNU Affero General Public License v3",
+    "Operating System :: POSIX",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+]
+keywords = ["CSV", "data processing", "encoding", "guess", "parser", "tabular"]
+dependencies = [
+    "boto3>=1.34.0",
+    "dateparser>=1.2.0",
+    "faust-cchardet>=2.1.19",
+    "pandas>=2.2.0",
+    "pytest>=8.3.0",
+    "python-dateutil>=2.8.2",
+    "Unidecode>=1.3.6",
+    "openpyxl>=3.1.5",
+    "xlrd>=2.0.1",
+    "odfpy>=1.4.1",
+    "requests>=2.32.3",
+    "responses>=0.25.0",
+    "python-magic>=0.4.27",
+    "faker>=33.0.0",
+    "rstr<=3.2.2",
+]
+
+[project.urls]
+Homepage = "https://github.com/etalab/csv_detective"
+
+[project.scripts]
+csv_detective = "csv_detective.cli:run"
+
+[tool.setuptools]
+packages = ["csv_detective"]
+
+[tool.setuptools.dynamic]
+version = {attr = "csv_detective.__version__"}
+
+[tool.setuptools.data-files]
+"share/csv_detective" = [
+    "CHANGELOG.md",
+    "LICENSE.AGPL.txt",
+    "README.md",
+]
+
+[build-system]
+requires = [
+    "setuptools>=61.0",
+    "wheel",
+    "twine",
+    "bumpr>=0.3.8"
+]
+build-backend = "setuptools.build_meta"

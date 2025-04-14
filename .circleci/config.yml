@@ -34,8 +34,12 @@ jobs:
           command: |
             virtualenv venv
             source venv/bin/activate
+            # Install build dependencies
+            pip install build
+            # Install project locked dependencies
             pip install -r requirements.txt
-            pip install -e .
+            # Install the package and its dependencies
+            pip install .
       - save_cache:
           key: << pipeline.parameters.cache-prefix >>-{{ arch }}-{{ checksum "requirements.txt" }}
           paths:
