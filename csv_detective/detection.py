@@ -1,10 +1,11 @@
-from typing import TextIO, Optional, Union
+from typing import TextIO, Optional
 from collections import defaultdict
 import pandas as pd
 import math
 import csv
 from cchardet import detect
 from ast import literal_eval
+import gzip
 import logging
 from time import time
 import openpyxl
@@ -21,10 +22,13 @@ NEW_EXCEL_EXT = [".xlsx", ".xlsm", ".xltx", ".xltm"]
 OLD_EXCEL_EXT = [".xls"]
 OPEN_OFFICE_EXT = [".odf", ".ods", ".odt"]
 XLS_LIKE_EXT = NEW_EXCEL_EXT + OLD_EXCEL_EXT + OPEN_OFFICE_EXT
+EXCEL_ENGINES = ["openpyxl", "xlrd", "odf"]
+COMPRESSION_ENGINES = ["gzip"]
 engine_to_file = {
     "openpyxl": "Excel",
     "xlrd": "old Excel",
-    "odf": "OpenOffice"
+    "odf": "OpenOffice",
+    "gzip": "csv.gz",
 }
 
 
@@ -128,6 +132,8 @@ def detect_engine(csv_file_path: str, verbose=False) -> Optional[str]:
     if verbose:
         start = time()
     mapping = {
+        "application/gzip": "gzip",
+        "application/x-gzip": "gzip",
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'openpyxl',
         'application/vnd.ms-excel': 'xlrd',
         'application/vnd.oasis.opendocument.spreadsheet': 'odf',
@@ -141,8 +147,12 @@ def detect_engine(csv_file_path: str, verbose=False) -> Optional[str]:
     else:
         engine = mapping.get(magic.from_file(csv_file_path, mime=True))
     if verbose:
+        message = (
+            f"File is not csv, detected {engine_to_file.get(engine, 'csv')}"
+            if engine else "Processing the file as a csv"
+        )
         display_logs_depending_process_time(
-            f'File has no extension, detected {engine_to_file.get(engine, "csv")}',
+            message,
             time() - start,
         )
     return engine
@@ -174,7 +184,9 @@ def detect_separator(file: TextIO, verbose: bool = False) -> str:
             break
         rows_lengths.add(len(row))
     if len(rows_lengths) > 1:
-        raise ValueError('Number of columns is not even across the first 10 rows.')
+        raise ValueError(
+            f"Number of columns is not even across the first 10 rows (detected separator: {sep})."
+        )
 
     if verbose:
         display_logs_depending_process_time(
@@ -184,19 +196,22 @@ def detect_separator(file: TextIO, verbose: bool = False) -> str:
     return sep
 
 
-def detect_encoding(csv_file_path: str, verbose: bool = False) -> str:
+def unzip(binary_file: BytesIO, engine: str) -> BytesIO:
+    if engine == "gzip":
+        with gzip.open(binary_file, mode="rb") as binary_file:
+            file_content = binary_file.read()
+    else:
+        raise NotImplementedError(f"{engine} is not yet supported")
+    return BytesIO(file_content)
+
+
+def detect_encoding(binary_file: BytesIO, verbose: bool = False) -> str:
     """
     Detects file encoding using faust-cchardet (forked from the original cchardet)
     """
     if verbose:
         start = time()
         logging.info("Detecting encoding")
-    if is_url(csv_file_path):
-        r = requests.get(csv_file_path)
-        r.raise_for_status()
-        binary_file = BytesIO(r.content)
-    else:
-        binary_file = open(csv_file_path, mode="rb")
     encoding_dict = detect(binary_file.read())
     if not encoding_dict["encoding"]:
         raise ValueError("Could not detect the file's encoding. Consider specifying it in the routine call.")
