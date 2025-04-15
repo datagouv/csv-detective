@@ -1,7 +1,8 @@
-import pandas as pd
-from numpy import random
-import pytest
 from datetime import date as _date, datetime as _datetime
+
+from numpy import random
+import pandas as pd
+import pytest
 
 from csv_detective.detect_fields.FR.geo import (
     adresse,
@@ -43,12 +44,12 @@ from csv_detective.detect_fields.other import (
     float as test_float,
 )
 from csv_detective.detect_fields.temp import date, datetime_iso, datetime_rfc822, year
-from csv_detective.detection import (
+from csv_detective.detection.variables import (
     detect_continuous_variable,
-    detetect_categorical_variable,
+    detect_categorical_variable,
 )
 from csv_detective.explore_csv import return_all_tests
-from csv_detective.utils import cast
+from csv_detective.output.dataframe import cast
 
 
 def test_all_tests_return_bool():
@@ -71,7 +72,7 @@ def test_detetect_categorical_variable():
     }
     df = pd.DataFrame(df_dict, dtype="unicode")
 
-    res, _ = detetect_categorical_variable(df)
+    res, _ = detect_categorical_variable(df)
     assert len(res.values) and all(k in res.values for k in ["cat", "cat2"])
 
 
