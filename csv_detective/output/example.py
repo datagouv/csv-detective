@@ -1,13 +1,14 @@
-import random
-import uuid
-import string
 from datetime import datetime
-import pandas as pd
-from typing import List, Union, Optional, Any, Type
 import json
+import random
+import string
+from typing import Union, Optional, Any, Type
+import uuid
+
+from faker import Faker
+import pandas as pd
 import requests
 import rstr
-from faker import Faker
 
 fake = Faker()
 
@@ -69,7 +70,7 @@ def create_example_csv_file(
         return str(uuid.uuid4())
 
     def _date(
-        date_range: Union[None, List[str]] = None,
+        date_range: Union[None, list[str]] = None,
         format: str = '%Y-%m-%d',
         required: bool = True,
     ) -> str:
@@ -98,7 +99,7 @@ def create_example_csv_file(
         return fake.time(format)
 
     def _datetime(
-        datetime_range: Optional[List[str]] = None,
+        datetime_range: Optional[list[str]] = None,
         format: str = '%Y-%m-%d %H-%M-%S',
         required: bool = True,
     ) -> str:
@@ -123,7 +124,7 @@ def create_example_csv_file(
 
     def _number(
         num_type: Type[Union[int, float]] = int,
-        num_range: Optional[List[float]] = None,
+        num_range: Optional[list[float]] = None,
         enum: Optional[list] = None,
         required: bool = True,
     ) -> Union[int, float]:
@@ -144,7 +145,7 @@ def create_example_csv_file(
             return ''
         return random.randint(0, 1) == 0
 
-    def _array(enum: List[Any], required: bool = True) -> str:
+    def _array(enum: list[Any], required: bool = True) -> str:
         if potential_skip(required):
             return ''
         return f"[{','.join(random.sample(enum, random.randint(1, len(enum))))}]"

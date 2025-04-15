@@ -1,12 +1,13 @@
-from csv_detective import routine
+import pandas as pd
 import pytest
 import responses
-import pandas as pd
+
+from csv_detective import routine
 
 
 def test_columns_output_on_file():
     output = routine(
-        csv_file_path="tests/a_test_file.csv",
+        file_path="tests/data/a_test_file.csv",
         num_rows=-1,
         output_profile=False,
         save_results=False,
@@ -40,7 +41,7 @@ def test_columns_output_on_file():
 
 def test_profile_output_on_file():
     output = routine(
-        csv_file_path="tests/a_test_file.csv",
+        file_path="tests/data/a_test_file.csv",
         num_rows=-1,
         output_profile=True,
         save_results=False,
@@ -72,7 +73,7 @@ def test_profile_output_on_file():
 def test_profile_with_num_rows():
     with pytest.raises(ValueError):
         routine(
-            csv_file_path="tests/a_test_file.csv",
+            file_path="tests/data/a_test_file.csv",
             num_rows=50,
             output_profile=True,
             save_results=False,
@@ -85,7 +86,7 @@ def test_exception_different_number_of_columns():
     """
     with pytest.raises(ValueError):
         routine(
-            csv_file_path="tests/c_test_file.csv",
+            file_path="tests/data/c_test_file.csv",
             num_rows=-1,
             output_profile=True,
             save_results=False,
@@ -94,7 +95,7 @@ def test_exception_different_number_of_columns():
 
 def test_code_dep_reg_on_file():
     output = routine(
-        csv_file_path="tests/b_test_file.csv",
+        file_path="tests/data/b_test_file.csv",
         num_rows=-1,
         output_profile=False,
         save_results=False,
@@ -106,7 +107,7 @@ def test_code_dep_reg_on_file():
 
 def test_schema_on_file():
     output = routine(
-        csv_file_path="tests/b_test_file.csv",
+        file_path="tests/data/b_test_file.csv",
         num_rows=-1,
         output_schema=True,
         save_results=False,
@@ -149,7 +150,7 @@ params_others = [
 def test_non_csv_files(params):
     file_name, checks = params
     _ = routine(
-        csv_file_path=f"tests/{file_name}",
+        file_path=f"tests/data/{file_name}",
         num_rows=-1,
         output_profile=False,
         save_results=False,
@@ -181,11 +182,11 @@ def test_urls(mocked_responses, params):
     url = f"http://example.com/{file_name}"
     mocked_responses.get(
         url,
-        body=open(f"tests/{file_name}", "rb").read(),
+        body=open(f"tests/data/{file_name}", "rb").read(),
         status=200,
     )
     _ = routine(
-        csv_file_path=url,
+        file_path=url,
         num_rows=-1,
         output_profile=False,
         save_results=False,
@@ -211,7 +212,7 @@ def test_nan_values(expected_type):
     # if skipping NaN, the column contains only ints
     skipna, expected_type = expected_type
     output = routine(
-        csv_file_path="tests/b_test_file.csv",
+        file_path="tests/data/b_test_file.csv",
         num_rows=-1,
         save_results=False,
         skipna=skipna,
@@ -221,7 +222,7 @@ def test_nan_values(expected_type):
 
 def test_output_df():
     output, df = routine(
-        csv_file_path="tests/b_test_file.csv",
+        file_path="tests/data/b_test_file.csv",
         num_rows=-1,
         output_profile=False,
         save_results=False,
@@ -249,7 +250,7 @@ def test_cast_json(mocked_responses, cast_json):
         status=200,
     )
     analysis, df = routine(
-        csv_file_path='http://example.com/test.csv',
+        file_path='http://example.com/test.csv',
         num_rows=-1,
         output_profile=False,
         save_results=False,
