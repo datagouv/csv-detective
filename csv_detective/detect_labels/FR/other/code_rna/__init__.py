@@ -1,5 +1,5 @@
 from csv_detective.utils import full_word_strictly_inside_string
-from csv_detective.process_text import _process_text
+from csv_detective.parsing.text import _process_text
 
 PROPORTION = 0.5
 
