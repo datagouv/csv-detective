@@ -1,6 +1,7 @@
 import os
 # flake8: noqa
 from csv_detective import detect_fields, detect_labels
+from csv_detective.load_tests import return_all_tests
 
 
 def tests_conformity():
@@ -29,3 +30,9 @@ def tests_conformity():
                 .replace("/", ".")
             )
             assert "_is" in dir(_package)
+
+
+def test_all_tests_have_unique_name():
+    names = [t.__name__.split(".")[-1] for t in return_all_tests("ALL", "detect_fields")]
+    assert len(names) == len(set(names))
+    
