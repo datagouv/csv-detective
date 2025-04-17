@@ -28,7 +28,8 @@ def detect_formats(
         # Detects columns that are categorical
         res_categorical, categorical_mask = detect_categorical_variable(table, verbose=verbose)
         res_categorical = list(res_categorical)
-        # Detect columns that are continuous (we already know the categorical) : we don't need this for now, cuts processing time
+        # Detect columns that are continuous (we already know the categorical) :
+        # we don't need this for now, cuts processing time
         # res_continuous = list(
         #     detect_continuous_variable(table.iloc[:, ~categorical_mask.values], verbose=verbose)
         # )
