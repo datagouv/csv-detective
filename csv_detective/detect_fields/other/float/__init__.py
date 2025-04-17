@@ -12,7 +12,7 @@ def _is(val):
         if (
             not isinstance(val, str)
             or any([k in val for k in ['_', '+', 'e', 'E']])
-            or (val.startswith('0') and len(val) > 1)
+            or (val.startswith("0") and len(val) > 1 and val[1] not in [".", ","])
         ):
             return False
         float_casting(val)
