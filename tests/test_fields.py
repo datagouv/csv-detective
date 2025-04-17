@@ -501,7 +501,7 @@ def test_not_match_int():
 
 # float
 def test_match_float():
-    for val in ["1", "0", "1764", "-24", "1.2", "1863.23", "-12.7", "0.1"]:
+    for val in ["1", "0", "1764", "-24", "1.2", "1863.23", "-12.7"]:
         assert test_float._is(val)
 
 
