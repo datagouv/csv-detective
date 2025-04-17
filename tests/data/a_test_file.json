@@ -1,0 +1,394 @@
+{
+    "encoding": "ASCII",
+    "separator": ";",
+    "header_row_idx": 2,
+    "header": [
+        "NUMCOM",
+        "NOMCOM",
+        "NUMDEP",
+        "NOMDEP",
+        "NUMEPCI",
+        "NOMEPCI",
+        "TXCOUVGLO_COM_2014",
+        "TXCOUVGLO_DEP_2014",
+        "TXCOUVGLO_EPCI_2014",
+        "STRUCTURED_INFO",
+        "GEO_INFO"
+    ],
+    "total_lines": 404,
+    "nb_duplicates": 7,
+    "heading_columns": 0,
+    "trailing_columns": 0,
+    "continuous": [
+        "TXCOUVGLO_EPCI_2014"
+    ],
+    "categorical": [
+        "NUMDEP",
+        "NOMDEP",
+        "TXCOUVGLO_DEP_2014",
+        "GEO_INFO"
+    ],
+    "columns_fields": {
+        "NUMCOM": {
+            "python_type": "string",
+            "format": "code_commune_insee",
+            "score": 1.0
+        },
+        "NOMCOM": {
+            "python_type": "string",
+            "format": "commune",
+            "score": 1.0
+        },
+        "NUMDEP": {
+            "python_type": "int",
+            "format": "int",
+            "score": 1.0
+        },
+        "NOMDEP": {
+            "python_type": "string",
+            "format": "departement",
+            "score": 1.0
+        },
+        "NUMEPCI": {
+            "python_type": "string",
+            "format": "siren",
+            "score": 1.0
+        },
+        "NOMEPCI": {
+            "python_type": "string",
+            "format": "string",
+            "score": 1.0
+        },
+        "TXCOUVGLO_COM_2014": {
+            "python_type": "float",
+            "format": "float",
+            "score": 1.0
+        },
+        "TXCOUVGLO_DEP_2014": {
+            "python_type": "float",
+            "format": "latitude_wgs",
+            "score": 0.9951690821256038
+        },
+        "TXCOUVGLO_EPCI_2014": {
+            "python_type": "float",
+            "format": "longitude_wgs",
+            "score": 0.9444444444444444
+        },
+        "STRUCTURED_INFO": {
+            "python_type": "json",
+            "format": "json",
+            "score": 1.0
+        },
+        "GEO_INFO": {
+            "python_type": "json",
+            "format": "json_geojson",
+            "score": 1.0
+        }
+    },
+    "columns_labels": {
+        "NUMCOM": {
+            "python_type": "string",
+            "format": "code_commune_insee",
+            "score": 1.0
+        },
+        "NOMCOM": {
+            "python_type": "string",
+            "format": "string",
+            "score": 1.0
+        },
+        "NUMDEP": {
+            "python_type": "string",
+            "format": "string",
+            "score": 1.0
+        },
+        "NOMDEP": {
+            "python_type": "string",
+            "format": "string",
+            "score": 1.0
+        },
+        "NUMEPCI": {
+            "python_type": "string",
+            "format": "string",
+            "score": 1.0
+        },
+        "NOMEPCI": {
+            "python_type": "string",
+            "format": "string",
+            "score": 1.0
+        },
+        "TXCOUVGLO_COM_2014": {
+            "python_type": "string",
+            "format": "code_commune_insee",
+            "score": 0.5
+        },
+        "TXCOUVGLO_DEP_2014": {
+            "python_type": "string",
+            "format": "code_departement",
+            "score": 0.5
+        },
+        "TXCOUVGLO_EPCI_2014": {
+            "python_type": "string",
+            "format": "string",
+            "score": 1.0
+        },
+        "STRUCTURED_INFO": {
+            "python_type": "string",
+            "format": "string",
+            "score": 1.0
+        },
+        "GEO_INFO": {
+            "python_type": "string",
+            "format": "latlon_wgs",
+            "score": 0.5
+        }
+    },
+    "columns": {
+        "NUMCOM": {
+            "python_type": "string",
+            "format": "code_commune_insee",
+            "score": 1.0
+        },
+        "NOMCOM": {
+            "python_type": "string",
+            "format": "commune",
+            "score": 1.0
+        },
+        "NUMDEP": {
+            "python_type": "int",
+            "format": "int",
+            "score": 1.0
+        },
+        "NOMDEP": {
+            "python_type": "string",
+            "format": "departement",
+            "score": 1.0
+        },
+        "NUMEPCI": {
+            "python_type": "string",
+            "format": "siren",
+            "score": 1.0
+        },
+        "NOMEPCI": {
+            "python_type": "string",
+            "format": "string",
+            "score": 1.0
+        },
+        "TXCOUVGLO_COM_2014": {
+            "python_type": "float",
+            "format": "float",
+            "score": 1.0
+        },
+        "TXCOUVGLO_DEP_2014": {
+            "python_type": "float",
+            "format": "float",
+            "score": 1.0
+        },
+        "TXCOUVGLO_EPCI_2014": {
+            "python_type": "float",
+            "format": "float",
+            "score": 1.0
+        },
+        "STRUCTURED_INFO": {
+            "python_type": "json",
+            "format": "json",
+            "score": 1.0
+        },
+        "GEO_INFO": {
+            "python_type": "json",
+            "format": "json_geojson",
+            "score": 1.0
+        }
+    },
+    "formats": {
+        "code_commune_insee": [
+            "NUMCOM"
+        ],
+        "int": [
+            "NUMDEP"
+        ],
+        "commune": [
+            "NOMCOM"
+        ],
+        "departement": [
+            "NOMDEP"
+        ],
+        "siren": [
+            "NUMEPCI"
+        ],
+        "string": [
+            "NOMEPCI"
+        ],
+        "float": [
+            "TXCOUVGLO_COM_2014",
+            "TXCOUVGLO_DEP_2014",
+            "TXCOUVGLO_EPCI_2014"
+        ],
+        "json": [
+            "STRUCTURED_INFO"
+        ],
+        "json_geojson": [
+            "GEO_INFO"
+        ]
+    },
+    "profile": {
+        "NUMCOM": {
+            "tops": [
+                "01170",
+                "01169",
+                "01167",
+                "01166",
+                "01165",
+                "01163",
+                "01162",
+                "01297",
+                "01304",
+                "01303"
+            ],
+            "nb_distinct": 407,
+            "nb_missing_values": 0
+        },
+        "NOMCOM": {
+            "tops": [
+                "BEARD-GEOVREISSIAT",
+                "GENOUILLEUX",
+                "GARNERANS",
+                "FRANS",
+                "FRANCHELEINS",
+                "FOISSIAT",
+                "FLAXIEU",
+                "PIZAY",
+                "PONT-D'AIN",
+                "PONCIN"
+            ],
+            "nb_distinct": 407,
+            "nb_missing_values": 0
+        },
+        "NUMDEP": {
+            "min": 1,
+            "max": 6,
+            "mean": 1,
+            "std": 0,
+            "tops": [
+                1,
+                6
+            ],
+            "nb_distinct": 2,
+            "nb_missing_values": 0
+        },
+        "NOMDEP": {
+            "tops": [
+                "AIN",
+                "ALPES MARITIMES"
+            ],
+            "nb_distinct": 2,
+            "nb_missing_values": 0
+        },
+        "NUMEPCI": {
+            "tops": [
+                "200040350",
+                "200042935",
+                "240100883",
+                "240100750",
+                "200042497",
+                "200035210",
+                "240100156",
+                "240100370",
+                "200029999",
+                "240100628"
+            ],
+            "nb_distinct": 33,
+            "nb_missing_values": 0
+        },
+        "NOMEPCI": {
+            "tops": [
+                "CC BUGEY SUD",
+                "CC HAUT - BUGEY",
+                "CC DE LA PLAINE DE L'AIN",
+                "CC DU PAYS DE GEX",
+                "CC DOMBES SAONE VALLEE",
+                "CC CHALARONNE CENTRE",
+                "CC DE MONTREVEL - EN - BRESSE",
+                "CC DU VALROMEY",
+                "CC RIVES DE L'AIN - PAYS DU CERDON",
+                "CA BOURG EN BRESSE AGGLOMERATION"
+            ],
+            "nb_distinct": 33,
+            "nb_missing_values": 0
+        },
+        "TXCOUVGLO_COM_2014": {
+            "min": 0.0,
+            "max": 200.2,
+            "mean": 59.35863746958638,
+            "std": 36.453598197621275,
+            "tops": [
+                0.0,
+                68.6,
+                30.5,
+                54.7,
+                82.6,
+                78.4,
+                64.3,
+                78.1,
+                24.9,
+                null
+            ],
+            "nb_distinct": 297,
+            "nb_missing_values": 3
+        },
+        "TXCOUVGLO_DEP_2014": {
+            "min": 47.0,
+            "max": 65.2,
+            "mean": 65.112077294686,
+            "std": 1.263455055322421,
+            "tops": [
+                65.2,
+                47.0
+            ],
+            "nb_distinct": 2,
+            "nb_missing_values": 0
+        },
+        "TXCOUVGLO_EPCI_2014": {
+            "min": 28.3,
+            "max": 93.9,
+            "mean": 64.45772946859903,
+            "std": 12.72227368109601,
+            "tops": [
+                52.4,
+                45.3,
+                75.2,
+                78.4,
+                46.9,
+                77.8,
+                67.9,
+                70.0,
+                72.9,
+                68.7
+            ],
+            "nb_distinct": 30,
+            "nb_missing_values": 0
+        },
+        "STRUCTURED_INFO": {
+            "tops": [
+                "{\"champ_1\": 154, \"champ_2\": 0.0792}",
+                "{\"champ_1\": 153, \"champ_2\": 0.0737}",
+                "{\"champ_1\": 152, \"champ_2\": 0.0681}",
+                "{\"champ_1\": 151, \"champ_2\": 0.0624}",
+                "{\"champ_1\": 150, \"champ_2\": 0.0568}",
+                "{\"champ_1\": 149, \"champ_2\": 0.0511}",
+                "{\"champ_1\": 148, \"champ_2\": 0.0454}",
+                "{\"champ_1\": 268, \"champ_2\": 0.553}",
+                "{\"champ_1\": 275, \"champ_2\": 0.5732}",
+                "{\"champ_1\": 274, \"champ_2\": 0.5704}"
+            ],
+            "nb_distinct": 407,
+            "nb_missing_values": 0
+        },
+        "GEO_INFO": {
+            "tops": [
+                "{\"type\": \"Point\", \"coordinates\": [12.5, 2.8]}"
+            ],
+            "nb_distinct": 1,
+            "nb_missing_values": 0
+        }
+    }
+}
