@@ -1,11 +1,10 @@
 import json
 import os
-from time import time
 from typing import Union
 
 import pandas as pd
 
-from csv_detective.utils import display_logs_depending_process_time, is_url
+from csv_detective.utils import is_url
 from .dataframe import cast_df
 from .profile import create_profile
 from .schema import generate_table_schema
