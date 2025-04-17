@@ -12,12 +12,8 @@
 - Handle csv.gz files [#110](https://github.com/datagouv/csv-detective/pull/110)
 - Refactor file tests [#110](https://github.com/datagouv/csv-detective/pull/110)
 - Restructure repo (breaking changes) [#111](https://github.com/datagouv/csv-detective/pull/111)
-<<<<<<< HEAD
 - Add validation function and associated flow [#112](https://github.com/datagouv/csv-detective/pull/112)
 - Better float detection [#113](https://github.com/datagouv/csv-detective/pull/113)
-=======
-- Add validate function and associated flow [#112](https://github.com/datagouv/csv-detective/pull/112)
->>>>>>> ba5a97a (fix: move fix to another branch)
 
 ## 0.7.4 (2024-11-15)
 
