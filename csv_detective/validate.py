@@ -39,12 +39,12 @@ def validate(
         logging.info("Comparing table with the previous analysis")
         logging.info("- Checking if all columns match")
     if (
-        any(col_name not in list(table.columns) for col_name in previous_analysis["profile"]["columns"])
-        or any(col_name not in list(previous_analysis["profile"]["columns"].keys()) for col_name in table.columns)
+        any(col_name not in list(table.columns) for col_name in previous_analysis["columns"])
+        or any(col_name not in list(previous_analysis["columns"].keys()) for col_name in table.columns)
     ):
         logging.warning("> Columns do not match, proceeding with full analysis")
         return False, table, analysis
-    for col_name, args in previous_analysis["profile"]["columns"].items():
+    for col_name, args in previous_analysis["columns"].items():
         if verbose:
             logging.info(f"- Testing {col_name} for {args['format']}")
         if args["format"] == "string":
@@ -59,4 +59,12 @@ def validate(
             return False, table, analysis
     if verbose:
         logging.info("> All checks successful")
-    return True, table, analysis
+    return True, table, analysis | {
+        k: previous_analysis[k] for k in [
+            "categorical",
+            "columns",
+            "columns_fields",
+            "columns_labels",
+            "formats",
+        ]
+    }
