@@ -2,6 +2,8 @@ import logging
 import math
 from typing import Optional
 
+logging.basicConfig(level=logging.INFO)
+
 
 def display_logs_depending_process_time(prompt: str, duration: float):
     '''

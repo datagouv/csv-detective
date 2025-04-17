@@ -48,7 +48,7 @@ from csv_detective.detection.variables import (
     detect_continuous_variable,
     detect_categorical_variable,
 )
-from csv_detective.explore_csv import return_all_tests
+from csv_detective.load_tests import return_all_tests
 from csv_detective.output.dataframe import cast
 
 
