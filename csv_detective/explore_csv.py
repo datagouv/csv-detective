@@ -104,7 +104,7 @@ def routine(
             )
 
 
-def validate_then_explore(
+def validate_then_detect(
     file_path: str,
     previous_analysis: dict,
     num_rows: int = 500,
