@@ -82,7 +82,7 @@ def create_example_csv_file(
             return fake.date(format)
         else:
             if len(date_range) != 2:
-                raise ValueError(""date_range" must have exactly two elements.")
+                raise ValueError("'date_range' must have exactly two elements.")
             return fake.date_between_dates(
                 datetime.strptime(date_range[0], format),
                 datetime.strptime(date_range[1], format),
@@ -111,7 +111,7 @@ def create_example_csv_file(
             return fake.date_time().strftime(format)
         else:
             if len(datetime_range) != 2:
-                raise ValueError(""date_range" must have exactly two elements.")
+                raise ValueError("'date_range' must have exactly two elements.")
             return fake.date_time_between(
                 datetime.strptime(datetime_range[0], format),
                 datetime.strptime(datetime_range[1], format),
@@ -148,7 +148,7 @@ def create_example_csv_file(
     def _array(enum: list[Any], required: bool = True) -> str:
         if potential_skip(required):
             return ""
-        return f"[{",".join(random.sample(enum, random.randint(1, len(enum))))}]"
+        return f"[{','.join(random.sample(enum, random.randint(1, len(enum))))}]"
 
     def build_args_from_constraints(constraints: dict) -> dict:
         args = {}
@@ -189,7 +189,7 @@ def create_example_csv_file(
             with open(schema_path, encoding=encoding) as jsonfile:
                 schema = json.load(jsonfile)
         if not ("fields" in schema.keys()):
-            raise ValueError("The schema must have a "fields" key.")
+            raise ValueError("The schema must have a 'fields' key.")
         else:
             fields = [
                 {
