@@ -19,7 +19,7 @@ liste_bool = set(bool_mapping.keys())
 
 
 def bool_casting(val: str) -> bool:
-    return bool_mapping.get(val)
+    return bool_mapping.get(val.lower())
 
 
 def _is(val: str) -> bool:

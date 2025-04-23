@@ -1,4 +1,4 @@
-from csv_detective.process_text import _process_text
+from csv_detective.parsing.text import _process_text
 
 PROPORTION = 0.55
 # ajouts d'espaces en fin de mots pour s'assurer que le str n'est pas juste une substr d'un mot plus long

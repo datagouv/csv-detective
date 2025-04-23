@@ -1,49 +1,28 @@
-"""
-Ce script analyse les premières lignes d'un CSV pour essayer de déterminer le
-contenu possible des champs
-"""
-
-from typing import Dict, List, Optional, Union
 from collections import defaultdict
 import json
-import numpy as np
+import logging
 import os
 import tempfile
-import logging
 from time import time
-import requests
-from io import StringIO
+from typing import Optional, Union
+
+import numpy as np
 import pandas as pd
 
 # flake8: noqa
 from csv_detective import detect_fields, detect_labels
-from csv_detective.s3_utils import download_from_minio, upload_to_minio
-from csv_detective.schema_generation import generate_table_schema
-from csv_detective.utils import (
-    cast_df,
-    display_logs_depending_process_time,
-    prepare_output_dict,
-    test_col,
-    test_label,
-)
-from .detection import (
-    detect_engine,
-    detect_separator,
-    detect_encoding,
-    detect_headers,
-    detect_heading_columns,
-    detect_trailing_columns,
-    parse_table,
-    parse_excel,
-    create_profile,
-    detetect_categorical_variable,
+from .detection.variables import (
+    detect_categorical_variable,
     # detect_continuous_variable,
-    is_url,
-    XLS_LIKE_EXT,
 )
-
-
-logging.basicConfig(level=logging.INFO)
+from .output.dataframe import cast_df
+from .output.profile import create_profile
+from .output.schema import generate_table_schema
+from .output.utils import prepare_output_dict
+from .parsing.load import load_file
+from .parsing.columns import test_col, test_label
+from .s3_utils import download_from_minio, upload_to_minio
+from .utils import display_logs_depending_process_time, is_url
 
 
 def get_all_packages(detect_type: str) -> list:
@@ -81,16 +60,14 @@ def return_all_tests(
 
     if isinstance(user_input_tests, str):
         user_input_tests = [user_input_tests]
-    if "ALL" in user_input_tests:
+    if "ALL" in user_input_tests or all(x[0] == "-" for x in user_input_tests):
         tests_to_do = [detect_type]
     else:
-        # can't require to only skip tests
-        assert not all(x[0] == "-" for x in user_input_tests)
         tests_to_do = [
-            detect_type + "." + x for x in user_input_tests if x[0] != "-"
+            f"{detect_type}.{x}" for x in user_input_tests if x[0] != "-"
         ]
     tests_skipped = [
-        detect_type + "." + x[1:] for x in user_input_tests if x[0] == "-"
+        f"{detect_type}.{x[1:]}" for x in user_input_tests if x[0] == "-"
     ]
     all_tests = [
         # this is why we need to import detect_fields/labels
@@ -106,9 +83,9 @@ def return_all_tests(
 
 
 def routine(
-    csv_file_path: str,
+    file_path: str,
     num_rows: int = 500,
-    user_input_tests: Union[str, List[str]] = "ALL",
+    user_input_tests: Union[str, list[str]] = "ALL",
     limited_output: bool = True,
     save_results: Union[bool, str] = True,
     encoding: Optional[str] = None,
@@ -125,7 +102,7 @@ def routine(
     column contents.
 
     Args:
-        csv_file_path: local path to CSV file if not using Minio
+        file_path: local path to CSV file if not using Minio
         num_rows: number of rows to sample from the file for analysis ; -1 for analysis
         of the whole file
         user_input_tests: tests to run on the file
@@ -142,89 +119,40 @@ def routine(
     Returns:
         dict: a dict with information about the csv and possible types for each column
     """
-    if not csv_file_path:
-        raise ValueError("csv_file_path is required.")
     
     if not (isinstance(save_results, bool) or (isinstance(save_results, str) and save_results.endswith(".json"))):
         raise ValueError("`save_results` must be a bool or a valid path to a json file.")
 
     if verbose:
         start_routine = time()
-        if is_url(csv_file_path):
+        if is_url(file_path):
             logging.info("Path recognized as a URL")
 
-    file_name = csv_file_path.split('/')[-1]
-    engine = None
-    if '.' not in file_name:
-        # file has no extension, we'll investigate how to read it
-        engine = detect_engine(csv_file_path, verbose=verbose)
-
-    is_xls_like = False
-    if engine or any([csv_file_path.endswith(k) for k in XLS_LIKE_EXT]):
-        is_xls_like = True
-        encoding, sep, heading_columns, trailing_columns = None, None, None, None
-        table, total_lines, nb_duplicates, sheet_name, engine, header_row_idx = parse_excel(
-            csv_file_path=csv_file_path,
-            num_rows=num_rows,
-            engine=engine,
-            sheet_name=sheet_name,
-            verbose=verbose,
-        )
-        header = table.columns.to_list()
-    else:
-        if encoding is None:
-            encoding = detect_encoding(csv_file_path, verbose=verbose)
-        if is_url(csv_file_path):
-            r = requests.get(csv_file_path, allow_redirects=True)
-            r.raise_for_status()
-            str_file = StringIO(r.content.decode(encoding=encoding))
-        else:
-            str_file = open(csv_file_path, "r", encoding=encoding)
-        if sep is None:
-            sep = detect_separator(str_file, verbose=verbose)
-        header_row_idx, header = detect_headers(str_file, sep, verbose=verbose)
-        if header is None:
-            return {"error": True}
-        elif isinstance(header, list):
-            if any([x is None for x in header]):
-                return {"error": True}
-        heading_columns = detect_heading_columns(str_file, sep, verbose=verbose)
-        trailing_columns = detect_trailing_columns(str_file, sep, heading_columns, verbose=verbose)
-        table, total_lines, nb_duplicates = parse_table(
-            str_file, encoding, sep, num_rows, header_row_idx, verbose=verbose
-        )
+    table, analysis = load_file(
+        file_path=file_path,
+        num_rows=num_rows,
+        encoding=encoding,
+        sep=sep,
+        verbose=verbose,
+        sheet_name=sheet_name,
+    )
 
     if table.empty:
         res_categorical = []
         # res_continuous = []
     else:
         # Detects columns that are categorical
-        res_categorical, categorical_mask = detetect_categorical_variable(table, verbose=verbose)
+        res_categorical, categorical_mask = detect_categorical_variable(table, verbose=verbose)
         res_categorical = list(res_categorical)
         # Detect columns that are continuous (we already know the categorical) : we don't need this for now, cuts processing time
         # res_continuous = list(
         #     detect_continuous_variable(table.iloc[:, ~categorical_mask.values], verbose=verbose)
         # )
 
-    # Creating return dictionary
-    analysis = {
-        "header_row_idx": header_row_idx,
-        "header": header,
-        "total_lines": total_lines,
-        "nb_duplicates": nb_duplicates,
-        "heading_columns": heading_columns,
-        "trailing_columns": trailing_columns,
+    analysis.update({
         "categorical": res_categorical,
         # "continuous": res_continuous,
-    }
-    # this is only relevant for xls-like
-    if is_xls_like:
-        analysis["engine"] = engine
-        analysis["sheet_name"] = sheet_name
-    # this is only relevant for csv
-    else:
-        analysis["encoding"] = encoding
-        analysis["separator"] = sep
+    })
 
     # list testing to be performed
     all_tests_fields = return_all_tests(
@@ -257,17 +185,19 @@ def routine(
     )
 
     # To reduce false positives: ensure these formats are detected only if the label yields
-    # a detection.
+    # a detection (skipping the ones that have been excluded by the users).
     formats_with_mandatory_label = [
-        "code_departement",
-        "code_commune_insee",
-        "code_postal",
-        "latitude_wgs",
-        "longitude_wgs",
-        "latitude_wgs_fr_metropole",
-        "longitude_wgs_fr_metropole",
-        "latitude_l93",
-        "longitude_l93",
+        f for f in [
+            "code_departement",
+            "code_commune_insee",
+            "code_postal",
+            "latitude_wgs",
+            "longitude_wgs",
+            "latitude_wgs_fr_metropole",
+            "longitude_wgs_fr_metropole",
+            "latitude_l93",
+            "longitude_l93",
+        ] if f in scores_table.index
     ]
     scores_table.loc[formats_with_mandatory_label, :] = np.where(
         scores_table_labels.loc[formats_with_mandatory_label, :],
@@ -341,10 +271,10 @@ def routine(
         if isinstance(save_results, str):
             output_path = save_results
         else:
-            output_path = os.path.splitext(csv_file_path)[0]
+            output_path = os.path.splitext(file_path)[0]
             if is_url(output_path):
                 output_path = output_path.split('/')[-1]
-            if is_xls_like:
+            if analysis.get("sheet_name"):
                 output_path += "_sheet-" + str(sheet_name)
             output_path += ".json"
         with open(output_path, "w", encoding="utf8") as fp:
@@ -372,9 +302,9 @@ def routine(
 
 
 def routine_minio(
-    csv_minio_location: Dict[str, str],
-    output_minio_location: Dict[str, str],
-    tableschema_minio_location: Dict[str, str],
+    csv_minio_location: dict[str, str],
+    output_minio_location: dict[str, str],
+    tableschema_minio_location: dict[str, str],
     minio_user: str,
     minio_pwd: str,
     **kwargs,
@@ -429,24 +359,24 @@ def routine_minio(
             ):
                 raise ValueError("Minio location dict must contain url, bucket and key")
 
-    csv_file_path = tempfile.NamedTemporaryFile(delete=False).name
+    file_path = tempfile.NamedTemporaryFile(delete=False).name
     download_from_minio(
         netloc=csv_minio_location["netloc"],
         bucket=csv_minio_location["bucket"],
         key=csv_minio_location["key"],
-        filepath=csv_file_path,
+        filepath=file_path,
         minio_user=minio_user,
         minio_pwd=minio_pwd,
     )
 
-    analysis = routine(
-        csv_file_path,
+    analysis = routine(file_path,
+        num_rows,
         save_results=True,
         **kwargs,
     )
 
     # Write report JSON file.
-    output_path_to_store_minio_file = os.path.splitext(csv_file_path)[0] + ".json"
+    output_path_to_store_minio_file = os.path.splitext(file_path)[0] + ".json"
     with open(output_path_to_store_minio_file, "w", encoding="utf8") as fp:
         json.dump(analysis, fp, indent=4, separators=(",", ": "))
 
@@ -460,7 +390,7 @@ def routine_minio(
     )
 
     os.remove(output_path_to_store_minio_file)
-    os.remove(csv_file_path)
+    os.remove(file_path)
 
     generate_table_schema(
         analysis_report=analysis,

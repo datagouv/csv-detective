@@ -1,12 +1,13 @@
-from csv_detective import routine
+import pandas as pd
 import pytest
 import responses
-import pandas as pd
+
+from csv_detective import routine
 
 
 def test_columns_output_on_file():
     output = routine(
-        csv_file_path="tests/a_test_file.csv",
+        file_path="tests/data/a_test_file.csv",
         num_rows=-1,
         output_profile=False,
         save_results=False,
@@ -40,7 +41,7 @@ def test_columns_output_on_file():
 
 def test_profile_output_on_file():
     output = routine(
-        csv_file_path="tests/a_test_file.csv",
+        file_path="tests/data/a_test_file.csv",
         num_rows=-1,
         output_profile=True,
         save_results=False,
@@ -69,10 +70,10 @@ def test_profile_output_on_file():
     assert output["profile"]["GEO_INFO"]["nb_distinct"] == 1
 
 
-def test_exception():
+def test_profile_with_num_rows():
     with pytest.raises(ValueError):
         routine(
-            csv_file_path="tests/a_test_file.csv",
+            file_path="tests/data/a_test_file.csv",
             num_rows=50,
             output_profile=True,
             save_results=False,
@@ -85,7 +86,7 @@ def test_exception_different_number_of_columns():
     """
     with pytest.raises(ValueError):
         routine(
-            csv_file_path="tests/c_test_file.csv",
+            file_path="tests/data/c_test_file.csv",
             num_rows=-1,
             output_profile=True,
             save_results=False,
@@ -94,7 +95,7 @@ def test_exception_different_number_of_columns():
 
 def test_code_dep_reg_on_file():
     output = routine(
-        csv_file_path="tests/b_test_file.csv",
+        file_path="tests/data/b_test_file.csv",
         num_rows=-1,
         output_profile=False,
         save_results=False,
@@ -106,7 +107,7 @@ def test_code_dep_reg_on_file():
 
 def test_schema_on_file():
     output = routine(
-        csv_file_path="tests/b_test_file.csv",
+        file_path="tests/data/b_test_file.csv",
         num_rows=-1,
         output_schema=True,
         save_results=False,
@@ -131,52 +132,37 @@ def test_schema_on_file():
     assert is_column_reg
 
 
-def test_non_csv_files():
-    _ = routine(
-        csv_file_path="tests/file.ods",
-        num_rows=-1,
-        output_profile=False,
-        save_results=False,
-    )
-    assert _['engine'] == 'odf'
-
+params_csv = [
+    ("csv_file", {"engine": None, "sheet_name": None}),
+    ("file.csv.gz", {"engine": None, "sheet_name": None, "separator": ",", "columns.len": 3}),
+]
+params_others = [
+    ("file.ods", {"engine": "odf"}),
     # this is a "tricked" xls file that is actually read as odf
-    _ = routine(
-        csv_file_path="tests/file.xls",
-        num_rows=-1,
-        output_profile=False,
-        save_results=False,
-    )
-    assert _['engine'] == 'odf'
+    ("file.xls", {"engine": "odf"}),
+    # this file has an empty first row; check if the sheet we consider is the largest
+    ("file.xlsx", {"engine": "openpyxl", "header_row_idx": 1, "sheet_name": "REI_1987"}),
+    ("xlsx_file", {"engine": "openpyxl"}),
+]
 
-    _ = routine(
-        csv_file_path="tests/file.xlsx",
-        num_rows=-1,
-        output_profile=False,
-        save_results=False,
-    )
-    assert _['engine'] == 'openpyxl'
-    # this file has an empty first row
-    assert _['header_row_idx'] == 1
-    # check if the sheet we consider is the largest
-    assert _['sheet_name'] == 'REI_1987'
 
+@pytest.mark.parametrize("params", params_csv + params_others)
+def test_non_csv_files(params):
+    file_name, checks = params
     _ = routine(
-        csv_file_path="tests/csv_file",
+        file_path=f"tests/data/{file_name}",
         num_rows=-1,
         output_profile=False,
         save_results=False,
     )
-    assert not _.get('engine')
-    assert not _.get('sheet_name')
-
-    _ = routine(
-        csv_file_path="tests/xlsx_file",
-        num_rows=-1,
-        output_profile=False,
-        save_results=False,
-    )
-    assert _['engine'] == 'openpyxl'
+    for k, v in checks.items():
+        if v is None:
+            assert not _.get(k)
+        elif "." in k:
+            key, func = k.split(".")
+            assert eval(func)(_[key]) == v
+        else:
+            assert _[k] == v
 
 
 @pytest.fixture
@@ -185,21 +171,34 @@ def mocked_responses():
         yield rsps
 
 
-def test_urls(mocked_responses):
-    url = 'http://example.com/test.csv'
-    expected_content = 'id,name,first_name\n1,John,Smith\n2,Jane,Doe\n3,Bob,Johnson'
+@pytest.mark.parametrize(
+    "params",
+    # ideally we'd like to do the same with params_others but pandas.read_excel uses urllib
+    # which doesn't support the way we mock the response, TBC
+    params_csv + [("a_test_file.csv", {"separator": ";", "header_row_idx": 2, "total_lines": 414})]
+)
+def test_urls(mocked_responses, params):
+    file_name, checks = params
+    url = f"http://example.com/{file_name}"
     mocked_responses.get(
         url,
-        body=expected_content,
+        body=open(f"tests/data/{file_name}", "rb").read(),
         status=200,
     )
-    output = routine(
-        csv_file_path=url,
+    _ = routine(
+        file_path=url,
         num_rows=-1,
         output_profile=False,
         save_results=False,
     )
-    assert output['header'] == ["id", "name", "first_name"]
+    for k, v in checks.items():
+        if v is None:
+            assert not _.get(k)
+        elif "." in k:
+            key, func = k.split(".")
+            assert eval(func)(_[key]) == v
+        else:
+            assert _[k] == v
 
 
 @pytest.mark.parametrize(
@@ -213,7 +212,7 @@ def test_nan_values(expected_type):
     # if skipping NaN, the column contains only ints
     skipna, expected_type = expected_type
     output = routine(
-        csv_file_path="tests/b_test_file.csv",
+        file_path="tests/data/b_test_file.csv",
         num_rows=-1,
         save_results=False,
         skipna=skipna,
@@ -223,7 +222,7 @@ def test_nan_values(expected_type):
 
 def test_output_df():
     output, df = routine(
-        csv_file_path="tests/b_test_file.csv",
+        file_path="tests/data/b_test_file.csv",
         num_rows=-1,
         output_profile=False,
         save_results=False,
@@ -251,7 +250,7 @@ def test_cast_json(mocked_responses, cast_json):
         status=200,
     )
     analysis, df = routine(
-        csv_file_path='http://example.com/test.csv',
+        file_path='http://example.com/test.csv',
         num_rows=-1,
         output_profile=False,
         save_results=False,

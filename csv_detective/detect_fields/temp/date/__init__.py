@@ -14,6 +14,11 @@ def date_casting(val: str) -> Optional[datetime]:
         return dateutil_parser(val)
     except ParserError:
         return date_parser(val)
+    except OverflowError:
+        return None
+
+
+threshold = 0.3
 
 
 def _is(val):
@@ -21,7 +26,6 @@ def _is(val):
     # early stops, to cut processing time
     if not isinstance(val, str) or len(val) > 20 or len(val) < 8:
         return False
-    threshold = 0.3
     if sum([char.isdigit() for char in val]) / len(val) < threshold:
         return False
     res = date_casting(val)
