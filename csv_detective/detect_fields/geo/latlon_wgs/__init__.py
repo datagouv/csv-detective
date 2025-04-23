@@ -1,13 +1,13 @@
-import re
+from ..latitude_wgs import _is as is_lat
+from ..longitude_wgs import _is as is_lon
 
-PROPORTION = 0.9
+PROPORTION = 1
 
 
 def _is(val):
     '''Renvoie True si val peut etre une latitude,longitude'''
 
-    return isinstance(val, str) and bool(
-        re.match(
-            r'^\[?[\+\-]?[0-8]?\d\.\d* ?, ?[\+\-]?(1[0-7]\d|\d{1,2})\.\d+\]?$', val
-        )
-    )
+    if not isinstance(val, str) or val.count(",") != 1:
+        return False
+    lat, lon = val.split(",")
+    return is_lat(lat) and is_lon(lon.replace(" ", ""))
