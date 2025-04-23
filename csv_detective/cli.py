@@ -8,37 +8,52 @@ from .explore_csv import routine
 
 
 def run():
-    explorer = argparse.ArgumentParser(description='Get the arguments we want')
+    explorer = argparse.ArgumentParser(description="Analyse a tabular file")
     explorer.add_argument(
-        'file_path',
+        "file_path",
         type=str,
-        help='Enter path of csv file to explore'
+        help="Enter path of tabular file to explore"
     )
     explorer.add_argument(
-        '-n',
-        '--num_rows',
-        dest='num_rows',
+        "-n",
+        "--num_rows",
+        dest="num_rows",
         type=int,
-        nargs='?',
-        help='Number of rows to use for detection'
+        nargs="?",
+        help="Number of rows to use for detection (default 500)"
     )
     explorer.add_argument(
-        '-t',
-        '--select_tests',
-        dest='city',
+        "-s",
+        "--sep",
+        dest="sep",
         type=str,
-        nargs='*',
-        help='List of tests to be performed (use "" if you want to use the dash option to remove tests)'
+        nargs="?",
+        help="Columns separator (detected if not specified)"
+    )
+    explorer.add_argument(
+        "--save",
+        dest="save_results",
+        type=int,
+        nargs="?",
+        help="Whether to save the resulting analysis to json (1 = save, 0 = don't)"
+    )
+    explorer.add_argument(
+        "-v",
+        "--verbose",
+        dest="verbose",
+        type=int,
+        nargs="?",
+        help="Verbose (0 = quiet, 1 = details)"
     )
 
     opts = explorer.parse_args()
 
-    num_rows = opts.num_rows or 50
     inspection_results = routine(
-        opts.file_path,
-        num_rows=num_rows,
-        user_input_tests='ALL',
-        output_mode='ALL'
+        csv_file_path=opts.file_path,
+        num_rows=opts.num_rows,
+        sep=opts.sep,
+        save_results=bool(opts.save_results),
+        verbose=bool(opts.verbose),
     )
 
-    print(json.dumps(inspection_results, indent=4, sort_keys=True, ensure_ascii=False))
+    print(json.dumps(inspection_results, indent=4, ensure_ascii=False))
