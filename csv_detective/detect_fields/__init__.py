@@ -10,19 +10,21 @@ from .FR.other import (
     insee_ape700,
     date_fr,
     code_waldec,
-    code_rna
+    code_rna,
 )
 
 from .other import (
     email,
     url,
     booleen,
+    money,
     mongo_object_id,
+    percent,
     twitter,
     float,
     int,
     uuid,
-    json
+    json,
 )
 
 from .FR.geo import (
@@ -40,7 +42,7 @@ from .FR.geo import (
     code_region,
     latitude_l93,
     longitude_l93,
-    insee_canton
+    insee_canton,
 )
 
 from .geo import (
@@ -50,7 +52,7 @@ from .geo import (
     latitude_wgs,
     longitude_wgs,
     latlon_wgs,
-    json_geojson
+    json_geojson,
 )
 
 from .FR.temp import jour_de_la_semaine, mois_de_annee

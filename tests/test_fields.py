@@ -48,7 +48,9 @@ from csv_detective.detect_fields.other import (
     booleen,
     email,
     json,
+    money,
     mongo_object_id,
+    percent,
     twitter,
     url,
     uuid,
@@ -269,9 +271,17 @@ fields = {
         True: ['{"pomme": "fruit", "reponse": 42}', "[1,2,3,4]"],
         False: ['{"coordinates": [45.783753, 3.049342], "citycode": "63870"}', "{zefib:"],
     },
+    money: {
+        True: ["120€", "-20.2$"],
+        False: ["200", "100 euros"],
+    },
     mongo_object_id: {
         True: ["62320e50f981bc2b57bcc044"],
         False: ["884762be-51f3-44c3-b811-1e14c5d89262", "0230240284a66e"],
+    },
+    percent: {
+        True: ["120%", "-20.2%"],
+        False: ["200", "100 pourcents"],
     },
     twitter: {
         True: ["@accueil1"],
