@@ -28,7 +28,7 @@ def test_columns_output_on_file():
         "STRUCTURED_INFO",
         "GEO_INFO",
     ]
-    assert output["total_lines"] == 414
+    assert output["total_lines"] == 404
     assert output["nb_duplicates"] == 7
     assert output["columns"]["NOMCOM"]["format"] == "commune"
     assert output["columns"]["NOMDEP"]["format"] == "departement"
@@ -48,7 +48,7 @@ def test_profile_output_on_file():
     )
     assert all(
         [
-            c in list(output["profile"]["NUMCOM"].keys())
+            c in list(output["profile"]["TXCOUVGLO_COM_2014"].keys())
             for c in [
                 "min",
                 "max",
@@ -60,12 +60,22 @@ def test_profile_output_on_file():
             ]
         ]
     )
-    assert len(output["profile"]["NOMCOM"].keys()) == 3
-    assert output["profile"]["NUMCOM"]["min"] == 1001
-    assert output["profile"]["NUMCOM"]["max"] == 6125
-    assert round(output["profile"]["NUMCOM"]["mean"]) == 1245
-    assert round(output["profile"]["NUMCOM"]["std"]) == 363
-    assert output["profile"]["TXCOUVGLO_COM_2014"]["nb_distinct"] == 296
+    assert not any(
+        [
+            c in list(output["profile"]["NUMCOM"].keys())
+            for c in [
+                    "min",
+                    "max",
+                    "mean",
+                    "std",
+            ]
+        ]
+    )
+    assert output["profile"]["TXCOUVGLO_COM_2014"]["min"] == 0.0
+    assert output["profile"]["TXCOUVGLO_COM_2014"]["max"] == 200.2
+    assert round(output["profile"]["TXCOUVGLO_COM_2014"]["mean"]) == 60
+    assert round(output["profile"]["TXCOUVGLO_COM_2014"]["std"]) == 36
+    assert output["profile"]["TXCOUVGLO_COM_2014"]["nb_distinct"] == 290
     assert output["profile"]["TXCOUVGLO_COM_2014"]["nb_missing_values"] == 3
     assert output["profile"]["GEO_INFO"]["nb_distinct"] == 1
 
@@ -175,7 +185,7 @@ def mocked_responses():
     "params",
     # ideally we'd like to do the same with params_others but pandas.read_excel uses urllib
     # which doesn't support the way we mock the response, TBC
-    params_csv + [("a_test_file.csv", {"separator": ";", "header_row_idx": 2, "total_lines": 414})]
+    params_csv + [("a_test_file.csv", {"separator": ";", "header_row_idx": 2, "total_lines": 404})]
 )
 def test_urls(mocked_responses, params):
     file_name, checks = params
