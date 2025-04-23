@@ -4,7 +4,7 @@ import logging
 import os
 import tempfile
 from time import time
-from typing import Union
+from typing import Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -25,7 +25,7 @@ from .s3_utils import download_from_minio, upload_to_minio
 from .utils import display_logs_depending_process_time, is_url
 
 
-def get_all_packages(detect_type) -> list:
+def get_all_packages(detect_type: str) -> list:
     root_dir = os.path.dirname(os.path.abspath(__file__)) + "/" + detect_type
     modules = []
     for dirpath, _, filenames in os.walk(root_dir):
@@ -88,15 +88,15 @@ def routine(
     user_input_tests: Union[str, list[str]] = "ALL",
     limited_output: bool = True,
     save_results: Union[bool, str] = True,
-    encoding: str = None,
-    sep: str = None,
+    encoding: Optional[str] = None,
+    sep: Optional[str] = None,
     skipna: bool = True,
     output_profile: bool = False,
     output_schema: bool = False,
     output_df: bool = False,
     cast_json: bool = True,
     verbose: bool = False,
-    sheet_name: Union[str, int] = None,
+    sheet_name: Optional[Union[str, int]] = None,
 ) -> Union[dict, tuple[dict, pd.DataFrame]]:
     """Returns a dict with information about the csv table and possible
     column contents.
@@ -307,10 +307,7 @@ def routine_minio(
     tableschema_minio_location: dict[str, str],
     minio_user: str,
     minio_pwd: str,
-    num_rows: int = 500,
-    user_input_tests: Union[str, list[str]] = "ALL",
-    encoding: str = None,
-    sep: str = None,
+    **kwargs,
 ):
     """Returns a dict with information about the csv table and possible
     column contents.
@@ -323,11 +320,7 @@ def routine_minio(
         None if not uploading the tableschema to Minio.
         minio_user: user name for the minio instance
         minio_pwd: password for the minio instance
-        num_rows: number of rows to sample from the file for analysis ; -1 for analysis of
-        the whole file
-        user_input_tests: tests to run on the file
-        output_mode: LIMITED or ALL, whether or not to return all possible types or only
-        the most likely one for each column
+        kwargs: arguments for routine
 
     Returns:
         dict: a dict with information about the csv and possible types for each column
@@ -376,14 +369,10 @@ def routine_minio(
         minio_pwd=minio_pwd,
     )
 
-    analysis = routine(
-        file_path,
+    analysis = routine(file_path,
         num_rows,
-        user_input_tests,
-        output_mode="LIMITED",
         save_results=True,
-        encoding=encoding,
-        sep=sep,
+        **kwargs,
     )
 
     # Write report JSON file.
@@ -404,8 +393,8 @@ def routine_minio(
     os.remove(file_path)
 
     generate_table_schema(
-        analysis,
-        True,
+        analysis_report=analysis,
+        save_file=True,
         netloc=tableschema_minio_location["netloc"],
         bucket=tableschema_minio_location["bucket"],
         key=tableschema_minio_location["key"],
