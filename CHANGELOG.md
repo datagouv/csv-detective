@@ -15,6 +15,7 @@
 - Restructure repo (breaking changes) [#111](https://github.com/datagouv/csv-detective/pull/111)
 - Add validation function and associated flow [#112](https://github.com/datagouv/csv-detective/pull/112)
 - Better float detection [#113](https://github.com/datagouv/csv-detective/pull/113)
+- Refactor fields tests [#114](https://github.com/datagouv/csv-detective/pull/114)
 
 ## 0.7.4 (2024-11-15)
 
