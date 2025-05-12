@@ -42,7 +42,8 @@ def validate(
         any(col_name not in list(table.columns) for col_name in previous_analysis["columns"])
         or any(col_name not in list(previous_analysis["columns"].keys()) for col_name in table.columns)
     ):
-        logging.warning("> Columns do not match, proceeding with full analysis")
+        if verbose:
+            logging.warning("> Columns do not match, proceeding with full analysis")
         return False, table, analysis
     for col_name, args in previous_analysis["columns"].items():
         if verbose:
@@ -55,7 +56,8 @@ def validate(
         if skipna:
             col_data = col_data.loc[~col_data.isna()]
         if not col_data.apply(test_func).all():
-            logging.warning("> Test failed, proceeding with full analysis")
+            if verbose:
+                logging.warning("> Test failed, proceeding with full analysis")
             return False, table, analysis
     if verbose:
         logging.info("> All checks successful")
