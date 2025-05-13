@@ -9,6 +9,7 @@ from .FR.other import (
     siret,
     insee_ape700,
     date_fr,
+    code_import,
     code_waldec,
     code_rna,
 )
