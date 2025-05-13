@@ -24,6 +24,7 @@ from csv_detective.detect_fields.FR.geo import (
 from csv_detective.detect_fields.FR.other import (
     code_csp_insee,
     code_rna,
+    code_import,
     code_waldec,
     csp_insee,
     date_fr,
@@ -184,8 +185,12 @@ fields = {
             "Wa1#89sf&h",
         ],
     },
+    code_import: {
+        True: ["123S1871092288"],
+        False: ["AA751PEE00188854", "W123456789"],
+    },
     code_waldec: {
-        True: ["751P00188854"],
+        True: ["W123456789", "W2D1234567"],
         False: ["AA751PEE00188854"],
     },
     csp_insee: {
