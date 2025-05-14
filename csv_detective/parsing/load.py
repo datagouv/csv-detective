@@ -1,5 +1,5 @@
 from io import BytesIO, StringIO
-from typing import Union
+from typing import Optional, Union
 
 import pandas as pd
 import requests
@@ -25,10 +25,10 @@ from .excel import (
 def load_file(
     file_path: str,
     num_rows: int = 500,
-    encoding: str = None,
-    sep: str = None,
+    encoding: Optional[str] = None,
+    sep: Optional[str] = None,
     verbose: bool = False,
-    sheet_name: Union[str, int] = None,
+    sheet_name: Optional[Union[str, int]] = None,
 ) -> tuple[pd.DataFrame, dict]:
     file_name = file_path.split('/')[-1]
     engine = None

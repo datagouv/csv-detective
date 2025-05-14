@@ -70,7 +70,7 @@ def create_example_csv_file(
         return str(uuid.uuid4())
 
     def _date(
-        date_range: Union[None, list[str]] = None,
+        date_range: Optional[list[str]] = None,
         format: str = "%Y-%m-%d",
         required: bool = True,
     ) -> str:
