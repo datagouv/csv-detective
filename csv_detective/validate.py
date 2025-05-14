@@ -23,18 +23,23 @@ def validate(
     verbose: bool = False,
     skipna: bool = True,
     sheet_name: Optional[Union[str, int]] = None,
-) -> tuple[bool, pd.DataFrame, dict]:
+) -> tuple[bool, pd.DataFrame | None, dict | None]:
     """
     Verify is the given file has the same fields and types as in the previous analysis.
     """
-    table, analysis = load_file(
-        file_path=file_path,
-        num_rows=num_rows,
-        encoding=encoding,
-        sep=sep,
-        verbose=verbose,
-        sheet_name=sheet_name,
-    )
+    try:
+        table, analysis = load_file(
+            file_path=file_path,
+            num_rows=num_rows,
+            encoding=encoding,
+            sep=sep,
+            verbose=verbose,
+            sheet_name=sheet_name,
+        )
+    except Exception as e:
+        if verbose:
+            logging.warning(f"> Could not load the file with previous analysis values: {e}")
+        return False, None, None
     if verbose:
         logging.info("Comparing table with the previous analysis")
         logging.info("- Checking if all columns match")

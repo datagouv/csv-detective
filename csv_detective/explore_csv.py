@@ -137,8 +137,16 @@ def validate_then_detect(
     if is_valid:
         # skipping formats detection as the validation is successful
         analysis = previous_analysis
+        # profile has to be regenerated, it's independent from analysis
         del analysis["profile"]
     else:
+        if analysis is None:
+            # if loading failed in validate, we load it from scratch
+            table, analysis = load_file(
+                file_path=file_path,
+                num_rows=num_rows,
+                verbose=verbose,
+            )
         analysis = detect_formats(
             table=table,
             analysis=analysis,
@@ -160,7 +168,7 @@ def validate_then_detect(
             output_df=output_df,
             cast_json=cast_json,
             verbose=verbose,
-            sheet_name=previous_analysis.get("sheet_name"),
+            sheet_name=analysis.get("sheet_name"),
         )
     finally:
         if verbose:
