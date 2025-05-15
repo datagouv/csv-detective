@@ -23,7 +23,7 @@ def validate(
     verbose: bool = False,
     skipna: bool = True,
     sheet_name: Optional[Union[str, int]] = None,
-) -> tuple[bool, pd.DataFrame | None, dict | None]:
+) -> tuple[bool, Optional[pd.DataFrame], Optional[dict]]:
     """
     Verify is the given file has the same fields and types as in the previous analysis.
     """
