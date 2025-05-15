@@ -17,6 +17,7 @@
 - Better float detection [#113](https://github.com/datagouv/csv-detective/pull/113)
 - Refactor fields tests [#114](https://github.com/datagouv/csv-detective/pull/114)
 - Better code waldec and add code import [#116](https://github.com/datagouv/csv-detective/pull/116)
+- Better validation and refactors [#117](https://github.com/datagouv/csv-detective/pull/117)
 
 ## 0.7.4 (2024-11-15)
 
