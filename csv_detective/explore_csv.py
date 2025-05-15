@@ -134,19 +134,14 @@ def validate_then_detect(
         verbose=verbose,
         skipna=skipna,
     )
-    if is_valid:
-        # skipping formats detection as the validation is successful
-        analysis = previous_analysis
-        # profile has to be regenerated, it's independent from analysis
-        del analysis["profile"]
-    else:
-        if analysis is None:
-            # if loading failed in validate, we load it from scratch
-            table, analysis = load_file(
-                file_path=file_path,
-                num_rows=num_rows,
-                verbose=verbose,
-            )
+    if analysis is None:
+        # if loading failed in validate, we load it from scratch
+        table, analysis = load_file(
+            file_path=file_path,
+            num_rows=num_rows,
+            verbose=verbose,
+        )
+    if not is_valid:
         analysis = detect_formats(
             table=table,
             analysis=analysis,
