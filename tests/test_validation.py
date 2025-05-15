@@ -3,6 +3,7 @@ import json
 import pandas as pd
 import pytest
 
+from csv_detective.explore_csv import validate_then_detect
 from csv_detective.validate import validate
 
 
@@ -26,9 +27,9 @@ def get_nested_value(source_dict: dict, key_chain: list[str]):
     "_params",
     (
         ((True, pd.DataFrame, dict), {}),
-        ((False, pd.DataFrame, dict), {"separator": "|"}),
+        ((False, None, None), {"separator": "|"}),
         ((False, None, None), {"encoding": "unknown"}),
-        ((False, pd.DataFrame, dict), {"header": ["a", "b"]}),
+        ((False, None, None), {"header": ["a", "b"]}),
         ((False, pd.DataFrame, dict), {
             "columns.NUMCOM": {
                 "python_type": "int",
@@ -61,3 +62,38 @@ def test_validation(_params):
         assert analysis is None
     else:
         assert isinstance(analysis, analysis_type)
+
+
+@pytest.mark.parametrize(
+    "modif_previous_analysis",
+    (
+        {"separator": "|"},
+        {"encoding": "unknown"},
+        {"header": ["a", "b"]},
+        {
+            "columns.NUMCOM": {
+                "python_type": "int",
+                "format": "int",
+                "score": 1.0,
+            },
+        },
+    ),
+)
+def test_validate_then_detect(modif_previous_analysis):
+    with open("tests/data/a_test_file.json", "r") as f:
+        previous_analysis = json.load(f)
+    valid_values = {}
+    for dotkey in modif_previous_analysis:
+        keys = dotkey.split(".")
+        valid_values[dotkey] = get_nested_value(previous_analysis, keys)
+        set_nested_value(previous_analysis, keys, modif_previous_analysis[dotkey])
+    analysis = validate_then_detect(
+        "tests/data/a_test_file.csv",
+        previous_analysis=previous_analysis,
+        num_rows=-1,
+        output_profile=True,
+        save_results=False,
+    )
+    # checking that if not valid, the analysis has managed to retrieve the right values
+    for dotkey in modif_previous_analysis:
+        assert get_nested_value(analysis, dotkey.split(".")) == valid_values[dotkey]
