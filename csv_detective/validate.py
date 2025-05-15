@@ -49,7 +49,7 @@ def validate(
     ):
         if verbose:
             logging.warning("> Columns do not match, proceeding with full analysis")
-        return False, table, analysis
+        return False, None, None
     for col_name, args in previous_analysis["columns"].items():
         if verbose:
             logging.info(f"- Testing {col_name} for {args['format']}")
