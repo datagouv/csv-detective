@@ -34,10 +34,5 @@ def prevent_nan(value: float) -> Optional[float]:
     return value
 
 
-def full_word_strictly_inside_string(word: str, string: str):
-    return (
-        word == string
-        or (" " + word + " " in string)
-        or (string.startswith(word + " "))
-        or (string.endswith(" " + word))
-    )
+def is_word_in_string(word: str, string: str):
+    return word in string
