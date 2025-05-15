@@ -44,8 +44,8 @@ def validate(
         logging.info("Comparing table with the previous analysis")
         logging.info("- Checking if all columns match")
     if (
-        any(col_name not in list(table.columns) for col_name in previous_analysis["columns"])
-        or any(col_name not in list(previous_analysis["columns"].keys()) for col_name in table.columns)
+        any(col_name not in analysis["header"] for col_name in previous_analysis["header"])
+        or any(col_name not in previous_analysis["header"] for col_name in analysis["header"])
     ):
         if verbose:
             logging.warning("> Columns do not match, proceeding with full analysis")

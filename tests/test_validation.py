@@ -28,18 +28,7 @@ def get_nested_value(source_dict: dict, key_chain: list[str]):
         ((True, pd.DataFrame, dict), {}),
         ((False, pd.DataFrame, dict), {"separator": "|"}),
         ((False, None, None), {"encoding": "unknown"}),
-        ((False, pd.DataFrame, dict), {"columns": {
-            "a": {
-                "python_type": "int",
-                "format": "int",
-                "score": 1.0,
-            },
-            "b": {
-                "python_type": "string",
-                "format": "siret",
-                "score": 1.0,
-            },
-        }}),
+        ((False, pd.DataFrame, dict), {"header": ["a", "b"]}),
         ((False, pd.DataFrame, dict), {
             "columns.NUMCOM": {
                 "python_type": "int",
