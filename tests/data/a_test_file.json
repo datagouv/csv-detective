@@ -89,7 +89,7 @@
         "NUMCOM": {
             "python_type": "string",
             "format": "code_commune_insee",
-            "score": 1.0
+            "score": 0.5
         },
         "NOMCOM": {
             "python_type": "string",
@@ -146,7 +146,7 @@
         "NUMCOM": {
             "python_type": "string",
             "format": "code_commune_insee",
-            "score": 1.0
+            "score": 1.25
         },
         "NOMCOM": {
             "python_type": "string",

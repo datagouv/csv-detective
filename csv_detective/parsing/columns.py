@@ -76,7 +76,6 @@ def test_col_label(label: str, test_func: Callable, proportion: float = 1, limit
 
 
 def test_col(table: pd.DataFrame, all_tests: list, limited_output: bool, skipna: bool = True, verbose: bool = False):
-    # Initialising dict for tests
     if verbose:
         start = time()
         logging.info("Testing columns to get types")
@@ -112,7 +111,6 @@ def test_col(table: pd.DataFrame, all_tests: list, limited_output: bool, skipna:
 
 
 def test_label(table: pd.DataFrame, all_tests: list, limited_output: bool, verbose: bool = False):
-    # Initialising dict for tests
     if verbose:
         start = time()
         logging.info("Testing labels to get types")

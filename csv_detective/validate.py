@@ -1,5 +1,5 @@
 import logging
-from typing import Union
+from typing import Optional, Union
 
 import pandas as pd
 
@@ -18,33 +18,38 @@ def validate(
     file_path: str,
     previous_analysis: dict,
     num_rows: int = 500,
-    encoding: str = None,
-    sep: str = None,
+    encoding: Optional[str] = None,
+    sep: Optional[str] = None,
     verbose: bool = False,
     skipna: bool = True,
-    sheet_name: Union[str, int] = None,
-) -> tuple[bool, pd.DataFrame, dict]:
+    sheet_name: Optional[Union[str, int]] = None,
+) -> tuple[bool, Optional[pd.DataFrame], Optional[dict]]:
     """
     Verify is the given file has the same fields and types as in the previous analysis.
     """
-    table, analysis = load_file(
-        file_path=file_path,
-        num_rows=num_rows,
-        encoding=encoding,
-        sep=sep,
-        verbose=verbose,
-        sheet_name=sheet_name,
-    )
+    try:
+        table, analysis = load_file(
+            file_path=file_path,
+            num_rows=num_rows,
+            encoding=encoding,
+            sep=sep,
+            verbose=verbose,
+            sheet_name=sheet_name,
+        )
+    except Exception as e:
+        if verbose:
+            logging.warning(f"> Could not load the file with previous analysis values: {e}")
+        return False, None, None
     if verbose:
         logging.info("Comparing table with the previous analysis")
         logging.info("- Checking if all columns match")
     if (
-        any(col_name not in list(table.columns) for col_name in previous_analysis["columns"])
-        or any(col_name not in list(previous_analysis["columns"].keys()) for col_name in table.columns)
+        any(col_name not in analysis["header"] for col_name in previous_analysis["header"])
+        or any(col_name not in previous_analysis["header"] for col_name in analysis["header"])
     ):
         if verbose:
             logging.warning("> Columns do not match, proceeding with full analysis")
-        return False, table, analysis
+        return False, None, None
     for col_name, args in previous_analysis["columns"].items():
         if verbose:
             logging.info(f"- Testing {col_name} for {args['format']}")

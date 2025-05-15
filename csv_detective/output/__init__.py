@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Union
+from typing import Optional, Union
 
 import pandas as pd
 
@@ -22,7 +22,7 @@ def generate_output(
     output_df: bool = False,
     cast_json: bool = True,
     verbose: bool = False,
-    sheet_name: Union[str, int] = None,
+    sheet_name: Optional[Union[str, int]] = None,
 ) -> Union[dict, tuple[dict, pd.DataFrame]]:
 
     if output_profile:

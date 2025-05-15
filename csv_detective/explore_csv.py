@@ -111,15 +111,12 @@ def validate_then_detect(
     user_input_tests: Union[str, list[str]] = "ALL",
     limited_output: bool = True,
     save_results: Union[bool, str] = True,
-    encoding: str = None,
-    sep: str = None,
     skipna: bool = True,
     output_profile: bool = False,
     output_schema: bool = False,
     output_df: bool = False,
     cast_json: bool = True,
     verbose: bool = False,
-    sheet_name: Union[str, int] = None,
 ):
 
     if verbose:
@@ -131,17 +128,25 @@ def validate_then_detect(
         file_path=file_path,
         previous_analysis=previous_analysis,
         num_rows=num_rows,
-        encoding=encoding,
-        sep=sep,
+        encoding=previous_analysis.get("encoding"),
+        sep=previous_analysis.get("separator"),
+        sheet_name=previous_analysis.get("sheet_name"),
         verbose=verbose,
         skipna=skipna,
-        sheet_name=sheet_name,
     )
     if is_valid:
         # skipping formats detection as the validation is successful
         analysis = previous_analysis
+        # profile has to be regenerated, it's independent from analysis
         del analysis["profile"]
     else:
+        if analysis is None:
+            # if loading failed in validate, we load it from scratch
+            table, analysis = load_file(
+                file_path=file_path,
+                num_rows=num_rows,
+                verbose=verbose,
+            )
         analysis = detect_formats(
             table=table,
             analysis=analysis,
@@ -163,7 +168,7 @@ def validate_then_detect(
             output_df=output_df,
             cast_json=cast_json,
             verbose=verbose,
-            sheet_name=sheet_name,
+            sheet_name=analysis.get("sheet_name"),
         )
     finally:
         if verbose:

@@ -1,4 +1,4 @@
-from csv_detective.utils import full_word_strictly_inside_string
+from csv_detective.utils import is_word_in_string
 from csv_detective.parsing.text import _process_text
 
 PROPORTION = 0.5
@@ -40,7 +40,7 @@ def _is(header):
     words_combination_in_header = 0.5 * float(
         any(
             [
-                full_word_strictly_inside_string(
+                is_word_in_string(
                     words_combination, processed_header
                 ) for words_combination in words_combinations_list
             ]
