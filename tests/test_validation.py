@@ -70,6 +70,7 @@ def test_validation(_params):
         {"separator": "|"},
         {"encoding": "unknown"},
         {"header": ["a", "b"]},
+        {"total_lines": 100},
         {
             "columns.NUMCOM": {
                 "python_type": "int",
