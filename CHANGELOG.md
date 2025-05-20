@@ -1,6 +1,6 @@
 # Changelog
 
-## Current (in progress)
+## 0.8.0 (2025-05-20)
 
 - New function that creates a csv from a list of fields and constraints, or from a TableSchema [#101](https://github.com/datagouv/csv-detective/pull/101)
 - Enable outputing loaded dataframe [#102](https://github.com/datagouv/csv-detective/pull/102)
