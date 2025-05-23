@@ -1,11 +1,8 @@
+from csv_detective.parsing.text import header_score
+
 PROPORTION = 0.5
 
 
-def _is(header):
-    '''
-    Returns 1 if at least one of the mentionned words is in the label, else 0
-    '''
-
-    words_list = ['budget', 'salaire', 'euro', 'euros', 'prêt', 'montant']
-
-    return float(any([word in header.lower() for word in words_list]))
+def _is(header: str) -> float:
+    words_combinations_list = ["budget", "salaire", "euro", "euros", "prêt", "montant"]
+    return header_score(header, words_combinations_list)
