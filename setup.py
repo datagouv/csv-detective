@@ -1,5 +1,4 @@
-#! /usr/bin/env python3
-
+from pathlib import Path
 from setuptools import setup, find_packages
 
 
@@ -8,6 +7,9 @@ def pip(filename):
     return open(filename).readlines()
 
 
+this_directory = Path(__file__).parent
+long_description = (this_directory / "README.md").read_text()
+
 setup(
     name="csv_detective",
     version=__import__("csv_detective").__version__,
@@ -15,25 +17,37 @@ setup(
     author_email="opendatateam@data.gouv.fr",
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
-        "License :: OSI Approved :: GNU Affero General Public License v3",
-        "Operating System :: POSIX",
+        "License :: OSI Approved :: MIT",
+        "Operating System :: OS Independent",
         "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
+        "Programming Language :: Python :: Implementation :: CPython",
         "Topic :: Scientific/Engineering :: Information Analysis",
         ],
     description="Detect CSV column content",
+    long_description=long_description,
     long_description_content_type="text/markdown",
     keywords="CSV data processing encoding guess parser tabular",
-    license="http://www.fsf.org/licensing/licenses/agpl-3.0.html",
-    url="https://github.com/etalab/csv_detective",
+    license="https://spdx.org/licenses/MIT.html#licenseText",
+    url="https://github.com/datagouv/csv_detective",
+    project_urls={
+        "Source": "https://github.com/datagouv/csv_detective",
+    },
     data_files=[
-        ("share/csv_detective", ["CHANGELOG.md", "LICENSE.AGPL.txt", "README.md"]),
+        ("share/csv_detective", ["CHANGELOG.md", "LICENSE", "README.md"]),
     ],
     entry_points={
         "console_scripts": [
             "csv_detective=csv_detective.cli:run",
         ],
     },
-    include_package_data=True,  # Will read MANIFEST.in
-    install_requires=pip('requirements.txt'),
+    setup_requires=pip("requirements-build.txt"),
+    install_requires=pip("requirements.txt"),
+    extras_require={
+        "dev": pip("requirements-dev.txt"),
+    },
     packages=find_packages(),
 )
