@@ -32,7 +32,3 @@ def prevent_nan(value: float) -> Optional[float]:
     if math.isnan(value):
         return None
     return value
-
-
-def is_word_in_string(word: str, string: str):
-    return word in string
