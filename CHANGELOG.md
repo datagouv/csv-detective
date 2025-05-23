@@ -2,7 +2,7 @@
 
 ## Current (in progress)
 
-- Nothing yet
+- Refactor label testing [#119](https://github.com/datagouv/csv-detective/pull/119)
 
 ## 0.8.0 (2025-05-20)
 
