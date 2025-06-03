@@ -25,6 +25,7 @@ def display_logs_depending_process_time(prompt: str, duration: float):
 
 def is_url(file_path: str) -> bool:
     # could be more sophisticated if needed
+    # using the URL detection test was considered but too broad (schema required to use requests)
     return file_path.startswith('http')
 
 

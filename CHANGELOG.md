@@ -3,6 +3,7 @@
 ## Current (in progress)
 
 - Refactor label testing [#119](https://github.com/datagouv/csv-detective/pull/119)
+- Better URL detection [#120](https://github.com/datagouv/csv-detective/pull/120)
 
 ## 0.8.0 (2025-05-20)
 

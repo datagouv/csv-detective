@@ -293,8 +293,17 @@ fields = {
         False: ["adresse@mail"],
     },
     url: {
-        True: ["www.etalab.data.gouv.fr"],
-        False: ["une phrase avec un @ dedans"],
+        True: [
+            "www.data.gouv.fr",
+            "http://data.gouv.fr",
+            "https://www.youtube.com/@data-gouv-fr",
+            (
+                "https://tabular-api.data.gouv.fr/api/resources/"
+                "aaaaaaaa-1111-bbbb-2222-cccccccccccc/data/"
+                "?score__greater=0.9&decompte__exact=13"
+            ),
+        ],
+        False: ["tmp@data.gouv.fr"],
     },
     uuid: {
         True: ["884762be-51f3-44c3-b811-1e14c5d89262"],
