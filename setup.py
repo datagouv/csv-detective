@@ -10,9 +10,16 @@ def pip(filename):
 this_directory = Path(__file__).parent
 long_description = (this_directory / "README.md").read_text()
 
+with open(this_directory / "csv_detective/__init__.py") as f:
+    lines = f.readlines()
+    for line in lines:
+        if line.startswith("__version__"):
+            _, _, version = line.replace("'", "").replace('"', "").split()
+            break
+
 setup(
     name="csv_detective",
-    version=__import__("csv_detective").__version__,
+    version=version,
     author="Etalab",
     author_email="opendatateam@data.gouv.fr",
     classifiers=[
