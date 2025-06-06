@@ -26,18 +26,16 @@ jobs:
           command: export BASE_BRANCH=$(base_branch)
       - restore_cache:
           keys:
-            - << pipeline.parameters.cache-prefix >>-{{ arch }}-{{ checksum "requirements.txt" }}
-            - << pipeline.parameters.cache-prefix >>-{{ arch }}-{{ .Branch }}
-            - << pipeline.parameters.cache-prefix >>-{{ arch }}-{{ .Environment.BASE_BRANCH }}
+            - << pipeline.parameters.cache-prefix >>-{{ arch }}-{{ checksum "requirements.txt" }}-{{ checksum "requirements-dev.txt" }}
       - run:
           name: Install python dependencies
           command: |
             virtualenv venv
             source venv/bin/activate
             pip install -r requirements.txt
-            pip install -e .
+            pip install -e .[dev]
       - save_cache:
-          key: << pipeline.parameters.cache-prefix >>-{{ arch }}-{{ checksum "requirements.txt" }}
+          key: << pipeline.parameters.cache-prefix >>-{{ arch }}-{{ checksum "requirements.txt" }}-{{ checksum "requirements-dev.txt" }}
           paths:
             - venv
       - persist_to_workspace:

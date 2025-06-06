@@ -10,7 +10,7 @@ You can also directly feed the URL of a remote file (from data.gouv.fr for insta
 
 ### Install the package
 
-You need to have python >= 3.7 installed. We recommend using a virtual environement.
+You need to have python >= 3.9 installed. We recommend using a virtual environement.
 
 ```
 pip install csv-detective
@@ -182,7 +182,7 @@ An early version of this analysis of all resources on data.gouv.fr can be found 
 
 ## Release
 
-The release process uses `bumpr`.
+The release process uses `bumpx`.
 
 ```shell
 pip install -r requirements-build.txt
@@ -190,16 +190,16 @@ pip install -r requirements-build.txt
 
 ### Process
 
-1. `bumpr` will handle bumping the version according to your command (patch, minor, major)
+1. `bumpx` will handle bumping the version according to your command (patch, minor, major)
 2. It will update the CHANGELOG according to the new version being published
 3. It will push a tag with the given version to github
 4. CircleCI will pickup this tag, build the package and publish it to pypi
-5. `bumpr` will have everything ready for the next version (version, changelog...)
+5. `bumpx` will have everything ready for the next version (version, changelog...)
 
 ### Dry run
 
 ```shell
-bumpr -d -v
+bumpx -d -v
 ```
 
 ### Release
@@ -207,38 +207,5 @@ bumpr -d -v
 This will release a patch version:
 
 ```shell
-bumpr -v
-```
-
-See bumpr options for minor and major:
-
-```
-$ bumpr -h
-usage: bumpr [-h] [--version] [-v] [-c CONFIG] [-d] [-st] [-b | -pr] [-M] [-m] [-p]
-             [-s SUFFIX] [-u] [-pM] [-pm] [-pp] [-ps PREPARE_SUFFIX] [-pu]
-             [--vcs {git,hg}] [-nc] [-P] [-nP]
-             [file] [files ...]
-
-[...]
-
-optional arguments:
-  -h, --help            show this help message and exit
-  --version             show program's version number and exit
-  -v, --verbose         Verbose output
-  -c CONFIG, --config CONFIG
-                        Specify a configuration file
-  -d, --dryrun          Do not write anything and display a diff
-  -st, --skip-tests     Skip tests
-  -b, --bump            Only perform the bump
-  -pr, --prepare        Only perform the prepare
-
-bump:
-  -M, --major           Bump major version
-  -m, --minor           Bump minor version
-  -p, --patch           Bump patch version
-  -s SUFFIX, --suffix SUFFIX
-                        Set suffix
-  -u, --unsuffix        Unset suffix
-
-[...]
+bumpx -v
 ```
