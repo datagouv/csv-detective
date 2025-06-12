@@ -1,42 +1,49 @@
 import pandas as pd
 import pytest
 import responses
+from unittest.mock import patch
 
 from csv_detective import routine
 
 
-def test_columns_output_on_file():
-    output = routine(
-        file_path="tests/data/a_test_file.csv",
-        num_rows=-1,
-        output_profile=False,
-        save_results=False,
-    )
-    assert isinstance(output, dict)
-    assert output["separator"] == ";"
-    assert output["header_row_idx"] == 2
-    assert output["header"] == [
-        "NUMCOM",
-        "NOMCOM",
-        "NUMDEP",
-        "NOMDEP",
-        "NUMEPCI",
-        "NOMEPCI",
-        "TXCOUVGLO_COM_2014",
-        "TXCOUVGLO_DEP_2014",
-        "TXCOUVGLO_EPCI_2014",
-        "STRUCTURED_INFO",
-        "GEO_INFO",
-    ]
-    assert output["total_lines"] == 404
-    assert output["nb_duplicates"] == 7
-    assert output["columns"]["NOMCOM"]["format"] == "commune"
-    assert output["columns"]["NOMDEP"]["format"] == "departement"
-    assert output["columns"]["NUMEPCI"]["format"] == "siren"
-    assert output["columns"]["STRUCTURED_INFO"]["python_type"] == "json"
-    assert output["columns"]["STRUCTURED_INFO"]["format"] == "json"
-    assert output["columns"]["GEO_INFO"]["python_type"] == "json"
-    assert output["columns"]["GEO_INFO"]["format"] == "json_geojson"
+@pytest.mark.parametrize(
+    "reduce_max_rows_analysis",
+    (True, False),
+)
+def test_columns_output_on_file(reduce_max_rows_analysis):
+    patched = 100 if reduce_max_rows_analysis else 1e5
+    with patch("csv_detective.detection.formats.MAX_ROWS_ANALYSIS", patched):
+        output = routine(
+            file_path="tests/data/a_test_file.csv",
+            num_rows=-1,
+            output_profile=False,
+            save_results=False,
+        )
+        assert isinstance(output, dict)
+        assert output["separator"] == ";"
+        assert output["header_row_idx"] == 2
+        assert output["header"] == [
+            "NUMCOM",
+            "NOMCOM",
+            "NUMDEP",
+            "NOMDEP",
+            "NUMEPCI",
+            "NOMEPCI",
+            "TXCOUVGLO_COM_2014",
+            "TXCOUVGLO_DEP_2014",
+            "TXCOUVGLO_EPCI_2014",
+            "STRUCTURED_INFO",
+            "GEO_INFO",
+        ]
+        assert output["total_lines"] == 404
+        assert output["nb_duplicates"] == 7
+        assert output["columns"]["NOMCOM"]["format"] == "commune"
+        assert output["columns"]["NOMDEP"]["format"] == "departement"
+        assert output["columns"]["NUMEPCI"]["format"] == "siren"
+        assert output["columns"]["STRUCTURED_INFO"]["python_type"] == "json"
+        assert output["columns"]["STRUCTURED_INFO"]["format"] == "json"
+        assert output["columns"]["GEO_INFO"]["python_type"] == "json"
+        assert output["columns"]["GEO_INFO"]["format"] == "json_geojson"
 
 
 def test_profile_output_on_file():
