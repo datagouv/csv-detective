@@ -6,6 +6,8 @@ import pandas as pd
 
 from csv_detective.utils import display_logs_depending_process_time
 
+MAX_ROWS_ANALYSIS = 1e5
+
 
 def test_col_val(
     serie: pd.Series,
@@ -52,7 +54,7 @@ def test_col_val(
             else:
                 # if we have a proportion, statistically it's OK to analyse up to 10k rows
                 # (arbitrary number) and get a significant result
-                to_analyse = min(ser_len, 10000)
+                to_analyse = min(ser_len, MAX_ROWS_ANALYSIS)
                 result = apply_test_func(serie, test_func, to_analyse).sum() / to_analyse
                 return result if result >= proportion else 0.0
     finally:

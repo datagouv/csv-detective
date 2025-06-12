@@ -75,6 +75,7 @@ def routine(
     analysis = detect_formats(
         table=table,
         analysis=analysis,
+        file_path=file_path,
         user_input_tests=user_input_tests,
         limited_output=limited_output,
         skipna=skipna,
@@ -145,6 +146,7 @@ def validate_then_detect(
         analysis = detect_formats(
             table=table,
             analysis=analysis,
+            file_path=file_path,
             user_input_tests=user_input_tests,
             limited_output=limited_output,
             skipna=skipna,
