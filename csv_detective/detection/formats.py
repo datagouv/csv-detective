@@ -25,7 +25,8 @@ def detect_formats(
 ):
     on_sample = len(table) > MAX_ROWS_ANALYSIS
     if on_sample:
-        logging.warning(f"File is too long, analysing the {MAX_ROWS_ANALYSIS} first rows")
+        if verbose:
+            logging.warning(f"File is too long, analysing the {MAX_ROWS_ANALYSIS} first rows")
         table = table.sample(n=MAX_ROWS_ANALYSIS, random_state=1)
 
     if table.empty:
@@ -151,7 +152,8 @@ def detect_formats(
             analysis["formats"][col_metadata["format"]].append(header)
 
     if on_sample:
-        logging.warning("Validating that analysis on the sample works on the whole file")
+        if verbose:
+            logging.warning("Validating that analysis on the sample works on the whole file")
         is_valid, _, _ = validate(
             file_path=file_path,
             previous_analysis=analysis,
