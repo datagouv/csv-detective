@@ -1,4 +1,5 @@
 from collections import defaultdict
+import logging
 from typing import Union
 
 import numpy as np
@@ -9,17 +10,24 @@ from csv_detective.detection.variables import (
 )
 from csv_detective.load_tests import return_all_tests
 from csv_detective.output.utils import prepare_output_dict
-from csv_detective.parsing.columns import test_col, test_label
+from csv_detective.parsing.columns import test_col, test_label, MAX_ROWS_ANALYSIS
+from csv_detective.validate import validate
 
 
 def detect_formats(
     table: pd.DataFrame,
     analysis: dict,
+    file_path: str,
     user_input_tests: Union[str, list[str]] = "ALL",
     limited_output: bool = True,
     skipna: bool = True,
     verbose: bool = False,
 ):
+    on_sample = len(table) > MAX_ROWS_ANALYSIS
+    if on_sample:
+        if verbose:
+            logging.warning(f"File is too long, analysing the {MAX_ROWS_ANALYSIS} first rows")
+        table = table.sample(n=MAX_ROWS_ANALYSIS, random_state=1)
 
     if table.empty:
         res_categorical = []
@@ -142,4 +150,21 @@ def detect_formats(
         analysis["formats"] = defaultdict(list)
         for header, col_metadata in analysis["columns"].items():
             analysis["formats"][col_metadata["format"]].append(header)
+
+    if on_sample:
+        if verbose:
+            logging.warning("Validating that analysis on the sample works on the whole file")
+        is_valid, _, _ = validate(
+            file_path=file_path,
+            previous_analysis=analysis,
+            num_rows=-1,
+            encoding=analysis.get("encoding"),
+            sep=analysis.get("separator"),
+            sheet_name=analysis.get("sheet_name"),
+            verbose=verbose,
+            skipna=skipna,
+        )
+        if not is_valid:
+            raise ValueError("Could not infer detected formats on the whole file")
+
     return analysis
