@@ -7,12 +7,12 @@ from typing import Optional, Union
 
 import pandas as pd
 
-from .detection.formats import detect_formats
-from .output import generate_output, generate_table_schema
-from .parsing.load import load_file
-from .s3_utils import download_from_minio, upload_to_minio
-from .utils import display_logs_depending_process_time, is_url
-from .validate import validate
+from csv_detective.detection.formats import detect_formats
+from csv_detective.output import generate_output, generate_table_schema
+from csv_detective.parsing.load import load_file
+from csv_detective.s3_utils import download_from_minio, upload_to_minio
+from csv_detective.utils import display_logs_depending_process_time, is_url
+from csv_detective.validate import validate
 
 logging.basicConfig(level=logging.INFO)
 

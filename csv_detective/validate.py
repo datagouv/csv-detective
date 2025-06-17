@@ -4,7 +4,7 @@ from typing import Optional, Union
 import pandas as pd
 
 from csv_detective.load_tests import return_all_tests
-from .parsing.load import load_file
+from csv_detective.parsing.load import load_file
 
 logging.basicConfig(level=logging.INFO)
 
