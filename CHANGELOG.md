@@ -6,7 +6,7 @@
 - Refactor repo metadata and requirements [#120](https://github.com/datagouv/csv-detective/pull/120) [#122](https://github.com/datagouv/csv-detective/pull/122)
 - Better URL detection [#121](https://github.com/datagouv/csv-detective/pull/121)
 - For big files, analyse on sample then validate on whole file [#124](https://github.com/datagouv/csv-detective/pull/124)
-- Fix imports [#125](https://github.com/datagouv/csv-detective/pull/125) [#126](https://github.com/datagouv/csv-detective/pull/126) [#127](https://github.com/datagouv/csv-detective/pull/127)
+- Fix imports [#125](https://github.com/datagouv/csv-detective/pull/125) [#126](https://github.com/datagouv/csv-detective/pull/126) [#127](https://github.com/datagouv/csv-detective/pull/127) [#128](https://github.com/datagouv/csv-detective/pull/128)
 
 ## 0.8.0 (2025-05-20)
 

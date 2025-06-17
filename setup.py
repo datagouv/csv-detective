@@ -59,4 +59,5 @@ setup(
         "dev": pip("requirements-dev.txt"),
     },
     packages=find_packages(),
+    include_package_data=True,  # Will read MANIFEST.in
 )
