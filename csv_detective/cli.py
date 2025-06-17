@@ -4,7 +4,7 @@ Command line client for csv_detective
 
 import argparse
 import json
-from .explore_csv import routine
+from csv_detective.explore_csv import routine
 
 
 def run():
