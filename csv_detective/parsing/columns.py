@@ -6,7 +6,7 @@ import pandas as pd
 
 from csv_detective.utils import display_logs_depending_process_time
 
-MAX_ROWS_ANALYSIS = 1e5
+MAX_ROWS_ANALYSIS = int(1e5)
 
 
 def test_col_val(
