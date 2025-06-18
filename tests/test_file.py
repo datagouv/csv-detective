@@ -7,12 +7,11 @@ from csv_detective import routine
 
 
 @pytest.mark.parametrize(
-    "reduce_max_rows_analysis",
-    (True, False),
+    "max_rows_analysis",
+    (100, int(1e5)),
 )
-def test_columns_output_on_file(reduce_max_rows_analysis):
-    patched = 100 if reduce_max_rows_analysis else 1e5
-    with patch("csv_detective.detection.formats.MAX_ROWS_ANALYSIS", patched):
+def test_columns_output_on_file(max_rows_analysis):
+    with patch("csv_detective.detection.formats.MAX_ROWS_ANALYSIS", max_rows_analysis):
         output = routine(
             file_path="tests/data/a_test_file.csv",
             num_rows=-1,
