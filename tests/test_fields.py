@@ -58,7 +58,14 @@ from csv_detective.detect_fields.other import (
     int as test_int,
     float as test_float,
 )
-from csv_detective.detect_fields.temp import date, datetime, datetime_iso, datetime_rfc822, year
+from csv_detective.detect_fields.temp import (
+    date,
+    datetime_aware,
+    datetime_iso,
+    datetime_naive,
+    datetime_rfc822,
+    year,
+)
 from csv_detective.detection.variables import (
     detect_continuous_variable,
     detect_categorical_variable,
@@ -70,7 +77,7 @@ from csv_detective.output.dataframe import cast
 def test_all_tests_return_bool():
     all_tests = return_all_tests("ALL", "detect_fields")
     for test in all_tests:
-        for tmp in ["a", "9", "3.14", "[]", float("nan")]:
+        for tmp in ["a", "9", "3.14", "[]", float("nan"), "2021-06-22 10:20:10"]:
             assert isinstance(test._is(tmp), bool)
 
 
@@ -337,9 +344,13 @@ fields = {
             "02052003",
         ],
     },
-    datetime: {
-        True: ["2021-06-22T10:20:10"],
-        False: ["2021-06-22T30:20:10", "Sun, 06 Nov 1994 08:49:37 GMT"],
+    datetime_aware: {
+        True: ["2021-06-22 10:20:10-04:00", "2030-06-22 00:00:00.0028+02:00"],
+        False: ["2021-06-22T30:20:10", "Sun, 06 Nov 1994 08:49:37 GMT", "2021-06-44 10:20:10"],
+    },
+    datetime_naive: {
+        True: ["2021-06-22 10:20:10", "2030-06-22 00:00:00.0028"],
+        False: ["2021-06-22T30:20:10", "Sun, 06 Nov 1994 08:49:37 GMT", "2021-06-44 10:20:10+02:00"],
     },
     datetime_iso: {
         True: ["2021-06-22T10:20:10"],
@@ -388,6 +399,7 @@ def test_fields_with_values(args):
         ('{"a": 1}', "json", dict),
         ("2022-08-01", "date", _date),
         ("2024-09-23 17:32:07", "datetime", _datetime),
+        ("2024-09-23 17:32:07+02:00", "datetime", _datetime),
     ),
 )
 def test_cast(args):

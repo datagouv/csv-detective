@@ -14,7 +14,7 @@ def date_casting(val: str) -> Optional[datetime]:
         return dateutil_parser(val)
     except ParserError:
         return date_parser(val)
-    except OverflowError:
+    except Exception:
         return None
 
 
