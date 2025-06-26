@@ -7,6 +7,7 @@
 - Better URL detection [#121](https://github.com/datagouv/csv-detective/pull/121)
 - For big files, analyse on sample then validate on whole file [#124](https://github.com/datagouv/csv-detective/pull/124) [#129](https://github.com/datagouv/csv-detective/pull/129)
 - Fix imports [#125](https://github.com/datagouv/csv-detective/pull/125) [#126](https://github.com/datagouv/csv-detective/pull/126) [#127](https://github.com/datagouv/csv-detective/pull/127) [#128](https://github.com/datagouv/csv-detective/pull/128)
+- Split aware and naive datetimes for hydra to cast them separately [#130](https://github.com/datagouv/csv-detective/pull/130)
 
 ## 0.8.0 (2025-05-20)
 

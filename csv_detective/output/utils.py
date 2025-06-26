@@ -34,6 +34,10 @@ def prepare_output_dict(return_table: pd.DataFrame, limited_output: bool):
             formats_to_remove.add("longitude_l93")
         if "code_region" in formats_detected:
             formats_to_remove.add("code_departement")
+        if "datetime_iso" in formats_detected:
+            formats_to_remove.add("datetime_naive")
+        if "datetime_rfc822" in formats_detected:
+            formats_to_remove.add("datetime_aware")
 
         formats_to_keep = formats_detected - formats_to_remove
 
