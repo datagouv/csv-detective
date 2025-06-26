@@ -107,7 +107,6 @@ def detect_formats(
         "json": "json",
         "json_geojson": "json",
         "datetime_aware": "datetime",
-        "datetime_iso": "datetime",
         "datetime_naive": "datetime",
         "datetime_rfc822": "datetime",
         "date": "date",

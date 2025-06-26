@@ -61,7 +61,6 @@ from csv_detective.detect_fields.other import (
 from csv_detective.detect_fields.temp import (
     date,
     datetime_aware,
-    datetime_iso,
     datetime_naive,
     datetime_rfc822,
     year,
@@ -345,16 +344,17 @@ fields = {
         ],
     },
     datetime_aware: {
-        True: ["2021-06-22 10:20:10-04:00", "2030-06-22 00:00:00.0028+02:00", "1996/06/22 10:20:10 GMT"],
+        True: [
+            "2021-06-22 10:20:10-04:00",
+            "2030-06-22 00:00:00.0028+02:00",
+            "2024-12-19T10:53:36.428000+00:00",
+            "1996/06/22 10:20:10 GMT",
+        ],
         False: ["2021-06-22T30:20:10", "Sun, 06 Nov 1994 08:49:37 GMT", "2021-06-44 10:20:10"],
     },
     datetime_naive: {
         True: ["2021-06-22 10:20:10", "2030/06/22 00:00:00.0028"],
         False: ["2021-06-22T30:20:10", "Sun, 06 Nov 1994 08:49:37 GMT", "2021-06-44 10:20:10+02:00"],
-    },
-    datetime_iso: {
-        True: ["2021-06-22T10:20:10"],
-        False: ["2021-06-22T30:20:10", "Sun, 06 Nov 1994 08:49:37 GMT"],
     },
     datetime_rfc822: {
         True: ["Sun, 06 Nov 1994 08:49:37 GMT"],
