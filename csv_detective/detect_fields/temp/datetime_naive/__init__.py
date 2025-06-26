@@ -8,6 +8,8 @@ PROPORTION = 1
 def _is(val: Optional[Any]) -> bool:
     """Detects naive datetimes only"""
     # early stops, to cut processing time
+    # 15 is the minimal length of a datetime format YYMMDDTHH:MM:SS
+    # 26 is the maximal length of an ISO datetime format YYYY-MM-DDTHH:MM:SS.dddddd, keeping some slack
     if not isinstance(val, str) or len(val) > 30 or len(val) < 15:
         return False
     threshold = 0.7

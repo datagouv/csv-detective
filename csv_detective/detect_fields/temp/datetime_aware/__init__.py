@@ -8,7 +8,9 @@ PROPORTION = 1
 def _is(val: Optional[Any]) -> bool:
     """Detects timezone-aware datetimes only"""
     # early stops, to cut processing time
-    if not isinstance(val, str) or len(val) > 30 or len(val) < 15:
+    # 21 is the minimal length of a datetime format YYMMDDTHH:MM:SS+HH:MM
+    # 32 is the maximal length of an ISO datetime format YYYY-MM-DDTHH:MM:SS.dddddd+HH:MM, keeping some slack
+    if not isinstance(val, str) or len(val) > 35 or len(val) < 21:
         return False
     threshold = 0.7
     if sum([char.isdigit() or char in {"-", "/", ":", " "} for char in val]) / len(val) < threshold:
