@@ -16,7 +16,7 @@ def test_col_val(
     skipna: bool = True,
     limited_output: bool = False,
     verbose: bool = False,
-):
+) -> float:
     """Tests values of the serie using test_func.
          - skipna : if True indicates that NaNs are not counted as False
          - proportion :  indicates the proportion of values that have to pass the test
@@ -81,10 +81,13 @@ def test_col(table: pd.DataFrame, all_tests: list, limited_output: bool, skipna:
     if verbose:
         start = time()
         logging.info("Testing columns to get types")
-    test_funcs = dict()
-    for test in all_tests:
-        name = test.__name__.split(".")[-1]
-        test_funcs[name] = {"func": test._is, "prop": test.PROPORTION}
+    test_funcs = {
+        test.__name__.split(".")[-1]: {
+            "func": test._is,
+            "prop": test.PROPORTION,
+        }
+        for test in all_tests
+    }
     return_table = pd.DataFrame(columns=table.columns)
     for idx, (key, value) in enumerate(test_funcs.items()):
         if verbose:
