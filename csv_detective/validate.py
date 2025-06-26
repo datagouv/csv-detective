@@ -5,11 +5,15 @@ import pandas as pd
 
 from csv_detective.load_tests import return_all_tests
 from csv_detective.parsing.load import load_file
+from csv_detective.parsing.columns import test_col_val
 
 logging.basicConfig(level=logging.INFO)
 
 tests = {
-    t.__name__.split(".")[-1]: t._is
+    t.__name__.split(".")[-1]: {
+        "func": t._is,
+        "prop": t.PROPORTION,
+    }
     for t in return_all_tests("ALL", "detect_fields")
 }
 
@@ -56,11 +60,13 @@ def validate(
         if args["format"] == "string":
             # no test for columns that have not been recognized as a specific format
             continue
-        test_func = tests[args["format"]]
-        col_data = table[col_name]
-        if skipna:
-            col_data = col_data.loc[~col_data.isna()]
-        if not col_data.apply(test_func).all():
+        test_result: float = test_col_val(
+            serie=table[col_name],
+            test_func=tests[args["format"]]["func"],
+            proportion=tests[args["format"]]["prop"],
+            skipna=skipna,
+        )
+        if not bool(test_result):
             if verbose:
                 logging.warning("> Test failed, proceeding with full analysis")
             return False, table, analysis
