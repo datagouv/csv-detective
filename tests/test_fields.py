@@ -44,6 +44,7 @@ from csv_detective.detect_fields.geo import (
     latitude_wgs,
     latlon_wgs,
     longitude_wgs,
+    lonlat_wgs,
 )
 from csv_detective.detect_fields.other import (
     booleen,
@@ -263,12 +264,16 @@ fields = {
         False: ["100"],
     },
     latlon_wgs: {
-        True: ["43.2,-22.6", "-10.7,140", "-40.7, 10.8"],
-        False: ["0.1,192", "-102, 92"],
+        True: ["43.2,-22.6", "-10.7,140", "-40.7, 10.8", "[12,-0.28]"],
+        False: ["0.1,192", "-102, 92", "[23.02,4.1", "23.02,4.1]"],
     },
     longitude_wgs: {
         True: ["120", "-20.2"],
         False: ["-200"],
+    },
+    lonlat_wgs: {
+        True: ["-22.6,43.2", "140,-10.7", "10.8, -40.7", "[-0.28,12]"],
+        False: ["192,0.1", "92, -102", "[4.1,23.02", "4.1,23.02]"],
     },
     booleen: {
         True: ["oui", "0", "1", "yes", "false", "True"],
