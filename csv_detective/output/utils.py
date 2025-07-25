@@ -36,6 +36,9 @@ def prepare_output_dict(return_table: pd.DataFrame, limited_output: bool):
             formats_to_remove.add("code_departement")
         if "datetime_rfc822" in formats_detected:
             formats_to_remove.add("datetime_aware")
+        # if there is no way to discriminate the case, default to latlon
+        if "latlon_wgs" in formats_detected:
+            formats_to_remove.add("lonlat_wgs")
 
         formats_to_keep = formats_detected - formats_to_remove
 

@@ -53,6 +53,7 @@ from .geo import (
     latitude_wgs,
     longitude_wgs,
     latlon_wgs,
+    lonlat_wgs,
     json_geojson,
 )
 

@@ -14,7 +14,7 @@ from .FR.geo import (
     longitude_l93,
     longitude_wgs_fr_metropole,
     pays,
-    region
+    region,
 )
 from .FR.other import (
     code_csp_insee,
@@ -27,7 +27,7 @@ from .FR.other import (
     siren,
     siret,
     tel_fr,
-    uai
+    uai,
 )
 from .FR.temp import jour_de_la_semaine, mois_de_annee
 from .geo import (
@@ -37,7 +37,8 @@ from .geo import (
     json_geojson,
     latitude_wgs,
     latlon_wgs,
-    longitude_wgs
+    longitude_wgs,
+    lonlat_wgs,
 )
 from .other import booleen, email, float, int, money, mongo_object_id, twitter, url, uuid
 from .temp import date, datetime_rfc822, year

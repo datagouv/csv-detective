@@ -5,9 +5,12 @@ PROPORTION = 1
 
 
 def _is(val):
-    '''Renvoie True si val peut etre une latitude,longitude'''
+    """Renvoie True si val peut etre une latitude,longitude"""
 
     if not isinstance(val, str) or val.count(",") != 1:
         return False
     lat, lon = val.split(",")
+    # handling [lat,lon]
+    if lat.startswith("[") and lon.endswith("]"):
+        lat, lon = lat[1:], lon[:-1]
     return is_lat(lat) and is_lon(lon.replace(" ", ""))

@@ -10,6 +10,7 @@
 - Split aware and naive datetimes for hydra to cast them separately [#130](https://github.com/datagouv/csv-detective/pull/130)
 - Validate using the testing function, to consider PROPORTIONS [#131](https://github.com/datagouv/csv-detective/pull/131)
 - Remove `datetime_iso` format due to ambiguous cast in db (can be naive or aware) [#132](https://github.com/datagouv/csv-detective/pull/132)
+- Add `lonlat_wgs` format and handle optional brackets for `latlon_wgs` [#133](https://github.com/datagouv/csv-detective/pull/133)
 
 ## 0.8.0 (2025-05-20)
 
