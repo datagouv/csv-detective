@@ -28,7 +28,7 @@ def _is(header: str) -> float:
         "position geographique",
         "c geo",
         "coordonnes geoloc",
-        "lat lon",
+        "lon lat",
         "code geo",
         "geo localisation",
         "coordonnes geo",
