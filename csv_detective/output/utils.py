@@ -1,7 +1,8 @@
 import pandas as pd
 
 
-def prepare_output_dict(return_table: pd.DataFrame, limited_output: bool):  # -> dict[str, dict | list[dict]] (to be added when upgrading to python>=3.10)
+def prepare_output_dict(return_table: pd.DataFrame, limited_output: bool):
+    # -> dict[str, dict | list[dict]] (to be added when upgrading to python>=3.10)
     return_dict_cols = return_table.to_dict("dict")
     output_dict = {}
     for column_name in return_dict_cols:
