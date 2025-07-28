@@ -4,5 +4,5 @@ PROPORTION = 0.5
 
 
 def _is(header: str) -> float:
-    words_combinations_list = ["is_", "has_", "est_"]
+    words_combinations_list = ["is ", "has ", "est "]
     return header_score(header, words_combinations_list)

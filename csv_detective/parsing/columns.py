@@ -46,7 +46,6 @@ def test_col_val(
                 ]:  # Pour ne pas faire d'opérations inutiles, on commence par 1,
                     # puis 5 valeurs puis la serie complète
                     if all(apply_test_func(serie, test_func, _range)):
-                        # print(serie.name, ': check OK')
                         pass
                     else:
                         return 0.0
