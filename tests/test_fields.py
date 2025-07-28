@@ -72,6 +72,7 @@ from csv_detective.detection.variables import (
 )
 from csv_detective.load_tests import return_all_tests
 from csv_detective.output.dataframe import cast
+from csv_detective.output.utils import prepare_output_dict
 
 
 def test_all_tests_return_bool():
@@ -285,7 +286,7 @@ fields = {
     },
     json: {
         True: ['{"pomme": "fruit", "reponse": 42}', "[1,2,3,4]"],
-        False: ['{"coordinates": [45.783753, 3.049342], "citycode": "63870"}', "{zefib:"],
+        False: ["5", '{"zefib":', '{"a"}'],
     },
     money: {
         True: ["120€", "-20.2$"],
@@ -410,3 +411,27 @@ def test_fields_with_values(args):
 def test_cast(args):
     value, detected_type, cast_type = args
     assert isinstance(cast(value, detected_type), cast_type)
+
+
+@pytest.mark.parametrize(
+    "args",
+    (
+        # there is a specific numerical format => specific wins
+        ({"int": 1, "float": 1, "latitude_wgs": 1}, "latitude_wgs"),
+        # scores are equal for related formats => priority wins
+        ({"int": 1, "float": 1}, "int"),
+        # score is lower for priority format => secondary wins
+        ({"int": 0.5, "float": 1}, "float"),
+        # score is lower for priority format, but is 1 => priority wins
+        ({"int": 1, "float": 1.25}, "int"),
+        # two rounds of priority => highest priority wins
+        ({"latlon_wgs": 1, "lonlat_wgs": 1, "json": 1}, "latlon_wgs"),
+        # no detection => default to string
+        ({}, "string"),
+    ),
+)
+def test_priority(args):
+    detections, expected = args
+    col = "col1"
+    output = prepare_output_dict(pd.DataFrame({col: detections}), limited_output=True)
+    assert output[col]["format"] == expected
