@@ -1,23 +1,23 @@
 import logging
-import math
 from typing import Optional
 
+import pandas as pd
+
 logging.basicConfig(level=logging.INFO)
+logging.addLevelName(logging.CRITICAL, "\033[1;41m%s\033[1;0m" % logging.getLevelName(logging.CRITICAL))
+logging.addLevelName(logging.WARN, "\033[1;31m%s\033[1;0m" % logging.getLevelName(logging.WARN))
+
+THRESHOLD_WARN = 1
+THRESHOLD_CRITICAL = 3
 
 
-def display_logs_depending_process_time(prompt: str, duration: float):
-    '''
+def display_logs_depending_process_time(prompt: str, duration: float) -> None:
+    """
     Print colored logs according to the time the operation took.
-    '''
-    logging.addLevelName(logging.CRITICAL, "\033[1;41m%s\033[1;0m" % logging.getLevelName(logging.CRITICAL))
-    logging.addLevelName(logging.WARN, "\033[1;31m%s\033[1;0m" % logging.getLevelName(logging.WARN))
-
-    threshold_warn = 1
-    threshold_critical = 3
-
-    if duration < threshold_warn:
+    """
+    if duration < THRESHOLD_WARN:
         logging.info(prompt)
-    elif duration < threshold_critical:
+    elif duration < THRESHOLD_CRITICAL:
         logging.warning(prompt)
     else:
         logging.critical(prompt)
@@ -30,6 +30,4 @@ def is_url(file_path: str) -> bool:
 
 
 def prevent_nan(value: float) -> Optional[float]:
-    if math.isnan(value):
-        return None
-    return value
+    return None if pd.isna(value) else value
