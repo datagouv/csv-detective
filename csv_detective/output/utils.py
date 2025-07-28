@@ -15,7 +15,17 @@ def prepare_output_dict(return_table: pd.DataFrame, limited_output: bool) -> dic
             if return_dict_cols[column_name][detected_value_type] > 0
         ]
         priorities = [
+            # no need to specify int and float everywhere, they are deprioritized anyway
             ("int", ("float",)),
+            # bool over everything
+            ("booleen", (
+                "latitude_l93",
+                "latitude_wgs",
+                "latitude_wgs_fr_metropole",
+                "longitude_l93",
+                "longitude_wgs",
+                "longitude_wgs_fr_metropole",
+            )),
             ("geojson", ("json",)),
             # latlon over lonlat if no longitude allows to discriminate
             ("latlon_wgs", ("json", "lonlat_wgs")),
