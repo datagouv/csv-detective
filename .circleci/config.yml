@@ -26,7 +26,7 @@ jobs:
           command: export BASE_BRANCH=$(base_branch)
       - restore_cache:
           keys:
-            - << pipeline.parameters.cache-prefix >>-{{ arch }}-{{ checksum "requirements.txt" }}-{{ checksum "requirements-dev.txt" }}
+            - << pipeline.parameters.cache-prefix >>-{{ arch }}-{{ checksum "pyproject.toml" }}-{{ checksum "requirements-dev.txt" }}
       - run:
           name: Install python dependencies
           command: |
@@ -34,7 +34,7 @@ jobs:
             source venv/bin/activate
             pip install -e .[dev]
       - save_cache:
-          key: << pipeline.parameters.cache-prefix >>-{{ arch }}-{{ checksum "requirements.txt" }}-{{ checksum "requirements-dev.txt" }}
+          key: << pipeline.parameters.cache-prefix >>-{{ arch }}-{{ checksum "pyproject.toml" }}-{{ checksum "requirements-dev.txt" }}
           paths:
             - venv
       - persist_to_workspace:
