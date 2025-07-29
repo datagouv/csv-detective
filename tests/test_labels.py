@@ -10,13 +10,14 @@ def test_money_labels():
 
 
 @pytest.mark.parametrize(
-    "params", [
+    "params",
+    [
         ("latitude", 1.0),
         ("lat", 1.0),
         ("coord_lat", 0.5),
         ("y", 1.0),
         ("nb_cycles", 0.0),
-    ]
+    ],
 )
 def test_latitude(params):
     header, expected = params

@@ -23,5 +23,5 @@ def bool_casting(val: str) -> bool:
 
 
 def _is(val: str) -> bool:
-    '''Détecte les booléens'''
+    """Détecte les booléens"""
     return isinstance(val, str) and val.lower() in liste_bool

@@ -4,7 +4,9 @@ from typing import Optional
 import pandas as pd
 
 logging.basicConfig(level=logging.INFO)
-logging.addLevelName(logging.CRITICAL, "\033[1;41m%s\033[1;0m" % logging.getLevelName(logging.CRITICAL))
+logging.addLevelName(
+    logging.CRITICAL, "\033[1;41m%s\033[1;0m" % logging.getLevelName(logging.CRITICAL)
+)
 logging.addLevelName(logging.WARN, "\033[1;31m%s\033[1;0m" % logging.getLevelName(logging.WARN))
 
 THRESHOLD_WARN = 1
@@ -26,7 +28,7 @@ def display_logs_depending_process_time(prompt: str, duration: float) -> None:
 def is_url(file_path: str) -> bool:
     # could be more sophisticated if needed
     # using the URL detection test was considered but too broad (schema required to use requests)
-    return file_path.startswith('http')
+    return file_path.startswith("http")
 
 
 def prevent_nan(value: float) -> Optional[float]:

@@ -1,7 +1,8 @@
+from unittest.mock import patch
+
 import pandas as pd
 import pytest
 import responses
-from unittest.mock import patch
 
 from csv_detective import routine
 
@@ -70,10 +71,10 @@ def test_profile_output_on_file():
         [
             c in list(output["profile"]["NUMCOM"].keys())
             for c in [
-                    "min",
-                    "max",
-                    "mean",
-                    "std",
+                "min",
+                "max",
+                "mean",
+                "std",
             ]
         ]
     )
@@ -191,7 +192,7 @@ def mocked_responses():
     "params",
     # ideally we'd like to do the same with params_others but pandas.read_excel uses urllib
     # which doesn't support the way we mock the response, TBC
-    params_csv + [("a_test_file.csv", {"separator": ";", "header_row_idx": 2, "total_lines": 404})]
+    params_csv + [("a_test_file.csv", {"separator": ";", "header_row_idx": 2, "total_lines": 404})],
 )
 def test_urls(mocked_responses, params):
     file_name, checks = params
@@ -261,17 +262,17 @@ def test_cast_json(mocked_responses, cast_json):
     cast_json, expected_type = cast_json
     expected_content = 'id,a_simple_dict\n1,{"a": 1}\n2,{"b": 2}\n3,{"c": 3}\n'
     mocked_responses.get(
-        'http://example.com/test.csv',
+        "http://example.com/test.csv",
         body=expected_content,
         status=200,
     )
     analysis, df = routine(
-        file_path='http://example.com/test.csv',
+        file_path="http://example.com/test.csv",
         num_rows=-1,
         output_profile=False,
         save_results=False,
         output_df=True,
         cast_json=cast_json,
     )
-    assert analysis['columns']["a_simple_dict"]["python_type"] == "json"
+    assert analysis["columns"]["a_simple_dict"]["python_type"] == "json"
     assert isinstance(df["a_simple_dict"][0], expected_type)

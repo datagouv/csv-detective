@@ -1,5 +1,6 @@
 # Analysis of a batch of tabular files
 import os
+
 from csv_detective import routine
 
 # replace with your file structure

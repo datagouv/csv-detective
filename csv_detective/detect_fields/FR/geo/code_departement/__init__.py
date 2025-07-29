@@ -1,4 +1,4 @@
-from frformat import NumeroDepartement, Options, Millesime
+from frformat import Millesime, NumeroDepartement, Options
 
 PROPORTION = 1
 
@@ -6,7 +6,7 @@ _options = Options(
     ignore_case=True,
     ignore_accents=True,
     replace_non_alphanumeric_with_space=True,
-    ignore_extra_whitespace=True
+    ignore_extra_whitespace=True,
 )
 _numero_departement = NumeroDepartement(Millesime.LATEST, _options)
 

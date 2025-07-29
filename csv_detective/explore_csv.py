@@ -55,7 +55,10 @@ def routine(
         dict: a dict with information about the csv and possible types for each column
     """
 
-    if not (isinstance(save_results, bool) or (isinstance(save_results, str) and save_results.endswith(".json"))):
+    if not (
+        isinstance(save_results, bool)
+        or (isinstance(save_results, str) and save_results.endswith(".json"))
+    ):
         raise ValueError("`save_results` must be a bool or a valid path to a json file.")
 
     if verbose:
@@ -100,8 +103,7 @@ def routine(
     finally:
         if verbose:
             display_logs_depending_process_time(
-                f"Routine completed in {round(time() - start_routine, 3)}s",
-                time() - start_routine
+                f"Routine completed in {round(time() - start_routine, 3)}s", time() - start_routine
             )
 
 
@@ -119,7 +121,6 @@ def validate_then_detect(
     cast_json: bool = True,
     verbose: bool = False,
 ):
-
     if verbose:
         start_routine = time()
         if is_url(file_path):
@@ -170,8 +171,7 @@ def validate_then_detect(
     finally:
         if verbose:
             display_logs_depending_process_time(
-                f"Process completed in {round(time() - start_routine, 3)}s",
-                time() - start_routine
+                f"Process completed in {round(time() - start_routine, 3)}s", time() - start_routine
             )
 
 
@@ -226,8 +226,7 @@ def routine_minio(
         if location_dict is not None:
             if any(
                 [
-                    (location_key not in location_dict)
-                    or (location_dict[location_key] is None)
+                    (location_key not in location_dict) or (location_dict[location_key] is None)
                     for location_key in ["netloc", "bucket", "key"]
                 ]
             ):

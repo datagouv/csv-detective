@@ -2,9 +2,7 @@ from re import finditer
 
 
 def camel_case_split(identifier: str):
-    matches = finditer(
-        ".+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)", identifier
-    )
+    matches = finditer(".+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)", identifier)
     return " ".join([m.group(0) for m in matches])
 
 
@@ -46,15 +44,12 @@ def header_score(header: str, words_combinations_list: list[str]) -> float:
     processed_header = _process_text(header)
 
     header_matches_words_combination = float(
-        any(
-            words_combination == processed_header for words_combination in words_combinations_list
-        )
+        any(words_combination == processed_header for words_combination in words_combinations_list)
     )
     words_combination_in_header = 0.5 * (
         any(
-            is_word_in_string(
-                words_combination, processed_header
-            ) for words_combination in words_combinations_list
+            is_word_in_string(words_combination, processed_header)
+            for words_combination in words_combinations_list
         )
     )
 

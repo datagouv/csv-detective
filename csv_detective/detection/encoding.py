@@ -1,6 +1,6 @@
 import logging
-from time import time
 from io import BytesIO
+from time import time
 
 from cchardet import detect
 
@@ -16,12 +16,14 @@ def detect_encoding(binary_file: BytesIO, verbose: bool = False) -> str:
         logging.info("Detecting encoding")
     encoding_dict = detect(binary_file.read())
     if not encoding_dict["encoding"]:
-        raise ValueError("Could not detect the file's encoding. Consider specifying it in the routine call.")
+        raise ValueError(
+            "Could not detect the file's encoding. Consider specifying it in the routine call."
+        )
     if verbose:
         message = f'Detected encoding: "{encoding_dict["encoding"]}"'
-        message += f' in {round(time() - start, 3)}s (confidence: {round(encoding_dict["confidence"]*100)}%)'
+        message += f" in {round(time() - start, 3)}s (confidence: {round(encoding_dict['confidence'] * 100)}%)"
         display_logs_depending_process_time(
             message,
             time() - start,
         )
-    return encoding_dict['encoding']
+    return encoding_dict["encoding"]
