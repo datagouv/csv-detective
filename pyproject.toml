@@ -46,11 +46,10 @@ csv_detective = "csv_detective.cli:run"
 include-package-data = true
 
 [tool.setuptools.packages.find]
-where = ["."]  # list directories where to look for packages
-include = ["csv_detective*"]  # optional: package name pattern to include
+where = ["."]
 
 [tool.setuptools.package-data]
-"share/csv_detective" = ["CHANGELOG.md", "LICENSE", "README.md"]
+csv_detective = ["CHANGELOG.md", "LICENSE", "README.md"]
 
 [tool.ruff]
 lint = { extend-select = ["I"] } # ["I"] is to also sort imports with an isort rule
