@@ -10,5 +10,5 @@ odfpy==1.4.1
 requests>=2.32.3,<3
 python-magic==0.4.27
 frformat==0.4.0
-faker>=33.0.0,
+Faker>=33.0.0
 rstr==3.2.2
