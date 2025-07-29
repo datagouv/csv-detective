@@ -32,7 +32,6 @@ jobs:
           command: |
             virtualenv venv
             source venv/bin/activate
-            pip install -r requirements.txt
             pip install -e .[dev]
       - save_cache:
           key: << pipeline.parameters.cache-prefix >>-{{ arch }}-{{ checksum "requirements.txt" }}-{{ checksum "requirements-dev.txt" }}
@@ -50,16 +49,14 @@ jobs:
       - attach_workspace:
           at: .
       - run:
-          name: Lint code
+          name: Lint and format code and sort imports
+          # ruff check --select I . : check linting and imports sorting without fixing (to fix, use --fix)
+          # ruff format --check . : check code formatting without fixing (to fix, remove --check)
           command: |
             source venv/bin/activate
-            pip install flake8
-            flake8 << pipeline.parameters.python-module >>
-      - run:
-          name: Lint tests
-          command: |
-            source venv/bin/activate
-            flake8 tests/
+            ruff --version
+            ruff check --select I .
+            ruff format --check .
 
   tests:
     docker:
