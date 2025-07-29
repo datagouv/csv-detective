@@ -34,6 +34,8 @@ dev = [
     "responses>=0.25.0",
     "ruff>=0.9.3",
     "bumpx>=0.3.10",
+    "build",
+    "twine",
 ]
 
 [project.urls]

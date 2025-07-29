@@ -79,18 +79,23 @@ jobs:
       - attach_workspace:
           at: .
       - run:
-          name: Build a distributable package
+          name: Inject version
+          command: |
+            if [[ $CIRCLE_TAG ]]; then
+                VERSION_FROM_TAG="${CIRCLE_TAG#v}"
+                echo "Using version from tag: $VERSION_FROM_TAG"
+                sed -i "s/version = \".*\"/version = \"$VERSION_FROM_TAG\"/" pyproject.toml
+            else
+                BASE_VERSION=$(grep '^version = ' pyproject.toml | sed -E 's/version = "(.*)"/\1/')
+                DEV_VERSION="${BASE_VERSION}.dev${CIRCLE_BUILD_NUM}"
+                echo "Injecting dev version: $DEV_VERSION"
+                sed -i "s/version = \".*\"/version = \"$DEV_VERSION\"/" pyproject.toml
+            fi
+      - run:
+          name: Build wheel package
           command: |
             source venv/bin/activate
-            # Build a wheel release
-            if [[ $CIRCLE_TAG ]]; then
-                # This is a tagged release, version should be handled upstream
-                python -m build --wheel
-                twine check dist/*
-            else
-                python setup.py egg_info -b $CIRCLE_BUILD_NUM bdist_wheel
-                twine check dist/*
-            fi
+            python -m build --wheel
       - store_artifacts:
           path: dist
       - persist_to_workspace:
@@ -108,7 +113,7 @@ jobs:
           name: Publish on PyPI
           command: |
             source venv/bin/activate
-            pip install twine
+            twine check dist/*
             twine upload --username "${PYPI_USERNAME}" --password "${PYPI_PASSWORD}" dist/*.whl
 
 workflows:
