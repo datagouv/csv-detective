@@ -82,6 +82,7 @@ jobs:
           name: Inject version
           command: |
             source venv/bin/activate
+            pip install toml
             python update_version.py
       - run:
           name: Build wheel package
