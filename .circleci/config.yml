@@ -81,20 +81,11 @@ jobs:
       - run:
           name: Inject version
           command: |
-            if [[ $CIRCLE_TAG ]]; then
-                VERSION_FROM_TAG="${CIRCLE_TAG#v}"
-                echo "Using version from tag: $VERSION_FROM_TAG"
-                sed -i "s/version = \".*\"/version = \"$VERSION_FROM_TAG\"/" pyproject.toml
-            else
-                BASE_VERSION=$(grep '^version = ' pyproject.toml | sed -E 's/version = "(.*)"/\1/')
-                DEV_VERSION="${BASE_VERSION}.dev${CIRCLE_BUILD_NUM}"
-                echo "Injecting dev version: $DEV_VERSION"
-                sed -i "s/version = \".*\"/version = \"$DEV_VERSION\"/" pyproject.toml
-            fi
+            source venv/bin/activate
+            python update_version.py
       - run:
           name: Build wheel package
           command: |
-            source venv/bin/activate
             python -m build --wheel
       - store_artifacts:
           path: dist
