@@ -1,7 +1,6 @@
 import os
 
-# flake8: noqa
-from csv_detective import detect_fields, detect_labels
+from csv_detective import detect_fields, detect_labels  # noqa
 from csv_detective.load_tests import return_all_tests
 
 

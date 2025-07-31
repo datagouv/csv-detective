@@ -1,8 +1,7 @@
 import os
 from typing import Union
 
-# flake8: noqa
-from csv_detective import detect_fields, detect_labels
+from csv_detective import detect_fields, detect_labels  # noqa
 
 
 def get_all_packages(detect_type) -> list:

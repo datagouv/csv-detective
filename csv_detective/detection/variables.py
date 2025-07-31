@@ -1,5 +1,5 @@
-from ast import literal_eval
 import logging
+from ast import literal_eval
 from time import time
 
 import pandas as pd
@@ -36,8 +36,7 @@ def detect_continuous_variable(
             value = value.replace(",", ".")
             value = literal_eval(value)
             return type(value)
-        # flake8: noqa
-        except:
+        except Exception:
             return False
 
     if verbose:
