@@ -89,11 +89,12 @@ jobs:
             if [[ $CIRCLE_TAG ]]; then
                 # This is a tagged release, version should be handled upstream
                 python -m build --wheel
-                twine check dist/*
             else
-                python setup.py egg_info -b $CIRCLE_BUILD_NUM bdist_wheel
-                twine check dist/*
+                pip install toml
+                python update_version.py
+                python -m build --wheel
             fi
+            twine check dist/*
       - store_artifacts:
           path: dist
       - persist_to_workspace:
