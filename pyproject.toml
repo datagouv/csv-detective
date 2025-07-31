@@ -33,6 +33,7 @@ dev = [
     "pytest>=8.3.0",
     "responses>=0.25.0",
     "bumpx>=0.3.10",
+    "ruff>=0.9.3",
 ]
 
 [project.urls]
@@ -49,3 +50,7 @@ where = ["."]
 
 [tool.setuptools.package-data]
 csv_detective = ["CHANGELOG.md", "LICENSE", "README.md"]
+
+[tool.ruff]
+lint = { extend-select = ["I"] } # ["I"] is to also sort imports with an isort rule
+line-length = 100
