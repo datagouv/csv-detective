@@ -22,11 +22,11 @@ def detect_engine(file_path: str, verbose=False) -> Optional[str]:
     mapping = {
         "application/gzip": "gzip",
         "application/x-gzip": "gzip",
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'openpyxl',
-        'application/vnd.ms-excel': 'xlrd',
-        'application/vnd.oasis.opendocument.spreadsheet': 'odf',
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "openpyxl",
+        "application/vnd.ms-excel": "xlrd",
+        "application/vnd.oasis.opendocument.spreadsheet": "odf",
         # all these files could be recognized as zip, may need to check all cases then
-        'application/zip': 'openpyxl',
+        "application/zip": "openpyxl",
     }
     # if none of the above, we move forwards with the csv process
     if is_url(file_path):
@@ -37,7 +37,8 @@ def detect_engine(file_path: str, verbose=False) -> Optional[str]:
     if verbose:
         message = (
             f"File is not csv, detected {engine_to_file.get(engine, 'csv')}"
-            if engine else "Processing the file as a csv"
+            if engine
+            else "Processing the file as a csv"
         )
         display_logs_depending_process_time(
             message,

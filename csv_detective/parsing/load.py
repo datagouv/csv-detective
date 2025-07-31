@@ -14,6 +14,7 @@ from csv_detective.detection.engine import (
 from csv_detective.detection.headers import detect_headers
 from csv_detective.detection.separator import detect_separator
 from csv_detective.utils import is_url
+
 from .compression import unzip
 from .csv import parse_csv
 from .excel import (
@@ -30,9 +31,9 @@ def load_file(
     verbose: bool = False,
     sheet_name: Optional[Union[str, int]] = None,
 ) -> tuple[pd.DataFrame, dict]:
-    file_name = file_path.split('/')[-1]
+    file_name = file_path.split("/")[-1]
     engine = None
-    if '.' not in file_name or not file_name.endswith("csv"):
+    if "." not in file_name or not file_name.endswith("csv"):
         # file has no extension, we'll investigate how to read it
         engine = detect_engine(file_path, verbose=verbose)
 
@@ -88,10 +89,12 @@ def load_file(
             "heading_columns": heading_columns,
             "trailing_columns": trailing_columns,
         }
-    analysis.update({
-        "header_row_idx": header_row_idx,
-        "header": header,
-        "total_lines": total_lines,
-        "nb_duplicates": nb_duplicates,
-    })
+    analysis.update(
+        {
+            "header_row_idx": header_row_idx,
+            "header": header,
+            "total_lines": total_lines,
+            "nb_duplicates": nb_duplicates,
+        }
+    )
     return table, analysis

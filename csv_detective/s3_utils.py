@@ -1,6 +1,6 @@
-import boto3
 import logging
 
+import boto3
 from botocore.client import Config
 from botocore.exceptions import ClientError
 
@@ -27,9 +27,7 @@ def download_from_minio(
     s3 = get_s3_client(netloc, minio_user, minio_pwd)
     try:
         s3.download_file(bucket, key, filepath)
-        logging.info(
-            f"Resource downloaded from minio at {get_minio_url(netloc, bucket, key)}"
-        )
+        logging.info(f"Resource downloaded from minio at {get_minio_url(netloc, bucket, key)}")
     except ClientError as e:
         logging.error(e)
 
@@ -41,8 +39,6 @@ def upload_to_minio(
     s3 = get_s3_client(netloc, minio_user, minio_pwd)
     try:
         s3.upload_file(filepath, bucket, key)
-        logging.info(
-            f"Resource saved into minio at {get_minio_url(netloc, bucket, key)}"
-        )
+        logging.info(f"Resource saved into minio at {get_minio_url(netloc, bucket, key)}")
     except ClientError as e:
         logging.error(e)

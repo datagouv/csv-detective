@@ -30,13 +30,16 @@ def get_nested_value(source_dict: dict, key_chain: list[str]):
         ((False, None, None), {"separator": "|"}),
         ((False, None, None), {"encoding": "unknown"}),
         ((False, None, None), {"header": ["a", "b"]}),
-        ((False, pd.DataFrame, dict), {
-            "columns.NUMCOM": {
-                "python_type": "int",
-                "format": "int",
-                "score": 1.0,
+        (
+            (False, pd.DataFrame, dict),
+            {
+                "columns.NUMCOM": {
+                    "python_type": "int",
+                    "format": "int",
+                    "score": 1.0,
+                },
             },
-        }),
+        ),
     ),
 )
 def test_validation(_params):

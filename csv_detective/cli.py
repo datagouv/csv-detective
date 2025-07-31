@@ -4,23 +4,20 @@ Command line client for csv_detective
 
 import argparse
 import json
+
 from csv_detective.explore_csv import routine
 
 
 def run():
     explorer = argparse.ArgumentParser(description="Analyse a tabular file")
-    explorer.add_argument(
-        "file_path",
-        type=str,
-        help="Enter path of tabular file to explore"
-    )
+    explorer.add_argument("file_path", type=str, help="Enter path of tabular file to explore")
     explorer.add_argument(
         "-n",
         "--num_rows",
         dest="num_rows",
         type=int,
         nargs="?",
-        help="Number of rows to use for detection (default 500)"
+        help="Number of rows to use for detection (default 500)",
     )
     explorer.add_argument(
         "-s",
@@ -28,14 +25,14 @@ def run():
         dest="sep",
         type=str,
         nargs="?",
-        help="Columns separator (detected if not specified)"
+        help="Columns separator (detected if not specified)",
     )
     explorer.add_argument(
         "--save",
         dest="save_results",
         type=int,
         nargs="?",
-        help="Whether to save the resulting analysis to json (1 = save, 0 = don't)"
+        help="Whether to save the resulting analysis to json (1 = save, 0 = don't)",
     )
     explorer.add_argument(
         "-v",
@@ -43,7 +40,7 @@ def run():
         dest="verbose",
         type=int,
         nargs="?",
-        help="Verbose (0 = quiet, 1 = details)"
+        help="Verbose (0 = quiet, 1 = details)",
     )
 
     opts = explorer.parse_args()

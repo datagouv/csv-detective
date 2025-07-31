@@ -1,7 +1,7 @@
-from datetime import date, datetime
 import json
-from typing import Optional, Union
+from datetime import date, datetime
 from time import time
+from typing import Optional, Union
 
 import pandas as pd
 
@@ -30,12 +30,16 @@ def cast(value: str, _type: str) -> Optional[Union[str, float, bool, date, datet
     raise ValueError(f"Unknown type `{_type}`")
 
 
-def cast_df(df: pd.DataFrame, columns: dict, cast_json: bool = True, verbose: bool = False) -> pd.DataFrame:
+def cast_df(
+    df: pd.DataFrame, columns: dict, cast_json: bool = True, verbose: bool = False
+) -> pd.DataFrame:
     if verbose:
         start = time()
     output_df = pd.DataFrame()
     for col_name, detection in columns.items():
-        if detection["python_type"] == "string" or (detection["python_type"] == "json" and not cast_json):
+        if detection["python_type"] == "string" or (
+            detection["python_type"] == "json" and not cast_json
+        ):
             # no change if detected type is string
             output_df[col_name] = df[col_name].copy()
         elif detection["python_type"] == "int":
@@ -49,7 +53,7 @@ def cast_df(df: pd.DataFrame, columns: dict, cast_json: bool = True, verbose: bo
         del df[col_name]
     if verbose:
         display_logs_depending_process_time(
-            f'Casting columns completed in {round(time() - start, 3)}s',
+            f"Casting columns completed in {round(time() - start, 3)}s",
             time() - start,
         )
     return output_df

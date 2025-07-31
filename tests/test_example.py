@@ -1,6 +1,6 @@
-
 import re
 from uuid import UUID
+
 from csv_detective import create_example_csv_file
 
 
@@ -41,11 +41,7 @@ def test_example_creation():
             "name": "nb_produits",
             "type": "int",
         },
-        {
-            "name": "note",
-            "type": "float",
-            "args": {"num_range": [1, 20]}
-        },
+        {"name": "note", "type": "float", "args": {"num_range": [1, 20]}},
     ]
     df = create_example_csv_file(
         fields=fields,

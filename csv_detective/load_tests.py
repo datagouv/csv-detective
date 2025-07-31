@@ -12,10 +12,7 @@ def get_all_packages(detect_type) -> list:
         for filename in filenames:
             file = os.path.join(dirpath, filename).replace(root_dir, "")
             if file.endswith("__init__.py"):
-                module = (
-                    file.replace("__init__.py", "")
-                    .replace("/", ".").replace("\\", ".")[:-1]
-                )
+                module = file.replace("__init__.py", "").replace("/", ".").replace("\\", ".")[:-1]
                 if module:
                     modules.append(detect_type + module)
     return modules
@@ -43,20 +40,15 @@ def return_all_tests(
     if "ALL" in user_input_tests or all(x[0] == "-" for x in user_input_tests):
         tests_to_do = [detect_type]
     else:
-        tests_to_do = [
-            f"{detect_type}.{x}" for x in user_input_tests if x[0] != "-"
-        ]
-    tests_skipped = [
-        f"{detect_type}.{x[1:]}" for x in user_input_tests if x[0] == "-"
-    ]
+        tests_to_do = [f"{detect_type}.{x}" for x in user_input_tests if x[0] != "-"]
+    tests_skipped = [f"{detect_type}.{x[1:]}" for x in user_input_tests if x[0] == "-"]
     all_tests = [
         # this is why we need to import detect_fields/labels
-        eval(x) for x in all_packages
+        eval(x)
+        for x in all_packages
         if any([y == x[: len(y)] for y in tests_to_do])
         and all([y != x[: len(y)] for y in tests_skipped])
     ]
     # to remove groups of tests
-    all_tests = [
-        test for test in all_tests if "_is" in dir(test)
-    ]
+    all_tests = [test for test in all_tests if "_is" in dir(test)]
     return all_tests

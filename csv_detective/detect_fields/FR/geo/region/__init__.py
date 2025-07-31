@@ -1,8 +1,9 @@
-from frformat import Region, Options, Millesime
+from frformat import Millesime, Options, Region
 
 PROPORTION = 1
 
-_extra_valid_values_set = frozenset({
+_extra_valid_values_set = frozenset(
+    {
         "alsace",
         "aquitaine",
         "ara",
@@ -30,7 +31,8 @@ _extra_valid_values_set = frozenset({
         "poitou charentes",
         "reunion",
         "rhone alpes",
-        })
+    }
+)
 
 
 _options = Options(
@@ -38,7 +40,7 @@ _options = Options(
     ignore_accents=True,
     replace_non_alphanumeric_with_space=True,
     ignore_extra_whitespace=True,
-    extra_valid_values=_extra_valid_values_set
+    extra_valid_values=_extra_valid_values_set,
 )
 _region = Region(Millesime.LATEST, _options)
 

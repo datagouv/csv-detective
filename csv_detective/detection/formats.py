@@ -1,16 +1,17 @@
-from collections import defaultdict
 import logging
+from collections import defaultdict
 from typing import Union
 
 import numpy as np
 import pandas as pd
+
 from csv_detective.detection.variables import (
     detect_categorical_variable,
     # detect_continuous_variable,
 )
 from csv_detective.load_tests import return_all_tests
 from csv_detective.output.utils import prepare_output_dict
-from csv_detective.parsing.columns import test_col, test_label, MAX_ROWS_ANALYSIS
+from csv_detective.parsing.columns import MAX_ROWS_ANALYSIS, test_col, test_label
 from csv_detective.validate import validate
 
 
@@ -42,10 +43,12 @@ def detect_formats(
         #     detect_continuous_variable(table.iloc[:, ~categorical_mask.values], verbose=verbose)
         # )
 
-    analysis.update({
-        "categorical": res_categorical,
-        # "continuous": res_continuous,
-    })
+    analysis.update(
+        {
+            "categorical": res_categorical,
+            # "continuous": res_continuous,
+        }
+    )
 
     # list testing to be performed
     all_tests_fields = return_all_tests(
@@ -60,7 +63,9 @@ def detect_formats(
         return analysis
 
     # Perform testing on fields
-    scores_table_fields = test_col(table, all_tests_fields, limited_output, skipna=skipna, verbose=verbose)
+    scores_table_fields = test_col(
+        table, all_tests_fields, limited_output, skipna=skipna, verbose=verbose
+    )
     analysis["columns_fields"] = prepare_output_dict(scores_table_fields, limited_output)
 
     # Perform testing on labels
@@ -71,16 +76,14 @@ def detect_formats(
     # This is because the fields are more important than the labels and yields a max
     # of 1.5 for the final score.
     scores_table = scores_table_fields * (
-        1
-        + scores_table_labels.reindex(
-            index=scores_table_fields.index, fill_value=0
-        ).values / 2
+        1 + scores_table_labels.reindex(index=scores_table_fields.index, fill_value=0).values / 2
     )
 
     # To reduce false positives: ensure these formats are detected only if the label yields
     # a detection (skipping the ones that have been excluded by the users).
     formats_with_mandatory_label = [
-        f for f in [
+        f
+        for f in [
             "code_departement",
             "code_commune_insee",
             "code_postal",
@@ -90,7 +93,8 @@ def detect_formats(
             "longitude_wgs_fr_metropole",
             "latitude_l93",
             "longitude_l93",
-        ] if f in scores_table.index
+        ]
+        if f in scores_table.index
     ]
     scores_table.loc[formats_with_mandatory_label, :] = np.where(
         scores_table_labels.loc[formats_with_mandatory_label, :],
@@ -123,9 +127,7 @@ def detect_formats(
             analysis[detection_method] = {
                 col_name: [
                     {
-                        "python_type": metier_to_python_type.get(
-                            detection["format"], "string"
-                        ),
+                        "python_type": metier_to_python_type.get(detection["format"], "string"),
                         **detection,
                     }
                     for detection in detections
@@ -136,9 +138,7 @@ def detect_formats(
         for detection_method in ["columns_fields", "columns_labels", "columns"]:
             analysis[detection_method] = {
                 col_name: {
-                    "python_type": metier_to_python_type.get(
-                        detection["format"], "string"
-                    ),
+                    "python_type": metier_to_python_type.get(detection["format"], "string"),
                     **detection,
                 }
                 for col_name, detection in analysis[detection_method].items()

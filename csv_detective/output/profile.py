@@ -1,5 +1,5 @@
-from collections import defaultdict
 import logging
+from collections import defaultdict
 from time import time
 
 import pandas as pd
@@ -29,15 +29,12 @@ def create_profile(
     safe_table = table.copy()
     if not limited_output:
         dict_cols_fields = {
-            k: v[0] if v else {'python_type': 'string', 'format': 'string', 'score': 1.0}
+            k: v[0] if v else {"python_type": "string", "format": "string", "score": 1.0}
             for k, v in dict_cols_fields.items()
         }
-    dtypes = {
-        k: map_python_types.get(v["python_type"], str)
-        for k, v in dict_cols_fields.items()
-    }
+    dtypes = {k: map_python_types.get(v["python_type"], str) for k, v in dict_cols_fields.items()}
     for c in safe_table.columns:
-        if dtypes[c] == float:
+        if dtypes[c] is float:
             safe_table[c] = safe_table[c].apply(
                 lambda s: float_casting(s) if isinstance(s, str) else s
             )
@@ -48,18 +45,26 @@ def create_profile(
             int,
         ]:
             profile[c].update(
-                min=prevent_nan(map_python_types.get(dict_cols_fields[c]["python_type"], str)(
-                    safe_table[c].min()
-                )),
-                max=prevent_nan(map_python_types.get(dict_cols_fields[c]["python_type"], str)(
-                    safe_table[c].max()
-                )),
-                mean=prevent_nan(map_python_types.get(dict_cols_fields[c]["python_type"], str)(
-                    safe_table[c].mean()
-                )),
-                std=prevent_nan(map_python_types.get(dict_cols_fields[c]["python_type"], str)(
-                    safe_table[c].std()
-                )),
+                min=prevent_nan(
+                    map_python_types.get(dict_cols_fields[c]["python_type"], str)(
+                        safe_table[c].min()
+                    )
+                ),
+                max=prevent_nan(
+                    map_python_types.get(dict_cols_fields[c]["python_type"], str)(
+                        safe_table[c].max()
+                    )
+                ),
+                mean=prevent_nan(
+                    map_python_types.get(dict_cols_fields[c]["python_type"], str)(
+                        safe_table[c].mean()
+                    )
+                ),
+                std=prevent_nan(
+                    map_python_types.get(dict_cols_fields[c]["python_type"], str)(
+                        safe_table[c].std()
+                    )
+                ),
             )
         tops_bruts = (
             safe_table[safe_table[c].notna()][c]
@@ -70,10 +75,12 @@ def create_profile(
         )
         tops = []
         for tb in tops_bruts:
-            tops.append({
-                "count": tb["count"],
-                "value": tb[c],
-            })
+            tops.append(
+                {
+                    "count": tb["count"],
+                    "value": tb[c],
+                }
+            )
         profile[c].update(
             tops=tops,
             nb_distinct=safe_table[c].nunique(),

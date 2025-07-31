@@ -1,4 +1,4 @@
-from frformat import Departement, Options, Millesime
+from frformat import Departement, Millesime, Options
 
 PROPORTION = 0.9
 
@@ -6,7 +6,7 @@ _options = Options(
     ignore_case=True,
     ignore_accents=True,
     replace_non_alphanumeric_with_space=True,
-    ignore_extra_whitespace=True
+    ignore_extra_whitespace=True,
 )
 _departement = Departement(Millesime.LATEST, _options)
 

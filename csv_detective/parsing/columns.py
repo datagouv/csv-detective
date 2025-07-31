@@ -28,6 +28,7 @@ def test_col_val(
     # TODO : change for a cleaner method and only test columns in modules labels
     def apply_test_func(serie: pd.Series, test_func: Callable, _range: int):
         return serie.sample(n=_range).apply(test_func)
+
     try:
         if skipna:
             serie = serie[serie.notnull()]
@@ -60,11 +61,13 @@ def test_col_val(
         if verbose and time() - start > 3:
             display_logs_depending_process_time(
                 f"\t/!\\ Column '{serie.name}' took too long ({round(time() - start, 3)}s)",
-                time() - start
+                time() - start,
             )
 
 
-def test_col_label(label: str, test_func: Callable, proportion: float = 1, limited_output: bool = False):
+def test_col_label(
+    label: str, test_func: Callable, proportion: float = 1, limited_output: bool = False
+):
     """Tests label (from header) using test_func.
     - proportion :  indicates the minimum score to pass the test for the serie
     to be detected as a certain format
@@ -76,7 +79,13 @@ def test_col_label(label: str, test_func: Callable, proportion: float = 1, limit
         return result if result >= proportion else 0
 
 
-def test_col(table: pd.DataFrame, all_tests: list, limited_output: bool, skipna: bool = True, verbose: bool = False):
+def test_col(
+    table: pd.DataFrame,
+    all_tests: list,
+    limited_output: bool,
+    skipna: bool = True,
+    verbose: bool = False,
+):
     if verbose:
         start = time()
         logging.info("Testing columns to get types")
@@ -106,11 +115,13 @@ def test_col(table: pd.DataFrame, all_tests: list, limited_output: bool, skipna:
         )
         if verbose:
             display_logs_depending_process_time(
-                f'\t> Done with type "{key}" in {round(time() - start_type, 3)}s ({idx+1}/{len(test_funcs)})',
-                time() - start_type
+                f'\t> Done with type "{key}" in {round(time() - start_type, 3)}s ({idx + 1}/{len(test_funcs)})',
+                time() - start_type,
             )
     if verbose:
-        display_logs_depending_process_time(f"Done testing columns in {round(time() - start, 3)}s", time() - start)
+        display_logs_depending_process_time(
+            f"Done testing columns in {round(time() - start, 3)}s", time() - start
+        )
     return return_table
 
 
@@ -128,16 +139,16 @@ def test_label(table: pd.DataFrame, all_tests: list, limited_output: bool, verbo
         if verbose:
             start_type = time()
         return_table.loc[key] = [
-            test_col_label(
-                col_name, value["func"], value["prop"], limited_output=limited_output
-            )
+            test_col_label(col_name, value["func"], value["prop"], limited_output=limited_output)
             for col_name in table.columns
         ]
         if verbose:
             display_logs_depending_process_time(
-                f'\t- Done with type "{key}" in {round(time() - start_type, 3)}s ({idx+1}/{len(test_funcs)})',
-                time() - start_type
+                f'\t- Done with type "{key}" in {round(time() - start_type, 3)}s ({idx + 1}/{len(test_funcs)})',
+                time() - start_type,
             )
     if verbose:
-        display_logs_depending_process_time(f"Done testing labels in {round(time() - start, 3)}s", time() - start)
+        display_logs_depending_process_time(
+            f"Done testing labels in {round(time() - start, 3)}s", time() - start
+        )
     return return_table

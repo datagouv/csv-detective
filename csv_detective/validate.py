@@ -4,8 +4,8 @@ from typing import Optional, Union
 import pandas as pd
 
 from csv_detective.load_tests import return_all_tests
-from csv_detective.parsing.load import load_file
 from csv_detective.parsing.columns import test_col_val
+from csv_detective.parsing.load import load_file
 
 logging.basicConfig(level=logging.INFO)
 
@@ -47,9 +47,8 @@ def validate(
     if verbose:
         logging.info("Comparing table with the previous analysis")
         logging.info("- Checking if all columns match")
-    if (
-        any(col_name not in analysis["header"] for col_name in previous_analysis["header"])
-        or any(col_name not in previous_analysis["header"] for col_name in analysis["header"])
+    if any(col_name not in analysis["header"] for col_name in previous_analysis["header"]) or any(
+        col_name not in previous_analysis["header"] for col_name in analysis["header"]
     ):
         if verbose:
             logging.warning("> Columns do not match, proceeding with full analysis")
@@ -72,12 +71,18 @@ def validate(
             return False, table, analysis
     if verbose:
         logging.info("> All checks successful")
-    return True, table, analysis | {
-        k: previous_analysis[k] for k in [
-            "categorical",
-            "columns",
-            "columns_fields",
-            "columns_labels",
-            "formats",
-        ]
-    }
+    return (
+        True,
+        table,
+        analysis
+        | {
+            k: previous_analysis[k]
+            for k in [
+                "categorical",
+                "columns",
+                "columns_fields",
+                "columns_labels",
+                "formats",
+            ]
+        },
+    )

@@ -28,14 +28,13 @@ def parse_excel(
     random_state: int = 42,
     verbose: bool = False,
 ) -> tuple[pd.DataFrame, int, int, str, str, int]:
-    """"Excel-like parsing is really slow, could be a good improvement for future development"""
+    """ "Excel-like parsing is really slow, could be a good improvement for future development"""
     if verbose:
         start = time()
     no_sheet_specified = sheet_name is None
 
-    if (
-        engine in ['openpyxl', 'xlrd'] or
-        any([file_path.endswith(k) for k in NEW_EXCEL_EXT + OLD_EXCEL_EXT])
+    if engine in ["openpyxl", "xlrd"] or any(
+        [file_path.endswith(k) for k in NEW_EXCEL_EXT + OLD_EXCEL_EXT]
     ):
         remote_content = None
         if is_url(file_path):
@@ -50,7 +49,7 @@ def parse_excel(
         if sheet_name is None:
             if verbose:
                 display_logs_depending_process_time(
-                    f'Detected {engine_to_file[engine]} file, no sheet specified, reading the largest one',
+                    f"Detected {engine_to_file[engine]} file, no sheet specified, reading the largest one",
                     time() - start,
                 )
             try:
@@ -58,8 +57,8 @@ def parse_excel(
                     # openpyxl doesn't want to open files that don't have a valid extension
                     # see: https://foss.heptapod.net/openpyxl/openpyxl/-/issues/2157
                     # if the file is remote, we have a remote content anyway so it's fine
-                    if not remote_content and '.' not in file_path.split('/')[-1]:
-                        with open(file_path, 'rb') as f:
+                    if not remote_content and "." not in file_path.split("/")[-1]:
+                        with open(file_path, "rb") as f:
                             remote_content = BytesIO(f.read())
                     # faster than loading all sheets
                     wb = openpyxl.load_workbook(remote_content or file_path, read_only=True)
@@ -82,7 +81,7 @@ def parse_excel(
                 # sometimes a xls file is recognized as ods
                 if verbose:
                     display_logs_depending_process_time(
-                        'Could not read file with classic xls reader, trying with ODS',
+                        "Could not read file with classic xls reader, trying with ODS",
                         time() - start,
                     )
                 engine = "odf"
@@ -95,7 +94,7 @@ def parse_excel(
         if sheet_name is None:
             if verbose:
                 display_logs_depending_process_time(
-                    f'Detected {engine_to_file[engine]} file, no sheet specified, reading the largest one',
+                    f"Detected {engine_to_file[engine]} file, no sheet specified, reading the largest one",
                     time() - start,
                 )
             tables = pd.read_excel(
@@ -132,7 +131,7 @@ def parse_excel(
             table = table.sample(num_rows, random_state=random_state)
         if verbose:
             display_logs_depending_process_time(
-                f'Table parsed successfully in {round(time() - start, 3)}s',
+                f"Table parsed successfully in {round(time() - start, 3)}s",
                 time() - start,
             )
         return table, total_lines, nb_duplicates, sheet_name, engine, header_row_idx
@@ -163,7 +162,7 @@ def parse_excel(
         table = table.sample(num_rows, random_state=random_state)
     if verbose:
         display_logs_depending_process_time(
-            f'Table parsed successfully in {round(time() - start, 3)}s',
+            f"Table parsed successfully in {round(time() - start, 3)}s",
             time() - start,
         )
     return table, total_lines, nb_duplicates, sheet_name, engine, header_row_idx
