@@ -26,16 +26,15 @@ jobs:
           command: export BASE_BRANCH=$(base_branch)
       - restore_cache:
           keys:
-            - << pipeline.parameters.cache-prefix >>-{{ arch }}-{{ checksum "requirements.txt" }}-{{ checksum "requirements-dev.txt" }}
+            - << pipeline.parameters.cache-prefix >>-{{ arch }}-{{ checksum "pyproject.toml" }}
       - run:
           name: Install python dependencies
           command: |
             virtualenv venv
             source venv/bin/activate
-            pip install -r requirements.txt
             pip install -e .[dev]
       - save_cache:
-          key: << pipeline.parameters.cache-prefix >>-{{ arch }}-{{ checksum "requirements.txt" }}-{{ checksum "requirements-dev.txt" }}
+          key: << pipeline.parameters.cache-prefix >>-{{ arch }}-{{ checksum "pyproject.toml" }}
           paths:
             - venv
       - persist_to_workspace:
@@ -85,12 +84,11 @@ jobs:
           name: Build a distributable package
           command: |
             source venv/bin/activate
-            pip install --upgrade -r requirements-build.txt
             pip install twine
             # Build a wheel release
             if [[ $CIRCLE_TAG ]]; then
                 # This is a tagged release, version should be handled upstream
-                python setup.py bdist_wheel
+                python -m build --wheel
                 twine check dist/*
             else
                 python setup.py egg_info -b $CIRCLE_BUILD_NUM bdist_wheel
