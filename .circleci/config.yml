@@ -90,6 +90,7 @@ jobs:
                 # This is a tagged release, version should be handled upstream
                 python -m build --wheel
             else
+                echo $CIRCLE_BUILD_NUM
                 pip install toml
                 python update_version.py
                 python -m build --wheel
