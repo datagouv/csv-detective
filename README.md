@@ -180,12 +180,21 @@ Organisations such as [data.gouv.fr](http://data.gouv.fr) aggregate huge amounts
 
 An early version of this analysis of all resources on data.gouv.fr can be found [here](https://github.com/Leobouloc/data.gouv-exploration).
 
+## Linting
+
+Remember to format, lint, and sort imports with [Ruff](https://docs.astral.sh/ruff/) before committing (checks will remind you anyway):
+```bash
+pip install .[dev]
+ruff check --fix .
+ruff format .
+```
+
 ## Release
 
 The release process uses `bumpx`.
 
 ```shell
-pip install -r requirements-build.txt
+pip install -e .[dev]
 ```
 
 ### Process

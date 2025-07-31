@@ -13,7 +13,7 @@
 - Add `lonlat_wgs` format and handle optional brackets for `latlon_wgs` [#133](https://github.com/datagouv/csv-detective/pull/133)
 - Refactor format prioritizing [#134](https://github.com/datagouv/csv-detective/pull/134)
 - Switch to pyproject [#139](https://github.com/datagouv/csv-detective/pull/139)
-- Lint with ruff [#140](https://github.com/datagouv/csv-detective/pull/140)
+- Lint with ruff [#140](https://github.com/datagouv/csv-detective/pull/140) [#141](https://github.com/datagouv/csv-detective/pull/141)
 
 ## 0.8.0 (2025-05-20)
 
