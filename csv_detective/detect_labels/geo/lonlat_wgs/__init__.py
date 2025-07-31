@@ -1,4 +1,5 @@
 from csv_detective.parsing.text import header_score
+
 from ..latlon_wgs import COMMON_COORDS_LABELS
 
 PROPORTION = 0.5

@@ -4,7 +4,6 @@ PROPORTION = 0.5
 
 
 def _is(header: str) -> float:
-
     words_combinations_list = [
         "telephone",
         "tel",

@@ -1,13 +1,13 @@
-from frformat import Pays, Options, Millesime
+from frformat import Millesime, Options, Pays
 
 PROPORTION = 0.6
 
 _options = Options(
-        ignore_case=True,
-        ignore_accents=True,
-        replace_non_alphanumeric_with_space=True,
-        ignore_extra_whitespace=True
-    )
+    ignore_case=True,
+    ignore_accents=True,
+    replace_non_alphanumeric_with_space=True,
+    ignore_extra_whitespace=True,
+)
 _pays = Pays(Millesime.LATEST, _options)
 
 

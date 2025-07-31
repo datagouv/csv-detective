@@ -1,14 +1,14 @@
-from datetime import datetime
 import json
 import logging
 import os
 import tempfile
+from datetime import datetime
 from time import time
 from typing import Optional
 
 from botocore.exceptions import ClientError
 
-from csv_detective.s3_utils import get_s3_client, download_from_minio, upload_to_minio
+from csv_detective.s3_utils import download_from_minio, get_s3_client, upload_to_minio
 from csv_detective.utils import display_logs_depending_process_time
 
 
@@ -26,13 +26,11 @@ def get_description(format: str) -> str:
         "insee_canton": "Le nom du canton",
         "latitude_l93": "La latitude au format Lambert 93",
         "latitude_wgs_fr_metropole": (
-            "La latitude au format WGS. Ne concerne que des latitudes "
-            "de la métropole française"
+            "La latitude au format WGS. Ne concerne que des latitudes de la métropole française"
         ),
         "longitude_l93": "La longitude au format Lambert 93",
         "longitude_wgs_fr_metropole": (
-            "La longitude au format WGS. Ne concerne que des longitudes "
-            "de la métropole française"
+            "La longitude au format WGS. Ne concerne que des longitudes de la métropole française"
         ),
         "pays": "Le nom du pays",
         "region": "Le nom de la région",
@@ -86,13 +84,13 @@ def get_pattern(format: str) -> str:
         ),
         "uai": r"^(0[0-8][0-9]|09[0-5]|9[78][0-9]|[67]20)[0-9]{4}[A-Z]$",
         "email": r"^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$",
-        "twitter": r'^@[A-Za-z0-9_]+$',
-        "mongo_object_id": r'^[0-9a-fA-F]{24}$',
-        "uuid": r'^[{]?[0-9a-fA-F]{8}' + '-?([0-9a-fA-F]{4}-?)' + '{3}[0-9a-fA-F]{12}[}]?$',
+        "twitter": r"^@[A-Za-z0-9_]+$",
+        "mongo_object_id": r"^[0-9a-fA-F]{24}$",
+        "uuid": r"^[{]?[0-9a-fA-F]{8}" + "-?([0-9a-fA-F]{4}-?)" + "{3}[0-9a-fA-F]{12}[}]?$",
         "url": (
-            r'^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]'
-            r'{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)$'
-        )
+            r"^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]"
+            r"{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)$"
+        ),
     }
     if format in format_to_pattern:
         return {"pattern": format_to_pattern[format]}
@@ -210,7 +208,7 @@ def generate_table_schema(
     key: Optional[str] = None,
     minio_user: Optional[str] = None,
     minio_pwd: Optional[str] = None,
-    verbose: bool = False
+    verbose: bool = False,
 ) -> dict:
     """Generates a table schema from the analysis report
 
@@ -236,7 +234,7 @@ def generate_table_schema(
             "example": get_example(field_report["format"]),
             "type": get_validata_type(field_report["format"]),
             "formatFR": field_report["format"],
-            "constraints": get_constraints(field_report["format"])
+            "constraints": get_constraints(field_report["format"]),
         }
         for header, field_report in analysis_report["columns"].items()
     ]
@@ -255,12 +253,9 @@ def generate_table_schema(
         "sources": [
             {
                 "title": "Spécification Tableschema",
-                "path": "https://specs.frictionlessdata.io/table-schema"
+                "path": "https://specs.frictionlessdata.io/table-schema",
             },
-            {
-                "title": "schema.data.gouv.fr",
-                "path": "https://schema.data.gouv.fr"
-            }
+            {"title": "schema.data.gouv.fr", "path": "https://schema.data.gouv.fr"},
         ],
         "created": datetime.today().strftime("%Y-%m-%d"),
         "lastModified": datetime.today().strftime("%Y-%m-%d"),
@@ -278,7 +273,9 @@ def generate_table_schema(
     }
 
     if verbose:
-        display_logs_depending_process_time(f'Created schema in {round(time() - start, 3)}s', time() - start)
+        display_logs_depending_process_time(
+            f"Created schema in {round(time() - start, 3)}s", time() - start
+        )
 
     if not save_file:
         return schema
@@ -301,9 +298,9 @@ def generate_table_schema(
         if "Contents" in tableschema_objects:
             tableschema_keys = [
                 tableschema["Key"]
-                for tableschema in client.list_objects(
-                    Bucket=bucket, Prefix=key, Delimiter="/"
-                )["Contents"]
+                for tableschema in client.list_objects(Bucket=bucket, Prefix=key, Delimiter="/")[
+                    "Contents"
+                ]
             ]
             tableschema_versions = [
                 os.path.splitext(tableschema_key)[0].split("_")[-1]

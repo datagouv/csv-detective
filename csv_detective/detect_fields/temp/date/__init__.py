@@ -2,7 +2,8 @@ from datetime import datetime
 from typing import Optional
 
 from dateparser import parse as date_parser
-from dateutil.parser import parse as dateutil_parser, ParserError
+from dateutil.parser import ParserError
+from dateutil.parser import parse as dateutil_parser
 
 PROPORTION = 1
 # /!\ this is only for dates, not datetimes which are handled by other utils
@@ -22,7 +23,7 @@ threshold = 0.3
 
 
 def _is(val):
-    '''Renvoie True si val peut être une date, False sinon'''
+    """Renvoie True si val peut être une date, False sinon"""
     # early stops, to cut processing time
     if not isinstance(val, str) or len(val) > 20 or len(val) < 8:
         return False

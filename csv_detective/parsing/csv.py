@@ -49,7 +49,7 @@ def parse_csv(
         raise ValueError("Could not load file")
     if verbose:
         display_logs_depending_process_time(
-            f'Table parsed successfully in {round(time() - start, 3)}s',
+            f"Table parsed successfully in {round(time() - start, 3)}s",
             time() - start,
         )
     return table, total_lines, nb_duplicates

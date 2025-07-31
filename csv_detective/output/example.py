@@ -1,14 +1,14 @@
-from datetime import datetime
 import json
 import random
 import string
-from typing import Union, Optional, Any, Type
 import uuid
+from datetime import datetime
+from typing import Any, Optional, Type, Union
 
-from faker import Faker
 import pandas as pd
 import requests
 import rstr
+from faker import Faker
 
 fake = Faker()
 
@@ -135,7 +135,7 @@ def create_example_csv_file(
             return random.choice(enum)
         if num_range is None:
             num_range = [0, 1000]
-        if num_type == int:
+        if num_type is int:
             return random.randint(num_range[0], num_range[1])
         else:
             return round(random.uniform(num_range[0], num_range[1]), 1)
@@ -179,7 +179,7 @@ def create_example_csv_file(
         "yearmonth": "date",
         "time": "time",
         "datetime": "datetime",
-        "array": "array"
+        "array": "array",
     }
 
     if schema_path:
@@ -188,7 +188,7 @@ def create_example_csv_file(
         else:
             with open(schema_path, encoding=encoding) as jsonfile:
                 schema = json.load(jsonfile)
-        if not ("fields" in schema.keys()):
+        if "fields" not in schema.keys():
             raise ValueError("The schema must have a 'fields' key.")
         else:
             fields = [
@@ -198,12 +198,14 @@ def create_example_csv_file(
                     # when frformat is supported in TableSchema, we can build args for French standards
                     # linked to https://github.com/datagouv/fr-format/issues/26
                     "args": (
-                        build_args_from_constraints(f["constraints"]) if "constraints" in f.keys()
+                        build_args_from_constraints(f["constraints"])
+                        if "constraints" in f.keys()
                         else build_args_from_constraints(f["arrayItem"]["constraints"])
                         if "arrayItem" in f.keys() and "constraints" in f["arrayItem"].keys()
                         else {}
-                    )
-                } for f in schema["fields"]
+                    ),
+                }
+                for f in schema["fields"]
             ]
 
     for k in range(len(fields)):
@@ -234,10 +236,8 @@ def create_example_csv_file(
     # would it be better to create by column or by row (as for now)?
     output = pd.DataFrame(
         [
-            [
-                types_to_func.get(f["type"], "str")(**f["args"])
-                for f in fields
-            ] for _ in range(file_length)
+            [types_to_func.get(f["type"], "str")(**f["args"]) for f in fields]
+            for _ in range(file_length)
         ],
         columns=[f["name"] for f in fields],
     )

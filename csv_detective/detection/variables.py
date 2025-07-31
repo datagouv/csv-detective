@@ -7,7 +7,9 @@ import pandas as pd
 from csv_detective.utils import display_logs_depending_process_time
 
 
-def detect_continuous_variable(table: pd.DataFrame, continuous_th: float = 0.9, verbose: bool = False):
+def detect_continuous_variable(
+    table: pd.DataFrame, continuous_th: float = 0.9, verbose: bool = False
+):
     """
     Detects whether a column contains continuous variables. We consider a continuous column
     one that contains a considerable amount of float values.
@@ -41,9 +43,7 @@ def detect_continuous_variable(table: pd.DataFrame, continuous_th: float = 0.9, 
     if verbose:
         start = time()
         logging.info("Detecting continuous columns")
-    res = table.apply(
-        lambda serie: check_threshold(serie.apply(parses_to_integer), continuous_th)
-    )
+    res = table.apply(lambda serie: check_threshold(serie.apply(parses_to_integer), continuous_th))
     if verbose:
         display_logs_depending_process_time(
             f"Detected {sum(res)} continuous columns in {round(time() - start, 3)}s",

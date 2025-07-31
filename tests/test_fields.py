@@ -1,8 +1,9 @@
-from datetime import date as _date, datetime as _datetime
+from datetime import date as _date
+from datetime import datetime as _datetime
 
-from numpy import random
 import pandas as pd
 import pytest
+from numpy import random
 
 from csv_detective.detect_fields.FR.geo import (
     adresse,
@@ -23,8 +24,8 @@ from csv_detective.detect_fields.FR.geo import (
 )
 from csv_detective.detect_fields.FR.other import (
     code_csp_insee,
-    code_rna,
     code_import,
+    code_rna,
     code_waldec,
     csp_insee,
     date_fr,
@@ -56,8 +57,12 @@ from csv_detective.detect_fields.other import (
     twitter,
     url,
     uuid,
-    int as test_int,
+)
+from csv_detective.detect_fields.other import (
     float as test_float,
+)
+from csv_detective.detect_fields.other import (
+    int as test_int,
 )
 from csv_detective.detect_fields.temp import (
     date,
@@ -67,8 +72,8 @@ from csv_detective.detect_fields.temp import (
     year,
 )
 from csv_detective.detection.variables import (
-    detect_continuous_variable,
     detect_categorical_variable,
+    detect_continuous_variable,
 )
 from csv_detective.load_tests import return_all_tests
 from csv_detective.output.dataframe import cast
@@ -225,10 +230,7 @@ fields = {
         True: ["13 fevrier 1996"],
         False: ["44 march 2025"],
     },
-    insee_ape700: {
-        True: ["0116Z"],
-        False: ["0116A"]
-    },
+    insee_ape700: {True: ["0116Z"], False: ["0116A"]},
     tel_fr: {
         True: ["0134643467"],
         False: ["6625388263", "01288398"],
@@ -360,7 +362,11 @@ fields = {
     },
     datetime_naive: {
         True: ["2021-06-22 10:20:10", "2030/06/22 00:00:00.0028"],
-        False: ["2021-06-22T30:20:10", "Sun, 06 Nov 1994 08:49:37 GMT", "2021-06-44 10:20:10+02:00"],
+        False: [
+            "2021-06-22T30:20:10",
+            "Sun, 06 Nov 1994 08:49:37 GMT",
+            "2021-06-44 10:20:10+02:00",
+        ],
     },
     datetime_rfc822: {
         True: ["Sun, 06 Nov 1994 08:49:37 GMT"],

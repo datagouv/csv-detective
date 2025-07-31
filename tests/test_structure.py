@@ -1,4 +1,5 @@
 import os
+
 # flake8: noqa
 from csv_detective import detect_fields, detect_labels
 from csv_detective.load_tests import return_all_tests
@@ -18,7 +19,8 @@ def tests_conformity():
                 if "__pycache__" not in dirname:
                     subfolders.append(os.path.join(dirpath, dirname))
         final_subfolders = [
-            sf for sf in subfolders
+            sf
+            for sf in subfolders
             if not any(other_sf.startswith(sf) for other_sf in subfolders if sf != other_sf)
         ]
         for f_sf in final_subfolders:
