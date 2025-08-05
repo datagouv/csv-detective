@@ -18,7 +18,7 @@ parameters:
 jobs:
   install:
     docker:
-      - image: cimg/python:<< pipeline.parameters.python-version >>
+      - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-bookworm-slim
     steps:
       - checkout
       - run:
@@ -29,14 +29,11 @@ jobs:
             - << pipeline.parameters.cache-prefix >>-{{ arch }}-{{ checksum "pyproject.toml" }}
       - run:
           name: Install python dependencies
-          command: |
-            virtualenv venv
-            source venv/bin/activate
-            pip install -e .[dev]
+          command: uv sync --extra dev
       - save_cache:
           key: << pipeline.parameters.cache-prefix >>-{{ arch }}-{{ checksum "pyproject.toml" }}
           paths:
-            - venv
+            - .venv
       - persist_to_workspace:
           root: .
           paths:
@@ -44,7 +41,7 @@ jobs:
 
   lint:
     docker:
-      - image: cimg/python:<< pipeline.parameters.python-version >>
+      - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-bookworm-slim
     steps:
       - attach_workspace:
           at: .
@@ -53,46 +50,43 @@ jobs:
           # ruff check . : check linting and imports sorting without fixing (to fix, use --fix)
           # ruff format --check . : check code formatting without fixing (to fix, remove --check)
           command: |
-            source venv/bin/activate
-            ruff check .
-            ruff format --check .
+            uv run ruff check .
+            uv run ruff format --check .
 
   tests:
     docker:
-      - image: cimg/python:<< pipeline.parameters.python-version >>
+      - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-bookworm-slim
     steps:
       - attach_workspace:
           at: .
       - run:
           name: Run tests
           command: |
-            source venv/bin/activate
-            pytest -s tests/ --junitxml=reports/python/tests.xml -p no:sugar --color=yes
+            uv run pytest -s tests/ --junitxml=reports/python/tests.xml -p no:sugar --color=yes
       - store_test_results:
           path: reports/python
 
   build:
     docker:
-      - image: cimg/python:<< pipeline.parameters.python-version >>
+      - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-bookworm-slim
     steps:
       - attach_workspace:
           at: .
       - run:
-          name: Build a distributable package
+          name: Set the version
           command: |
-            source venv/bin/activate
-            pip install twine
-            pip install build
-            # Build a wheel release
             if [[ $CIRCLE_TAG ]]; then
                 # This is a tagged release, version should be handled upstream
-                python -m build --wheel
+                uv version $CIRCLE_TAG
             else
-                pip install toml
-                python update_version.py
-                python -m build --wheel
+                # For non-tagged releases, use the update_version.py script
+                uv run python update_version.py
             fi
-            twine check dist/*
+      - run:
+          name: Build a distributable package
+          command: |
+            # Build a wheel release
+            uv build
       - store_artifacts:
           path: dist
       - persist_to_workspace:
@@ -102,19 +96,15 @@ jobs:
 
   publish:
     docker:
-      - image: cimg/python:<< pipeline.parameters.python-version >>
+      - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-bookworm-slim
     steps:
       - attach_workspace:
           at: .
-      - deploy:
+      - run:
           name: Publish on PyPI
-          command: |
-            source venv/bin/activate
-            pip install twine
-            twine upload --username "${PYPI_USERNAME}" --password "${PYPI_PASSWORD}" dist/*.whl
+          command: uv publish --username "${PYPI_USERNAME}" --password "${PYPI_PASSWORD}" dist/*
 
 workflows:
-  version: 2
   build:
     jobs:
       - install:
