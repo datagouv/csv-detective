@@ -60,6 +60,11 @@ jobs:
       - attach_workspace:
           at: .
       - run:
+          name: Install system dependencies
+          command: |
+            apt-get update && apt-get install -y \
+              libmagic1
+      - run:
           name: Run tests
           command: |
             uv run pytest -s tests/ --junitxml=reports/python/tests.xml -p no:sugar --color=yes
@@ -73,6 +78,11 @@ jobs:
       - attach_workspace:
           at: .
       - run:
+          name: Install system dependencies
+          command: |
+            apt-get update && apt-get install -y \
+              libmagic1
+      - run:
           name: Set the version
           command: |
             if [[ $CIRCLE_TAG ]]; then
@@ -80,6 +90,7 @@ jobs:
                 uv version $CIRCLE_TAG
             else
                 # For non-tagged releases, use the update_version.py script
+                uv add toml
                 uv run python update_version.py
             fi
       - run:
