@@ -46,9 +46,7 @@ def cast_df(
             # to allow having ints and NaN in the same column
             df[col_name] = df[col_name].astype(pd.Int64Dtype())
         else:
-            df[col_name] = df[col_name].apply(
-                lambda col: cast(col, _type=detection["python_type"])
-            )
+            df[col_name] = df[col_name].apply(lambda col: cast(col, _type=detection["python_type"]))
     if verbose:
         display_logs_depending_process_time(
             f"Casting columns completed in {round(time() - start, 3)}s",
