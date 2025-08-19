@@ -2,7 +2,7 @@
 
 ## Current (in progress)
 
-- Nothing yet
+- Cast columns in place to cut processing time [#144](https://github.com/datagouv/csv-detective/pull/144)
 
 ## 0.9.0 (2025-07-31)
 
