@@ -44,7 +44,7 @@ def cast_df(
             continue
         elif detection["python_type"] == "int":
             # to allow having ints and NaN in the same column
-            df[col_name] = pd.to_numeric(df[col_name]).astype(pd.Int64Dtype())
+            df[col_name] = df[col_name].astype(pd.Int64Dtype())
         else:
             df[col_name] = df[col_name].apply(
                 lambda col: cast(col, _type=detection["python_type"])
