@@ -2,7 +2,7 @@
 
 ## Current (in progress)
 
-- Nothing yet
+- Better sample for analysis if file is too big and therefore reduce sample size [#143](https://github.com/datagouv/csv-detective/pull/143)
 
 ## 0.9.0 (2025-07-31)
 
