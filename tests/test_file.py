@@ -280,7 +280,7 @@ def test_cast_json(mocked_responses, cast_json):
 
 def test_almost_uniform_column(mocked_responses):
     col_name = "int_not_bool"
-    expected_content = f"{col_name}\n" + "1\n" * int(1e6) + "9\n"
+    expected_content = f"{col_name}\n" + "9\n" + "1\n" * int(1e7)
     mocked_responses.get(
         "http://example.com/test.csv",
         body=expected_content,
