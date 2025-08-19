@@ -197,5 +197,5 @@ def build_sample(table: pd.DataFrame) -> pd.DataFrame:
     )
     return pd.concat(
         [samples, table.sample(n=MAX_ROWS_ANALYSIS - len(samples), random_state=1)],
-        ignore_index=True
+        ignore_index=True,
     )
