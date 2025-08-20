@@ -6,8 +6,6 @@ from dateparser import parse as date_parser
 from dateutil.parser import ParserError
 from dateutil.parser import parse as dateutil_parser
 
-from csv_detective.parsing.text import _process_text
-
 PROPORTION = 1
 # /!\ this is only for dates, not datetimes which are handled by other utils
 
@@ -45,11 +43,11 @@ def _is(val):
         return False
     # if it's a usual date pattern
     if any(
-        # with this syntax, if the first value is True, the other two are not computed (and so on)
+        # with this syntax, if any of the first value is True, the next ones are not computed
         [
             bool(re.match(pat, val))
             or bool(re.match(tap, val))
-            or bool(re.match(letters, _process_text(val)))
+            or bool(re.match(letters, val, re.IGNORECASE))
         ]
     ):
         return True
