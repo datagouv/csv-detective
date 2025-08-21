@@ -14,7 +14,7 @@ from csv_detective.output.utils import prepare_output_dict
 from csv_detective.parsing.columns import MAX_ROWS_ANALYSIS, test_col, test_label
 from csv_detective.validate import validate
 
-# above this threshold, a columns is not considered categorical
+# above this threshold, a column is not considered categorical
 MAX_NUMBER_CATEGORICAL_VALUES = 25
 
 
