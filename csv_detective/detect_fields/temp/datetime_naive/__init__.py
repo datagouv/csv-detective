@@ -6,7 +6,7 @@ from csv_detective.detect_fields.temp.date import date_casting, tap
 PROPORTION = 1
 threshold = 0.7
 
-# matches AAAA-MM-JJTHH:MM:SS(.µµµµµ)Z with any of the listed separators for the date OR NO SEPARATOR
+# matches AAAA-MM-JJTHH:MM:SS(.dddddd)Z with any of the listed separators for the date OR NO SEPARATOR
 pat = tap + r"(T|\s)(0\d|1[0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])(.\d{1,6})?Z"
 
 
