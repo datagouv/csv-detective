@@ -1,8 +1,13 @@
+import re
 from typing import Any, Optional
 
-from csv_detective.detect_fields.temp.date import date_casting
+from csv_detective.detect_fields.temp.date import date_casting, tap
 
 PROPORTION = 1
+threshold = 0.7
+
+# matches AAAA-MM-JJTHH:MM:SS(.µµµµµ)Z with any of the listed separators for the date OR NO SEPARATOR
+pat = tap + r"(T|\s)(0\d|1[0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])(.\d+)?Z"
 
 
 def _is(val: Optional[Any]) -> bool:
@@ -12,7 +17,9 @@ def _is(val: Optional[Any]) -> bool:
     # 26 is the maximal length of an ISO datetime format YYYY-MM-DDTHH:MM:SS.dddddd, keeping some slack
     if not isinstance(val, str) or len(val) > 30 or len(val) < 15:
         return False
-    threshold = 0.7
+    # if usual format, no need to parse
+    if bool(re.match(pat, val)):
+        return True
     if sum([char.isdigit() or char in {"-", "/", ":", " "} for char in val]) / len(val) < threshold:
         return False
     res = date_casting(val)
