@@ -2,7 +2,7 @@
 
 ## Current (in progress)
 
-- Cast columns in place to cut processing time [#144](https://github.com/datagouv/csv-detective/pull/144)
+- Cast columns in place and restore early detection for date(time) to cut processing time [#144](https://github.com/datagouv/csv-detective/pull/144)
 
 ## 0.9.0 (2025-07-31)
 
