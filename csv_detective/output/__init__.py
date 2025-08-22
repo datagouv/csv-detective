@@ -25,12 +25,20 @@ def generate_output(
     verbose: bool = False,
     sheet_name: Optional[Union[str, int]] = None,
 ) -> Union[dict, tuple[dict, pd.DataFrame]]:
-    if output_profile:
+    if output_profile or output_df:
+        # to create the profile we have to cast columns, so using the dedicated function
+        table = cast_df(
+            df=table,
+            columns=analysis["columns"],
+            cast_json=cast_json,
+            verbose=verbose,
+        )
         analysis["profile"] = create_profile(
             table=table,
-            dict_cols_fields=analysis["columns"],
+            columns=analysis["columns"],
             num_rows=num_rows,
             limited_output=limited_output,
+            cast_json=cast_json,
             verbose=verbose,
         )
 
@@ -45,16 +53,13 @@ def generate_output(
                 output_path += "_sheet-" + str(sheet_name)
             output_path += ".json"
         with open(output_path, "w", encoding="utf8") as fp:
-            json.dump(analysis, fp, indent=4, separators=(",", ": "), ensure_ascii=False)
+            json.dump(
+                analysis, fp, indent=4, separators=(",", ": "), ensure_ascii=False, default=str
+            )
 
     if output_schema:
         analysis["schema"] = generate_table_schema(analysis, save_file=False, verbose=verbose)
 
     if output_df:
-        return analysis, cast_df(
-            df=table,
-            columns=analysis["columns"],
-            cast_json=cast_json,
-            verbose=verbose,
-        )
+        return analysis, table
     return analysis
