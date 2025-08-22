@@ -1,5 +1,6 @@
 from datetime import date as _date
 from datetime import datetime as _datetime
+from unittest.mock import patch
 
 import pandas as pd
 import pytest
@@ -441,3 +442,22 @@ def test_priority(args):
     col = "col1"
     output = prepare_output_dict(pd.DataFrame({col: detections}), limited_output=True)
     assert output[col]["format"] == expected
+
+
+@pytest.mark.parametrize(
+    "args",
+    (
+        ("1996-02-13", date),
+        ("28/01/2000", date),
+        ("2025-08-20T14:30:00+02:00", datetime_aware),
+        ("2025/08/20 14:30:00.2763-12:00", datetime_aware),
+        ("1925_12_20T14:30:00.2763Z", datetime_naive),
+        ("1925 12 20 14:30:00Z", datetime_naive),
+    ),
+)
+def test_early_detection(args):
+    value, module = args
+    with patch("csv_detective.detect_fields.temp.date.date_casting") as mock_func:
+        res = module._is(value)
+        assert res
+        mock_func.assert_not_called()

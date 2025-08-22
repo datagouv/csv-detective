@@ -33,27 +33,23 @@ def cast(value: str, _type: str) -> Optional[Union[str, float, bool, date, datet
 def cast_df(
     df: pd.DataFrame, columns: dict, cast_json: bool = True, verbose: bool = False
 ) -> pd.DataFrame:
+    # for efficiency this modifies the dataframe in place as we don't need it anymore afterwards
     if verbose:
         start = time()
-    output_df = pd.DataFrame()
     for col_name, detection in columns.items():
         if detection["python_type"] == "string" or (
             detection["python_type"] == "json" and not cast_json
         ):
             # no change if detected type is string
-            output_df[col_name] = df[col_name].copy()
+            continue
         elif detection["python_type"] == "int":
             # to allow having ints and NaN in the same column
-            output_df[col_name] = df[col_name].copy().astype(pd.Int64Dtype())
+            df[col_name] = df[col_name].astype(pd.Int64Dtype())
         else:
-            output_df[col_name] = df[col_name].apply(
-                lambda col: cast(col, _type=detection["python_type"])
-            )
-        # to save RAM
-        del df[col_name]
+            df[col_name] = df[col_name].apply(lambda col: cast(col, _type=detection["python_type"]))
     if verbose:
         display_logs_depending_process_time(
             f"Casting columns completed in {round(time() - start, 3)}s",
             time() - start,
         )
-    return output_df
+    return df
