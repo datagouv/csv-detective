@@ -1,7 +1,7 @@
 import re
 from typing import Any, Optional
 
-from csv_detective.detect_fields.temp.date import date_casting, aaaammjj_pattern
+from csv_detective.detect_fields.temp.date import aaaammjj_pattern, date_casting
 
 PROPORTION = 1
 threshold = 0.7

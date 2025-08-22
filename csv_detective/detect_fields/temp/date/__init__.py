@@ -22,9 +22,13 @@ def date_casting(val: str) -> Optional[datetime]:
 
 seps = r"[\s/\-\*_\|;.,]"
 # matches JJ-MM-AAAA with any of the listed separators
-jjmmaaaa_pattern = r"^(0[1-9]|[12][0-9]|3[01])SEP(0[1-9]|1[0-2])SEP((19|20)\d{2})$".replace("SEP", seps)
+jjmmaaaa_pattern = r"^(0[1-9]|[12][0-9]|3[01])SEP(0[1-9]|1[0-2])SEP((19|20)\d{2})$".replace(
+    "SEP", seps
+)
 # matches AAAA-MM-JJ with any of the listed separators OR NO SEPARATOR
-aaaammjj_pattern = r"^((19|20)\d{2})SEP(0[1-9]|1[0-2])SEP(0[1-9]|[12][0-9]|3[01])$".replace("SEP", seps + "?")
+aaaammjj_pattern = r"^((19|20)\d{2})SEP(0[1-9]|1[0-2])SEP(0[1-9]|[12][0-9]|3[01])$".replace(
+    "SEP", seps + "?"
+)
 # matches JJ-mmm-AAAA and JJ-mmm...mm-AAAA with any of the listed separators OR NO SEPARATOR
 string_month_pattern = (
     r"^(0[1-9]|[12][0-9]|3[01])SEP(jan|fev|feb|mar|avr|apr"
