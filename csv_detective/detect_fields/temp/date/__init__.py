@@ -22,11 +22,11 @@ def date_casting(val: str) -> Optional[datetime]:
 
 seps = r"[\s/\-\*_\|;.,]"
 # matches JJ-MM-AAAA with any of the listed separators
-pat = r"^(0[1-9]|[12][0-9]|3[01])SEP(0[1-9]|1[0-2])SEP((19|20)\d{2})$".replace("SEP", seps)
+jjmmaaaa_pattern = r"^(0[1-9]|[12][0-9]|3[01])SEP(0[1-9]|1[0-2])SEP((19|20)\d{2})$".replace("SEP", seps)
 # matches AAAA-MM-JJ with any of the listed separators OR NO SEPARATOR
-tap = r"^((19|20)\d{2})SEP(0[1-9]|1[0-2])SEP(0[1-9]|[12][0-9]|3[01])$".replace("SEP", seps + "?")
+aaaammjj_pattern = r"^((19|20)\d{2})SEP(0[1-9]|1[0-2])SEP(0[1-9]|[12][0-9]|3[01])$".replace("SEP", seps + "?")
 # matches JJ-mmm-AAAA and JJ-mmm...mm-AAAA with any of the listed separators OR NO SEPARATOR
-letters = (
+string_month_pattern = (
     r"^(0[1-9]|[12][0-9]|3[01])SEP(jan|fev|feb|mar|avr|apr"
     r"|mai|may|jun|jui|jul|aou|aug|sep|oct|nov|dec|janvier|fevrier|mars|avril|"
     r"mai|juin|jullet|aout|septembre|octobre|novembre|decembre)SEP"
@@ -45,9 +45,9 @@ def _is(val):
     if any(
         # with this syntax, if any of the first value is True, the next ones are not computed
         [
-            bool(re.match(pat, val))
-            or bool(re.match(tap, val))
-            or bool(re.match(letters, val, re.IGNORECASE))
+            bool(re.match(jjmmaaaa_pattern, val))
+            or bool(re.match(aaaammjj_pattern, val))
+            or bool(re.match(string_month_pattern, val, re.IGNORECASE))
         ]
     ):
         return True
