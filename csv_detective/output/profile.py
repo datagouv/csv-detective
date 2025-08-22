@@ -12,7 +12,7 @@ def create_profile(
     columns: dict,
     num_rows: int,
     limited_output: bool = True,
-    cast_json: bool = True, 
+    cast_json: bool = True,
     verbose: bool = False,
 ) -> dict:
     if verbose:
@@ -36,26 +36,10 @@ def create_profile(
         # for numerical formats we want min, max, mean, std
         if columns[c]["python_type"] in ["float", "int"]:
             profile[c].update(
-                min=prevent_nan(
-                    map_python_types[columns[c]["python_type"]](
-                        table[c].min()
-                    )
-                ),
-                max=prevent_nan(
-                    map_python_types[columns[c]["python_type"]](
-                        table[c].max()
-                    )
-                ),
-                mean=prevent_nan(
-                    map_python_types[columns[c]["python_type"]](
-                        table[c].mean()
-                    )
-                ),
-                std=prevent_nan(
-                    map_python_types[columns[c]["python_type"]](
-                        table[c].std()
-                    )
-                ),
+                min=prevent_nan(map_python_types[columns[c]["python_type"]](table[c].min())),
+                max=prevent_nan(map_python_types[columns[c]["python_type"]](table[c].max())),
+                mean=prevent_nan(map_python_types[columns[c]["python_type"]](table[c].mean())),
+                std=prevent_nan(map_python_types[columns[c]["python_type"]](table[c].std())),
             )
         # for all formats we want most frequent values, nb unique values and nb missing values
         tops_bruts = (

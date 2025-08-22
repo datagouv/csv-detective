@@ -53,7 +53,9 @@ def generate_output(
                 output_path += "_sheet-" + str(sheet_name)
             output_path += ".json"
         with open(output_path, "w", encoding="utf8") as fp:
-            json.dump(analysis, fp, indent=4, separators=(",", ": "), ensure_ascii=False, default=str)
+            json.dump(
+                analysis, fp, indent=4, separators=(",", ": "), ensure_ascii=False, default=str
+            )
 
     if output_schema:
         analysis["schema"] = generate_table_schema(analysis, save_file=False, verbose=verbose)
