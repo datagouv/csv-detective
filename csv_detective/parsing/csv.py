@@ -32,9 +32,7 @@ def parse_csv(
         if "ISO-8859" in encoding:
             encoding = "ISO-8859-1"
         try:
-            table = pd.read_csv(
-                the_file, sep=sep, dtype=str, encoding=encoding, skiprows=skiprows
-            )
+            table = pd.read_csv(the_file, sep=sep, dtype=str, encoding=encoding, skiprows=skiprows)
             total_lines = len(table)
             nb_duplicates = len(table.loc[table.duplicated()])
             if num_rows > 0:
