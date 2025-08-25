@@ -101,7 +101,7 @@ def parse_excel(
                 file_path,
                 engine="odf",
                 sheet_name=None,
-                dtype="unicode",
+                dtype=str,
             )
             sizes = {sheet_name: table.size for sheet_name, table in tables.items()}
             sheet_name = max(sizes, key=sizes.get)
@@ -121,7 +121,7 @@ def parse_excel(
                 file_path,
                 engine="odf",
                 sheet_name=sheet_name,
-                dtype="unicode",
+                dtype=str,
             )
         table, header_row_idx = remove_empty_first_rows(table)
         total_lines = len(table)
@@ -152,7 +152,7 @@ def parse_excel(
         file_path,
         engine=engine,
         sheet_name=sheet_name,
-        dtype="unicode",
+        dtype=str,
     )
     table, header_row_idx = remove_empty_first_rows(table)
     total_lines = len(table)

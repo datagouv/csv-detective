@@ -33,7 +33,7 @@ def parse_csv(
             encoding = "ISO-8859-1"
         try:
             table = pd.read_csv(
-                the_file, sep=sep, dtype="unicode", encoding=encoding, skiprows=skiprows
+                the_file, sep=sep, dtype=str, encoding=encoding, skiprows=skiprows
             )
             total_lines = len(table)
             nb_duplicates = len(table.loc[table.duplicated()])
