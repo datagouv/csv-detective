@@ -99,7 +99,7 @@ def test_detetect_categorical_variable():
         "cat2": categorical_col2,
         "not_cat": not_categorical_col,
     }
-    df = pd.DataFrame(df_dict, dtype="unicode")
+    df = pd.DataFrame(df_dict, dtype=str)
 
     res, _ = detect_categorical_variable(df)
     assert len(res.values) and all(k in res.values for k in ["cat", "cat2"])
@@ -114,8 +114,8 @@ def test_detect_continuous_variable():
     df_dict = {"cont": continuous_col, "not_cont": not_continuous_col}
     df_dict_2 = {"cont": continuous_col_2, "not_cont": not_continuous_col}
 
-    df = pd.DataFrame(df_dict, dtype="unicode")
-    df2 = pd.DataFrame(df_dict_2, dtype="unicode")
+    df = pd.DataFrame(df_dict, dtype=str)
+    df2 = pd.DataFrame(df_dict_2, dtype=str)
 
     res = detect_continuous_variable(df)
     res2 = detect_continuous_variable(df2, continuous_th=0.65)
