@@ -177,21 +177,23 @@ def detect_formats(
 
 def build_sample(table: pd.DataFrame) -> pd.DataFrame:
     """
-    building a sample of MAX_ROWS_ANALYSIS rows that contains at least one representative
-    of each possible value taken by columns that have at most MAX_NUMBER_CATEGORICAL_VALUES
-    different values
+    building a sample of MAX_ROWS_ANALYSIS rows that contains at least one representative of
+    the min and max values of each column, and one case of NaN if the column contains any.
     """
-    representatives = {
-        col: [value for value in table[col].unique() if not pd.isna(value)]
-        for col in table.columns
-        if table[col].nunique() <= MAX_NUMBER_CATEGORICAL_VALUES
-    }
-    # getting one row for each unique value
     samples = pd.concat(
         [
-            table.loc[table[col] == value].iloc[[0]]
-            for col in representatives.keys()
-            for value in representatives[col]
+            # one row with the minimum of the column
+            table.loc[table[col] == table[col].dropna().min()].iloc[[0]]
+            for col in table.columns
+        ] + [
+            # one row with the maximum of the column
+            table.loc[table[col] == table[col].dropna().max()].iloc[[0]]
+            for col in table.columns
+        ] + [
+            # one row with a NaN value if the column has any
+            table.loc[table[col].isna()].iloc[[0]]
+            for col in table.columns
+            if table[col].isna().any()
         ],
         ignore_index=True,
     )
