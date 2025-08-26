@@ -106,14 +106,14 @@ def test_profile_with_num_rows():
             {
                 "int_with_nan": {"format": "int", "python_type": "int"},
                 "date": {"format": "date", "python_type": "date"},
-            }
+            },
         ),
         (
             False,
             {
                 "int_with_nan": [{"format": "int", "python_type": "int"}],
                 "date": [{"format": "date", "python_type": "date"}],
-            }
+            },
         ),
     ),
 )
