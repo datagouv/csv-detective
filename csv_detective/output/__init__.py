@@ -25,14 +25,7 @@ def generate_output(
     verbose: bool = False,
     sheet_name: Optional[Union[str, int]] = None,
 ) -> Union[dict, tuple[dict, pd.DataFrame]]:
-    if output_profile or output_df:
-        # to create the profile we have to cast columns, so using the dedicated function
-        table = cast_df(
-            df=table,
-            columns=analysis["columns"],
-            cast_json=cast_json,
-            verbose=verbose,
-        )
+    if output_profile:
         analysis["profile"] = create_profile(
             table=table,
             columns=analysis["columns"],
@@ -61,5 +54,10 @@ def generate_output(
         analysis["schema"] = generate_table_schema(analysis, save_file=False, verbose=verbose)
 
     if output_df:
-        return analysis, table
+        return analysis, cast_df(
+            df=table,
+            columns=analysis["columns"],
+            cast_json=cast_json,
+            verbose=verbose,
+        )
     return analysis

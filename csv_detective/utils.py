@@ -1,5 +1,5 @@
 import logging
-from typing import Optional
+from typing import Optional, Union
 
 import pandas as pd
 
@@ -31,5 +31,7 @@ def is_url(file_path: str) -> bool:
     return file_path.startswith("http")
 
 
-def prevent_nan(value: float) -> Optional[float]:
-    return None if pd.isna(value) else value
+def cast_prevent_nan(value: float, _type: str) -> Optional[Union[float, int]]:
+    if _type not in {"int", "float"}:
+        raise ValueError(f"Invalid type was passed: {_type}")
+    return None if pd.isna(value) else eval(_type)(value)
