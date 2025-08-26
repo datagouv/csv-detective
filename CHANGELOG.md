@@ -2,6 +2,9 @@
 
 ## Current (in progress)
 
+- Remove `create_example_csv_file` from __init__ to avoid noise from `faker` in production logs [#145](https://github.com/datagouv/csv-detective/pull/145)
+- Cast columns in place and restore early detection for date(time) to cut processing time [#144](https://github.com/datagouv/csv-detective/pull/144)
+- Load data with `dtype=str` instead of deprecated "unicode" [#149](https://github.com/datagouv/csv-detective/pull/149)
 - Better sample for analysis if file is too big and therefore reduce sample size [#143](https://github.com/datagouv/csv-detective/pull/143)
 
 ## 0.9.0 (2025-07-31)

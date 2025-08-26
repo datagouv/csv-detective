@@ -1,7 +1,7 @@
 import re
 from uuid import UUID
 
-from csv_detective import create_example_csv_file
+from csv_detective.output.example import create_example_csv_file
 
 
 def test_example_creation():
