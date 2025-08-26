@@ -1,5 +1,9 @@
 # Changelog
 
+## Current (in progress)
+
+- Nothing yet
+
 ## 0.9.1 (2025-08-26)
 
 - Remove `create_example_csv_file` from __init__ to avoid noise from `faker` in production logs [#145](https://github.com/datagouv/csv-detective/pull/145)
