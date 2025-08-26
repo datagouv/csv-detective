@@ -276,3 +276,20 @@ def test_cast_json(mocked_responses, cast_json):
     )
     assert analysis["columns"]["a_simple_dict"]["python_type"] == "json"
     assert isinstance(df["a_simple_dict"][0], expected_type)
+
+
+def test_almost_uniform_column(mocked_responses):
+    col_name = "int_not_bool"
+    expected_content = f"{col_name}\n" + "9\n" + "1\n" * int(1e7)
+    mocked_responses.get(
+        "http://example.com/test.csv",
+        body=expected_content,
+        status=200,
+    )
+    analysis = routine(
+        file_path="http://example.com/test.csv",
+        num_rows=-1,
+        output_profile=False,
+        save_results=False,
+    )
+    assert analysis["columns"][col_name]["format"] == "int"

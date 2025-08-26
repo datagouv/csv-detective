@@ -14,6 +14,9 @@ from csv_detective.output.utils import prepare_output_dict
 from csv_detective.parsing.columns import MAX_ROWS_ANALYSIS, test_col, test_label
 from csv_detective.validate import validate
 
+# above this threshold, a column is not considered categorical
+MAX_NUMBER_CATEGORICAL_VALUES = 25
+
 
 def detect_formats(
     table: pd.DataFrame,
@@ -28,14 +31,18 @@ def detect_formats(
     if on_sample:
         if verbose:
             logging.warning(f"File is too long, analysing the {MAX_ROWS_ANALYSIS} first rows")
-        table = table.sample(n=MAX_ROWS_ANALYSIS, random_state=1)
+        table = build_sample(table)
 
     if table.empty:
         res_categorical = []
         # res_continuous = []
     else:
         # Detects columns that are categorical
-        res_categorical, categorical_mask = detect_categorical_variable(table, verbose=verbose)
+        res_categorical, categorical_mask = detect_categorical_variable(
+            table,
+            max_number_categorical_values=MAX_NUMBER_CATEGORICAL_VALUES,
+            verbose=verbose,
+        )
         res_categorical = list(res_categorical)
         # Detect columns that are continuous (we already know the categorical) :
         # we don't need this for now, cuts processing time
@@ -166,3 +173,33 @@ def detect_formats(
             raise ValueError("Could not infer detected formats on the whole file")
 
     return analysis
+
+
+def build_sample(table: pd.DataFrame) -> pd.DataFrame:
+    """
+    building a sample of MAX_ROWS_ANALYSIS rows that contains at least one representative of
+    the min and max values of each column, and one case of NaN if the column contains any.
+    """
+    samples = pd.concat(
+        [
+            # one row with the minimum of the column
+            table.loc[table[col] == table[col].dropna().min()].iloc[[0]]
+            for col in table.columns
+        ]
+        + [
+            # one row with the maximum of the column
+            table.loc[table[col] == table[col].dropna().max()].iloc[[0]]
+            for col in table.columns
+        ]
+        + [
+            # one row with a NaN value if the column has any
+            table.loc[table[col].isna()].iloc[[0]]
+            for col in table.columns
+            if table[col].isna().any()
+        ],
+        ignore_index=True,
+    )
+    return pd.concat(
+        [samples, table.sample(n=MAX_ROWS_ANALYSIS - len(samples), random_state=1)],
+        ignore_index=True,
+    )
