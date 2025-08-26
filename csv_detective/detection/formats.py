@@ -185,11 +185,13 @@ def build_sample(table: pd.DataFrame) -> pd.DataFrame:
             # one row with the minimum of the column
             table.loc[table[col] == table[col].dropna().min()].iloc[[0]]
             for col in table.columns
-        ] + [
+        ]
+        + [
             # one row with the maximum of the column
             table.loc[table[col] == table[col].dropna().max()].iloc[[0]]
             for col in table.columns
-        ] + [
+        ]
+        + [
             # one row with a NaN value if the column has any
             table.loc[table[col].isna()].iloc[[0]]
             for col in table.columns
