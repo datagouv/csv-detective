@@ -5,6 +5,7 @@ import pytest
 import responses
 
 from csv_detective import routine
+from csv_detective.output.profile import create_profile
 
 
 @pytest.mark.parametrize(
@@ -95,6 +96,55 @@ def test_profile_with_num_rows():
             output_profile=True,
             save_results=False,
         )
+
+
+@pytest.mark.parametrize(
+    "params",
+    (
+        (
+            True,
+            {
+                "int_with_nan": {"format": "int", "python_type": "int"},
+                "date": {"format": "date", "python_type": "date"},
+            }
+        ),
+        (
+            False,
+            {
+                "int_with_nan": [{"format": "int", "python_type": "int"}],
+                "date": [{"format": "date", "python_type": "date"}],
+            }
+        ),
+    ),
+)
+def test_profile_specific_cases(params):
+    limited_output, columns = params
+    table = pd.DataFrame(
+        {
+            "int_with_nan": ["1", pd.NA, pd.NA],
+            "date": ["1996-01-02", "1996-01-02", "2024-11-12"],
+        }
+    )
+    profile = create_profile(
+        table=table,
+        columns=columns,
+        limited_output=limited_output,
+        num_rows=-1,
+    )
+    assert profile["int_with_nan"] == {
+        "min": 1,
+        "max": 1,
+        "mean": 1,
+        "std": None,
+        "tops": [{"count": 1, "value": "1"}],
+        "nb_distinct": 1,
+        "nb_missing_values": 2,
+    }
+    assert profile["date"] == {
+        "tops": [{"count": 2, "value": "1996-01-02"}, {"count": 1, "value": "2024-11-12"}],
+        "nb_distinct": 2,
+        "nb_missing_values": 0,
+    }
 
 
 def test_exception_different_number_of_columns():
