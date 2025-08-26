@@ -4,7 +4,8 @@ from time import time
 
 import pandas as pd
 
-from csv_detective.utils import display_logs_depending_process_time, prevent_nan
+from csv_detective.detect_fields.other.float import float_casting
+from csv_detective.utils import cast_prevent_nan, display_logs_depending_process_time
 
 
 def create_profile(
@@ -18,11 +19,6 @@ def create_profile(
     if verbose:
         start = time()
         logging.info("Creating profile")
-    map_python_types = {
-        "string": str,
-        "int": float,
-        "float": float,
-    }
 
     if num_rows > 0:
         raise ValueError("To create profiles num_rows has to be set to -1")
@@ -35,12 +31,19 @@ def create_profile(
     for c in table.columns:
         # for numerical formats we want min, max, mean, std
         if columns[c]["python_type"] in ["float", "int"]:
-            profile[c].update(
-                min=prevent_nan(map_python_types[columns[c]["python_type"]](table[c].min())),
-                max=prevent_nan(map_python_types[columns[c]["python_type"]](table[c].max())),
-                mean=prevent_nan(map_python_types[columns[c]["python_type"]](table[c].mean())),
-                std=prevent_nan(map_python_types[columns[c]["python_type"]](table[c].std())),
+            # we locally cast the column to perform the operations, using the same method as in cast_df
+            cast_col = (
+                table[c].astype(pd.Int64Dtype())
+                if columns[c]["python_type"] == "int"
+                else table[c].apply(lambda x: float_casting(x) if isinstance(x, str) else pd.NA)
             )
+            profile[c].update(
+                min=cast_prevent_nan(cast_col.min(), columns[c]["python_type"]),
+                max=cast_prevent_nan(cast_col.max(), columns[c]["python_type"]),
+                mean=cast_prevent_nan(cast_col.mean(), columns[c]["python_type"]),
+                std=cast_prevent_nan(cast_col.std(), columns[c]["python_type"]),
+            )
+            del cast_col
         # for all formats we want most frequent values, nb unique values and nb missing values
         tops_bruts = (
             table.loc[table[c].notna(), c]
