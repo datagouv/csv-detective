@@ -2,7 +2,7 @@
 
 ## Current (in progress)
 
-- Nothing yet
+- Fix profile creation [#150](https://github.com/datagouv/csv-detective/pull/150)
 
 ## 0.9.1 (2025-08-26)
 
