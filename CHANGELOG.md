@@ -1,6 +1,6 @@
 # Changelog
 
-## Current (in progress)
+## 0.9.2 (2025-08-26)
 
 - Fix profile creation [#150](https://github.com/datagouv/csv-detective/pull/150)
 
