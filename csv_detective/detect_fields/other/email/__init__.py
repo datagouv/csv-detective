@@ -1,6 +1,6 @@
 import re
 
-PROPORTION = 1
+PROPORTION = 0.9
 
 
 def _is(val):
