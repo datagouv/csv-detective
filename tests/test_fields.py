@@ -284,7 +284,7 @@ fields = {
         False: ["nein", "ja", "2", "-0"],
     },
     email: {
-        True: ["cdo_intern@data.gouv.fr"],
+        True: ["cdo_intern@data.gouv.fr", "P.NOM@CIE.LONGDOMAIN"],
         False: ["cdo@@gouv.sfd"],
     },
     json: {
