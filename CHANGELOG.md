@@ -2,13 +2,13 @@
 
 ## Current (in progress)
 
-- Nothing yet
+- Better email detection [#151](https://github.com/datagouv/csv-detective/pull/151)
 
 ## 0.9.2 (2025-08-26)
 
 - Fix profile creation [#150](https://github.com/datagouv/csv-detective/pull/150)
 
-## 0.9.1 (2025-08-26)
+## 0.9.1 /!\ YANKED (2025-08-26)
 
 - Remove `create_example_csv_file` from __init__ to avoid noise from `faker` in production logs [#145](https://github.com/datagouv/csv-detective/pull/145)
 - Cast columns in place and restore early detection for date(time) to cut processing time [#144](https://github.com/datagouv/csv-detective/pull/144)

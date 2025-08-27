@@ -30,7 +30,7 @@ def detect_formats(
     on_sample = len(table) > MAX_ROWS_ANALYSIS
     if on_sample:
         if verbose:
-            logging.warning(f"File is too long, analysing the {MAX_ROWS_ANALYSIS} first rows")
+            logging.warning(f"File is too long, analysing a sample of {MAX_ROWS_ANALYSIS} rows")
         table = build_sample(table)
 
     if table.empty:
