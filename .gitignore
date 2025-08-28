@@ -1,16 +1,38 @@
+# Backup files
 *.txt~
 *.py~
+
+# Byte-compiled / optimized / DLL files
 *.pyc
+
+# IDEs and editors
 .vscode
 .spyderproject
+
+# Git backup files
 .gitignore~
-data_gouv_api_download.py
-reformat_tab.py
+
+# Build and distribution
 build
 csv_detective.egg-info
 dist
-venv
-.venv
+
+# MacOS system files
 .DS_Store
 
+# Python environments
+venv
+.venv
+
+# Python package managers
+.python-version
+pdm.lock
+uv.lock
+
+# Code quality tools
+.ruff_cache/
+
+# Project specific files
 analyse_csv.py
+data_gouv_api_download.py
+reformat_tab.py
