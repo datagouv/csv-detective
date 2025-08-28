@@ -5,6 +5,7 @@ import pytest
 import responses
 
 from csv_detective import routine
+from csv_detective.parsing.columns import MAX_ROWS_ANALYSIS
 from csv_detective.output.profile import create_profile
 
 
@@ -343,3 +344,20 @@ def test_almost_uniform_column(mocked_responses):
         save_results=False,
     )
     assert analysis["columns"][col_name]["format"] == "int"
+
+
+def test_full_nan_column(mocked_responses):
+    # we want a file that needs sampling
+    expected_content = "only_nan,second_col\n" + ",1\n" * (MAX_ROWS_ANALYSIS + 1)
+    mocked_responses.get(
+        "http://example.com/test.csv",
+        body=expected_content,
+        status=200,
+    )
+    # just testing it doesn't fail
+    routine(
+        file_path="http://example.com/test.csv",
+        num_rows=-1,
+        output_profile=False,
+        save_results=False,
+    )
