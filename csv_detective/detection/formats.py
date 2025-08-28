@@ -180,26 +180,40 @@ def build_sample(table: pd.DataFrame) -> pd.DataFrame:
     building a sample of MAX_ROWS_ANALYSIS rows that contains at least one representative of
     the min and max values of each column, and one case of NaN if the column contains any.
     """
-    samples = pd.concat(
-        [
-            # one row with the minimum of the column
-            table.loc[table[col] == table[col].dropna().min()].iloc[[0]]
-            for col in table.columns
-        ]
-        + [
-            # one row with the maximum of the column
-            table.loc[table[col] == table[col].dropna().max()].iloc[[0]]
-            for col in table.columns
-        ]
-        + [
-            # one row with a NaN value if the column has any
-            table.loc[table[col].isna()].iloc[[0]]
-            for col in table.columns
-            if table[col].isna().any()
-        ],
-        ignore_index=True,
-    )
-    return pd.concat(
-        [samples, table.sample(n=MAX_ROWS_ANALYSIS - len(samples), random_state=1)],
-        ignore_index=True,
-    )
+    samples = []
+    
+    for col in table.columns:
+        try:
+            # Get min value row
+            min_rows = table.loc[table[col] == table[col].dropna().min()]
+            if len(min_rows) > 0:
+                samples.append(min_rows.iloc[[0]])
+        except (ValueError, IndexError):
+            pass  # Skip if we can't get min value
+            
+        try:
+            # Get max value row
+            max_rows = table.loc[table[col] == table[col].dropna().max()]
+            if len(max_rows) > 0:
+                samples.append(max_rows.iloc[[0]])
+        except (ValueError, IndexError):
+            pass  # Skip if we can't get max value
+            
+        try:
+            # Get NaN row if column has any
+            nan_rows = table.loc[table[col].isna()]
+            if len(nan_rows) > 0:
+                samples.append(nan_rows.iloc[[0]])
+        except (ValueError, IndexError):
+            pass  # Skip if we can't get NaN value
+    
+    if samples:
+        samples = pd.concat(samples, ignore_index=True)
+        remaining_rows: int = MAX_ROWS_ANALYSIS - len(samples)
+        if remaining_rows > 0:
+            additional_sample = table.sample(n=remaining_rows, random_state=1)
+            return pd.concat([samples, additional_sample], ignore_index=True)
+        return samples
+    else:
+        # Fallback if no samples could be created
+        return table.sample(n=min(MAX_ROWS_ANALYSIS, len(table)), random_state=1)
