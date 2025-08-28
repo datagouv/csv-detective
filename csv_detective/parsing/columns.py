@@ -1,5 +1,5 @@
-from collections import defaultdict
 import logging
+from collections import defaultdict
 from time import time
 from typing import Callable
 
@@ -139,7 +139,7 @@ def test_col(
         if verbose:
             display_logs_depending_process_time(
                 f'\t> Done with column "{column}" in {round(time() - start_col, 3)}s'
-                f' ({idx + 1}/{nb_cols}), {len(tested)} tests performed',
+                f" ({idx + 1}/{nb_cols}), {len(tested)} tests performed",
                 time() - start_col,
             )
     if verbose:

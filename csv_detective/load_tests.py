@@ -64,8 +64,5 @@ def build_tests_dicts(tests: list[ModuleType]) -> tuple[dict[str, dict], dict[st
         for test in tests
     }
     parents = {v["parent"] for v in tests_dict.values() if v["parent"] is not None}
-    specific_tests = {
-        k: v for k, v in tests_dict.items()
-        if k not in parents
-    }
+    specific_tests = {k: v for k, v in tests_dict.items() if k not in parents}
     return tests_dict, specific_tests
