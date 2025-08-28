@@ -29,7 +29,6 @@ from csv_detective.detect_fields.FR.other import (
     code_rna,
     code_waldec,
     csp_insee,
-    date_fr,
     insee_ape700,
     sexe,
     siren,
@@ -37,7 +36,7 @@ from csv_detective.detect_fields.FR.other import (
     tel_fr,
     uai,
 )
-from csv_detective.detect_fields.FR.temp import jour_de_la_semaine, mois_de_annee
+from csv_detective.detect_fields.FR.temp import date_fr, jour_de_la_semaine, mois_de_annee
 from csv_detective.detect_fields.geo import (
     iso_country_code_alpha2,
     iso_country_code_alpha3,

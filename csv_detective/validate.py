@@ -13,6 +13,7 @@ tests = {
     t.__name__.split(".")[-1]: {
         "func": t._is,
         "prop": t.PROPORTION,
+        "parent": getattr(t, "PARENT", None),
     }
     for t in return_all_tests("ALL", "detect_fields")
 }

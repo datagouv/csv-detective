@@ -1,6 +1,7 @@
 import re
 
 PROPORTION = 1
+PARENT = "date"
 regex = (
     r"^\d{1,2}[ \-](janvier|fevrier|mars|avril|mai|juin|juillet|aout|septembre"
     r"|octobre|novembre|decembre)[ \-]\d{4}$"

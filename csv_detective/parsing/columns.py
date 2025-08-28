@@ -1,9 +1,11 @@
+from collections import defaultdict
 import logging
 from time import time
 from typing import Callable
 
 import pandas as pd
 
+from csv_detective.load_tests import build_test_priorities
 from csv_detective.utils import display_logs_depending_process_time
 
 MAX_ROWS_ANALYSIS = int(1e4)
@@ -89,40 +91,64 @@ def test_col(
     if verbose:
         start = time()
         logging.info("Testing columns to get types")
-    test_funcs = {
-        test.__name__.split(".")[-1]: {
-            "func": test._is,
-            "prop": test.PROPORTION,
-        }
-        for test in all_tests
-    }
-    return_table = pd.DataFrame(columns=table.columns)
-    for idx, (key, value) in enumerate(test_funcs.items()):
+    test_funcs, specific_tests = build_test_priorities(all_tests)
+    results = defaultdict(dict)
+    nb_cols = len(table.columns)
+    for idx, column in enumerate(table.columns):
         if verbose:
-            start_type = time()
-            logging.info(f"\t- Starting with type '{key}'")
-        # improvement lead : put the longest tests behind and make them only if previous tests not satisfactory
-        # => the following needs to change, "apply" means all columns are tested for one type at once
-        return_table.loc[key] = table.apply(
-            lambda serie: test_col_val(
-                serie,
-                value["func"],
-                value["prop"],
+            start_col = time()
+            logging.info(f"\t- Starting with column '{column}'")
+        tested = set()
+        # testing for the most specific formats first (we have early stops in test_col_val)
+        for test_name, test_attr in specific_tests.items():
+            results[column][test_name] = test_col_val(
+                table[column],
+                test_attr["func"],
+                test_attr["prop"],
                 skipna=skipna,
                 limited_output=limited_output,
                 verbose=verbose,
             )
-        )
+            print(f"{test_name}: {results[column][test_name]}")
+            tested.add(test_name)
+            # should we break if one of the specific tests is successful?
+        # performing less and less specific tests if specific ones fail
+        for test_name in [test for test in specific_tests if test not in tested]:
+            current_test = test_name
+            while test_funcs[current_test]["parent"] is not None:
+                if test_funcs[current_test]["parent"] in results[column]:
+                    print(f"already here {test_name}: {results[column][test_name]}")
+                    # already tested as a parent of a previous test
+                    break
+                if results[column][current_test] > 0:
+                    # if a child test is successful, we set the parent's score to the same value
+                    # this is not perfect: the column can be 50% child but 100% parent
+                    # we would have to perform the parent test to know exactly, but this saves much time
+                    results[column][test_funcs[current_test]["parent"]] = results[column][current_test]
+                    print(f"bypassed {test_name}: {results[column][test_name]}")
+                else:
+                    results[column][test_funcs[current_test]["parent"]] = test_col_val(
+                        table[column],
+                        test_attr["func"],
+                        test_attr["prop"],
+                        skipna=skipna,
+                        limited_output=limited_output,
+                        verbose=verbose,
+                    )
+                    print(f"processed {test_name}: {results[column][test_name]}")
+                    tested.add(current_test)
+                current_test = test_funcs[current_test]["parent"]
         if verbose:
             display_logs_depending_process_time(
-                f'\t> Done with type "{key}" in {round(time() - start_type, 3)}s ({idx + 1}/{len(test_funcs)})',
-                time() - start_type,
+                f'\t> Done with column "{column}" in {round(time() - start_col, 3)}s'
+                f' ({idx + 1}/{nb_cols}), {len(tested)} tests performed',
+                time() - start_col,
             )
     if verbose:
         display_logs_depending_process_time(
             f"Done testing columns in {round(time() - start, 3)}s", time() - start
         )
-    return return_table
+    return pd.DataFrame(results)
 
 
 def test_label(table: pd.DataFrame, all_tests: list, limited_output: bool, verbose: bool = False):
