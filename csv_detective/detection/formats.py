@@ -183,13 +183,15 @@ def build_sample(table: pd.DataFrame) -> pd.DataFrame:
     samples = pd.concat(
         [
             # one row with the minimum of the column
-            table.loc[table[col] == table[col].dropna().min()].iloc[[0]]
+            table.loc[table[col] == val].iloc[[0]]
             for col in table.columns
+            if not pd.isna(val := table[col].dropna().min())
         ]
         + [
             # one row with the maximum of the column
-            table.loc[table[col] == table[col].dropna().max()].iloc[[0]]
+            table.loc[table[col] == val].iloc[[0]]
             for col in table.columns
+            if not pd.isna(val := table[col].dropna().max())
         ]
         + [
             # one row with a NaN value if the column has any
@@ -199,7 +201,12 @@ def build_sample(table: pd.DataFrame) -> pd.DataFrame:
         ],
         ignore_index=True,
     )
-    return pd.concat(
-        [samples, table.sample(n=MAX_ROWS_ANALYSIS - len(samples), random_state=1)],
-        ignore_index=True,
+    return (
+        pd.concat(
+            [samples, table.sample(n=MAX_ROWS_ANALYSIS - len(samples), random_state=1)],
+            ignore_index=True,
+        )
+        # this is very unlikely but we never know
+        if len(samples) <= MAX_ROWS_ANALYSIS
+        else samples.sample(n=MAX_ROWS_ANALYSIS, random_state=1)
     )
