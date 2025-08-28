@@ -181,7 +181,7 @@ def build_sample(table: pd.DataFrame) -> pd.DataFrame:
     the min and max values of each column, and one case of NaN if the column contains any.
     """
     samples = []
-    
+
     for col in table.columns:
         try:
             # Get min value row
@@ -190,7 +190,7 @@ def build_sample(table: pd.DataFrame) -> pd.DataFrame:
                 samples.append(min_rows.iloc[[0]])
         except (ValueError, IndexError):
             pass  # Skip if we can't get min value
-            
+
         try:
             # Get max value row
             max_rows = table.loc[table[col] == table[col].dropna().max()]
@@ -198,7 +198,7 @@ def build_sample(table: pd.DataFrame) -> pd.DataFrame:
                 samples.append(max_rows.iloc[[0]])
         except (ValueError, IndexError):
             pass  # Skip if we can't get max value
-            
+
         try:
             # Get NaN row if column has any
             nan_rows = table.loc[table[col].isna()]
@@ -206,7 +206,7 @@ def build_sample(table: pd.DataFrame) -> pd.DataFrame:
                 samples.append(nan_rows.iloc[[0]])
         except (ValueError, IndexError):
             pass  # Skip if we can't get NaN value
-    
+
     if samples:
         samples = pd.concat(samples, ignore_index=True)
         remaining_rows: int = MAX_ROWS_ANALYSIS - len(samples)
