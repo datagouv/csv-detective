@@ -1,7 +1,7 @@
 from io import BytesIO, StringIO
 
+import httpx
 import pandas as pd
-import requests
 
 from csv_detective.detection.columns import detect_heading_columns, detect_trailing_columns
 from csv_detective.detection.encoding import detect_encoding
@@ -52,7 +52,7 @@ def load_file(
     else:
         # fetching or reading file as binary
         if is_url(file_path):
-            r = requests.get(file_path, allow_redirects=True)
+            r = httpx.get(file_path, allow_redirects=True)
             r.raise_for_status()
             binary_file = BytesIO(r.content)
         else:

@@ -1,9 +1,9 @@
 from io import BytesIO
 from time import time
 
+import httpx
 import openpyxl
 import pandas as pd
-import requests
 import xlrd
 
 from csv_detective.detection.engine import engine_to_file
@@ -37,7 +37,7 @@ def parse_excel(
     ):
         remote_content = None
         if is_url(file_path):
-            r = requests.get(file_path)
+            r = httpx.get(file_path)
             r.raise_for_status()
             remote_content = BytesIO(r.content)
         if not engine:
