@@ -109,35 +109,33 @@ def test_col(
                 limited_output=limited_output,
                 verbose=verbose,
             )
-            print(f"{test_name}: {results[column][test_name]}")
             tested.add(test_name)
             # should we break if one of the specific tests is successful?
         # performing less and less specific tests if specific ones fail
-        for test_name in [test for test in specific_tests if test not in tested]:
-            current_test = test_name
-            while test_funcs[current_test]["parent"] is not None:
-                if test_funcs[current_test]["parent"] in results[column]:
-                    print(f"already here {test_name}: {results[column][test_name]}")
-                    # already tested as a parent of a previous test
+        for test_name in specific_tests:
+            current = test_name
+            parent = test_funcs[current]["parent"]
+            while parent is not None:
+                if parent in results[column]:
+                    # already tested as a parent of a previous test, no need to get higher parents
                     break
-                if results[column][current_test] > 0:
+                if results[column][current] > 0:
                     # if a child test is successful, we set the parent's score to the same value
                     # this is not perfect: the column can be 50% child but 100% parent
                     # we would have to perform the parent test to know exactly, but this saves much time
-                    results[column][test_funcs[current_test]["parent"]] = results[column][current_test]
-                    print(f"bypassed {test_name}: {results[column][test_name]}")
+                    results[column][parent] = results[column][current]
                 else:
-                    results[column][test_funcs[current_test]["parent"]] = test_col_val(
+                    results[column][parent] = test_col_val(
                         table[column],
-                        test_attr["func"],
-                        test_attr["prop"],
+                        test_funcs[parent]["func"],
+                        test_funcs[parent]["prop"],
                         skipna=skipna,
                         limited_output=limited_output,
                         verbose=verbose,
                     )
-                    print(f"processed {test_name}: {results[column][test_name]}")
-                    tested.add(current_test)
-                current_test = test_funcs[current_test]["parent"]
+                    tested.add(parent)
+                current = parent
+                parent = test_funcs[current]["parent"]
         if verbose:
             display_logs_depending_process_time(
                 f'\t> Done with column "{column}" in {round(time() - start_col, 3)}s'
