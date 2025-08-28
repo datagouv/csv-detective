@@ -52,7 +52,7 @@ def load_file(
     else:
         # fetching or reading file as binary
         if is_url(file_path):
-            r = httpx.get(file_path, allow_redirects=True)
+            r = httpx.get(file_path, follow_redirects=True)
             r.raise_for_status()
             binary_file = BytesIO(r.content)
         else:
