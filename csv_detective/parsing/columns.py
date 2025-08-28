@@ -5,7 +5,7 @@ from typing import Callable
 
 import pandas as pd
 
-from csv_detective.load_tests import build_test_priorities
+from csv_detective.load_tests import build_tests_dicts
 from csv_detective.utils import display_logs_depending_process_time
 
 MAX_ROWS_ANALYSIS = int(1e4)
@@ -91,7 +91,7 @@ def test_col(
     if verbose:
         start = time()
         logging.info("Testing columns to get types")
-    test_funcs, specific_tests = build_test_priorities(all_tests)
+    test_funcs, specific_tests = build_tests_dicts(all_tests)
     results = defaultdict(dict)
     nb_cols = len(table.columns)
     for idx, column in enumerate(table.columns):

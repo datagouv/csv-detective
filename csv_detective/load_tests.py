@@ -54,7 +54,7 @@ def return_all_tests(
     return all_tests
 
 
-def build_test_priorities(tests: list[ModuleType]) -> tuple[dict[str, dict], dict[str, dict]]:
+def build_tests_dicts(tests: list[ModuleType]) -> tuple[dict[str, dict], dict[str, dict]]:
     tests_dict = {
         test.__name__.split(".")[-1]: {
             "func": test._is,
