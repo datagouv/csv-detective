@@ -73,7 +73,6 @@ def detect_formats(
     scores_table_fields = test_col(
         table, all_tests_fields, limited_output, skipna=skipna, verbose=verbose
     )
-    print(scores_table_fields)
     analysis["columns_fields"] = prepare_output_dict(scores_table_fields, limited_output)
 
     # Perform testing on labels
