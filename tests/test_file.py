@@ -5,8 +5,8 @@ import pytest
 import responses
 
 from csv_detective import routine
-from csv_detective.parsing.columns import MAX_ROWS_ANALYSIS
 from csv_detective.output.profile import create_profile
+from csv_detective.parsing.columns import MAX_ROWS_ANALYSIS
 
 
 @pytest.mark.parametrize(
