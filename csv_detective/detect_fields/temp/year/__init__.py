@@ -1,4 +1,5 @@
 PROPORTION = 1
+PARENT = "int"
 
 
 def _is(val):

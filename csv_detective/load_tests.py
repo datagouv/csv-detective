@@ -1,10 +1,11 @@
 import os
+from types import ModuleType
 from typing import Union
 
 from csv_detective import detect_fields, detect_labels  # noqa
 
 
-def get_all_packages(detect_type) -> list:
+def get_all_packages(detect_type) -> list[str]:
     root_dir = os.path.dirname(os.path.abspath(__file__)) + "/" + detect_type
     modules = []
     for dirpath, _, filenames in os.walk(root_dir):
@@ -20,7 +21,7 @@ def get_all_packages(detect_type) -> list:
 def return_all_tests(
     user_input_tests: Union[str, list],
     detect_type: str,
-) -> list:
+) -> list[ModuleType]:
     """
     returns all tests that have a method _is and are listed in the user_input_tests
     the function can select a sub_package from csv_detective
@@ -51,3 +52,17 @@ def return_all_tests(
     # to remove groups of tests
     all_tests = [test for test in all_tests if "_is" in dir(test)]
     return all_tests
+
+
+def build_tests_dicts(tests: list[ModuleType]) -> tuple[dict[str, dict], dict[str, dict]]:
+    tests_dict = {
+        test.__name__.split(".")[-1]: {
+            "func": test._is,
+            "prop": test.PROPORTION,
+            "parent": getattr(test, "PARENT", None),
+        }
+        for test in tests
+    }
+    parents = {v["parent"] for v in tests_dict.values() if v["parent"] is not None}
+    specific_tests = {k: v for k, v in tests_dict.items() if k not in parents}
+    return tests_dict, specific_tests

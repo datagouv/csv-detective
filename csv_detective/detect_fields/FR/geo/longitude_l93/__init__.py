@@ -4,6 +4,7 @@ from csv_detective.detect_fields.other.float import _is as is_float
 from csv_detective.detect_fields.other.float import float_casting
 
 PROPORTION = 0.9
+PARENT = "float"
 
 _longitudel93 = LongitudeL93()
 

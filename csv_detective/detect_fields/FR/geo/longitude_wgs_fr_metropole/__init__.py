@@ -1,6 +1,7 @@
 from csv_detective.detect_fields.other.float import _is as is_float
 
 PROPORTION = 0.9
+PARENT = "longitude_wgs"
 
 
 def _is(val):

@@ -3,19 +3,13 @@ from typing import Optional, Union
 
 import pandas as pd
 
-from csv_detective.load_tests import return_all_tests
+from csv_detective.load_tests import build_tests_dicts, return_all_tests
 from csv_detective.parsing.columns import test_col_val
 from csv_detective.parsing.load import load_file
 
 logging.basicConfig(level=logging.INFO)
 
-tests = {
-    t.__name__.split(".")[-1]: {
-        "func": t._is,
-        "prop": t.PROPORTION,
-    }
-    for t in return_all_tests("ALL", "detect_fields")
-}
+tests, _ = build_tests_dicts(return_all_tests("ALL", "detect_fields"))
 
 
 def validate(
