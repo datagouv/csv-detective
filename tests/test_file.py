@@ -2,7 +2,6 @@ from unittest.mock import patch
 
 import pandas as pd
 import pytest
-import responses
 
 from csv_detective import routine
 from csv_detective.output.profile import create_profile
@@ -233,26 +232,15 @@ def test_non_csv_files(params):
             assert _[k] == v
 
 
-@pytest.fixture
-def mocked_responses():
-    with responses.RequestsMock() as rsps:
-        yield rsps
-
-
 @pytest.mark.parametrize(
     "params",
     # ideally we'd like to do the same with params_others but pandas.read_excel uses urllib
     # which doesn't support the way we mock the response, TBC
     params_csv + [("a_test_file.csv", {"separator": ";", "header_row_idx": 2, "total_lines": 404})],
 )
-def test_urls(mocked_responses, params):
+def test_urls(mock_httpx_transport, params):
     file_name, checks = params
     url = f"http://example.com/{file_name}"
-    mocked_responses.get(
-        url,
-        body=open(f"tests/data/{file_name}", "rb").read(),
-        status=200,
-    )
     _ = routine(
         file_path=url,
         num_rows=-1,
@@ -309,14 +297,10 @@ def test_output_df():
         (False, str),
     ),
 )
-def test_cast_json(mocked_responses, cast_json):
+def test_cast_json(mock_httpx_transport, cast_json):
     cast_json, expected_type = cast_json
     expected_content = 'id,a_simple_dict\n1,{"a": 1}\n2,{"b": 2}\n3,{"c": 3}\n'
-    mocked_responses.get(
-        "http://example.com/test.csv",
-        body=expected_content,
-        status=200,
-    )
+    mock_httpx_transport.mock_http_response_for_url("http://example.com/test.csv", expected_content)
     analysis, df = routine(
         file_path="http://example.com/test.csv",
         num_rows=-1,
@@ -329,14 +313,10 @@ def test_cast_json(mocked_responses, cast_json):
     assert isinstance(df["a_simple_dict"][0], expected_type)
 
 
-def test_almost_uniform_column(mocked_responses):
+def test_almost_uniform_column(mock_httpx_transport):
     col_name = "int_not_bool"
     expected_content = f"{col_name}\n" + "9\n" + "1\n" * int(1e7)
-    mocked_responses.get(
-        "http://example.com/test.csv",
-        body=expected_content,
-        status=200,
-    )
+    mock_httpx_transport.mock_http_response_for_url("http://example.com/test.csv", expected_content)
     analysis = routine(
         file_path="http://example.com/test.csv",
         num_rows=-1,
@@ -346,14 +326,10 @@ def test_almost_uniform_column(mocked_responses):
     assert analysis["columns"][col_name]["format"] == "int"
 
 
-def test_full_nan_column(mocked_responses):
+def test_full_nan_column(mock_httpx_transport):
     # we want a file that needs sampling
-    expected_content = "only_nan,second_col\n" + ",1\n" * (MAX_ROWS_ANALYSIS + 1)
-    mocked_responses.get(
-        "http://example.com/test.csv",
-        body=expected_content,
-        status=200,
-    )
+    expected_content = "only_nan,second_col\n" + ",1\n" + ",1\n" * MAX_ROWS_ANALYSIS
+    mock_httpx_transport.mock_http_response_for_url("http://example.com/test.csv", expected_content)
     # just testing it doesn't fail
     routine(
         file_path="http://example.com/test.csv",
