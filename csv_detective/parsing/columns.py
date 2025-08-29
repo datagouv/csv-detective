@@ -122,7 +122,6 @@ def test_col(
             current = test_name
             parent = test_funcs[current]["parent"]
             while parent is not None:
-                print(current, parent)
                 if parent in results[column]:
                     # already tested as a parent of a previous test, no need to get higher parents
                     break
