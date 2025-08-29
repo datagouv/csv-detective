@@ -129,7 +129,6 @@ def test_col(
                     # if a child test is successful, we set the parent's score to the same value
                     # this is not perfect: the column can be 50% child but 100% parent
                     # we would have to perform the parent test to know exactly, but this saves much time
-                    print(f"setting {parent} from {current}, score : {results[column][current]}")
                     results[column][parent] = results[column][current]
                 else:
                     results[column][parent] = test_col_val(
