@@ -113,12 +113,15 @@ def test_col(
             # should we break if one of the specific tests is successful?
         # performing less and less specific tests if specific ones fail
         # starting with highest scores to set the parents from there
-        for test_name in reversed([
-            test for test, _ in sorted(
-                (tup for tup in results[column].items()),
-                key=lambda tup: tup[1],
-            )
-        ]):
+        for test_name in reversed(
+            [
+                test
+                for test, _ in sorted(
+                    (tup for tup in results[column].items()),
+                    key=lambda tup: tup[1],
+                )
+            ]
+        ):
             current = test_name
             parent = test_funcs[current]["parent"]
             while parent is not None:
