@@ -184,7 +184,9 @@ def create_example_csv_file(
 
     if schema_path:
         if schema_path.startswith("http"):
-            schema = httpx.get(schema_path).json()
+            with httpx.Client() as client:
+                response = client.get(schema_path)
+                schema = response.json()
         else:
             with open(schema_path, encoding=encoding) as jsonfile:
                 schema = json.load(jsonfile)
