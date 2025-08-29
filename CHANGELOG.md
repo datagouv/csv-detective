@@ -5,6 +5,7 @@
 - Better email detection [#151](https://github.com/datagouv/csv-detective/pull/151)
 - Sample can handle full NaN columns [#152](https://github.com/datagouv/csv-detective/pull/152)
 - Update .gitignore [#153](https://github.com/datagouv/csv-detective/pull/153)
+- Use `httpx` in place of `requests` [#156](https://github.com/datagouv/csv-detective/pull/156)
 
 ## 0.9.2 (2025-08-26)
 
