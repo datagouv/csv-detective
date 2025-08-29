@@ -4,7 +4,7 @@
 
 - Better email detection [#151](https://github.com/datagouv/csv-detective/pull/151)
 - Sample can handle full NaN columns [#154](https://github.com/datagouv/csv-detective/pull/154)
-- Add checks priorization to prevent testing all formats [#155](https://github.com/datagouv/csv-detective/pull/155)
+- Add tests priorization to prevent testing all formats [#155](https://github.com/datagouv/csv-detective/pull/155)
 
 ## 0.9.2 (2025-08-26)
 

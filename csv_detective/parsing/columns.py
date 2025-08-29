@@ -112,10 +112,17 @@ def test_col(
             tested.add(test_name)
             # should we break if one of the specific tests is successful?
         # performing less and less specific tests if specific ones fail
-        for test_name in specific_tests:
+        # starting with highest scores to set the parents from there
+        for test_name in reversed([
+            test for test, _ in sorted(
+                (tup for tup in results[column].items()),
+                key=lambda tup: tup[1],
+            )
+        ]):
             current = test_name
             parent = test_funcs[current]["parent"]
             while parent is not None:
+                print(current, parent)
                 if parent in results[column]:
                     # already tested as a parent of a previous test, no need to get higher parents
                     break
@@ -123,6 +130,7 @@ def test_col(
                     # if a child test is successful, we set the parent's score to the same value
                     # this is not perfect: the column can be 50% child but 100% parent
                     # we would have to perform the parent test to know exactly, but this saves much time
+                    print(f"setting {parent} from {current}, score : {results[column][current]}")
                     results[column][parent] = results[column][current]
                 else:
                     results[column][parent] = test_col_val(
@@ -134,8 +142,7 @@ def test_col(
                         verbose=verbose,
                     )
                     tested.add(parent)
-                current = parent
-                parent = test_funcs[current]["parent"]
+                current, parent = parent, test_funcs[parent]["parent"]
         if verbose:
             display_logs_depending_process_time(
                 f'\t> Done with column "{column}" in {round(time() - start_col, 3)}s'
