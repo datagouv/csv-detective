@@ -97,7 +97,7 @@ def test_col(
     for idx, column in enumerate(table.columns):
         if verbose:
             start_col = time()
-            logging.info(f"\t- Starting with column '{column}'")
+            logging.info(f"\t- Starting with column '{column}' ({idx + 1}/{nb_cols})")
         tested = set()
         # testing for the most specific formats first (we have early stops in test_col_val)
         for test_name, test_attr in specific_tests.items():
@@ -147,7 +147,7 @@ def test_col(
         if verbose:
             display_logs_depending_process_time(
                 f'\t> Done with column "{column}" in {round(time() - start_col, 3)}s'
-                f" ({idx + 1}/{nb_cols}), {len(tested)} tests performed",
+                f", {len(tested)} tests performed",
                 time() - start_col,
             )
     if verbose:
