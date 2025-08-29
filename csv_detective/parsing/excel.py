@@ -37,8 +37,10 @@ def parse_excel(
     ):
         remote_content = None
         if is_url(file_path):
-            r = httpx.get(file_path)
-            remote_content = BytesIO(r.content)
+            with httpx.Client() as client:
+                r = client.get(file_path)
+                r.raise_for_status()
+                remote_content = BytesIO(r.content)
         if not engine:
             if any([file_path.endswith(k) for k in NEW_EXCEL_EXT]):
                 engine = "openpyxl"

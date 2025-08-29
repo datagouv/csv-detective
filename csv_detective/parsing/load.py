@@ -52,8 +52,10 @@ def load_file(
     else:
         # fetching or reading file as binary
         if is_url(file_path):
-            r = httpx.get(file_path, follow_redirects=True)
-            binary_file = BytesIO(r.content)
+            with httpx.Client(follow_redirects=True) as client:
+                r = client.get(file_path)
+                r.raise_for_status()
+                binary_file = BytesIO(r.content)
         else:
             binary_file = open(file_path, "rb")
         # handling compression
