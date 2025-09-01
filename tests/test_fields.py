@@ -79,6 +79,7 @@ from csv_detective.detection.variables import (
 from csv_detective.load_tests import return_all_tests
 from csv_detective.output.dataframe import cast
 from csv_detective.output.utils import prepare_output_dict
+from csv_detective.parsing.columns import test_col as col_test  # to prevent pytest from testing it
 
 
 def test_all_tests_return_bool():
@@ -461,3 +462,27 @@ def test_early_detection(args):
         res = module._is(value)
         assert res
         mock_func.assert_not_called()
+
+
+def test_all_proportion_1():
+    all_tests = return_all_tests("ALL", "detect_fields")
+    prop_1 = {
+        t.__name__.split(".")[-1]: eval(
+            t.__name__.split(".")[-1]
+            if t.__name__.split(".")[-1] not in ["int", "float"]
+            else "test_" + t.__name__.split(".")[-1]
+        )
+        for t in all_tests
+        if t.PROPORTION == 1
+    }
+    # building a table that uses only correct values for these formats, except on one row
+    table = pd.DataFrame(
+        {
+            test_name: (fields[test_module][True] * 100)[:100] + ["not_suitable"]
+            for test_name, test_module in prop_1.items()
+        }
+    )
+    # testing columns for all formats
+    returned_table = col_test(table, all_tests, limited_output=True)
+    # the analysis should have found no match on any format
+    assert all(returned_table[col].sum() == 0 for col in table.columns)

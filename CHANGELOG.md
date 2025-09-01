@@ -5,6 +5,7 @@
 - Better email detection [#151](https://github.com/datagouv/csv-detective/pull/151)
 - Sample can handle full NaN columns [#152](https://github.com/datagouv/csv-detective/pull/152)
 - Update .gitignore [#153](https://github.com/datagouv/csv-detective/pull/153)
+- Fix allowed valid proportions for geo float columns [#157](https://github.com/datagouv/csv-detective/pull/157)
 
 ## 0.9.2 (2025-08-26)
 
