@@ -1,6 +1,6 @@
 from csv_detective.detect_fields.other.float import _is as is_float
 
-PROPORTION = 0.9
+PROPORTION = 1
 
 
 def _is(val):
