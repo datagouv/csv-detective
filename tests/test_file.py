@@ -241,14 +241,12 @@ def test_non_csv_files(params):
 def test_urls(httpx_mock, params):
     file_name, checks = params
     url = f"http://example.com/{file_name}"
-    
+
     # Mock HTTP response for this test file
     httpx_mock.add_response(
-        url=url,
-        content=open(f"tests/data/{file_name}", "rb").read(),
-        is_reusable=True
+        url=url, content=open(f"tests/data/{file_name}", "rb").read(), is_reusable=True
     )
-    
+
     _ = routine(
         file_path=url,
         num_rows=-1,
@@ -308,13 +306,10 @@ def test_output_df():
 def test_cast_json(httpx_mock, cast_json):
     cast_json, expected_type = cast_json
     expected_content = 'id,a_simple_dict\n1,{"a": 1}\n2,{"b": 2}\n3,{"c": 3}\n'
-    
+
     # Mock JSON response for testing JSON parsing
-    httpx_mock.add_response(
-        url="http://example.com/test.csv",
-        text=expected_content
-    )
-    
+    httpx_mock.add_response(url="http://example.com/test.csv", text=expected_content)
+
     analysis, df = routine(
         file_path="http://example.com/test.csv",
         num_rows=-1,
@@ -330,14 +325,12 @@ def test_cast_json(httpx_mock, cast_json):
 def test_almost_uniform_column(httpx_mock):
     col_name = "int_not_bool"
     expected_content = f"{col_name}\n" + "9\n" + "1\n" * int(1e7)
-    
+
     # Mock response for testing column format detection
     httpx_mock.add_response(
-        url="http://example.com/test.csv",
-        content=expected_content.encode(),
-        is_reusable=True
+        url="http://example.com/test.csv", content=expected_content.encode(), is_reusable=True
     )
-    
+
     analysis = routine(
         file_path="http://example.com/test.csv",
         num_rows=-1,
@@ -353,9 +346,7 @@ def test_full_nan_column(httpx_mock):
 
     # Mock response for testing NaN column handling
     httpx_mock.add_response(
-        url="http://example.com/test.csv",
-        content=expected_content.encode(),
-        is_reusable=True
+        url="http://example.com/test.csv", content=expected_content.encode(), is_reusable=True
     )
 
     # just testing it doesn't fail with columns containing many NaN values
