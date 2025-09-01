@@ -79,7 +79,7 @@ from csv_detective.detection.variables import (
 from csv_detective.load_tests import return_all_tests
 from csv_detective.output.dataframe import cast
 from csv_detective.output.utils import prepare_output_dict
-from csv_detective.parsing.columns import test_col
+from csv_detective.parsing.columns import test_col as col_test  # to prevent pytest from testing it
 
 
 def test_all_tests_return_bool():
@@ -483,6 +483,6 @@ def test_all_proportion_1():
         }
     )
     # testing columns for all formats
-    returned_table = test_col(table, all_tests, limited_output=True)
+    returned_table = col_test(table, all_tests, limited_output=True)
     # the analysis should have found no match on any format
     assert all(returned_table[col].sum() == 0 for col in table.columns)
