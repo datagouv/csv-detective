@@ -204,7 +204,7 @@ def generate_table_schema(
 
     Args:
         analysis_report (dict): The analysis report from csv_detective
-        save_file (bool or str): whether and where to save the results
+        save_results (bool or str): whether and where to save the results
 
     Returns:
     """
@@ -265,3 +265,5 @@ def generate_table_schema(
         output_path = save_results if isinstance(save_results, str) else "schema.json"
         with open(output_path, "w", encoding="utf8") as fp:
             json.dump(schema, fp, indent=4, separators=(",", ": "), ensure_ascii=False, default=str)
+
+    return schema
