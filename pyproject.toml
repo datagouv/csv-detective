@@ -8,7 +8,6 @@ version = "0.9.3.dev"
 description = "Detect tabular files column content"
 authors = [{ name = "Etalab", email = "opendatateam@data.gouv.fr" }]
 dependencies = [
-    "boto3>=1.34.0,<2",
     "dateparser>=1.2.0,<2",
     "faust-cchardet==2.1.19",
     "pandas>=2.2.0,<3",

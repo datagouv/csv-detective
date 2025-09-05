@@ -1,14 +1,9 @@
 import json
 import logging
-import os
-import tempfile
 from datetime import datetime
 from time import time
-from typing import Optional
+from typing import Union
 
-from botocore.exceptions import ClientError
-
-from csv_detective.s3_utils import download_from_minio, get_s3_client, upload_to_minio
 from csv_detective.utils import display_logs_depending_process_time
 
 
@@ -202,25 +197,14 @@ def get_constraints(format: str) -> dict:
 
 def generate_table_schema(
     analysis_report: dict,
-    save_file: bool,
-    netloc: Optional[str] = None,
-    bucket: Optional[str] = None,
-    key: Optional[str] = None,
-    minio_user: Optional[str] = None,
-    minio_pwd: Optional[str] = None,
+    save_results: Union[bool, str] = True,
     verbose: bool = False,
 ) -> dict:
     """Generates a table schema from the analysis report
 
     Args:
         analysis_report (dict): The analysis report from csv_detective
-        save_file (bool): indicate if schema should be saved into minio or just returned
-        netloc (str): The netloc of the minio instance to upload the tableschema
-        bucket (str): The bucket to save the schema in
-        key (str): The key to save the schema in (without extension as we will append
-        version number and extension)
-        minio_user (str): The minio user
-        minio_pwd (str): The minio password
+        save_file (bool or str): whether and where to save the results
 
     Returns:
     """
@@ -277,71 +261,9 @@ def generate_table_schema(
             f"Created schema in {round(time() - start, 3)}s", time() - start
         )
 
-    if not save_file:
-        return schema
-
-    if save_file:
-        if not all([netloc, key, bucket, minio_user, minio_pwd]):
-            raise Exception(
-                "To save schema into minio, parameters : netloc, key, bucket, "
-                "minio_user, minio_pwd should be provided"
+    if save_results:
+        output_path = save_results if isinstance(save_results, str) else "schema.json"
+        with open(output_path, "w", encoding="utf8") as fp:
+            json.dump(
+                schema, fp, indent=4, separators=(",", ": "), ensure_ascii=False, default=str
             )
-
-        # Create bucket if does not exist
-        client = get_s3_client(netloc, minio_user, minio_pwd)
-        try:
-            client.head_bucket(Bucket=bucket)
-        except ClientError:
-            client.create_bucket(Bucket=bucket)
-
-        tableschema_objects = client.list_objects(Bucket=bucket, Prefix=key, Delimiter="/")
-        if "Contents" in tableschema_objects:
-            tableschema_keys = [
-                tableschema["Key"]
-                for tableschema in client.list_objects(Bucket=bucket, Prefix=key, Delimiter="/")[
-                    "Contents"
-                ]
-            ]
-            tableschema_versions = [
-                os.path.splitext(tableschema_key)[0].split("_")[-1]
-                for tableschema_key in tableschema_keys
-            ]
-            latest_version = max(tableschema_versions)
-
-            with tempfile.NamedTemporaryFile() as latest_schema_file:
-                with open(latest_schema_file.name, "w") as fp:
-                    download_from_minio(
-                        netloc,
-                        bucket,
-                        f"{key}_{latest_version}.json",
-                        latest_schema_file.name,
-                        minio_user,
-                        minio_pwd,
-                    )
-                    # Check if files are different
-                    with open(latest_schema_file.name, "r") as fp:
-                        latest_schema = json.load(fp)
-                        if latest_schema["fields"] != fields:
-                            latest_version_split = latest_version.split(".")
-                            new_version = (
-                                latest_version_split[0]
-                                + "."
-                                + latest_version_split[1]
-                                + "."
-                                + str(int(latest_version_split[2]) + 1)
-                            )
-                        else:
-                            return None
-
-            schema["version"] = new_version
-
-        tableschema_file = tempfile.NamedTemporaryFile(delete=False)
-        with open(tableschema_file.name, "w") as fp:
-            json.dump(schema, fp, indent=4)
-
-        new_version_key = f"{key}_{new_version}.json"
-        upload_to_minio(
-            netloc, bucket, new_version_key, tableschema_file.name, minio_user, minio_pwd
-        )
-        os.unlink(tableschema_file.name)
-        return {"netloc": netloc, "bucket": bucket, "key": new_version_key}
