@@ -51,7 +51,7 @@ def generate_output(
             )
 
     if output_schema:
-        analysis["schema"] = generate_table_schema(analysis, save_file=False, verbose=verbose)
+        analysis["schema"] = generate_table_schema(analysis, save_results=False, verbose=verbose)
 
     if output_df:
         return analysis, cast_df(
