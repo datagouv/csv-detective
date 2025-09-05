@@ -264,6 +264,4 @@ def generate_table_schema(
     if save_results:
         output_path = save_results if isinstance(save_results, str) else "schema.json"
         with open(output_path, "w", encoding="utf8") as fp:
-            json.dump(
-                schema, fp, indent=4, separators=(",", ": "), ensure_ascii=False, default=str
-            )
+            json.dump(schema, fp, indent=4, separators=(",", ": "), ensure_ascii=False, default=str)
