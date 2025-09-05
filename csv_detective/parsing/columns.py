@@ -125,22 +125,25 @@ def test_col(
     return return_table
 
 
-def test_label(table: pd.DataFrame, all_tests: list, limited_output: bool, verbose: bool = False):
+def test_label(columns: list[str], all_tests: list, limited_output: bool, verbose: bool = False):
     if verbose:
         start = time()
         logging.info("Testing labels to get types")
-    test_funcs = dict()
-    for test in all_tests:
-        name = test.__name__.split(".")[-1]
-        test_funcs[name] = {"func": test._is, "prop": test.PROPORTION}
+    test_funcs = {
+        test.__name__.split(".")[-1]: {
+            "func": test._is,
+            "prop": test.PROPORTION,
+        }
+        for test in all_tests
+    }
 
-    return_table = pd.DataFrame(columns=table.columns)
+    return_table = pd.DataFrame(columns=columns)
     for idx, (key, value) in enumerate(test_funcs.items()):
         if verbose:
             start_type = time()
         return_table.loc[key] = [
             test_col_label(col_name, value["func"], value["prop"], limited_output=limited_output)
-            for col_name in table.columns
+            for col_name in columns
         ]
         if verbose:
             display_logs_depending_process_time(
