@@ -7,6 +7,9 @@ import pandas as pd
 from csv_detective.parsing.csv import CHUNK_SIZE
 from csv_detective.utils import display_logs_depending_process_time
 
+# above this threshold, a column is not considered categorical
+MAX_NUMBER_CATEGORICAL_VALUES = 25
+
 
 def test_col_val(
     serie: pd.Series,
@@ -165,6 +168,11 @@ def test_col_chunks(
 
     # hashing rows to get nb_duplicates
     row_hashes_count = table.apply(lambda row: hash(tuple(row)), axis=1).value_counts()
+    # getting values for profile if specified
+    col_values = {
+        col: table[col].value_counts(dropna=False)
+        for col in table.columns
+    }
 
     # only csv files can end up here, can't chunk excel
     chunks = pd.read_csv(
@@ -187,6 +195,8 @@ def test_col_chunks(
             chunk.apply(lambda row: hash(tuple(row)), axis=1).value_counts(),
             fill_value=0,
         )
+        for col in chunk.columns:
+            col_values[col] = col_values[col].add(chunk[col].value_counts(dropna=False))
         if not any(remaining_tests for remaining_tests in remaining_tests_per_col.values()):
             # no more potential tests to do on any column, early stop
             break
@@ -212,6 +222,10 @@ def test_col_chunks(
                 )
         remaining_tests_per_col = build_remaining_tests_per_col(return_table)
     analysis["nb_duplicates"] = sum(row_hashes_count > 1)
+    analysis["categorical"] = [
+        col for col, values in col_values.items()
+        if len(values) <= MAX_NUMBER_CATEGORICAL_VALUES
+    ]
     # handling that empty columns score 1 everywhere
     for col in return_table.columns:
         if sum(return_table[col]) == len(return_table):
