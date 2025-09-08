@@ -125,7 +125,6 @@ def validate_then_detect(
     is_valid, table, analysis = validate(
         file_path=file_path,
         previous_analysis=previous_analysis,
-        num_rows=num_rows,
         encoding=previous_analysis.get("encoding"),
         sep=previous_analysis.get("separator"),
         sheet_name=previous_analysis.get("sheet_name"),

@@ -11,7 +11,7 @@ from csv_detective.detection.variables import (
 )
 from csv_detective.load_tests import return_all_tests
 from csv_detective.output.utils import prepare_output_dict
-from csv_detective.parsing.columns import MAX_ROWS_ANALYSIS, test_col, test_label
+from csv_detective.parsing.columns import test_col, test_col_chunks, test_label
 from csv_detective.validate import validate
 
 # above this threshold, a column is not considered categorical
@@ -27,35 +27,21 @@ def detect_formats(
     skipna: bool = True,
     verbose: bool = False,
 ):
-    on_sample = len(table) > MAX_ROWS_ANALYSIS
-    if on_sample:
-        if verbose:
-            logging.warning(f"File is too long, analysing a sample of {MAX_ROWS_ANALYSIS} rows")
-        table = build_sample(table)
+    on_sample = analysis.get("total_lines") is None
 
-    if table.empty:
-        res_categorical = []
-        # res_continuous = []
-    else:
-        # Detects columns that are categorical
-        res_categorical, categorical_mask = detect_categorical_variable(
-            table,
-            max_number_categorical_values=MAX_NUMBER_CATEGORICAL_VALUES,
-            verbose=verbose,
-        )
-        res_categorical = list(res_categorical)
-        # Detect columns that are continuous (we already know the categorical) :
-        # we don't need this for now, cuts processing time
-        # res_continuous = list(
-        #     detect_continuous_variable(table.iloc[:, ~categorical_mask.values], verbose=verbose)
-        # )
+    # # Detects columns that are categorical
+    # res_categorical, categorical_mask = detect_categorical_variable(
+    #     table,
+    #     max_number_categorical_values=MAX_NUMBER_CATEGORICAL_VALUES,
+    #     verbose=verbose,
+    # )
 
-    analysis.update(
-        {
-            "categorical": res_categorical,
-            # "continuous": res_continuous,
-        }
-    )
+    # analysis.update(
+    #     {
+    #         "categorical": res_categorical,
+    #         # "continuous": res_continuous,
+    #     }
+    # )
 
     # list testing to be performed
     all_tests_fields = return_all_tests(
@@ -70,13 +56,29 @@ def detect_formats(
         return analysis
 
     # Perform testing on fields
-    scores_table_fields = test_col(
-        table, all_tests_fields, limited_output, skipna=skipna, verbose=verbose
-    )
+    if not on_sample:
+        # table is small enough to be tested in one go
+        scores_table_fields = test_col(
+            table=table,
+            all_tests=all_tests_fields,
+            limited_output=limited_output,
+            skipna=skipna,
+            verbose=verbose,
+        )
+    else:
+        scores_table_fields, analysis = test_col_chunks(
+            table=table,
+            file_path=file_path,
+            analysis=analysis,
+            all_tests=all_tests_fields,
+            limited_output=limited_output,
+            skipna=skipna,
+            verbose=verbose,
+        )
     analysis["columns_fields"] = prepare_output_dict(scores_table_fields, limited_output)
 
     # Perform testing on labels
-    scores_table_labels = test_label(table, all_tests_labels, limited_output, verbose=verbose)
+    scores_table_labels = test_label(analysis["header"], all_tests_labels, limited_output, verbose=verbose)
     analysis["columns_labels"] = prepare_output_dict(scores_table_labels, limited_output)
 
     # Multiply the results of the fields by 1 + 0.5 * the results of the labels.
@@ -156,57 +158,4 @@ def detect_formats(
         for header, col_metadata in analysis["columns"].items():
             analysis["formats"][col_metadata["format"]].append(header)
 
-    if on_sample:
-        if verbose:
-            logging.warning("Validating that analysis on the sample works on the whole file")
-        is_valid, _, _ = validate(
-            file_path=file_path,
-            previous_analysis=analysis,
-            num_rows=-1,
-            encoding=analysis.get("encoding"),
-            sep=analysis.get("separator"),
-            sheet_name=analysis.get("sheet_name"),
-            verbose=verbose,
-            skipna=skipna,
-        )
-        if not is_valid:
-            raise ValueError("Could not infer detected formats on the whole file")
-
     return analysis
-
-
-def build_sample(table: pd.DataFrame) -> pd.DataFrame:
-    """
-    building a sample of MAX_ROWS_ANALYSIS rows that contains at least one representative of
-    the min and max values of each column, and one case of NaN if the column contains any.
-    """
-    samples = pd.concat(
-        [
-            # one row with the minimum of the column
-            table.loc[table[col] == val].iloc[[0]]
-            for col in table.columns
-            if not pd.isna(val := table[col].dropna().min())
-        ]
-        + [
-            # one row with the maximum of the column
-            table.loc[table[col] == val].iloc[[0]]
-            for col in table.columns
-            if not pd.isna(val := table[col].dropna().max())
-        ]
-        + [
-            # one row with a NaN value if the column has any
-            table.loc[table[col].isna()].iloc[[0]]
-            for col in table.columns
-            if table[col].isna().any()
-        ],
-        ignore_index=True,
-    )
-    return (
-        pd.concat(
-            [samples, table.sample(n=MAX_ROWS_ANALYSIS - len(samples), random_state=1)],
-            ignore_index=True,
-        )
-        # this is very unlikely but we never know
-        if len(samples) <= MAX_ROWS_ANALYSIS
-        else samples.sample(n=MAX_ROWS_ANALYSIS, random_state=1)
-    )

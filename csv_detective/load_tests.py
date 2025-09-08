@@ -20,7 +20,7 @@ def get_all_packages(detect_type) -> list:
 def return_all_tests(
     user_input_tests: Union[str, list],
     detect_type: str,
-) -> list:
+) -> dict[str, dict]:
     """
     returns all tests that have a method _is and are listed in the user_input_tests
     the function can select a sub_package from csv_detective
@@ -41,6 +41,7 @@ def return_all_tests(
     else:
         tests_to_do = [f"{detect_type}.{x}" for x in user_input_tests if x[0] != "-"]
     tests_skipped = [f"{detect_type}.{x[1:]}" for x in user_input_tests if x[0] == "-"]
+    # removing specified (groups of) tests
     all_tests = [
         # this is why we need to import detect_fields/labels
         eval(x)
@@ -48,6 +49,11 @@ def return_all_tests(
         if any([y == x[: len(y)] for y in tests_to_do])
         and all([y != x[: len(y)] for y in tests_skipped])
     ]
-    # to remove groups of tests
-    all_tests = [test for test in all_tests if "_is" in dir(test)]
-    return all_tests
+    return {
+        test.__name__.split(".")[-1]: {
+            "func": test._is,
+            "prop": test.PROPORTION,
+            "module": test,
+        }
+        for test in all_tests if "_is" in dir(test)
+    }

@@ -45,6 +45,8 @@ def load_file(
             sheet_name=sheet_name,
             verbose=verbose,
         )
+        if table.empty:
+            raise ValueError("Table seems to be empty")
         header = table.columns.to_list()
         analysis = {
             "engine": engine,
@@ -73,28 +75,31 @@ def load_file(
         if sep is None:
             sep = detect_separator(str_file, verbose=verbose)
         header_row_idx, header = detect_headers(str_file, sep, verbose=verbose)
-        if header is None:
-            return {"error": True}
-        elif isinstance(header, list):
-            if any([x is None for x in header]):
-                return {"error": True}
+        if header is None or (isinstance(header, list) and any([h is None for h in header])):
+            raise ValueError("Could not retrieve headers")
         heading_columns = detect_heading_columns(str_file, sep, verbose=verbose)
         trailing_columns = detect_trailing_columns(str_file, sep, heading_columns, verbose=verbose)
         table, total_lines, nb_duplicates = parse_csv(
             str_file, encoding, sep, num_rows, header_row_idx, verbose=verbose
         )
+        if table.empty:
+            raise ValueError("Table seems to be empty")
         analysis = {
             "encoding": encoding,
             "separator": sep,
             "heading_columns": heading_columns,
             "trailing_columns": trailing_columns,
         }
+        if engine is not None:
+            analysis["compression"] = engine
     analysis.update(
         {
             "header_row_idx": header_row_idx,
             "header": header,
-            "total_lines": total_lines,
-            "nb_duplicates": nb_duplicates,
         }
     )
+    if total_lines is not None:
+        analysis["total_lines"] = total_lines
+    if nb_duplicates is not None:
+        analysis["nb_duplicates"] = nb_duplicates
     return table, analysis

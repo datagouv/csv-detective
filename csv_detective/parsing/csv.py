@@ -1,10 +1,12 @@
 import logging
 from time import time
-from typing import TextIO
+from typing import Optional, TextIO
 
 import pandas as pd
 
 from csv_detective.utils import display_logs_depending_process_time
+
+CHUNK_SIZE = int(1e4)
 
 
 def parse_csv(
@@ -15,36 +17,36 @@ def parse_csv(
     skiprows: int,
     random_state: int = 42,
     verbose: bool = False,
-) -> tuple[pd.DataFrame, int, int]:
+) -> tuple[pd.DataFrame, Optional[int], Optional[int]]:
     if verbose:
         start = time()
         logging.info("Parsing table")
-    table = None
 
     if not isinstance(the_file, str):
         the_file.seek(0)
 
-    total_lines = None
-    for encoding in [encoding, "ISO-8859-1", "utf-8"]:
-        if encoding is None:
-            continue
-
-        if "ISO-8859" in encoding:
-            encoding = "ISO-8859-1"
-        try:
-            table = pd.read_csv(the_file, sep=sep, dtype=str, encoding=encoding, skiprows=skiprows)
-            total_lines = len(table)
+    try:
+        table = pd.read_csv(
+            the_file,
+            sep=sep,
+            dtype=str,
+            encoding=encoding,
+            skiprows=skiprows,
+            nrows=CHUNK_SIZE,
+        )
+        total_lines = len(table)
+        # branch between small and big files starts here
+        if total_lines == CHUNK_SIZE:
+            if verbose:
+                logging.warning(f"File is too long, analysing a sample of {CHUNK_SIZE} rows")
+            total_lines, nb_duplicates = None, None
+        else:
             nb_duplicates = len(table.loc[table.duplicated()])
-            if num_rows > 0:
-                num_rows = min(num_rows - 1, total_lines)
-                table = table.sample(num_rows, random_state=random_state)
-            # else : table is unchanged
-            break
-        except TypeError:
-            print("Trying encoding : {encoding}".format(encoding=encoding))
-
-    if table is None:
-        raise ValueError("Could not load file")
+        if num_rows > 0:
+            num_rows = min(num_rows, total_lines or len(table))
+            table = table.sample(num_rows, random_state=random_state)
+    except Exception as e:
+        raise ValueError("Could not load file") from e
     if verbose:
         display_logs_depending_process_time(
             f"Table parsed successfully in {round(time() - start, 3)}s",
