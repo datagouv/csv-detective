@@ -27,7 +27,7 @@ def detect_formats(
     skipna: bool = True,
     verbose: bool = False,
 ) -> tuple[dict, Optional[dict[str, pd.Series]]]:
-    on_sample = analysis.get("total_lines") is None
+    in_chunks = analysis.get("total_lines") is None
 
     # list testing to be performed
     all_tests_fields = return_all_tests(
@@ -42,7 +42,7 @@ def detect_formats(
         return analysis, None
 
     # Perform testing on fields
-    if not on_sample:
+    if not in_chunks:
         # table is small enough to be tested in one go
         scores_table_fields = test_col(
             table=table,
