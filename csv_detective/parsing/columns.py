@@ -180,6 +180,7 @@ def test_col_chunks(
         dtype=str,
         encoding=analysis["encoding"],
         sep=analysis["separator"],
+        skiprows=analysis["header_row_idx"],
         compression=analysis.get("compression"),
         chunksize=CHUNK_SIZE,
     )
