@@ -24,6 +24,7 @@ def generate_output(
     cast_json: bool = True,
     verbose: bool = False,
     sheet_name: Optional[Union[str, int]] = None,
+    _col_values: Optional[dict[str, pd.Series]] = None,
 ) -> Union[dict, tuple[dict, pd.DataFrame]]:
     if output_profile:
         analysis["profile"] = create_profile(
@@ -33,6 +34,7 @@ def generate_output(
             limited_output=limited_output,
             cast_json=cast_json,
             verbose=verbose,
+            _col_values=_col_values,
         )
 
     if save_results:

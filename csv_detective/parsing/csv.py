@@ -38,7 +38,7 @@ def parse_csv(
         # branch between small and big files starts here
         if total_lines == CHUNK_SIZE:
             if verbose:
-                logging.warning(f"File is too long, analysing a sample of {CHUNK_SIZE} rows")
+                logging.warning(f"File is too long, analysing in chunks of {CHUNK_SIZE} rows")
             total_lines, nb_duplicates = None, None
         else:
             nb_duplicates = len(table.loc[table.duplicated()])

@@ -149,7 +149,7 @@ def test_col_chunks(
     limited_output: bool,
     skipna: bool = True,
     verbose: bool = False,
-) -> tuple[pd.DataFrame, dict]:
+) -> tuple[pd.DataFrame, dict, dict[str, pd.Series]]:
     def build_remaining_tests_per_col(return_table: pd.DataFrame) -> dict[str, list[str]]:
         return {
             col: [
@@ -168,7 +168,7 @@ def test_col_chunks(
 
     # hashing rows to get nb_duplicates
     row_hashes_count = table.apply(lambda row: hash(tuple(row)), axis=1).value_counts()
-    # getting values for profile if specified
+    # getting values for profile to read the file only once
     col_values = {
         col: table[col].value_counts(dropna=False)
         for col in table.columns
@@ -196,7 +196,10 @@ def test_col_chunks(
             fill_value=0,
         )
         for col in chunk.columns:
-            col_values[col] = col_values[col].add(chunk[col].value_counts(dropna=False))
+            col_values[col] = col_values[col].add(
+                chunk[col].value_counts(dropna=False),
+                fill_value=0,
+            )
         if not any(remaining_tests for remaining_tests in remaining_tests_per_col.values()):
             # no more potential tests to do on any column, early stop
             break
@@ -234,4 +237,4 @@ def test_col_chunks(
         display_logs_depending_process_time(
             f"Done testing chunks in {round(time() - start, 3)}s", time() - start
         )
-    return return_table, analysis
+    return return_table, analysis, col_values

@@ -1,6 +1,5 @@
-import logging
 from collections import defaultdict
-from typing import Union
+from typing import Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -11,11 +10,12 @@ from csv_detective.detection.variables import (
 )
 from csv_detective.load_tests import return_all_tests
 from csv_detective.output.utils import prepare_output_dict
-from csv_detective.parsing.columns import test_col, test_col_chunks, test_label
-from csv_detective.validate import validate
-
-# above this threshold, a column is not considered categorical
-MAX_NUMBER_CATEGORICAL_VALUES = 25
+from csv_detective.parsing.columns import (
+    MAX_NUMBER_CATEGORICAL_VALUES,
+    test_col,
+    test_col_chunks,
+    test_label,
+)
 
 
 def detect_formats(
@@ -26,22 +26,8 @@ def detect_formats(
     limited_output: bool = True,
     skipna: bool = True,
     verbose: bool = False,
-):
+) -> tuple[dict, Optional[dict[str, pd.Series]]]:
     on_sample = analysis.get("total_lines") is None
-
-    # # Detects columns that are categorical
-    # res_categorical, categorical_mask = detect_categorical_variable(
-    #     table,
-    #     max_number_categorical_values=MAX_NUMBER_CATEGORICAL_VALUES,
-    #     verbose=verbose,
-    # )
-
-    # analysis.update(
-    #     {
-    #         "categorical": res_categorical,
-    #         # "continuous": res_continuous,
-    #     }
-    # )
 
     # list testing to be performed
     all_tests_fields = return_all_tests(
@@ -53,7 +39,7 @@ def detect_formats(
 
     # if no testing then return
     if not all_tests_fields and not all_tests_labels:
-        return analysis
+        return analysis, None
 
     # Perform testing on fields
     if not on_sample:
@@ -65,8 +51,15 @@ def detect_formats(
             skipna=skipna,
             verbose=verbose,
         )
+        res_categorical, _ = detect_categorical_variable(
+            table,
+            max_number_categorical_values=MAX_NUMBER_CATEGORICAL_VALUES,
+            verbose=verbose,
+        )
+        analysis["categorical"] = res_categorical
+        col_values = None
     else:
-        scores_table_fields, analysis = test_col_chunks(
+        scores_table_fields, analysis, col_values = test_col_chunks(
             table=table,
             file_path=file_path,
             analysis=analysis,
@@ -158,4 +151,4 @@ def detect_formats(
         for header, col_metadata in analysis["columns"].items():
             analysis["formats"][col_metadata["format"]].append(header)
 
-    return analysis
+    return analysis, col_values

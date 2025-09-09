@@ -71,7 +71,7 @@ def routine(
         sheet_name=sheet_name,
     )
 
-    analysis = detect_formats(
+    analysis, _col_values = detect_formats(
         table=table,
         analysis=analysis,
         file_path=file_path,
@@ -95,6 +95,7 @@ def routine(
             cast_json=cast_json,
             verbose=verbose,
             sheet_name=sheet_name,
+            _col_values=_col_values,
         )
     finally:
         if verbose:
