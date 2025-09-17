@@ -185,20 +185,27 @@ def test_col_chunks(
         chunksize=CHUNK_SIZE,
     )
     analysis["total_lines"] = CHUNK_SIZE
+    batch, batch_number = [], 1
     for idx, chunk in enumerate(chunks):
         if idx == 0:
             # we have read and analysed the first chunk already
             continue
+        if len(batch) < 10:
+            # it's too slow to process chunks directly, but we want to keep the first analysis
+            # on a "small" chunk, so partial analyses are done on batches of chunks
+            batch.append(chunk)
+            continue
         if verbose:
-            logging.info(f"> Testing chunk number {idx + 1}")
-        analysis["total_lines"] += len(chunk)
+            logging.info(f"> Testing batch number {batch_number}")
+        batch = pd.concat(batch, ignore_index=True)
+        analysis["total_lines"] += len(batch)
         row_hashes_count = row_hashes_count.add(
-            chunk.apply(lambda row: hash(tuple(row)), axis=1).value_counts(),
+            batch.apply(lambda row: hash(tuple(row)), axis=1).value_counts(),
             fill_value=0,
         )
-        for col in chunk.columns:
+        for col in batch.columns:
             col_values[col] = col_values[col].add(
-                chunk[col].value_counts(dropna=False),
+                batch[col].value_counts(dropna=False),
                 fill_value=0,
             )
         if not any(remaining_tests for remaining_tests in remaining_tests_per_col.values()):
@@ -206,25 +213,26 @@ def test_col_chunks(
             break
         for col, tests in remaining_tests_per_col.items():
             # testing each column with the tests that are still competing
-            # after previous chunks analyses
+            # after previous batchs analyses
             for test in tests:
-                chunk_col_test = test_col_val(
-                    chunk[col],
+                batch_col_test = test_col_val(
+                    batch[col],
                     all_tests[test]["func"],
                     all_tests[test]["prop"],
                     limited_output=limited_output,
                     skipna=skipna,
                 )
                 return_table.loc[test, col] = (
-                    # if this chunk's column tested 0 then test fails overall
-                    0 if chunk_col_test == 0
+                    # if this batch's column tested 0 then test fails overall
+                    0 if batch_col_test == 0
                     # otherwise updating the score with weighted average
                     else (
-                        (return_table.loc[test, col] * idx + chunk_col_test)
+                        (return_table.loc[test, col] * idx + batch_col_test)
                         / (idx + 1)
                     )
                 )
         remaining_tests_per_col = build_remaining_tests_per_col(return_table)
+        batch, batch_number = [], batch_number + 1
     analysis["nb_duplicates"] = sum(row_hashes_count > 1)
     analysis["categorical"] = [
         col for col, values in col_values.items()
