@@ -5,8 +5,8 @@ import pandas as pd
 
 from csv_detective.load_tests import return_all_tests
 from csv_detective.parsing.columns import MAX_NUMBER_CATEGORICAL_VALUES, test_col_val
-from csv_detective.parsing.csv import CHUNK_SIZE
 
+VALIDATION_CHUNK_SIZE = int(1e5)
 logging.basicConfig(level=logging.INFO)
 
 tests = return_all_tests("ALL", "detect_fields")
@@ -31,7 +31,7 @@ def validate(
                 encoding=previous_analysis["encoding"],
                 skiprows=previous_analysis["header_row_idx"],
                 compression=previous_analysis.get("compression"),
-                chunksize=CHUNK_SIZE,
+                chunksize=VALIDATION_CHUNK_SIZE,
             )
             analysis = {
                 k: v for k, v in previous_analysis.items()
