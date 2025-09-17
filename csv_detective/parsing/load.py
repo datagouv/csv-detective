@@ -69,7 +69,14 @@ def load_file(
             binary_file.seek(0)
         # decoding and reading file
         if is_url(file_path) or engine in COMPRESSION_ENGINES:
-            str_file = StringIO(binary_file.read().decode(encoding=encoding))
+            str_file = StringIO()
+            while True:
+                chunk = binary_file.read(1024**2)
+                if not chunk:
+                    break
+                str_file.write(chunk.decode(encoding=encoding))
+            del binary_file
+            str_file.seek(0)
         else:
             str_file = open(file_path, "r", encoding=encoding)
         if sep is None:
@@ -82,6 +89,7 @@ def load_file(
         table, total_lines, nb_duplicates = parse_csv(
             str_file, encoding, sep, num_rows, header_row_idx, verbose=verbose
         )
+        del str_file
         if table.empty:
             raise ValueError("Table seems to be empty")
         analysis = {
