@@ -49,12 +49,9 @@ def test_validation(_params):
     for dotkey in modif_previous_analysis:
         keys = dotkey.split(".")
         set_nested_value(previous_analysis, keys, modif_previous_analysis[dotkey])
-    is_valid, table, analysis = validate(
+    is_valid, table, analysis, col_values = validate(
         "tests/data/a_test_file.csv",
         previous_analysis=previous_analysis,
-        num_rows=-1,
-        sep=previous_analysis.get("separator"),
-        encoding=previous_analysis.get("encoding"),
     )
     assert is_valid == should_be_valid
     if table_type is None:
@@ -65,6 +62,15 @@ def test_validation(_params):
         assert analysis is None
     else:
         assert isinstance(analysis, analysis_type)
+    if should_be_valid:
+        assert isinstance(col_values, dict)
+        assert all(
+            col in table.columns
+            and isinstance(values, pd.Series)
+            for col, values in col_values.items()
+        )
+    else:
+        assert col_values is None
 
 
 @pytest.mark.parametrize(
