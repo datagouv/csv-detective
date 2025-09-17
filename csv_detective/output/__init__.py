@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Optional, Union
+from typing import Iterator, Optional, Union
 
 import pandas as pd
 
@@ -25,7 +25,7 @@ def generate_output(
     verbose: bool = False,
     sheet_name: Optional[Union[str, int]] = None,
     _col_values: Optional[dict[str, pd.Series]] = None,
-) -> Union[dict, tuple[dict, pd.DataFrame]]:
+) -> Union[dict, tuple[dict, Iterator[pd.DataFrame]]]:
     if output_profile:
         analysis["profile"] = create_profile(
             table=table,
