@@ -2,6 +2,7 @@ import logging
 from time import time
 from typing import Callable
 
+from more_itertools import peekable
 import pandas as pd
 
 from csv_detective.parsing.csv import CHUNK_SIZE
@@ -186,7 +187,9 @@ def test_col_chunks(
     )
     analysis["total_lines"] = CHUNK_SIZE
     batch, batch_number = [], 1
-    for idx, chunk in enumerate(chunks):
+    iterator = peekable(enumerate(chunks))
+    while iterator:
+        idx, chunk = next(iterator)
         if idx == 0:
             # we have read and analysed the first chunk already
             continue
@@ -194,7 +197,13 @@ def test_col_chunks(
             # it's too slow to process chunks directly, but we want to keep the first analysis
             # on a "small" chunk, so partial analyses are done on batches of chunks
             batch.append(chunk)
-            continue
+            # we don't know when the chunks end, and doing one additionnal step
+            # for the final batch is ugly
+            try:
+                iterator.peek()
+                continue
+            except StopIteration:
+                pass
         if verbose:
             logging.info(f"> Testing batch number {batch_number}")
         batch = pd.concat(batch, ignore_index=True)
