@@ -26,7 +26,4 @@ def _is(val: Optional[Any]) -> bool:
     if sum([char.isdigit() or char in {"-", "/", ":", " "} for char in val]) / len(val) < threshold:
         return False
     res = date_casting(val)
-    return (
-        res is not None
-        and not bool(res.tzinfo)
-    )
+    return res is not None and not bool(res.tzinfo)
