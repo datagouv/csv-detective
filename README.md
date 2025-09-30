@@ -44,7 +44,7 @@ inspection_results = routine(
 
 The program creates a `Python` dictionnary with the following information :
 
-```json
+```
 {
     "encoding": "windows-1252", 			        # Encoding detected
     "separator": ";",						# Detected CSV separator
