@@ -1,6 +1,6 @@
 # CSV Detective
 
-This is a package to **automatically detect column content in tabular files**. The script reads either the whole file or the first few rows and performs various checks to see for each column if it matches with various content types. This is currently done through regex and string comparison.
+This is a package to **automatically detect column content in tabular files**. The script reads either the whole file or the first few rows and performs various checks (regex, casting, comparison with official lists...) to see for each column if it matches with various content types.
 
 Currently supported file types: csv, xls, xlsx, ods.
 
@@ -20,7 +20,7 @@ pip install csv-detective
 
 Say you have a tabular file located at `file_path`. This is how you could use `csv_detective`:
 
-```
+```python
 # Import the csv_detective package
 from csv_detective import routine
 import os # for this example only
@@ -44,7 +44,7 @@ inspection_results = routine(
 
 The program creates a `Python` dictionnary with the following information :
 
-```
+```json
 {
     "encoding": "windows-1252", 			        # Encoding detected
     "separator": ";",						# Detected CSV separator
@@ -128,19 +128,42 @@ The program creates a `Python` dictionnary with the following information :
 ```
 
 The output slightly differs depending on the file format:
-- csv files have `encoding` and `separator`
+- csv files have `encoding` and `separator` (and `compression` if relevant)
 - xls, xls, ods files have `engine` and `sheet_name`
+
+You may also set `output_df` to `True`, in which case the output is a tuple of two elements:
+- the analysis (as described above)
+- an iteror of `pd.DataFrame`s which contain the columns cast with the detected types (which can be used with `pd.concat` or in a loop):
+```python
+inspection, df_chunks = routine(
+    file_path=file_path,
+    num_rows=-1,
+    output_df=True,
+)
+cast_df = pd.concat(df_chunks, ignore_index=True)
+# if "col1" has been detected as a float, then cast_df["col1"] contains floats
+```
 
 ### What Formats Can Be Detected
 
 Includes :
-
+- types (float, int, dates, datetimes, JSON) and more specific (latitude, longitude, geoJSON...) 
 - Communes, Départements, Régions, Pays
 - Codes Communes, Codes Postaux, Codes Departement, ISO Pays
 - Codes CSP, Description CSP, SIREN
 - E-Mails, URLs, Téléphones FR
 - Years, Dates, Jours de la Semaine FR
 - UUIDs, Mongo ObjectIds
+
+### Validation
+If you have a pre-made analysis of a file, you can check whether an other file conforms to the same analysis:
+```python
+from csv_detective import validate
+is_valid, *_ = validate(
+  file_path,
+  previous_analysis,  # exactly as it came out from the routine function
+)
+```
 
 ### Format detection and scoring
 For each column, 3 scores are computed for each format, the higher the score, the more likely the format:
@@ -169,7 +192,6 @@ Only the format with highest score is present in the output.
 Related ideas:
 
 - store column names to make a learning model based on column names for (possible pre-screen)
-- normalising data based on column prediction
 - entity resolution (good luck...)
 
 ## Why Could This Be of Any Use ?
