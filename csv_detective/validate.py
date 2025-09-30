@@ -34,30 +34,28 @@ def validate(
                 chunksize=VALIDATION_CHUNK_SIZE,
             )
             analysis = {
-                k: v for k, v in previous_analysis.items()
-                if k in ["encoding", "separator", "compression", "heading_columns", "trailing_columns"]
+                k: v
+                for k, v in previous_analysis.items()
+                if k
+                in ["encoding", "separator", "compression", "heading_columns", "trailing_columns"]
                 and v is not None
             }
         else:
             # or chunks-like if not chunkable
-            chunks = iter([
-                pd.read_excel(
-                    file_path,
-                    dtype=str,
-                    engine=previous_analysis["engine"],
-                    sheet_name=previous_analysis["sheet_name"],
-                )
-            ])
-            analysis = {
-                k: v for k, v in previous_analysis.items()
-                if k in ["engine", "sheet_name"]
-            }
+            chunks = iter(
+                [
+                    pd.read_excel(
+                        file_path,
+                        dtype=str,
+                        engine=previous_analysis["engine"],
+                        sheet_name=previous_analysis["sheet_name"],
+                    )
+                ]
+            )
+            analysis = {k: v for k, v in previous_analysis.items() if k in ["engine", "sheet_name"]}
         first_chunk = next(chunks)
         analysis.update(
-            {
-                k: v for k, v in previous_analysis.items()
-                if k in ["header_row_idx", "header"]
-            }
+            {k: v for k, v in previous_analysis.items() if k in ["header_row_idx", "header"]}
         )
     except Exception as e:
         if verbose:
@@ -66,26 +64,22 @@ def validate(
     if verbose:
         logging.info("Comparing table with the previous analysis")
         logging.info("- Checking if all columns match")
-    if (
-        len(first_chunk.columns) != len(previous_analysis["header"])
-        or any(
-            list(first_chunk.columns)[k] != previous_analysis["header"][k]
-            for k in range(len(previous_analysis["header"]))
-        )
+    if len(first_chunk.columns) != len(previous_analysis["header"]) or any(
+        list(first_chunk.columns)[k] != previous_analysis["header"][k]
+        for k in range(len(previous_analysis["header"]))
     ):
         if verbose:
             logging.warning("> Columns do not match, proceeding with full analysis")
         return False, None, None, None
     if verbose:
-        logging.info(f"Testing previously detected formats on chunks of {CHUNK_SIZE} rows")
+        logging.info(
+            f"Testing previously detected formats on chunks of {VALIDATION_CHUNK_SIZE} rows"
+        )
 
     # hashing rows to get nb_duplicates
     row_hashes_count = first_chunk.apply(lambda row: hash(tuple(row)), axis=1).value_counts()
     # getting values for profile to read the file only once
-    col_values = {
-        col: first_chunk[col].value_counts(dropna=False)
-        for col in first_chunk.columns
-    }
+    col_values = {col: first_chunk[col].value_counts(dropna=False) for col in first_chunk.columns}
     analysis["total_lines"] = 0
     for idx, chunk in enumerate([first_chunk, *chunks]):
         if verbose:
@@ -120,8 +114,7 @@ def validate(
         logging.info("> All checks successful")
     analysis["nb_duplicates"] = sum(row_hashes_count > 1)
     analysis["categorical"] = [
-        col for col, values in col_values.items()
-        if len(values) <= MAX_NUMBER_CATEGORICAL_VALUES
+        col for col, values in col_values.items() if len(values) <= MAX_NUMBER_CATEGORICAL_VALUES
     ]
     return (
         True,

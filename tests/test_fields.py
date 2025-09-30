@@ -467,11 +467,7 @@ def test_early_detection(args):
 def test_all_proportion_1():
     all_tests = return_all_tests("ALL", "detect_fields")
     prop_1 = {
-        name: eval(
-            name
-            if name not in ["int", "float"]
-            else "test_" + name
-        )
+        name: eval(name if name not in ["int", "float"] else "test_" + name)
         for name, attr in all_tests.items()
         if attr["prop"] == 1
     }

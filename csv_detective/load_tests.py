@@ -55,5 +55,6 @@ def return_all_tests(
             "prop": test.PROPORTION,
             "module": test,
         }
-        for test in all_tests if "_is" in dir(test)
+        for test in all_tests
+        if "_is" in dir(test)
     }

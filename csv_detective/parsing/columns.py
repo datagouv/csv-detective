@@ -2,8 +2,8 @@ import logging
 from time import time
 from typing import Callable
 
-from more_itertools import peekable
 import pandas as pd
+from more_itertools import peekable
 
 from csv_detective.parsing.csv import CHUNK_SIZE
 from csv_detective.utils import display_logs_depending_process_time
@@ -117,7 +117,9 @@ def test_col(
     return return_table
 
 
-def test_label(columns: list[str], all_tests: dict[str, dict], limited_output: bool, verbose: bool = False):
+def test_label(
+    columns: list[str], all_tests: dict[str, dict], limited_output: bool, verbose: bool = False
+):
     if verbose:
         start = time()
         logging.info("Testing labels to get types")
@@ -153,9 +155,7 @@ def test_col_chunks(
 ) -> tuple[pd.DataFrame, dict, dict[str, pd.Series]]:
     def build_remaining_tests_per_col(return_table: pd.DataFrame) -> dict[str, list[str]]:
         return {
-            col: [
-                test for test in return_table.index if return_table.loc[test, col] > 0
-            ]
+            col: [test for test in return_table.index if return_table.loc[test, col] > 0]
             for col in return_table.columns
         }
 
@@ -170,10 +170,7 @@ def test_col_chunks(
     # hashing rows to get nb_duplicates
     row_hashes_count = table.apply(lambda row: hash(tuple(row)), axis=1).value_counts()
     # getting values for profile to read the file only once
-    col_values = {
-        col: table[col].value_counts(dropna=False)
-        for col in table.columns
-    }
+    col_values = {col: table[col].value_counts(dropna=False) for col in table.columns}
 
     # only csv files can end up here, can't chunk excel
     chunks = pd.read_csv(
@@ -233,19 +230,16 @@ def test_col_chunks(
                 )
                 return_table.loc[test, col] = (
                     # if this batch's column tested 0 then test fails overall
-                    0 if batch_col_test == 0
+                    0
+                    if batch_col_test == 0
                     # otherwise updating the score with weighted average
-                    else (
-                        (return_table.loc[test, col] * idx + batch_col_test)
-                        / (idx + 1)
-                    )
+                    else ((return_table.loc[test, col] * idx + batch_col_test) / (idx + 1))
                 )
         remaining_tests_per_col = build_remaining_tests_per_col(return_table)
         batch, batch_number = [], batch_number + 1
     analysis["nb_duplicates"] = sum(row_hashes_count > 1)
     analysis["categorical"] = [
-        col for col, values in col_values.items()
-        if len(values) <= MAX_NUMBER_CATEGORICAL_VALUES
+        col for col, values in col_values.items() if len(values) <= MAX_NUMBER_CATEGORICAL_VALUES
     ]
     # handling that empty columns score 1 everywhere
     for col in return_table.columns:

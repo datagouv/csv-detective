@@ -65,8 +65,7 @@ def test_validation(_params):
     if should_be_valid:
         assert isinstance(col_values, dict)
         assert all(
-            col in table.columns
-            and isinstance(values, pd.Series)
+            col in table.columns and isinstance(values, pd.Series)
             for col, values in col_values.items()
         )
     else:

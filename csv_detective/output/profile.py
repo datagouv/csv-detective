@@ -55,7 +55,9 @@ def create_profile(
                 cast_col[c] = (
                     cast_col[c].astype(pd.Int64Dtype())
                     if columns[c]["python_type"] == "int"
-                    else cast_col[c].apply(lambda x: float_casting(x) if isinstance(x, str) else pd.NA)
+                    else cast_col[c].apply(
+                        lambda x: float_casting(x) if isinstance(x, str) else pd.NA
+                    )
                 )
                 stats = {
                     "min": cast_prevent_nan(cast_col[c].min(), columns[c]["python_type"]),
@@ -76,11 +78,8 @@ def create_profile(
             del cast_col
         # for all formats we want most frequent values, nb unique values and nb missing values
         tops_bruts = (
-            (
-                table[c].value_counts()
-                if _col_values is None
-                else _col_values[c].sort_values()
-            ).reset_index()
+            (table[c].value_counts() if _col_values is None else _col_values[c].sort_values())
+            .reset_index()
             .iloc[:10]
             .to_dict(orient="records")
         )
@@ -105,11 +104,7 @@ def create_profile(
             nb_missing_values=(
                 len(table[c].loc[table[c].isna()])
                 if _col_values is None
-                else (
-                    _col_values[c].loc[pd.NA]
-                    if pd.NA in _col_values[c].index
-                    else 0
-                )
+                else (_col_values[c].loc[pd.NA] if pd.NA in _col_values[c].index else 0)
             ),
         )
     if verbose:

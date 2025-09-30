@@ -30,9 +30,7 @@ def detect_engine(file_path: str, verbose=False) -> Optional[str]:
     }
     # if none of the above, we move forwards with the csv process
     if is_url(file_path):
-        remote_content = next(
-            requests.get(file_path, stream=True).iter_content(chunk_size=1024)
-        )
+        remote_content = next(requests.get(file_path, stream=True).iter_content(chunk_size=1024))
         engine = mapping.get(magic.from_buffer(remote_content, mime=True))
     else:
         engine = mapping.get(magic.from_file(file_path, mime=True))
