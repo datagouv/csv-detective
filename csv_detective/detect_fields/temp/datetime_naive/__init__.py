@@ -9,7 +9,7 @@ threshold = 0.7
 # matches AAAA-MM-JJTHH:MM:SS(.dddddd)Z with any of the listed separators for the date OR NO SEPARATOR
 pat = (
     aaaammjj_pattern.replace("$", "")
-    + r"(T|\s)(0\d|1[0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])(.\d{1,6})?Z$"
+    + r"(T|\s)(0\d|1[0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])(.\d{1,6})?Z?$"
 )
 
 
@@ -26,8 +26,4 @@ def _is(val: Optional[Any]) -> bool:
     if sum([char.isdigit() or char in {"-", "/", ":", " "} for char in val]) / len(val) < threshold:
         return False
     res = date_casting(val)
-    return (
-        res is not None
-        and bool(res.hour or res.minute or res.second or res.microsecond)
-        and not bool(res.tzinfo)
-    )
+    return res is not None and not bool(res.tzinfo)
