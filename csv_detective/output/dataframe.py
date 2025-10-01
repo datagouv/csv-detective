@@ -1,13 +1,14 @@
 import json
 from datetime import date, datetime
 from time import time
-from typing import Optional, Union
+from typing import Iterator, Optional, Union
 
 import pandas as pd
 
 from csv_detective.detect_fields.other.booleen import bool_casting
 from csv_detective.detect_fields.other.float import float_casting
 from csv_detective.detect_fields.temp.date import date_casting
+from csv_detective.parsing.csv import CHUNK_SIZE
 from csv_detective.utils import display_logs_depending_process_time
 
 
@@ -53,3 +54,38 @@ def cast_df(
             time() - start,
         )
     return df
+
+
+def cast_df_chunks(
+    df: pd.DataFrame,
+    analysis: dict,
+    file_path: str,
+    cast_json: bool = True,
+    verbose: bool = False,
+) -> Iterator[pd.DataFrame]:
+    if analysis.get("engine") or analysis["total_lines"] <= CHUNK_SIZE:
+        # the file is loaded in one chunk, so returning the cast df
+        yield cast_df(
+            df=df,
+            columns=analysis["columns"],
+            cast_json=cast_json,
+            verbose=verbose,
+        )
+    else:
+        # loading the csv in chunks using the analysis
+        chunks = pd.read_csv(
+            file_path,
+            dtype=str,
+            sep=analysis["separator"],
+            encoding=analysis["encoding"],
+            skiprows=analysis["header_row_idx"],
+            compression=analysis.get("compression"),
+            chunksize=CHUNK_SIZE,
+        )
+        for chunk in chunks:
+            yield cast_df(
+                df=chunk,
+                columns=analysis["columns"],
+                cast_json=cast_json,
+                verbose=verbose,
+            )
