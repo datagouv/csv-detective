@@ -35,6 +35,7 @@
 - Refactor format prioritizing [#134](https://github.com/datagouv/csv-detective/pull/134)
 - Switch to pyproject [#139](https://github.com/datagouv/csv-detective/pull/139)
 - Lint with ruff [#140](https://github.com/datagouv/csv-detective/pull/140) [#141](https://github.com/datagouv/csv-detective/pull/141)
+- New `tag_version.sh` script to replace Bump'x [#161](https://github.com/datagouv/csv-detective/pull/161)
 
 ## 0.8.0 (2025-05-20)
 
