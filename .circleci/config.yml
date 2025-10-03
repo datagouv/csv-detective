@@ -10,7 +10,7 @@ parameters:
     default: "master"
   cache-prefix:
     type: string
-    default: "py-cache"
+    default: "py-cache-v2"
 
 jobs:
   install:
@@ -23,17 +23,16 @@ jobs:
           command: export BASE_BRANCH=$(base_branch)
       - restore_cache:
           keys:
-            - << pipeline.parameters.cache-prefix >>-{{ arch }}-{{ checksum "pyproject.toml" }}
+            - << pipeline.parameters.cache-prefix >>-{{ arch }}-{{ checksum "pyproject.toml" }}-{{ checksum "uv.lock" }}
       - run:
-          name: Install python dependencies
+          name: Install Python dependencies
           command: |
-            virtualenv venv
-            source venv/bin/activate
-            pip install -e .[dev]
+            pip install uv
+            uv sync --frozen --extra dev
       - save_cache:
-          key: << pipeline.parameters.cache-prefix >>-{{ arch }}-{{ checksum "pyproject.toml" }}
+          key: << pipeline.parameters.cache-prefix >>-{{ arch }}-{{ checksum "pyproject.toml" }}-{{ checksum "uv.lock" }}
           paths:
-            - venv
+            - .venv
       - persist_to_workspace:
           root: .
           paths:
@@ -50,9 +49,8 @@ jobs:
           # ruff check . : check linting and imports sorting without fixing (to fix, use --fix)
           # ruff format --check . : check code formatting without fixing (to fix, remove --check)
           command: |
-            source venv/bin/activate
-            ruff check .
-            ruff format --check .
+            uv run ruff check .
+            uv run ruff format --check .
 
   tests:
     docker:
@@ -63,8 +61,7 @@ jobs:
       - run:
           name: Run tests
           command: |
-            source venv/bin/activate
-            pytest -s tests/ --junitxml=reports/python/tests.xml -p no:sugar --color=yes
+            uv run pytest -s tests/ --junitxml=reports/python/tests.xml -p no:sugar --color=yes
       - store_test_results:
           path: reports/python
 
@@ -77,18 +74,15 @@ jobs:
       - run:
           name: Build a distributable package
           command: |
-            source venv/bin/activate
-            pip install build twine
             # Build a wheel release
             if [[ $CIRCLE_TAG ]]; then
                 # This is a tagged release, version should be handled upstream
-                python -m build --wheel
+                uv build --wheel
             else
-                pip install toml
-                python update_version.py
-                python -m build --wheel
+                uv pip install toml
+                uv run update_version.py
+                uv build --wheel
             fi
-            twine check dist/*
       - store_artifacts:
           path: dist
       - persist_to_workspace:
@@ -102,12 +96,10 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - deploy:
+      - run:
           name: Publish on PyPI
           command: |
-            source venv/bin/activate
-            pip install twine
-            twine upload --username "${PYPI_USERNAME}" --password "${PYPI_PASSWORD}" dist/*.whl
+            uv publish --username "${PYPI_USERNAME}" --password "${PYPI_PASSWORD}" dist/*.whl
 
 workflows:
   build-deploy-publish:

@@ -10,9 +10,15 @@ You can also directly feed the URL of a remote file (from data.gouv.fr for insta
 
 ### Install the package
 
-You need to have python >= 3.9 installed. We recommend using a virtual environement.
+You need to have python >= 3.9 installed. We recommend using a virtual environment.
 
+**Using [uv](https://github.com/astral-sh/uv) (recommended):**
+```bash
+uv add csv-detective
 ```
+
+**Using pip:**
+```bash
 pip install csv-detective
 ```
 
@@ -183,6 +189,15 @@ An early version of this analysis of all resources on data.gouv.fr can be found 
 ## Linting
 
 Remember to format, lint, and sort imports with [Ruff](https://docs.astral.sh/ruff/) before committing (checks will remind you anyway):
+
+**Using [uv](https://github.com/astral-sh/uv) (recommended):**
+```bash
+uv sync --dev
+uv run ruff check --fix .
+uv run ruff format .
+```
+
+**Using pip:**
 ```bash
 pip install .[dev]
 ruff check --fix .
@@ -193,7 +208,13 @@ ruff format .
 
 The release process uses `bumpx`.
 
-```shell
+**Using [uv](https://github.com/astral-sh/uv) (recommended):**
+```bash
+uv sync --dev
+```
+
+**Using pip:**
+```bash
 pip install -e .[dev]
 ```
 
@@ -207,7 +228,13 @@ pip install -e .[dev]
 
 ### Dry run
 
-```shell
+**Using [uv](https://github.com/astral-sh/uv) (recommended):**
+```bash
+uv run bumpx -d -v
+```
+
+**Using pip:**
+```bash
 bumpx -d -v
 ```
 
@@ -215,6 +242,12 @@ bumpx -d -v
 
 This will release a patch version:
 
-```shell
+**Using [uv](https://github.com/astral-sh/uv) (recommended):**
+```bash
+uv run bumpx -v
+```
+
+**Using pip:**
+```bash
 bumpx -v
 ```
