@@ -1,5 +1,4 @@
 import logging
-from typing import Optional, Union
 
 import pandas as pd
 
@@ -22,12 +21,12 @@ def validate(
     file_path: str,
     previous_analysis: dict,
     num_rows: int = 500,
-    encoding: Optional[str] = None,
-    sep: Optional[str] = None,
+    encoding: str | None = None,
+    sep: str | None = None,
     verbose: bool = False,
     skipna: bool = True,
-    sheet_name: Optional[Union[str, int]] = None,
-) -> tuple[bool, Optional[pd.DataFrame], Optional[dict]]:
+    sheet_name: str | int | None = None,
+) -> tuple[bool, pd.DataFrame | None, dict | None]:
     """
     Verify is the given file has the same fields and types as in the previous analysis.
     """

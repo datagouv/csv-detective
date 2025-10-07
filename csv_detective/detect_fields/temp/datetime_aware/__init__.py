@@ -1,5 +1,5 @@
 import re
-from typing import Any, Optional
+from typing import Any
 
 from csv_detective.detect_fields.temp.date import aaaammjj_pattern, date_casting
 
@@ -14,7 +14,7 @@ pat = (
 )
 
 
-def _is(val: Optional[Any]) -> bool:
+def _is(val: Any | None) -> bool:
     """Detects timezone-aware datetimes only"""
     # early stops, to cut processing time
     # 16 is the minimal length of a datetime format YYMMDDTHH:MM:SSZ

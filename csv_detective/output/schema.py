@@ -2,7 +2,6 @@ import json
 import logging
 from datetime import datetime
 from time import time
-from typing import Union
 
 from csv_detective.utils import display_logs_depending_process_time
 
@@ -197,7 +196,7 @@ def get_constraints(format: str) -> dict:
 
 def generate_table_schema(
     analysis_report: dict,
-    save_results: Union[bool, str] = True,
+    save_results: bool | str = True,
     verbose: bool = False,
 ) -> dict:
     """Generates a table schema from the analysis report
