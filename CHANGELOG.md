@@ -8,6 +8,7 @@
 - Fix allowed valid proportions for geo float columns [#157](https://github.com/datagouv/csv-detective/pull/157)
 - Remove Minio-related parts of the code [#158](https://github.com/datagouv/csv-detective/pull/158)
 - Handle midnight in datetimes [commit](https://github.com/datagouv/csv-detective/commit/78e632878dccb005f7dee1a3e3afae696d8611eb)
+- Fix datetime differentiation [#162](https://github.com/datagouv/csv-detective/pull/162)
 
 ## 0.9.2 (2025-08-26)
 
