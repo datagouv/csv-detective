@@ -10,6 +10,7 @@
 - Handle midnight in datetimes [commit](https://github.com/datagouv/csv-detective/commit/78e632878dccb005f7dee1a3e3afae696d8611eb)
 - Fix datetime differentiation [#162](https://github.com/datagouv/csv-detective/pull/162)
 - Bump minimum Python version from 3.9 to 3.10 [#163](https://github.com/datagouv/csv-detective/pull/163)
+- Use uv as the build backend instead of setuptools [#165](https://github.com/datagouv/csv-detective/pull/165)
 
 ## 0.9.2 (2025-08-26)
 
