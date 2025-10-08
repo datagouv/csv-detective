@@ -1,6 +1,5 @@
 import json
 import os
-from typing import Optional, Union
 
 import pandas as pd
 
@@ -17,14 +16,14 @@ def generate_output(
     file_path: str,
     num_rows: int = 500,
     limited_output: bool = True,
-    save_results: Union[bool, str] = True,
+    save_results: bool | str = True,
     output_profile: bool = False,
     output_schema: bool = False,
     output_df: bool = False,
     cast_json: bool = True,
     verbose: bool = False,
-    sheet_name: Optional[Union[str, int]] = None,
-) -> Union[dict, tuple[dict, pd.DataFrame]]:
+    sheet_name: str | int | None = None,
+) -> dict | tuple[dict, pd.DataFrame]:
     if output_profile:
         analysis["profile"] = create_profile(
             table=table,

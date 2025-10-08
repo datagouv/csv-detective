@@ -1,6 +1,5 @@
 from io import BytesIO
 from time import time
-from typing import Optional
 
 import openpyxl
 import pandas as pd
@@ -23,8 +22,8 @@ XLS_LIKE_EXT = NEW_EXCEL_EXT + OLD_EXCEL_EXT + OPEN_OFFICE_EXT
 def parse_excel(
     file_path: str,
     num_rows: int = -1,
-    engine: Optional[str] = None,
-    sheet_name: Optional[str] = None,
+    engine: str | None = None,
+    sheet_name: str | None = None,
     random_state: int = 42,
     verbose: bool = False,
 ) -> tuple[pd.DataFrame, int, int, str, str, int]:
