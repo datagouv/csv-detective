@@ -1,0 +1,305 @@
+lock-version = "1.0"
+created-by = "pip"
+
+[[packages]]
+name = "certifi"
+version = "2025.10.5"
+
+[[packages.wheels]]
+name = "certifi-2025.10.5-py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/e4/37/af0d2ef3967ac0d6113837b44a4f0bfe1328c2b9763bd5b1744520e5cfed/certifi-2025.10.5-py3-none-any.whl"
+
+[packages.wheels.hashes]
+sha256 = "0f212c2744a9bb6de0c56639a6f68afe01ecd92d91f14ae897c4fe7bbeeef0de"
+
+[[packages]]
+name = "charset-normalizer"
+version = "3.4.3"
+
+[[packages.wheels]]
+name = "charset_normalizer-3.4.3-cp313-cp313-macosx_10_13_universal2.whl"
+url = "https://files.pythonhosted.org/packages/65/ca/2135ac97709b400c7654b4b764daf5c5567c2da45a30cdd20f9eefe2d658/charset_normalizer-3.4.3-cp313-cp313-macosx_10_13_universal2.whl"
+
+[packages.wheels.hashes]
+sha256 = "14c2a87c65b351109f6abfc424cab3927b3bdece6f706e4d12faaf3d52ee5efe"
+
+[[packages]]
+name = "csv-detective"
+
+[packages.directory]
+path = "."
+
+[[packages]]
+name = "dateparser"
+version = "1.2.2"
+
+[[packages.wheels]]
+name = "dateparser-1.2.2-py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/87/22/f020c047ae1346613db9322638186468238bcfa8849b4668a22b97faad65/dateparser-1.2.2-py3-none-any.whl"
+
+[packages.wheels.hashes]
+sha256 = "5a5d7211a09013499867547023a2a0c91d5a27d15dd4dbcea676ea9fe66f2482"
+
+[[packages]]
+name = "defusedxml"
+version = "0.7.1"
+
+[[packages.wheels]]
+name = "defusedxml-0.7.1-py2.py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/07/6c/aa3f2f849e01cb6a001cd8554a88d4c77c5c1a31c95bdf1cf9301e6d9ef4/defusedxml-0.7.1-py2.py3-none-any.whl"
+
+[packages.wheels.hashes]
+sha256 = "a352e7e428770286cc899e2542b6cdaedb2b4953ff269a210103ec58f6198a61"
+
+[[packages]]
+name = "et-xmlfile"
+version = "2.0.0"
+
+[[packages.wheels]]
+name = "et_xmlfile-2.0.0-py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/c1/8b/5fe2cc11fee489817272089c4203e679c63b570a5aaeb18d852ae3cbba6a/et_xmlfile-2.0.0-py3-none-any.whl"
+
+[packages.wheels.hashes]
+sha256 = "7a91720bc756843502c3b7504c77b8fe44217c85c537d85037f0f536151b2caa"
+
+[[packages]]
+name = "faker"
+version = "37.11.0"
+
+[[packages.wheels]]
+name = "faker-37.11.0-py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/a3/46/8f4097b55e43af39e8e71e1f7aec59ff7398bca54d975c30889bc844719d/faker-37.11.0-py3-none-any.whl"
+
+[packages.wheels.hashes]
+sha256 = "1508d2da94dfd1e0087b36f386126d84f8583b3de19ac18e392a2831a6676c57"
+
+[[packages]]
+name = "faust-cchardet"
+version = "2.1.19"
+
+[packages.sdist]
+name = "faust-cchardet-2.1.19.tar.gz"
+url = "https://files.pythonhosted.org/packages/e9/53/2125d17d7c2a14b76303bf5c3c5db35ea8e4b8a14817bb191c601d67e288/faust-cchardet-2.1.19.tar.gz"
+
+[packages.sdist.hashes]
+sha256 = "f89386297cde0c8e0f5e21464bc2d6d0e4a4fc1b1d77cdb238ca24d740d872e0"
+
+[[packages]]
+name = "frformat"
+version = "0.4.0"
+
+[[packages.wheels]]
+name = "frformat-0.4.0-py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/58/f6/1414cdd4cce067e2e88ca8e62c8051f8d3f32957e2f847c6791bec32c98f/frformat-0.4.0-py3-none-any.whl"
+
+[packages.wheels.hashes]
+sha256 = "bdd62e03bec7c56a4bc388a90296eadfe2186b8f8f186a92911a101d23bffa35"
+
+[[packages]]
+name = "idna"
+version = "3.10"
+
+[[packages.wheels]]
+name = "idna-3.10-py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/76/c6/c88e154df9c4e1a2a66ccf0005a88dfb2650c1dffb6f5ce603dfbd452ce3/idna-3.10-py3-none-any.whl"
+
+[packages.wheels.hashes]
+sha256 = "946d195a0d259cbba61165e88e65941f16e9b36ea6ddb97f00452bae8b1287d3"
+
+[[packages]]
+name = "numpy"
+version = "2.3.3"
+
+[[packages.wheels]]
+name = "numpy-2.3.3-cp313-cp313-macosx_14_0_arm64.whl"
+url = "https://files.pythonhosted.org/packages/35/c7/477a83887f9de61f1203bad89cf208b7c19cc9fef0cebef65d5a1a0619f2/numpy-2.3.3-cp313-cp313-macosx_14_0_arm64.whl"
+
+[packages.wheels.hashes]
+sha256 = "9dc13c6a5829610cc07422bc74d3ac083bd8323f14e2827d992f9e52e22cd6a6"
+
+[[packages]]
+name = "odfpy"
+version = "1.4.1"
+
+[packages.sdist]
+name = "odfpy-1.4.1.tar.gz"
+url = "https://files.pythonhosted.org/packages/97/73/8ade73f6749177003f7ce3304f524774adda96e6aaab30ea79fd8fda7934/odfpy-1.4.1.tar.gz"
+
+[packages.sdist.hashes]
+sha256 = "db766a6e59c5103212f3cc92ec8dd50a0f3a02790233ed0b52148b70d3c438ec"
+
+[[packages]]
+name = "openpyxl"
+version = "3.1.5"
+
+[[packages.wheels]]
+name = "openpyxl-3.1.5-py2.py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/c0/da/977ded879c29cbd04de313843e76868e6e13408a94ed6b987245dc7c8506/openpyxl-3.1.5-py2.py3-none-any.whl"
+
+[packages.wheels.hashes]
+sha256 = "5282c12b107bffeef825f4617dc029afaf41d0ea60823bbb665ef3079dc79de2"
+
+[[packages]]
+name = "pandas"
+version = "2.3.3"
+
+[[packages.wheels]]
+name = "pandas-2.3.3-cp313-cp313-macosx_11_0_arm64.whl"
+url = "https://files.pythonhosted.org/packages/31/94/72fac03573102779920099bcac1c3b05975c2cb5f01eac609faf34bed1ca/pandas-2.3.3-cp313-cp313-macosx_11_0_arm64.whl"
+
+[packages.wheels.hashes]
+sha256 = "bdcd9d1167f4885211e401b3036c0c8d9e274eee67ea8d0758a256d60704cfe8"
+
+[[packages]]
+name = "python-dateutil"
+version = "2.9.0.post0"
+
+[[packages.wheels]]
+name = "python_dateutil-2.9.0.post0-py2.py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/ec/57/56b9bcc3c9c6a792fcbaf139543cee77261f3651ca9da0c93f5c1221264b/python_dateutil-2.9.0.post0-py2.py3-none-any.whl"
+
+[packages.wheels.hashes]
+sha256 = "a8b2bc7bffae282281c8140a97d3aa9c14da0b136dfe83f850eea9a5f7470427"
+
+[[packages]]
+name = "python-magic"
+version = "0.4.27"
+
+[[packages.wheels]]
+name = "python_magic-0.4.27-py2.py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/6c/73/9f872cb81fc5c3bb48f7227872c28975f998f3e7c2b1c16e95e6432bbb90/python_magic-0.4.27-py2.py3-none-any.whl"
+
+[packages.wheels.hashes]
+sha256 = "c212960ad306f700aa0d01e5d7a325d20548ff97eb9920dcd29513174f0294d3"
+
+[[packages]]
+name = "python-stdnum"
+version = "1.20"
+
+[[packages.wheels]]
+name = "python_stdnum-1.20-py2.py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/d6/0f/8639d60f6d7c169836694aa81504c4ee9a95dfb73ccdb16be66df4785f52/python_stdnum-1.20-py2.py3-none-any.whl"
+
+[packages.wheels.hashes]
+sha256 = "111008e10391d54fb2afad2a10df70d5cb0c6c0a7ec82fec6f022cb8712961d3"
+
+[[packages]]
+name = "pytz"
+version = "2025.2"
+
+[[packages.wheels]]
+name = "pytz-2025.2-py2.py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/81/c4/34e93fe5f5429d7570ec1fa436f1986fb1f00c3e0f43a589fe2bbcd22c3f/pytz-2025.2-py2.py3-none-any.whl"
+
+[packages.wheels.hashes]
+sha256 = "5ddf76296dd8c44c26eb8f4b6f35488f3ccbf6fbbd7adee0b7262d43f0ec2f00"
+
+[[packages]]
+name = "regex"
+version = "2025.9.18"
+
+[[packages.wheels]]
+name = "regex-2025.9.18-cp313-cp313-macosx_11_0_arm64.whl"
+url = "https://files.pythonhosted.org/packages/25/c4/9ceaa433cb5dc515765560f22a19578b95b92ff12526e5a259321c4fc1a0/regex-2025.9.18-cp313-cp313-macosx_11_0_arm64.whl"
+
+[packages.wheels.hashes]
+sha256 = "1a351aff9e07a2dabb5022ead6380cff17a4f10e4feb15f9100ee56c4d6d06af"
+
+[[packages]]
+name = "requests"
+version = "2.32.5"
+
+[[packages.wheels]]
+name = "requests-2.32.5-py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/1e/db/4254e3eabe8020b458f1a747140d32277ec7a271daf1d235b70dc0b4e6e3/requests-2.32.5-py3-none-any.whl"
+
+[packages.wheels.hashes]
+sha256 = "2462f94637a34fd532264295e186976db0f5d453d1cdd31473c85a6a161affb6"
+
+[[packages]]
+name = "rstr"
+version = "3.2.2"
+
+[[packages.wheels]]
+name = "rstr-3.2.2-py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/c8/8c/a0f14f2fcdd846839c478048032b2fc93293deaa936ff6751f27dcf50995/rstr-3.2.2-py3-none-any.whl"
+
+[packages.wheels.hashes]
+sha256 = "f39195d38da1748331eeec52f1276e71eb6295e7949beea91a5e9af2340d7b3b"
+
+[[packages]]
+name = "shapely"
+version = "2.1.2"
+
+[[packages.wheels]]
+name = "shapely-2.1.2-cp313-cp313-macosx_11_0_arm64.whl"
+url = "https://files.pythonhosted.org/packages/6d/ab/0bee5a830d209adcd3a01f2d4b70e587cdd9fd7380d5198c064091005af8/shapely-2.1.2-cp313-cp313-macosx_11_0_arm64.whl"
+
+[packages.wheels.hashes]
+sha256 = "8cff473e81017594d20ec55d86b54bc635544897e13a7cfc12e36909c5309a2a"
+
+[[packages]]
+name = "six"
+version = "1.17.0"
+
+[[packages.wheels]]
+name = "six-1.17.0-py2.py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/b7/ce/149a00dd41f10bc29e5921b496af8b574d8413afcd5e30dfa0ed46c2cc5e/six-1.17.0-py2.py3-none-any.whl"
+
+[packages.wheels.hashes]
+sha256 = "4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274"
+
+[[packages]]
+name = "tzdata"
+version = "2025.2"
+
+[[packages.wheels]]
+name = "tzdata-2025.2-py2.py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/5c/23/c7abc0ca0a1526a0774eca151daeb8de62ec457e77262b66b359c3c7679e/tzdata-2025.2-py2.py3-none-any.whl"
+
+[packages.wheels.hashes]
+sha256 = "1a403fada01ff9221ca8044d701868fa132215d84beb92242d9acd2147f667a8"
+
+[[packages]]
+name = "tzlocal"
+version = "5.3.1"
+
+[[packages.wheels]]
+name = "tzlocal-5.3.1-py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/c2/14/e2a54fabd4f08cd7af1c07030603c3356b74da07f7cc056e600436edfa17/tzlocal-5.3.1-py3-none-any.whl"
+
+[packages.wheels.hashes]
+sha256 = "eb1a66c3ef5847adf7a834f1be0800581b683b5608e74f86ecbcef8ab91bb85d"
+
+[[packages]]
+name = "unidecode"
+version = "1.4.0"
+
+[[packages.wheels]]
+name = "Unidecode-1.4.0-py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/8f/b7/559f59d57d18b44c6d1250d2eeaa676e028b9c527431f5d0736478a73ba1/Unidecode-1.4.0-py3-none-any.whl"
+
+[packages.wheels.hashes]
+sha256 = "c3c7606c27503ad8d501270406e345ddb480a7b5f38827eafe4fa82a137f0021"
+
+[[packages]]
+name = "urllib3"
+version = "2.5.0"
+
+[[packages.wheels]]
+name = "urllib3-2.5.0-py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/a7/c2/fe1e52489ae3122415c51f387e221dd0773709bad6c6cdaa599e8a2c5185/urllib3-2.5.0-py3-none-any.whl"
+
+[packages.wheels.hashes]
+sha256 = "e6b01673c0fa6a13e374b50871808eb3bf7046c4b125b216f6bf1cc604cff0dc"
+
+[[packages]]
+name = "xlrd"
+version = "2.0.1"
+
+[[packages.wheels]]
+name = "xlrd-2.0.1-py2.py3-none-any.whl"
+url = "https://files.pythonhosted.org/packages/a6/0c/c2a72d51fe56e08a08acc85d13013558a2d793028ae7385448a6ccdfae64/xlrd-2.0.1-py2.py3-none-any.whl"
+
+[packages.wheels.hashes]
+sha256 = "6a33ee89877bd9abc1158129f6e94be74e2679636b8a205b43b85206c3f0bbdd"
