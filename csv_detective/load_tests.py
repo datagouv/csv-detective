@@ -1,5 +1,4 @@
 import os
-from typing import Union
 
 from csv_detective import detect_fields, detect_labels  # noqa
 
@@ -18,7 +17,7 @@ def get_all_packages(detect_type) -> list:
 
 
 def return_all_tests(
-    user_input_tests: Union[str, list],
+    user_input_tests: str | list,
     detect_type: str,
 ) -> list:
     """

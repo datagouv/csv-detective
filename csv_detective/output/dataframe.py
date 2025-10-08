@@ -1,7 +1,6 @@
 import json
 from datetime import date, datetime
 from time import time
-from typing import Optional, Union
 
 import pandas as pd
 
@@ -11,7 +10,7 @@ from csv_detective.detect_fields.temp.date import date_casting
 from csv_detective.utils import display_logs_depending_process_time
 
 
-def cast(value: str, _type: str) -> Optional[Union[str, float, bool, date, datetime]]:
+def cast(value: str, _type: str) -> str | float | bool | date | datetime | None:
     if not isinstance(value, str) or not value:
         # None is the current default value in hydra, should we keep this?
         return None
