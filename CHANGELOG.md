@@ -36,6 +36,7 @@
 - Refactor format prioritizing [#134](https://github.com/datagouv/csv-detective/pull/134)
 - Switch to pyproject [#139](https://github.com/datagouv/csv-detective/pull/139)
 - Lint with ruff [#140](https://github.com/datagouv/csv-detective/pull/140) [#141](https://github.com/datagouv/csv-detective/pull/141)
+- Bump minimum Python version from 3.9 to 3.10 [#163](https://github.com/datagouv/csv-detective/pull/163)
 
 ## 0.8.0 (2025-05-20)
 

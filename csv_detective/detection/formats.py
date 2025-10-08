@@ -1,6 +1,5 @@
 import logging
 from collections import defaultdict
-from typing import Union
 
 import numpy as np
 import pandas as pd
@@ -22,7 +21,7 @@ def detect_formats(
     table: pd.DataFrame,
     analysis: dict,
     file_path: str,
-    user_input_tests: Union[str, list[str]] = "ALL",
+    user_input_tests: str | list[str] = "ALL",
     limited_output: bool = True,
     skipna: bool = True,
     verbose: bool = False,

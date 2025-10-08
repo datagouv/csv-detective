@@ -1,11 +1,11 @@
 import logging
 from time import time
-from typing import Optional, TextIO
+from typing import TextIO
 
 from csv_detective.utils import display_logs_depending_process_time
 
 
-def detect_headers(file: TextIO, sep: str, verbose: bool = False) -> tuple[int, Optional[list]]:
+def detect_headers(file: TextIO, sep: str, verbose: bool = False) -> tuple[int, list | None]:
     """Tests 10 first rows for possible header (in case header is not 1st row)"""
     if verbose:
         start = time()
