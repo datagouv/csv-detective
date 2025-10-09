@@ -318,6 +318,7 @@ fields = {
                 "aaaaaaaa-1111-bbbb-2222-cccccccccccc/data/"
                 "?score__greater=0.9&decompte__exact=13"
             ),
+            "https://une-ville.fr/délibérations/2025/Doc avec espaces et àccëñts.pdf",
         ],
         False: ["tmp@data.gouv.fr"],
     },
