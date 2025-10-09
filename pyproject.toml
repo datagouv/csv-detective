@@ -31,7 +31,6 @@ keywords = ["CSV", "data processing", "encoding", "guess", "parser", "tabular"]
 dev = [
     "pytest>=8.3.0",
     "responses>=0.25.0",
-    "bumpx>=0.3.10",
     "ruff>=0.9.3",
 ]
 

@@ -79,15 +79,7 @@ jobs:
           command: |
             source venv/bin/activate
             pip install build twine
-            # Build a wheel release
-            if [[ $CIRCLE_TAG ]]; then
-                # This is a tagged release, version should be handled upstream
-                python -m build --wheel
-            else
-                pip install toml
-                python update_version.py
-                python -m build --wheel
-            fi
+            python -m build --wheel
             twine check dist/*
       - store_artifacts:
           path: dist
@@ -102,7 +94,7 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - deploy:
+      - run:
           name: Publish on PyPI
           command: |
             source venv/bin/activate
