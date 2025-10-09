@@ -5,8 +5,8 @@ import uuid
 from datetime import datetime
 from typing import Any, Type
 
+import httpx
 import pandas as pd
-import requests
 import rstr
 from faker import Faker
 
@@ -184,7 +184,9 @@ def create_example_csv_file(
 
     if schema_path:
         if schema_path.startswith("http"):
-            schema = requests.get(schema_path).json()
+            with httpx.Client() as client:
+                response = client.get(schema_path)
+                schema = response.json()
         else:
             with open(schema_path, encoding=encoding) as jsonfile:
                 schema = json.load(jsonfile)

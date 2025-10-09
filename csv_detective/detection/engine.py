@@ -1,7 +1,7 @@
 from time import time
 
+import httpx
 import magic
-import requests
 
 from csv_detective.utils import display_logs_depending_process_time, is_url
 
@@ -29,7 +29,9 @@ def detect_engine(file_path: str, verbose=False) -> str | None:
     }
     # if none of the above, we move forwards with the csv process
     if is_url(file_path):
-        remote_content = requests.get(file_path).content
+        with httpx.Client() as client:
+            r = client.get(file_path)
+            remote_content = r.content
         engine = mapping.get(magic.from_buffer(remote_content, mime=True))
     else:
         engine = mapping.get(magic.from_file(file_path, mime=True))
