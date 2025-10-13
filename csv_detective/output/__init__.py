@@ -1,11 +1,12 @@
 import json
 import os
+from typing import Iterator
 
 import pandas as pd
 
 from csv_detective.utils import is_url
 
-from .dataframe import cast_df
+from .dataframe import cast_df_chunks
 from .profile import create_profile
 from .schema import generate_table_schema
 
@@ -23,7 +24,8 @@ def generate_output(
     cast_json: bool = True,
     verbose: bool = False,
     sheet_name: str | int | None = None,
-) -> dict | tuple[dict, pd.DataFrame]:
+    _col_values: dict[str, pd.Series] | None = None,
+) -> dict | tuple[dict, Iterator[pd.DataFrame]]:
     if output_profile:
         analysis["profile"] = create_profile(
             table=table,
@@ -32,6 +34,7 @@ def generate_output(
             limited_output=limited_output,
             cast_json=cast_json,
             verbose=verbose,
+            _col_values=_col_values,
         )
 
     if save_results:
@@ -53,9 +56,10 @@ def generate_output(
         analysis["schema"] = generate_table_schema(analysis, save_results=False, verbose=verbose)
 
     if output_df:
-        return analysis, cast_df(
+        return analysis, cast_df_chunks(
             df=table,
-            columns=analysis["columns"],
+            analysis=analysis,
+            file_path=file_path,
             cast_json=cast_json,
             verbose=verbose,
         )

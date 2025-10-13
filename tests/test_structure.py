@@ -34,5 +34,8 @@ def tests_conformity():
 
 
 def test_all_tests_have_unique_name():
-    names = [t.__name__.split(".")[-1] for t in return_all_tests("ALL", "detect_fields")]
+    names = [
+        attr["module"].__name__.split(".")[-1]
+        for attr in return_all_tests("ALL", "detect_fields").values()
+    ]
     assert len(names) == len(set(names))
