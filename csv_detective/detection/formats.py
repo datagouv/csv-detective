@@ -1,8 +1,4 @@
 from collections import defaultdict
-<<<<<<< HEAD
-=======
-from typing import Optional, Union
->>>>>>> refactor/chunks
 
 import numpy as np
 import pandas as pd
@@ -29,7 +25,7 @@ def detect_formats(
     limited_output: bool = True,
     skipna: bool = True,
     verbose: bool = False,
-) -> tuple[dict, Optional[dict[str, pd.Series]]]:
+) -> tuple[dict, dict[str, pd.Series] | None]:
     in_chunks = analysis.get("total_lines") is None
 
     # list testing to be performed
