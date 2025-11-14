@@ -11,6 +11,7 @@
 - Fix datetime differentiation [#162](https://github.com/datagouv/csv-detective/pull/162)
 - Bump minimum Python version from 3.9 to 3.10 [#163](https://github.com/datagouv/csv-detective/pull/163)
 - New `tag_version.sh` script to replace Bump'x [#161](https://github.com/datagouv/csv-detective/pull/161)
+- Better labels detection for some formats [#168](https://github.com/datagouv/csv-detective/pull/168)
 
 ## 0.9.2 (2025-08-26)
 
