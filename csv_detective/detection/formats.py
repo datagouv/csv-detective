@@ -93,12 +93,15 @@ def detect_formats(
             "code_departement",
             "code_commune_insee",
             "code_postal",
+            "code_fantoir",
             "latitude_wgs",
             "longitude_wgs",
             "latitude_wgs_fr_metropole",
             "longitude_wgs_fr_metropole",
             "latitude_l93",
             "longitude_l93",
+            "siren",
+            "siret",
         ]
         if f in scores_table.index
     ]
