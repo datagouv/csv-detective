@@ -12,12 +12,11 @@ specific = [
 ]
 
 # we aim wide to catch exact matches if possible for the highest possible score
-words = COMMON_COORDS_LABELS + specific + [
-    w + sep + suf
-    for suf in specific
-    for w in COMMON_COORDS_LABELS
-    for sep in ["", " "]
-]
+words = (
+    COMMON_COORDS_LABELS
+    + specific
+    + [w + sep + suf for suf in specific for w in COMMON_COORDS_LABELS for sep in ["", " "]]
+)
 
 
 def _is(header: str) -> float:
