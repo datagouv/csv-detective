@@ -6,6 +6,7 @@ import pandas as pd
 
 from csv_detective.utils import display_logs_depending_process_time
 
+# the number of rows for the first analysis, and the number of rows per chunk of the df iterator
 CHUNK_SIZE = int(1e4)
 
 
