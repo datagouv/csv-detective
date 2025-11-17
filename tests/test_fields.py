@@ -84,13 +84,13 @@ from csv_detective.parsing.columns import test_col as col_test  # to prevent pyt
 
 def test_all_tests_return_bool():
     all_tests = return_all_tests("ALL", "detect_fields")
-    for test in all_tests:
+    for attr in all_tests.values():
         for tmp in ["a", "9", "3.14", "[]", float("nan"), "2021-06-22 10:20:10"]:
-            assert isinstance(test._is(tmp), bool)
+            assert isinstance(attr["func"](tmp), bool)
 
 
 # categorical
-def test_detetect_categorical_variable():
+def test_detect_categorical_variable():
     categorical_col = ["type_a"] * 33 + ["type_b"] * 33 + ["type_c"] * 34
     categorical_col2 = [str(k // 20) for k in range(100)]
     not_categorical_col = [i for i in range(100)]
@@ -103,7 +103,7 @@ def test_detetect_categorical_variable():
     df = pd.DataFrame(df_dict, dtype=str)
 
     res, _ = detect_categorical_variable(df)
-    assert len(res.values) and all(k in res.values for k in ["cat", "cat2"])
+    assert len(res) and all(k in res for k in ["cat", "cat2"])
 
 
 # continuous
@@ -394,8 +394,8 @@ fields = {
 
 def test_all_fields_have_tests():
     all_tests = return_all_tests("ALL", "detect_fields")
-    for test in all_tests:
-        assert fields.get(test)
+    for attr in all_tests.values():
+        assert fields.get(attr["module"])
 
 
 @pytest.mark.parametrize(
@@ -475,13 +475,9 @@ def test_early_detection(args):
 def test_all_proportion_1():
     all_tests = return_all_tests("ALL", "detect_fields")
     prop_1 = {
-        t.__name__.split(".")[-1]: eval(
-            t.__name__.split(".")[-1]
-            if t.__name__.split(".")[-1] not in ["int", "float"]
-            else "test_" + t.__name__.split(".")[-1]
-        )
-        for t in all_tests
-        if t.PROPORTION == 1
+        name: eval(name if name not in ["int", "float"] else "test_" + name)
+        for name, attr in all_tests.items()
+        if attr["prop"] == 1
     }
     # building a table that uses only correct values for these formats, except on one row
     table = pd.DataFrame(
