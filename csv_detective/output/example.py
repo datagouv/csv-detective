@@ -3,7 +3,7 @@ import random
 import string
 import uuid
 from datetime import datetime
-from typing import Any, Optional, Type, Union
+from typing import Any, Type
 
 import pandas as pd
 import requests
@@ -16,10 +16,10 @@ fake = Faker()
 
 
 def create_example_csv_file(
-    fields: Optional[dict] = None,
-    schema_path: Optional[str] = None,
+    fields: dict | None = None,
+    schema_path: str | None = None,
     file_length: int = 10,
-    output_name: Optional[str] = "example_file.csv",
+    output_name: str | None = "example_file.csv",
     output_sep: str = ";",
     encoding: str = "utf-8",
     ignore_required: bool = False,
@@ -51,8 +51,8 @@ def create_example_csv_file(
     def _string(
         length: int = 10,
         required: bool = True,
-        pattern: Optional[str] = None,
-        enum: Optional[str] = None,
+        pattern: str | None = None,
+        enum: str | None = None,
     ) -> str:
         if potential_skip(required):
             return ""
@@ -72,7 +72,7 @@ def create_example_csv_file(
         return str(uuid.uuid4())
 
     def _date(
-        date_range: Optional[list[str]] = None,
+        date_range: list[str] | None = None,
         format: str = "%Y-%m-%d",
         required: bool = True,
     ) -> str:
@@ -101,7 +101,7 @@ def create_example_csv_file(
         return fake.time(format)
 
     def _datetime(
-        datetime_range: Optional[list[str]] = None,
+        datetime_range: list[str] | None = None,
         format: str = "%Y-%m-%d %H-%M-%S",
         required: bool = True,
     ) -> str:
@@ -125,11 +125,11 @@ def create_example_csv_file(
         return f"http://{rstr.domainsafe()}.{rstr.letters(3)}/{rstr.urlsafe()}"
 
     def _number(
-        num_type: Type[Union[int, float]] = int,
-        num_range: Optional[list[float]] = None,
-        enum: Optional[list] = None,
+        num_type: Type[int | float] = int,
+        num_range: list[float] | None = None,
+        enum: list | None = None,
         required: bool = True,
-    ) -> Union[int, float]:
+    ) -> int | float:
         assert num_range is None or len(num_range) == 2
         if potential_skip(required):
             return ""

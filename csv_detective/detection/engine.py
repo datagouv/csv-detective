@@ -1,5 +1,4 @@
 from time import time
-from typing import Optional
 
 import magic
 import requests
@@ -16,7 +15,7 @@ engine_to_file = {
 }
 
 
-def detect_engine(file_path: str, verbose=False) -> Optional[str]:
+def detect_engine(file_path: str, verbose=False) -> str | None:
     if verbose:
         start = time()
     mapping = {

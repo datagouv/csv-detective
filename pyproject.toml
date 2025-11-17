@@ -23,7 +23,7 @@ dependencies = [
     "rstr==3.2.2",
     "more-itertools>=10.8.0",
 ]
-requires-python = ">=3.9,<3.14"
+requires-python = ">=3.10,<3.14"
 license = { text = "MIT" }
 readme = "README.md"
 keywords = ["CSV", "data processing", "encoding", "guess", "parser", "tabular"]
@@ -32,7 +32,6 @@ keywords = ["CSV", "data processing", "encoding", "guess", "parser", "tabular"]
 dev = [
     "pytest>=8.3.0",
     "responses>=0.25.0",
-    "bumpx>=0.3.10",
     "ruff>=0.9.3",
 ]
 

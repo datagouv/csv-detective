@@ -1,5 +1,4 @@
 import logging
-from typing import Optional
 
 import pandas as pd
 
@@ -17,7 +16,7 @@ def validate(
     previous_analysis: dict,
     verbose: bool = False,
     skipna: bool = True,
-) -> tuple[bool, Optional[pd.DataFrame], Optional[dict], Optional[dict[str, pd.Series]]]:
+) -> tuple[bool, pd.DataFrame | None, dict | None, dict[str, pd.Series] | None]:
     """
     Verify is the given file has the same fields and types as in the given analysis.
     """

@@ -1,6 +1,5 @@
 import logging
 from time import time
-from typing import Optional, Union
 
 import pandas as pd
 
@@ -16,19 +15,19 @@ logging.basicConfig(level=logging.INFO)
 def routine(
     file_path: str,
     num_rows: int = 500,
-    user_input_tests: Union[str, list[str]] = "ALL",
+    user_input_tests: str | list[str] = "ALL",
     limited_output: bool = True,
-    save_results: Union[bool, str] = True,
-    encoding: Optional[str] = None,
-    sep: Optional[str] = None,
+    save_results: bool | str = True,
+    encoding: str | None = None,
+    sep: str | None = None,
     skipna: bool = True,
     output_profile: bool = False,
     output_schema: bool = False,
     output_df: bool = False,
     cast_json: bool = True,
     verbose: bool = False,
-    sheet_name: Optional[Union[str, int]] = None,
-) -> Union[dict, tuple[dict, pd.DataFrame]]:
+    sheet_name: str | int | None = None,
+) -> dict | tuple[dict, pd.DataFrame]:
     """Returns a dict with information about the table and possible
     column contents, and if requested the DataFrame with columns cast according to analysis.
 
@@ -108,9 +107,9 @@ def validate_then_detect(
     file_path: str,
     previous_analysis: dict,
     num_rows: int = 500,
-    user_input_tests: Union[str, list[str]] = "ALL",
+    user_input_tests: str | list[str] = "ALL",
     limited_output: bool = True,
-    save_results: Union[bool, str] = True,
+    save_results: bool | str = True,
     skipna: bool = True,
     output_profile: bool = False,
     output_schema: bool = False,

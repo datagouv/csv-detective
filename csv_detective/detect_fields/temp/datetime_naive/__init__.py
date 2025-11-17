@@ -1,5 +1,5 @@
 import re
-from typing import Any, Optional
+from typing import Any
 
 from csv_detective.detect_fields.temp.date import aaaammjj_pattern, date_casting
 
@@ -9,11 +9,11 @@ threshold = 0.7
 # matches AAAA-MM-JJTHH:MM:SS(.dddddd)Z with any of the listed separators for the date OR NO SEPARATOR
 pat = (
     aaaammjj_pattern.replace("$", "")
-    + r"(T|\s)(0\d|1[0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])(.\d{1,6})?Z?$"
+    + r"(T|\s)(0\d|1[0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])(.\d{1,6})?$"
 )
 
 
-def _is(val: Optional[Any]) -> bool:
+def _is(val: Any | None) -> bool:
     """Detects naive datetimes only"""
     # early stops, to cut processing time
     # 15 is the minimal length of a datetime format YYMMDDTHH:MM:SS

@@ -4,7 +4,7 @@ version: 2.1
 parameters:
   python-version:
     type: string
-    default: "3.9"
+    default: "3.11"
   publish-branch:
     type: string
     default: "master"
@@ -102,7 +102,7 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - deploy:
+      - run:
           name: Publish on PyPI
           command: |
             source venv/bin/activate

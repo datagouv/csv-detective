@@ -1,5 +1,4 @@
 from collections import defaultdict
-from typing import Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -22,7 +21,7 @@ def detect_formats(
     table: pd.DataFrame,
     analysis: dict,
     file_path: str,
-    user_input_tests: Union[str, list[str]] = "ALL",
+    user_input_tests: str | list[str] = "ALL",
     limited_output: bool = True,
     skipna: bool = True,
     verbose: bool = False,
@@ -91,12 +90,15 @@ def detect_formats(
             "code_departement",
             "code_commune_insee",
             "code_postal",
+            "code_fantoir",
             "latitude_wgs",
             "longitude_wgs",
             "latitude_wgs_fr_metropole",
             "longitude_wgs_fr_metropole",
             "latitude_l93",
             "longitude_l93",
+            "siren",
+            "siret",
         ]
         if f in scores_table.index
     ]

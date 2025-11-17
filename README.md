@@ -211,32 +211,26 @@ ruff check --fix .
 ruff format .
 ```
 
-## Release
+### 🏷️ Release
 
-The release process uses `bumpx`.
+The release process uses the [`tag_version.sh`](tag_version.sh) script to create git tags and update [CHANGELOG.md](CHANGELOG.md) and [pyproject.toml](pyproject.toml) automatically.
 
-```shell
-pip install -e .[dev]
+```bash
+# Create a new release
+./tag_version.sh <version>
+
+# Example
+./tag_version.sh 2.5.0
+
+# Dry run to see what would happen
+./tag_version.sh 2.5.0 --dry-run
 ```
 
-### Process
+**Prerequisites**: GitHub CLI (`gh`) must be installed and authenticated, and you must be on the main branch with a clean working directory.
 
-1. `bumpx` will handle bumping the version according to your command (patch, minor, major)
-2. It will update the CHANGELOG according to the new version being published
-3. It will push a tag with the given version to github
-4. CircleCI will pickup this tag, build the package and publish it to pypi
-5. `bumpx` will have everything ready for the next version (version, changelog...)
-
-### Dry run
-
-```shell
-bumpx -d -v
-```
-
-### Release
-
-This will release a patch version:
-
-```shell
-bumpx -v
-```
+The script automatically:
+- Updates the version in pyproject.toml
+- Extracts commits since the last tag and formats them for CHANGELOG.md
+- Identifies breaking changes (commits with `!:` in the subject)
+- Creates a git tag and pushes it to the remote repository
+- Creates a GitHub release with the changelog content
