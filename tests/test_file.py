@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock, patch
 
 import pandas as pd
+from pandas._libs.lib import dicts_to_array
 import pytest
 import responses
 
@@ -370,22 +371,23 @@ def test_almost_uniform_column(mocked_responses):
 
 def test_full_nan_column(mocked_responses):
     # we want a file that needs sampling
-    expected_content = "only_nan,second_col\n" + ",1\n" * (CHUNK_SIZE + 1)
+    col_name = "only_nan"
+    expected_content = f"{col_name},second_col\n" + ",1\n" * (CHUNK_SIZE + 1)
     mocked_responses.get(
         "http://example.com/test.csv",
         body=expected_content,
         status=200,
     )
     with patch("urllib.request.urlopen") as mock_urlopen:
-        # Create a mock HTTP response object
         mock_response = MagicMock()
         mock_response.read.return_value = expected_content.encode("utf-8")
         mock_response.__enter__.return_value = mock_response
         mock_urlopen.return_value = mock_response
-        # just testing it doesn't fail
-        routine(
+        # only NaNs should return "string"
+        analysis = routine(
             file_path="http://example.com/test.csv",
             num_rows=-1,
             output_profile=False,
             save_results=False,
         )
+        assert analysis["columns"][col_name]["format"] == "string"
