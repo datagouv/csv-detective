@@ -30,6 +30,10 @@ def create_profile(
             k: v[0] if v else {"python_type": "string", "format": "string", "score": 1.0}
             for k, v in columns.items()
         }
+    # value_counts().reset_index() tries to insert a "count" column, and fails if it's already here
+    _count_col = "count"
+    while _count_col in table.columns:
+        _count_col = "_" + _count_col
     profile = defaultdict(dict)
     for c in table.columns:
         # for numerical formats we want min, max, mean, std
@@ -79,14 +83,14 @@ def create_profile(
         # for all formats we want most frequent values, nb unique values and nb missing values
         tops_bruts = (
             (table[c].value_counts() if _col_values is None else _col_values[c].sort_values())
-            .reset_index()
+            .reset_index(name=_count_col)
             .iloc[:10]
             .to_dict(orient="records")
         )
         profile[c].update(
             tops=[
                 {
-                    "count": tb["count"],
+                    "count": tb[_count_col],
                     "value": tb[c],
                 }
                 for tb in tops_bruts
