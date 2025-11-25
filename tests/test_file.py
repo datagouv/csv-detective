@@ -1,7 +1,6 @@
 from unittest.mock import MagicMock, patch
 
 import pandas as pd
-from pandas._libs.lib import dicts_to_array
 import pytest
 import responses
 
@@ -394,7 +393,7 @@ def test_full_nan_column(mocked_responses):
 
 
 def test_count_column(mocked_responses):
-    expected_content = f"count,_count\n" + "a,1\n" * 100
+    expected_content = "count,_count\n" + "a,1\n" * 100
     mocked_responses.get(
         "http://example.com/test.csv",
         body=expected_content,
