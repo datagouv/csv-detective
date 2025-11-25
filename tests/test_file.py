@@ -391,3 +391,24 @@ def test_full_nan_column(mocked_responses):
             save_results=False,
         )
         assert analysis["columns"][col_name]["format"] == "string"
+
+
+def test_count_column(mocked_responses):
+    expected_content = f"count,_count\n" + "a,1\n" * 100
+    mocked_responses.get(
+        "http://example.com/test.csv",
+        body=expected_content,
+        status=200,
+    )
+    with patch("urllib.request.urlopen") as mock_urlopen:
+        mock_response = MagicMock()
+        mock_response.read.return_value = expected_content.encode("utf-8")
+        mock_response.__enter__.return_value = mock_response
+        mock_urlopen.return_value = mock_response
+        # only testing it doesn't fail with output_profile=True
+        routine(
+            file_path="http://example.com/test.csv",
+            num_rows=-1,
+            output_profile=True,
+            save_results=False,
+        )
