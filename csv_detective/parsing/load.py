@@ -47,6 +47,8 @@ def load_file(
         if table.empty:
             raise ValueError("Table seems to be empty")
         header = table.columns.to_list()
+        if any(col.startswith("Unnamed") for col in header):
+            raise ValueError("Could not retrieve headers")
         analysis = {
             "engine": engine,
             "sheet_name": sheet_name,
@@ -99,12 +101,10 @@ def load_file(
         }
         if engine is not None:
             analysis["compression"] = engine
-    analysis.update(
-        {
-            "header_row_idx": header_row_idx,
-            "header": header,
-        }
-    )
+    analysis |= {
+        "header_row_idx": header_row_idx,
+        "header": header,
+    }
     if total_lines is not None:
         analysis["total_lines"] = total_lines
     if nb_duplicates is not None:
