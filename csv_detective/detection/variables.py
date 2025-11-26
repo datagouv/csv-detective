@@ -56,7 +56,7 @@ def detect_categorical_variable(
     threshold_pct_categorical: float = 0.05,
     max_number_categorical_values: int = 25,
     verbose: bool = False,
-):
+) -> tuple[list[str], pd.DataFrame]:
     """
     Heuristically detects whether a table (df) contains categorical values according to
     the number of unique values contained.
@@ -94,4 +94,4 @@ def detect_categorical_variable(
             f"Detected {sum(res)} categorical columns out of {len(table.columns)} in {round(time() - start, 3)}s",
             time() - start,
         )
-    return res.index[res], res
+    return list(res.index[res]), res

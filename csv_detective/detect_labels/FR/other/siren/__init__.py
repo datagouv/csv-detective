@@ -12,5 +12,6 @@ def _is(header: str) -> float:
         "siren organisme",
         "siren titulaire",
         "numero siren",
+        "epci",
     ]
     return header_score(header, words_combinations_list)

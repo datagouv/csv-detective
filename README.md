@@ -1,6 +1,6 @@
 # CSV Detective
 
-This is a package to **automatically detect column content in tabular files**. The script reads either the whole file or the first few rows and performs various checks to see for each column if it matches with various content types. This is currently done through regex and string comparison.
+This is a package to **automatically detect column content in tabular files**. The script reads either the whole file or the first few rows and performs various checks (regex, casting, comparison with official lists...) to see for each column if it matches with various content types.
 
 Currently supported file types: csv, xls, xlsx, ods.
 
@@ -20,7 +20,7 @@ pip install csv-detective
 
 Say you have a tabular file located at `file_path`. This is how you could use `csv_detective`:
 
-```
+```python
 # Import the csv_detective package
 from csv_detective import routine
 import os # for this example only
@@ -128,19 +128,42 @@ The program creates a `Python` dictionnary with the following information :
 ```
 
 The output slightly differs depending on the file format:
-- csv files have `encoding` and `separator`
+- csv files have `encoding` and `separator` (and `compression` if relevant)
 - xls, xls, ods files have `engine` and `sheet_name`
+
+You may also set `output_df` to `True`, in which case the output is a tuple of two elements:
+- the analysis (as described above)
+- an iteror of `pd.DataFrame`s which contain the columns cast with the detected types (which can be used with `pd.concat` or in a loop):
+```python
+inspection, df_chunks = routine(
+    file_path=file_path,
+    num_rows=-1,
+    output_df=True,
+)
+cast_df = pd.concat(df_chunks, ignore_index=True)
+# if "col1" has been detected as a float, then cast_df["col1"] contains floats
+```
 
 ### What Formats Can Be Detected
 
 Includes :
-
+- types (float, int, dates, datetimes, JSON) and more specific (latitude, longitude, geoJSON...) 
 - Communes, Départements, Régions, Pays
 - Codes Communes, Codes Postaux, Codes Departement, ISO Pays
 - Codes CSP, Description CSP, SIREN
 - E-Mails, URLs, Téléphones FR
 - Years, Dates, Jours de la Semaine FR
 - UUIDs, Mongo ObjectIds
+
+### Validation
+If you have a pre-made analysis of a file, you can check whether an other file conforms to the same analysis:
+```python
+from csv_detective import validate
+is_valid, *_ = validate(
+  file_path,
+  previous_analysis,  # exactly as it came out from the routine function
+)
+```
 
 ### Format detection and scoring
 For each column, 3 scores are computed for each format, the higher the score, the more likely the format:
@@ -169,7 +192,6 @@ Only the format with highest score is present in the output.
 Related ideas:
 
 - store column names to make a learning model based on column names for (possible pre-screen)
-- normalising data based on column prediction
 - entity resolution (good luck...)
 
 ## Why Could This Be of Any Use ?
@@ -189,32 +211,26 @@ ruff check --fix .
 ruff format .
 ```
 
-## Release
+### 🏷️ Release
 
-The release process uses `bumpx`.
+The release process uses the [`tag_version.sh`](tag_version.sh) script to create git tags and update [CHANGELOG.md](CHANGELOG.md) and [pyproject.toml](pyproject.toml) automatically.
 
-```shell
-pip install -e .[dev]
+```bash
+# Create a new release
+./tag_version.sh <version>
+
+# Example
+./tag_version.sh 2.5.0
+
+# Dry run to see what would happen
+./tag_version.sh 2.5.0 --dry-run
 ```
 
-### Process
+**Prerequisites**: GitHub CLI (`gh`) must be installed and authenticated, and you must be on the main branch with a clean working directory.
 
-1. `bumpx` will handle bumping the version according to your command (patch, minor, major)
-2. It will update the CHANGELOG according to the new version being published
-3. It will push a tag with the given version to github
-4. CircleCI will pickup this tag, build the package and publish it to pypi
-5. `bumpx` will have everything ready for the next version (version, changelog...)
-
-### Dry run
-
-```shell
-bumpx -d -v
-```
-
-### Release
-
-This will release a patch version:
-
-```shell
-bumpx -v
-```
+The script automatically:
+- Updates the version in pyproject.toml
+- Extracts commits since the last tag and formats them for CHANGELOG.md
+- Identifies breaking changes (commits with `!:` in the subject)
+- Creates a git tag and pushes it to the remote repository
+- Creates a GitHub release with the changelog content
