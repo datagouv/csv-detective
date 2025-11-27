@@ -70,7 +70,7 @@ def routine(
         sheet_name=sheet_name,
     )
 
-    analysis = detect_formats(
+    analysis, _col_values = detect_formats(
         table=table,
         analysis=analysis,
         file_path=file_path,
@@ -94,6 +94,7 @@ def routine(
             cast_json=cast_json,
             verbose=verbose,
             sheet_name=sheet_name,
+            _col_values=_col_values,
         )
     finally:
         if verbose:
@@ -121,13 +122,9 @@ def validate_then_detect(
         if is_url(file_path):
             logging.info("Path recognized as a URL")
 
-    is_valid, table, analysis = validate(
+    is_valid, table, analysis, col_values = validate(
         file_path=file_path,
         previous_analysis=previous_analysis,
-        num_rows=num_rows,
-        encoding=previous_analysis.get("encoding"),
-        sep=previous_analysis.get("separator"),
-        sheet_name=previous_analysis.get("sheet_name"),
         verbose=verbose,
         skipna=skipna,
     )
@@ -139,7 +136,7 @@ def validate_then_detect(
             verbose=verbose,
         )
     if not is_valid:
-        analysis = detect_formats(
+        analysis, col_values = detect_formats(
             table=table,
             analysis=analysis,
             file_path=file_path,
@@ -162,6 +159,7 @@ def validate_then_detect(
             cast_json=cast_json,
             verbose=verbose,
             sheet_name=analysis.get("sheet_name"),
+            _col_values=col_values,
         )
     finally:
         if verbose:

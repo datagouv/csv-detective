@@ -10,6 +10,8 @@ import requests
 import rstr
 from faker import Faker
 
+from csv_detective.utils import is_url
+
 fake = Faker()
 
 
@@ -183,7 +185,7 @@ def create_example_csv_file(
     }
 
     if schema_path:
-        if schema_path.startswith("http"):
+        if is_url(schema_path):
             schema = requests.get(schema_path).json()
         else:
             with open(schema_path, encoding=encoding) as jsonfile:
