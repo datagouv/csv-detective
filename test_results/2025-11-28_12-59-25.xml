@@ -1,0 +1,385 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="6" skipped="0" tests="284" time="287.479" timestamp="2025-11-28T12:59:25.464972+01:00" hostname="MacBookPro-001.lan"><testcase classname="tests.test_example" name="test_example_creation" time="0.023" /><testcase classname="tests.test_example" name="test_example_from_tableschema" time="0.133" /><testcase classname="tests.test_fields" name="test_all_tests_return_bool" time="0.006" /><testcase classname="tests.test_fields" name="test_detect_categorical_variable" time="0.011" /><testcase classname="tests.test_fields" name="test_detect_continuous_variable" time="0.005"><failure message="RuntimeError: ArrowInvalid: (&quot;Could not convert &lt;class 'float'&gt; with type type: did not recognize Python value type when inferring an Arrow data type&quot;, 'Conversion failed for column __fireducks_dummy_0 with type object')&#10;&#10;At:&#10;  pyarrow/error.pxi(92): pyarrow.lib.check_status">def test_detect_continuous_variable():
+        continuous_col = random.random(100)
+        continuous_col_2 = [1.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7, 21, 3] * 10
+        not_continuous_col = ["type_a"] * 33 + ["type_b"] * 33 + ["type_c"] * 34
+    
+        df_dict = {"cont": continuous_col, "not_cont": not_continuous_col}
+        df_dict_2 = {"cont": continuous_col_2, "not_cont": not_continuous_col}
+    
+        df = pd.DataFrame(df_dict, dtype=str)
+        df2 = pd.DataFrame(df_dict_2, dtype=str)
+    
+&gt;       res = detect_continuous_variable(df)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_fields.py:121: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+csv_detective/detection/variables.py:45: in detect_continuous_variable
+    res = table.apply(lambda serie: check_threshold(serie.apply(parses_to_integer), continuous_th))
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fireducks/pandas/generic.py:351: in wrapper
+    return fireducks_func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fireducks/pandas/generic.py:949: in apply
+    return self._fallback_call("apply", args, kwargs, stacklevel=8)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fireducks/pandas/generic.py:526: in _fallback_call
+    return utils.fallback_call(
+.venv/lib/python3.13/site-packages/fireducks/pandas/utils.py:267: in fallback_call
+    return ff.fallback_call(
+.venv/lib/python3.13/site-packages/fireducks/fallback.py:363: in fallback_call
+    return method(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fireducks/fallback.py:309: in wrapper
+    ret = attr(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/pandas/core/frame.py:10401: in apply
+    return op.apply().__finalize__(self, method="apply")
+           ^^^^^^^^^^
+.venv/lib/python3.13/site-packages/pandas/core/apply.py:916: in apply
+    return self.apply_standard()
+           ^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/pandas/core/apply.py:1063: in apply_standard
+    results, res_index = self.apply_series_generator()
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/pandas/core/apply.py:1081: in apply_series_generator
+    results[i] = self.func(v, *self.args, **self.kwargs)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fireducks/pandas/generic.py:946: in wrapper
+    return utils._unwrap(func(*args, **kwargs))
+                         ^^^^^^^^^^^^^^^^^^^^^
+csv_detective/detection/variables.py:45: in &lt;lambda&gt;
+    res = table.apply(lambda serie: check_threshold(serie.apply(parses_to_integer), continuous_th))
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+csv_detective/detection/variables.py:23: in check_threshold
+    count = serie.value_counts().to_dict()
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fireducks/pandas/series.py:954: in __getattr__
+    return utils.fallback_attr(self._unwrap, name, reason)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fireducks/pandas/utils.py:246: in fallback_attr
+    return ff.fallback_attr(
+.venv/lib/python3.13/site-packages/fireducks/fallback.py:268: in fallback_attr
+    obj = fallbacker(reason=reason)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fireducks/pandas/generic.py:498: in _unwrap
+    return self.to_pandas(reason=f"unwrap ({reason})")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fireducks/pandas/generic.py:1749: in to_pandas
+    "pandas_object", self._to_pandas(options=options)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fireducks/pandas/series.py:876: in _to_pandas
+    result = _to_pandas_frame_metadata(self._value, options)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fireducks/pandas/frame.py:1825: in _to_pandas_frame_metadata
+    df, meta = fireducks.core.evaluate([v0, v1], options=options)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fireducks/core.py:410: in evaluate
+    ret = _evaluate(values, options, evalLogger)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fireducks/core.py:387: in _evaluate
+    return fire.evaluate(values, wrapper, package="fireducks")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/firefw/runtime.py:31: in wrapper
+    ret = func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/firefw/runtime.py:69: in evaluate
+    ret = executor(source, input_values, output_values)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+ir = '  func.func @main(%c136: !fireducks.pyobj, %c137: !fireducks.metadata) -&gt; (!fireducks.table, !fireducks.table, !fired...v141, %v144 : !fireducks.table, !fireducks.table, !fireducks.pyobj, !fireducks.metadata, !tfrt.chain, !tfrt.chain\n  }'
+input_values = [&lt;firefw.core.Value object at 0x11d25ef50&gt;, &lt;firefw.core.Value object at 0x11d25f150&gt;]
+output_values = [&lt;firefw.core.Value object at 0x11d25c6d0&gt;, &lt;firefw.core.Value object at 0x11d25eed0&gt;, &lt;firefw.core.Value object at 0x...ore.Value object at 0x11d25d550&gt;, &lt;firefw.core.Value object at 0x11d25c7d0&gt;, &lt;firefw.core.Value object at 0x11d25d5d0&gt;]
+
+    def wrapper(ir, input_values, output_values):
+        fi = fireducks_ext.FunctionInvocation()
+        fi.ir = ir
+        fi.input_types = [v.mlir_type for v in input_values]
+        fi.input_values = [v.get_result() for v in input_values]
+        fi.output_types = [v.mlir_type for v in output_values]
+    
+&gt;       return fireducks_ext.execute(
+            context().ext_context,
+            options._compile_options,
+            fi,
+            evalLogger._extLogger if evalLogger is not None else None,
+        )
+E       RuntimeError: ArrowInvalid: ("Could not convert &lt;class 'float'&gt; with type type: did not recognize Python value type when inferring an Arrow data type", 'Conversion failed for column __fireducks_dummy_0 with type object')
+E       
+E       At:
+E         pyarrow/error.pxi(92): pyarrow.lib.check_status
+
+.venv/lib/python3.13/site-packages/fireducks/core.py:379: RuntimeError</failure></testcase><testcase classname="tests.test_fields" name="test_all_fields_have_tests" time="0.003" /><testcase classname="tests.test_fields" name="test_fields_with_values[args0]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args1]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args2]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args3]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args4]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args5]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args6]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args7]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args8]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args9]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args10]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args11]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args12]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args13]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args14]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args15]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args16]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args17]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args18]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args19]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args20]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args21]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args22]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args23]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args24]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args25]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args26]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args27]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args28]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args29]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args30]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args31]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args32]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args33]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args34]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args35]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args36]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args37]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args38]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args39]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args40]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args41]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args42]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args43]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args44]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args45]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args46]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args47]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args48]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args49]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args50]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args51]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args52]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args53]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args54]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args55]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args56]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args57]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args58]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args59]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args60]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args61]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args62]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args63]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args64]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args65]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args66]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args67]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args68]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args69]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args70]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args71]" time="0.002" /><testcase classname="tests.test_fields" name="test_fields_with_values[args72]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args73]" time="0.001" /><testcase classname="tests.test_fields" name="test_fields_with_values[args74]" time="0.001" /><testcase classname="tests.test_fields" name="test_fields_with_values[args75]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args76]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args77]" time="0.003" /><testcase classname="tests.test_fields" name="test_fields_with_values[args78]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args79]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args80]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args81]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args82]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args83]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args84]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args85]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args86]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args87]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args88]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args89]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args90]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args91]" time="0.001" /><testcase classname="tests.test_fields" name="test_fields_with_values[args92]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args93]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args94]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args95]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args96]" time="0.001" /><testcase classname="tests.test_fields" name="test_fields_with_values[args97]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args98]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args99]" time="0.002" /><testcase classname="tests.test_fields" name="test_fields_with_values[args100]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args101]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args102]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args103]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args104]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args105]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args106]" time="0.001" /><testcase classname="tests.test_fields" name="test_fields_with_values[args107]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args108]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args109]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args110]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args111]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args112]" time="0.001" /><testcase classname="tests.test_fields" name="test_fields_with_values[args113]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args114]" time="0.001" /><testcase classname="tests.test_fields" name="test_fields_with_values[args115]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args116]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args117]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args118]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args119]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args120]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args121]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args122]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args123]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args124]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args125]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args126]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args127]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args128]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args129]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args130]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args131]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args132]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args133]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args134]" time="0.001" /><testcase classname="tests.test_fields" name="test_fields_with_values[args135]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args136]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args137]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args138]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args139]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args140]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args141]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args142]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args143]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args144]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args145]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args146]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args147]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args148]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args149]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args150]" time="0.004" /><testcase classname="tests.test_fields" name="test_fields_with_values[args151]" time="0.001" /><testcase classname="tests.test_fields" name="test_fields_with_values[args152]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args153]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args154]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args155]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args156]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args157]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args158]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args159]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args160]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args161]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args162]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args163]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args164]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args165]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args166]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args167]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args168]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args169]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args170]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args171]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args172]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args173]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args174]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args175]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args176]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args177]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args178]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args179]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args180]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args181]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args182]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args183]" time="0.001" /><testcase classname="tests.test_fields" name="test_fields_with_values[args184]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args185]" time="0.001" /><testcase classname="tests.test_fields" name="test_fields_with_values[args186]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args187]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args188]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args189]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args190]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args191]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args192]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args193]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args194]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args195]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args196]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args197]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args198]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args199]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args200]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args201]" time="0.001" /><testcase classname="tests.test_fields" name="test_fields_with_values[args202]" time="0.108" /><testcase classname="tests.test_fields" name="test_fields_with_values[args203]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args204]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args205]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args206]" time="1.604" /><testcase classname="tests.test_fields" name="test_fields_with_values[args207]" time="0.056" /><testcase classname="tests.test_fields" name="test_fields_with_values[args208]" time="0.056" /><testcase classname="tests.test_fields" name="test_fields_with_values[args209]" time="0.007" /><testcase classname="tests.test_fields" name="test_fields_with_values[args210]" time="0.037" /><testcase classname="tests.test_fields" name="test_fields_with_values[args211]" time="0.037" /><testcase classname="tests.test_fields" name="test_fields_with_values[args212]" time="0.037" /><testcase classname="tests.test_fields" name="test_fields_with_values[args213]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args214]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args215]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args216]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args217]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args218]" time="0.071" /><testcase classname="tests.test_fields" name="test_fields_with_values[args219]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args220]" time="0.067" /><testcase classname="tests.test_fields" name="test_fields_with_values[args221]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args222]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args223]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args224]" time="0.071" /><testcase classname="tests.test_fields" name="test_fields_with_values[args225]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args226]" time="0.190" /><testcase classname="tests.test_fields" name="test_fields_with_values[args227]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args228]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args229]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args230]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args231]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args232]" time="0.000" /><testcase classname="tests.test_fields" name="test_fields_with_values[args233]" time="0.000" /><testcase classname="tests.test_fields" name="test_cast[args0]" time="0.000" /><testcase classname="tests.test_fields" name="test_cast[args1]" time="0.000" /><testcase classname="tests.test_fields" name="test_cast[args2]" time="0.000" /><testcase classname="tests.test_fields" name="test_cast[args3]" time="0.000" /><testcase classname="tests.test_fields" name="test_cast[args4]" time="0.000" /><testcase classname="tests.test_fields" name="test_cast[args5]" time="0.000" /><testcase classname="tests.test_fields" name="test_cast[args6]" time="0.000" /><testcase classname="tests.test_fields" name="test_priority[args0]" time="0.001" /><testcase classname="tests.test_fields" name="test_priority[args1]" time="0.001" /><testcase classname="tests.test_fields" name="test_priority[args2]" time="0.001" /><testcase classname="tests.test_fields" name="test_priority[args3]" time="0.000" /><testcase classname="tests.test_fields" name="test_priority[args4]" time="0.001" /><testcase classname="tests.test_fields" name="test_priority[args5]" time="0.001" /><testcase classname="tests.test_fields" name="test_early_detection[args0]" time="0.001" /><testcase classname="tests.test_fields" name="test_early_detection[args1]" time="0.000" /><testcase classname="tests.test_fields" name="test_early_detection[args2]" time="0.000" /><testcase classname="tests.test_fields" name="test_early_detection[args3]" time="0.000" /><testcase classname="tests.test_fields" name="test_early_detection[args4]" time="0.000" /><testcase classname="tests.test_fields" name="test_early_detection[args5]" time="0.000" /><testcase classname="tests.test_fields" name="test_all_proportion_1" time="11.576" /><testcase classname="tests.test_file" name="test_columns_output_on_file[100]" time="5.544" /><testcase classname="tests.test_file" name="test_columns_output_on_file[404]" time="6.588" /><testcase classname="tests.test_file" name="test_columns_output_on_file[100000]" time="7.589" /><testcase classname="tests.test_file" name="test_profile_output_on_file" time="8.382"><failure message="assert np.int64(291) == 290">def test_profile_output_on_file():
+        output = routine(
+            file_path="tests/data/a_test_file.csv",
+            num_rows=-1,
+            output_profile=True,
+            save_results=False,
+        )
+        assert all(
+            [
+                c in list(output["profile"]["TXCOUVGLO_COM_2014"].keys())
+                for c in [
+                    "min",
+                    "max",
+                    "mean",
+                    "std",
+                    "tops",
+                    "nb_distinct",
+                    "nb_missing_values",
+                ]
+            ]
+        )
+        assert not any(
+            [
+                c in list(output["profile"]["NUMCOM"].keys())
+                for c in [
+                    "min",
+                    "max",
+                    "mean",
+                    "std",
+                ]
+            ]
+        )
+        assert output["profile"]["TXCOUVGLO_COM_2014"]["min"] == 0.0
+        assert output["profile"]["TXCOUVGLO_COM_2014"]["max"] == 200.2
+        assert round(output["profile"]["TXCOUVGLO_COM_2014"]["mean"]) == 60
+        assert round(output["profile"]["TXCOUVGLO_COM_2014"]["std"]) == 36
+&gt;       assert output["profile"]["TXCOUVGLO_COM_2014"]["nb_distinct"] == 290
+E       assert np.int64(291) == 290
+
+tests/test_file.py:91: AssertionError</failure></testcase><testcase classname="tests.test_file" name="test_profile_with_num_rows" time="8.043" /><testcase classname="tests.test_file" name="test_profile_specific_cases[params0]" time="0.081"><failure message="AssertionError: assert {'max': 1, 'm...int64(2), ...} == {'max': 1, 'm...inct': 1, ...}&#10;  &#10;  Omitting 6 identical items, use -vv to show&#10;  Differing items:&#10;  #x1B[0m{#x1B[33m'#x1B[39;49;00m#x1B[33mnb_distinct#x1B[39;49;00m#x1B[33m'#x1B[39;49;00m: np.int64(#x1B[94m2#x1B[39;49;00m)}#x1B[90m#x1B[39;49;00m != #x1B[0m{#x1B[33m'#x1B[39;49;00m#x1B[33mnb_distinct#x1B[39;49;00m#x1B[33m'#x1B[39;49;00m: #x1B[94m1#x1B[39;49;00m}#x1B[90m#x1B[39;49;00m&#10;  Use -v to get more diff">params = (True, {'date': {'format': 'date', 'python_type': 'date'}, 'int_with_nan': {'format': 'int', 'python_type': 'int'}})
+
+    @pytest.mark.parametrize(
+        "params",
+        (
+            (
+                True,
+                {
+                    "int_with_nan": {"format": "int", "python_type": "int"},
+                    "date": {"format": "date", "python_type": "date"},
+                },
+            ),
+            (
+                False,
+                {
+                    "int_with_nan": [{"format": "int", "python_type": "int"}],
+                    "date": [{"format": "date", "python_type": "date"}],
+                },
+            ),
+        ),
+    )
+    def test_profile_specific_cases(params):
+        limited_output, columns = params
+        table = pd.DataFrame(
+            {
+                "int_with_nan": ["1", pd.NA, pd.NA],
+                "date": ["1996-01-02", "1996-01-02", "2024-11-12"],
+            }
+        )
+        profile = create_profile(
+            table=table,
+            columns=columns,
+            limited_output=limited_output,
+            num_rows=-1,
+        )
+&gt;       assert profile["int_with_nan"] == {
+            "min": 1,
+            "max": 1,
+            "mean": 1,
+            "std": None,
+            "tops": [{"count": 1, "value": "1"}],
+            "nb_distinct": 1,
+            "nb_missing_values": 2,
+        }
+E       AssertionError: assert {'max': 1, 'm...int64(2), ...} == {'max': 1, 'm...inct': 1, ...}
+E         
+E         Omitting 6 identical items, use -vv to show
+E         Differing items:
+E         #x1B[0m{#x1B[33m'#x1B[39;49;00m#x1B[33mnb_distinct#x1B[39;49;00m#x1B[33m'#x1B[39;49;00m: np.int64(#x1B[94m2#x1B[39;49;00m)}#x1B[90m#x1B[39;49;00m != #x1B[0m{#x1B[33m'#x1B[39;49;00m#x1B[33mnb_distinct#x1B[39;49;00m#x1B[33m'#x1B[39;49;00m: #x1B[94m1#x1B[39;49;00m}#x1B[90m#x1B[39;49;00m
+E         Use -v to get more diff
+
+tests/test_file.py:139: AssertionError</failure></testcase><testcase classname="tests.test_file" name="test_profile_specific_cases[params1]" time="0.061"><failure message="AssertionError: assert {'max': 1, 'm...int64(2), ...} == {'max': 1, 'm...inct': 1, ...}&#10;  &#10;  Omitting 6 identical items, use -vv to show&#10;  Differing items:&#10;  #x1B[0m{#x1B[33m'#x1B[39;49;00m#x1B[33mnb_distinct#x1B[39;49;00m#x1B[33m'#x1B[39;49;00m: np.int64(#x1B[94m2#x1B[39;49;00m)}#x1B[90m#x1B[39;49;00m != #x1B[0m{#x1B[33m'#x1B[39;49;00m#x1B[33mnb_distinct#x1B[39;49;00m#x1B[33m'#x1B[39;49;00m: #x1B[94m1#x1B[39;49;00m}#x1B[90m#x1B[39;49;00m&#10;  Use -v to get more diff">params = (False, {'date': [{'format': 'date', 'python_type': 'date'}], 'int_with_nan': [{'format': 'int', 'python_type': 'int'}]})
+
+    @pytest.mark.parametrize(
+        "params",
+        (
+            (
+                True,
+                {
+                    "int_with_nan": {"format": "int", "python_type": "int"},
+                    "date": {"format": "date", "python_type": "date"},
+                },
+            ),
+            (
+                False,
+                {
+                    "int_with_nan": [{"format": "int", "python_type": "int"}],
+                    "date": [{"format": "date", "python_type": "date"}],
+                },
+            ),
+        ),
+    )
+    def test_profile_specific_cases(params):
+        limited_output, columns = params
+        table = pd.DataFrame(
+            {
+                "int_with_nan": ["1", pd.NA, pd.NA],
+                "date": ["1996-01-02", "1996-01-02", "2024-11-12"],
+            }
+        )
+        profile = create_profile(
+            table=table,
+            columns=columns,
+            limited_output=limited_output,
+            num_rows=-1,
+        )
+&gt;       assert profile["int_with_nan"] == {
+            "min": 1,
+            "max": 1,
+            "mean": 1,
+            "std": None,
+            "tops": [{"count": 1, "value": "1"}],
+            "nb_distinct": 1,
+            "nb_missing_values": 2,
+        }
+E       AssertionError: assert {'max': 1, 'm...int64(2), ...} == {'max': 1, 'm...inct': 1, ...}
+E         
+E         Omitting 6 identical items, use -vv to show
+E         Differing items:
+E         #x1B[0m{#x1B[33m'#x1B[39;49;00m#x1B[33mnb_distinct#x1B[39;49;00m#x1B[33m'#x1B[39;49;00m: np.int64(#x1B[94m2#x1B[39;49;00m)}#x1B[90m#x1B[39;49;00m != #x1B[0m{#x1B[33m'#x1B[39;49;00m#x1B[33mnb_distinct#x1B[39;49;00m#x1B[33m'#x1B[39;49;00m: #x1B[94m1#x1B[39;49;00m}#x1B[90m#x1B[39;49;00m
+E         Use -v to get more diff
+
+tests/test_file.py:139: AssertionError</failure></testcase><testcase classname="tests.test_file" name="test_exception_different_number_of_columns" time="0.001" /><testcase classname="tests.test_file" name="test_code_dep_reg_on_file" time="2.886" /><testcase classname="tests.test_file" name="test_schema_on_file" time="3.038" /><testcase classname="tests.test_file" name="test_non_csv_files[params0]" time="2.015" /><testcase classname="tests.test_file" name="test_non_csv_files[params1]" time="2.705" /><testcase classname="tests.test_file" name="test_non_csv_files[params2]" time="4.027" /><testcase classname="tests.test_file" name="test_non_csv_files[params3]" time="6.430" /><testcase classname="tests.test_file" name="test_non_csv_files[params4]" time="31.649" /><testcase classname="tests.test_file" name="test_non_csv_files[params5]" time="40.891" /><testcase classname="tests.test_file" name="test_urls[params0]" time="3.326" /><testcase classname="tests.test_file" name="test_urls[params1]" time="4.763" /><testcase classname="tests.test_file" name="test_urls[params2]" time="13.886" /><testcase classname="tests.test_file" name="test_nan_values[expected_type0]" time="4.441" /><testcase classname="tests.test_file" name="test_nan_values[expected_type1]" time="0.174"><failure message="TypeError: int() argument must be a string, a bytes-like object or a real number, not 'NoneType'">expected_type = 'string'
+
+    @pytest.mark.parametrize(
+        "expected_type",
+        (
+            (True, "int"),
+            (False, "string"),
+        ),
+    )
+    def test_nan_values(expected_type):
+        # if skipping NaN, the column contains only ints
+        skipna, expected_type = expected_type
+&gt;       output = routine(
+            file_path="tests/data/b_test_file.csv",
+            num_rows=-1,
+            save_results=False,
+            skipna=skipna,
+        )
+
+tests/test_file.py:292: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+csv_detective/explore_csv.py:73: in routine
+    analysis, _col_values = detect_formats(
+csv_detective/detection/formats.py:46: in detect_formats
+    scores_table_fields = test_col(
+csv_detective/parsing/columns.py:98: in test_col
+    return_table.loc[name] = table.apply(
+.venv/lib/python3.13/site-packages/fireducks/pandas/generic.py:351: in wrapper
+    return fireducks_func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fireducks/pandas/generic.py:949: in apply
+    return self._fallback_call("apply", args, kwargs, stacklevel=8)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fireducks/pandas/generic.py:526: in _fallback_call
+    return utils.fallback_call(
+.venv/lib/python3.13/site-packages/fireducks/pandas/utils.py:267: in fallback_call
+    return ff.fallback_call(
+.venv/lib/python3.13/site-packages/fireducks/fallback.py:363: in fallback_call
+    return method(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fireducks/fallback.py:309: in wrapper
+    ret = attr(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/pandas/core/frame.py:10401: in apply
+    return op.apply().__finalize__(self, method="apply")
+           ^^^^^^^^^^
+.venv/lib/python3.13/site-packages/pandas/core/apply.py:916: in apply
+    return self.apply_standard()
+           ^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/pandas/core/apply.py:1063: in apply_standard
+    results, res_index = self.apply_series_generator()
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/pandas/core/apply.py:1081: in apply_series_generator
+    results[i] = self.func(v, *self.args, **self.kwargs)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fireducks/pandas/generic.py:946: in wrapper
+    return utils._unwrap(func(*args, **kwargs))
+                         ^^^^^^^^^^^^^^^^^^^^^
+csv_detective/parsing/columns.py:99: in &lt;lambda&gt;
+    lambda serie: test_col_val(
+csv_detective/parsing/columns.py:53: in test_col_val
+    if not all(apply_test_func(serie, test_func, _range)):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+csv_detective/parsing/columns.py:33: in apply_test_func
+    return serie.sample(n=_range).apply(test_func)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fireducks/pandas/generic.py:351: in wrapper
+    return fireducks_func(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fireducks/pandas/generic.py:949: in apply
+    return self._fallback_call("apply", args, kwargs, stacklevel=8)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fireducks/pandas/generic.py:526: in _fallback_call
+    return utils.fallback_call(
+.venv/lib/python3.13/site-packages/fireducks/pandas/utils.py:267: in fallback_call
+    return ff.fallback_call(
+.venv/lib/python3.13/site-packages/fireducks/fallback.py:363: in fallback_call
+    return method(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/fireducks/fallback.py:309: in wrapper
+    ret = attr(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/pandas/core/series.py:4943: in apply
+    ).apply()
+      ^^^^^^^
+.venv/lib/python3.13/site-packages/pandas/core/apply.py:1422: in apply
+    return self.apply_standard()
+           ^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/pandas/core/apply.py:1502: in apply_standard
+    mapped = obj._map_values(
+.venv/lib/python3.13/site-packages/pandas/core/base.py:925: in _map_values
+    return algorithms.map_array(arr, mapper, na_action=na_action, convert=convert)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.13/site-packages/pandas/core/algorithms.py:1743: in map_array
+    return lib.map_infer(values, mapper, convert=convert)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pandas/_libs/lib.pyx:2999: in pandas._libs.lib.map_infer
+    ???
+.venv/lib/python3.13/site-packages/fireducks/pandas/generic.py:946: in wrapper
+    return utils._unwrap(func(*args, **kwargs))
+                         ^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+val = None
+
+    def _is(val):
+        """Returns True if val can be a year"""
+        try:
+&gt;           val = int(val)
+                  ^^^^^^^^
+E           TypeError: int() argument must be a string, a bytes-like object or a real number, not 'NoneType'
+
+csv_detective/detect_fields/temp/year/__init__.py:7: TypeError</failure></testcase><testcase classname="tests.test_file" name="test_output_df" time="4.637"><failure message="AssertionError: assert dtype('float64') == Int64Dtype()&#10; +  where dtype('float64') = 0     10.0\n1    100.0\n2     76.0\n3      NaN\n4      NaN\n5      NaN\nName: partly_empty, dtype: float64.dtype&#10; +  and   Int64Dtype() = &lt;class 'pandas.core.arrays.integer.Int64Dtype'&gt;()&#10; +    where &lt;class 'pandas.core.arrays.integer.Int64Dtype'&gt; = pd.Int64Dtype">def test_output_df():
+        output, df_chunks = routine(
+            file_path="tests/data/b_test_file.csv",
+            num_rows=-1,
+            output_profile=False,
+            save_results=False,
+            output_df=True,
+        )
+        df = pd.concat(df_chunks, ignore_index=True)
+        assert isinstance(output, dict)
+        assert isinstance(df, pd.DataFrame)
+        assert len(df) == 6
+&gt;       assert df["partly_empty"].dtype == pd.Int64Dtype()
+E       AssertionError: assert dtype('float64') == Int64Dtype()
+E        +  where dtype('float64') = 0     10.0\n1    100.0\n2     76.0\n3      NaN\n4      NaN\n5      NaN\nName: partly_empty, dtype: float64.dtype
+E        +  and   Int64Dtype() = &lt;class 'pandas.core.arrays.integer.Int64Dtype'&gt;()
+E        +    where &lt;class 'pandas.core.arrays.integer.Int64Dtype'&gt; = pd.Int64Dtype
+
+tests/test_file.py:313: AssertionError</failure></testcase><testcase classname="tests.test_file" name="test_cast_json[cast_json0]" time="3.337" /><testcase classname="tests.test_file" name="test_cast_json[cast_json1]" time="3.431" /><testcase time="0.000" /></testsuite><properties><property name="python.version" value="3.13.9" /><property name="test.run.timestamp" value="2025-11-28_12-59-25" /></properties></testsuites>
