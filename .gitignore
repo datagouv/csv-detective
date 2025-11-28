@@ -35,3 +35,6 @@ pdm.lock
 analyse_csv.py
 data_gouv_api_download.py
 reformat_tab.py
+
+# Test results
+test_results/
