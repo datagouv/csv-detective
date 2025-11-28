@@ -16,6 +16,7 @@
 - Process big csv files in chunks (/!\ breaking changes) [#159](https://github.com/datagouv/csv-detective/pull/159)
 - Handle column named `count` in profile creation [#171](https://github.com/datagouv/csv-detective/pull/171)
 - Prevent `NaN` in headers [#173](https://github.com/datagouv/csv-detective/pull/173)
+- Add lock file [#166](https://github.com/datagouv/csv-detective/pull/166)
 
 ## 0.9.2 (2025-08-26)
 
