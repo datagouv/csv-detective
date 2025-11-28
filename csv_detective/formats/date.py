@@ -8,26 +8,27 @@ from dateutil.parser import parse as dateutil_parser
 proportion = 1
 tags = ["temp"]
 labels = [
-        "date",
-        "jour",
-        "date de mise a jour",
-        "sns date",
-        "date maj",
-        "rem date",
-        "periode",
-        "date de publication",
-        "dpc",
-        "extract date",
-        "date immatriculation",
-        "date jeu donnees",
-        "datemaj",
-        "dateouv",
-        "date der maj",
-        "dmaj",
-        "jour",
-        "yyyymmdd",
-        "aaaammjj",
+    "date",
+    "jour",
+    "date de mise a jour",
+    "sns date",
+    "date maj",
+    "rem date",
+    "periode",
+    "date de publication",
+    "dpc",
+    "extract date",
+    "date immatriculation",
+    "date jeu donnees",
+    "datemaj",
+    "dateouv",
+    "date der maj",
+    "dmaj",
+    "jour",
+    "yyyymmdd",
+    "aaaammjj",
 ]
+
 
 def date_casting(val: str) -> datetime | None:
     """For performance reasons, we try first with dateutil and fallback on dateparser"""
@@ -58,7 +59,6 @@ string_month_pattern = (
 ).replace("SEP", seps + "?")
 
 
-
 def _is(val):
     # early stops, to cut processing time
     if not isinstance(val, str) or len(val) > 20 or len(val) < 8:
@@ -82,22 +82,22 @@ def _is(val):
 
 
 _test_values = {
-        True: [
-            "1960-08-07",
-            "12/02/2007",
-            "15 jan 1985",
-            "15 décembre 1985",
-            "02 05 2003",
-            "20030502",
-            "1993-12/02",
-        ],
-        False: [
-            "1993-1993-1993",
-            "39-10-1993",
-            "19-15-1993",
-            "15 tambour 1985",
-            "12152003",
-            "20031512",
-            "02052003",
-        ],
+    True: [
+        "1960-08-07",
+        "12/02/2007",
+        "15 jan 1985",
+        "15 décembre 1985",
+        "02 05 2003",
+        "20030502",
+        "1993-12/02",
+    ],
+    False: [
+        "1993-1993-1993",
+        "39-10-1993",
+        "19-15-1993",
+        "15 tambour 1985",
+        "12152003",
+        "20031512",
+        "02052003",
+    ],
 }

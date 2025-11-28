@@ -3,14 +3,14 @@ import re
 proportion = 0.9
 tags = ["fr"]
 labels = [
-        "siren",
-        "siren organisme designe",
-        "siren organisme designant",
-        "n° siren",
-        "siren organisme",
-        "siren titulaire",
-        "numero siren",
-        "epci",
+    "siren",
+    "siren organisme designe",
+    "siren organisme designant",
+    "n° siren",
+    "siren organisme",
+    "siren titulaire",
+    "numero siren",
+    "epci",
 ]
 
 
@@ -32,6 +32,6 @@ def _is(val):
 
 
 _test_values = {
-        True: ["552 100 554", "552100554"],
-        False: ["42"],
+    True: ["552 100 554", "552100554"],
+    False: ["42"],
 }

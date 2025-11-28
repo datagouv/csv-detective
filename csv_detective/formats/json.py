@@ -3,8 +3,7 @@ from json import JSONDecodeError
 
 proportion = 1
 tags = []
-labels = [
-]
+labels = []
 
 
 def _is(val):
@@ -17,6 +16,6 @@ def _is(val):
 
 
 _test_values = {
-        True: ['{"pomme": "fruit", "reponse": 42}', "[1,2,3,4]"],
-        False: ["5", '{"zefib":', '{"a"}'],
+    True: ['{"pomme": "fruit", "reponse": 42}', "[1,2,3,4]"],
+    False: ["5", '{"zefib":', '{"a"}'],
 }

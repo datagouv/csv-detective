@@ -3,9 +3,9 @@ from frformat import Commune, Millesime, Options
 proportion = 0.8
 tags = ["fr", "geo"]
 labels = [
-        "commune",
-        "ville",
-        "libelle commune",
+    "commune",
+    "ville",
+    "libelle commune",
 ]
 
 _options = Options(
@@ -22,6 +22,6 @@ def _is(val):
 
 
 _test_values = {
-        True: ["saint denis"],
-        False: ["new york", "lion"],
+    True: ["saint denis"],
+    False: ["new york", "lion"],
 }

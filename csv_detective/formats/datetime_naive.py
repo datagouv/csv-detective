@@ -5,8 +5,7 @@ from .date import aaaammjj_pattern, date_casting
 
 proportion = 1
 tags = ["temp"]
-labels = [
-]
+labels = []
 threshold = 0.7
 
 # matches AAAA-MM-JJTHH:MM:SS(.dddddd)Z with any of the listed separators for the date OR NO SEPARATOR
@@ -33,17 +32,17 @@ def _is(val: Any | None) -> bool:
 
 
 _test_values = {
-        True: [
-            "2021-06-22 10:20:10",
-            "2030/06-22   00:00:00",
-            "2030/06/22 00:00:00.0028",
-        ],
-        False: [
-            "2021-06-22T30:20:10",
-            "Sun, 06 Nov 1994 08:49:37 GMT",
-            "2021-06-44 10:20:10+02:00",
-            "1999-12-01T00:00:00Z",
-            "2021-06-44",
-            "15 décembre 1985",
-        ],
+    True: [
+        "2021-06-22 10:20:10",
+        "2030/06-22   00:00:00",
+        "2030/06/22 00:00:00.0028",
+    ],
+    False: [
+        "2021-06-22T30:20:10",
+        "Sun, 06 Nov 1994 08:49:37 GMT",
+        "2021-06-44 10:20:10+02:00",
+        "1999-12-01T00:00:00Z",
+        "2021-06-44",
+        "15 décembre 1985",
+    ],
 }

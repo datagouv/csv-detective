@@ -2,8 +2,7 @@ import re
 
 proportion = 0.8
 tags = []
-labels = [
-]
+labels = []
 
 
 def _is(val) -> bool:
@@ -13,6 +12,6 @@ def _is(val) -> bool:
 
 
 _test_values = {
-        True: ["884762be-51f3-44c3-b811-1e14c5d89262"],
-        False: ["0610928327"],
+    True: ["884762be-51f3-44c3-b811-1e14c5d89262"],
+    False: ["0610928327"],
 }

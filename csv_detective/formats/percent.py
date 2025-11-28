@@ -2,8 +2,7 @@ from .float import _is as is_float
 
 proportion = 0.8
 tags = []
-labels = [
-]
+labels = []
 
 
 def _is(val):
@@ -13,6 +12,6 @@ def _is(val):
 
 
 _test_values = {
-        True: ["120%", "-20.2%"],
-        False: ["200", "100 pourcents"],
+    True: ["120%", "-20.2%"],
+    False: ["200", "100 pourcents"],
 }

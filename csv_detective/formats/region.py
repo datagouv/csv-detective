@@ -3,17 +3,17 @@ from frformat import Millesime, Options, Region
 proportion = 1
 tags = ["fr", "geo"]
 labels = [
-        "region",
-        "libelle region",
-        "nom region",
-        "libelle reg",
-        "nom reg",
-        "reg libusage",
-        "nom de la region",
-        "regionorg",
-        "regionlieu",
-        "reg",
-        "nom officiel region",
+    "region",
+    "libelle region",
+    "nom region",
+    "libelle reg",
+    "nom reg",
+    "reg libusage",
+    "nom de la region",
+    "regionorg",
+    "regionlieu",
+    "reg",
+    "nom officiel region",
 ]
 
 _extra_valid_values_set = frozenset(
@@ -65,6 +65,6 @@ def _is(val):
 
 
 _test_values = {
-        True: ["bretagne", "ile-de-france"],
-        False: ["baviere", "overgne"],
+    True: ["bretagne", "ile-de-france"],
+    False: ["baviere", "overgne"],
 }

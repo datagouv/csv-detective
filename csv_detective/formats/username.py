@@ -2,8 +2,7 @@ import re
 
 proportion = 1
 tags = []
-labels = ["account", "username", "user"
-]
+labels = ["account", "username", "user"]
 
 
 def _is(val):
@@ -11,6 +10,6 @@ def _is(val):
 
 
 _test_values = {
-        True: ["@accueil1"],
-        False: ["adresse@mail"],
+    True: ["@accueil1"],
+    False: ["adresse@mail"],
 }

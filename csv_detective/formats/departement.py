@@ -3,19 +3,19 @@ from frformat import Departement, Millesime, Options
 proportion = 0.9
 tags = ["fr", "geo"]
 labels = [
-        "departement",
-        "libelle du departement",
-        "deplib",
-        "nom dept",
-        "dept",
-        "libdepartement",
-        "nom departement",
-        "libelle dep",
-        "libelle departement",
-        "lb departements",
-        "dep libusage",
-        "lb departement",
-        "nom dep",
+    "departement",
+    "libelle du departement",
+    "deplib",
+    "nom dept",
+    "dept",
+    "libdepartement",
+    "nom departement",
+    "libelle dep",
+    "libelle departement",
+    "lb departements",
+    "dep libusage",
+    "lb departement",
+    "nom dep",
 ]
 
 _options = Options(
@@ -32,6 +32,6 @@ def _is(val):
 
 
 _test_values = {
-        True: ["essonne"],
-        False: ["alabama", "auvergne"],
+    True: ["essonne"],
+    False: ["alabama", "auvergne"],
 }

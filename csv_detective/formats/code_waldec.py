@@ -2,8 +2,7 @@ from frformat import CodeRNA
 
 proportion = 0.9
 tags = ["fr"]
-labels = ["code waldec", "waldec"
-]
+labels = ["code waldec", "waldec"]
 
 _code_rna = CodeRNA()
 
@@ -13,6 +12,6 @@ def _is(val):
 
 
 _test_values = {
-        True: ["W123456789", "W2D1234567"],
-        False: ["AA751PEE00188854"],
+    True: ["W123456789", "W2D1234567"],
+    False: ["AA751PEE00188854"],
 }

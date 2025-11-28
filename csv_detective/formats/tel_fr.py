@@ -3,17 +3,17 @@ import re
 proportion = 0.7
 tags = ["fr"]
 labels = [
-        "telephone",
-        "tel",
-        "tel1",
-        "tel2",
-        "phone",
-        "num tel",
-        "tel mob",
-        "telephone sav",
-        "telephone1",
-        "coordinates.phone",
-        "telephone du lieu",
+    "telephone",
+    "tel",
+    "tel1",
+    "tel2",
+    "phone",
+    "num tel",
+    "tel mob",
+    "telephone sav",
+    "telephone1",
+    "coordinates.phone",
+    "telephone du lieu",
 ]
 
 
@@ -31,6 +31,6 @@ def _is(val):
 
 
 _test_values = {
-        True: ["0134643467"],
-        False: ["6625388263", "01288398"],
+    True: ["0134643467"],
+    False: ["6625388263", "01288398"],
 }

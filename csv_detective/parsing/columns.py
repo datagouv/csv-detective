@@ -112,10 +112,7 @@ def test_label(
     for idx, (label, format) in enumerate(formats.items()):
         if verbose:
             start_type = time()
-        return_table.loc[label] = [
-            format.is_valid_label(col_name)
-            for col_name in columns
-        ]
+        return_table.loc[label] = [format.is_valid_label(col_name) for col_name in columns]
         if verbose:
             display_logs_depending_process_time(
                 f'\t- Done with type "{label}" in {round(time() - start_type, 3)}s ({idx + 1}/{len(formats)})',
@@ -140,7 +137,11 @@ def test_col_chunks(
     def build_remaining_tests_per_col(return_table: pd.DataFrame) -> dict[str, list[str]]:
         # returns a dict with the table's columns as keys and the list of remaining format labels to apply
         return {
-            col: [fmt_label for fmt_label in return_table.index if return_table.loc[fmt_label, col] > 0]
+            col: [
+                fmt_label
+                for fmt_label in return_table.index
+                if return_table.loc[fmt_label, col] > 0
+            ]
             for col in return_table.columns
         }
 

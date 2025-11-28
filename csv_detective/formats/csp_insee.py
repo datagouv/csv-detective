@@ -5,9 +5,9 @@ from csv_detective.parsing.text import _process_text
 proportion = 1
 tags = ["fr"]
 labels = [
-        "csp insee",
-        "csp",
-        "categorie socioprofessionnelle",
+    "csp insee",
+    "csp",
+    "categorie socioprofessionnelle",
 ]
 
 f = open(join(dirname(__file__), "data", "csp_insee.txt"), "r")
@@ -26,6 +26,6 @@ def _is(val):
 
 
 _test_values = {
-        True: ["employes de la poste"],
-        False: ["super-heros"],
+    True: ["employes de la poste"],
+    False: ["super-heros"],
 }

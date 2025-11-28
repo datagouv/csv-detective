@@ -3,16 +3,16 @@ import re
 proportion = 1
 tags = ["temp"]
 labels = [
-        "datetime",
-        "timestamp",
-        "osm_timestamp",
-        "date",
-        "created at",
-        "last update",
-        "date maj",
-        "createdat",
-        "date naissance",
-        "date donnees",
+    "datetime",
+    "timestamp",
+    "osm_timestamp",
+    "date",
+    "created at",
+    "last update",
+    "date maj",
+    "createdat",
+    "date naissance",
+    "date donnees",
 ]
 
 
@@ -29,6 +29,6 @@ def _is(val):
 
 
 _test_values = {
-        True: ["Sun, 06 Nov 1994 08:49:37 GMT"],
-        False: ["2021-06-22T10:20:10"],
+    True: ["Sun, 06 Nov 1994 08:49:37 GMT"],
+    False: ["2021-06-22T10:20:10"],
 }

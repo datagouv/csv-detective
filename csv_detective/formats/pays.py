@@ -3,17 +3,17 @@ from frformat import Millesime, Options, Pays
 proportion = 0.6
 tags = ["fr", "geo"]
 labels = [
-        "pays",
-        "payslieu",
-        "paysorg",
-        "country",
-        "pays lib",
-        "lieupays",
-        "pays beneficiaire",
-        "nom du pays",
-        "journey start country",
-        "libelle pays",
-        "journey end country",
+    "pays",
+    "payslieu",
+    "paysorg",
+    "country",
+    "pays lib",
+    "lieupays",
+    "pays beneficiaire",
+    "nom du pays",
+    "journey start country",
+    "libelle pays",
+    "journey end country",
 ]
 
 _options = Options(
@@ -30,6 +30,6 @@ def _is(val):
 
 
 _test_values = {
-        True: ["france", "italie"],
-        False: ["amerique", "paris"],
+    True: ["france", "italie"],
+    False: ["amerique", "paris"],
 }

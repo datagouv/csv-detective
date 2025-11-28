@@ -4,8 +4,7 @@ from csv_detective.parsing.text import _process_text
 
 proportion = 1
 tags = ["fr"]
-labels = ["code csp insee", "code csp"
-]
+labels = ["code csp insee", "code csp"]
 
 
 def _is(val):
@@ -32,6 +31,6 @@ def _is(val):
 
 
 _test_values = {
-        True: ["121f"],
-        False: ["121x"],
+    True: ["121f"],
+    False: ["121x"],
 }

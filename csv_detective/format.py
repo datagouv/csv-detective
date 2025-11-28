@@ -19,7 +19,7 @@ class Format:
         self.labels: list[str] = labels
         self.proportion: float = proportion
         self.tags: list[str] = tags
-    
+
     def is_valid_label(self, val: str) -> float:
         return header_score(val, self.labels)
 
@@ -29,10 +29,8 @@ class FormatsManager:
 
     def __init__(self) -> None:
         import csv_detective.formats as formats
-        format_labels = [
-            f for f in dir(formats)
-            if "_is" in dir(getattr(formats, f))
-        ]
+
+        format_labels = [f for f in dir(formats) if "_is" in dir(getattr(formats, f))]
         assert len(format_labels) == len(set(format_labels)), "Format labels must be unique"
         self.formats = {
             label: Format(
@@ -47,7 +45,7 @@ class FormatsManager:
             )
             for label in format_labels
         }
-    
+
     def get_formats_from_tags(self, tags: list[str]) -> dict[str, Format]:
         # allowed to skip with -temp
         return {

@@ -18,6 +18,7 @@ from csv_detective.parsing.columns import (
 
 fmtm = FormatsManager()
 
+
 def detect_formats(
     table: pd.DataFrame,
     analysis: dict,
@@ -31,9 +32,7 @@ def detect_formats(
 
     # list testing to be performed
     formats: dict[str, Format] = (
-        fmtm.get_formats_from_tags(tags)
-        if tags is not None
-        else fmtm.formats
+        fmtm.get_formats_from_tags(tags) if tags is not None else fmtm.formats
     )
 
     # if no testing then return
@@ -70,9 +69,7 @@ def detect_formats(
     analysis["columns_fields"] = prepare_output_dict(scores_table_fields, limited_output)
 
     # Perform testing on labels
-    scores_table_labels = test_label(
-        analysis["header"], formats, limited_output, verbose=verbose
-    )
+    scores_table_labels = test_label(analysis["header"], formats, limited_output, verbose=verbose)
     analysis["columns_labels"] = prepare_output_dict(scores_table_labels, limited_output)
 
     # Multiply the results of the fields by 1 + 0.5 * the results of the labels.

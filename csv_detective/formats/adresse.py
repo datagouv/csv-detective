@@ -111,6 +111,6 @@ def _is(val):
 
 
 _test_values = {
-        True: ["rue du martyr"],
-        False: ["un batiment"],
+    True: ["rue du martyr"],
+    False: ["un batiment"],
 }

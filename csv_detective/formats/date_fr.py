@@ -2,8 +2,7 @@ import re
 
 proportion = 1
 tags = ["fr", "temp"]
-labels = ["date"
-]
+labels = ["date"]
 
 pattern = (
     r"^\d{1,2}[ \-](janvier|fevrier|mars|avril|mai|juin|juillet|aout|septembre"
@@ -16,6 +15,6 @@ def _is(val):
 
 
 _test_values = {
-        True: ["13 février 1996"],
-        False: ["44 march 2025"],
+    True: ["13 février 1996"],
+    False: ["44 march 2025"],
 }

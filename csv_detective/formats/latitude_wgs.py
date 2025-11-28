@@ -3,27 +3,27 @@ from .float import _is as is_float
 proportion = 1
 tags = ["geo"]
 labels = [
-        "latitude",
-        "lat",
-        "y",
-        "yf",
-        "yd",
-        "coordonnee y",
-        "coord y",
-        "ycoord",
-        "geocodage y gps",
-        "location latitude",
-        "ylatitude",
-        "ylat",
-        "latitude (y)",
-        "latitudeorg",
-        "coordinates.latitude",
-        "googlemap latitude",
-        "latitudelieu",
-        "latitude googlemap",
-        "latitude wgs84",
-        "y wgs84",
-        "latitude (wgs84)",
+    "latitude",
+    "lat",
+    "y",
+    "yf",
+    "yd",
+    "coordonnee y",
+    "coord y",
+    "ycoord",
+    "geocodage y gps",
+    "location latitude",
+    "ylatitude",
+    "ylat",
+    "latitude (y)",
+    "latitudeorg",
+    "coordinates.latitude",
+    "googlemap latitude",
+    "latitudelieu",
+    "latitude googlemap",
+    "latitude wgs84",
+    "y wgs84",
+    "latitude (wgs84)",
 ]
 
 
@@ -37,6 +37,6 @@ def _is(val):
 
 
 _test_values = {
-        True: ["43.2", "-22"],
-        False: ["100"],
+    True: ["43.2", "-22"],
+    False: ["100"],
 }

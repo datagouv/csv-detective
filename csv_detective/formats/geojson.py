@@ -3,14 +3,14 @@ import json
 proportion = 1
 tags = ["geo"]
 labels = [
-        "json geojson",
-        "json",
-        "geojson",
-        "geo shape",
-        "geom",
-        "geometry",
-        "geo shape",
-        "geoshape",
+    "json geojson",
+    "json",
+    "geojson",
+    "geo shape",
+    "geom",
+    "geometry",
+    "geo shape",
+    "geoshape",
 ]
 
 
@@ -28,9 +28,9 @@ def _is(val) -> bool:
 
 
 _test_values = {
-        True: [
-            '{"coordinates": [45.783753, 3.049342], "type": "63870"}',
-            '{"geometry": {"coordinates": [45.783753, 3.049342]}}',
-        ],
-        False: ['{"pomme": "fruit", "reponse": 42}'],
+    True: [
+        '{"coordinates": [45.783753, 3.049342], "type": "63870"}',
+        '{"geometry": {"coordinates": [45.783753, 3.049342]}}',
+    ],
+    False: ['{"pomme": "fruit", "reponse": 42}'],
 }

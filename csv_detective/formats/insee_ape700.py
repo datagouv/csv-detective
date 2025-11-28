@@ -5,12 +5,12 @@ from csv_detective.parsing.text import _process_text
 proportion = 0.8
 tags = ["fr"]
 labels = [
-        "code ape",
-        "code activite (ape)",
-        "code naf",
-        "code naf organisme designe",
-        "code naf organisme designant",
-        "base sirene : code ape de l'etablissement siege",
+    "code ape",
+    "code activite (ape)",
+    "code naf",
+    "code naf organisme designe",
+    "code naf organisme designant",
+    "base sirene : code ape de l'etablissement siege",
 ]
 
 f = open(join(dirname(__file__), "data", "insee_ape700.txt"), "r")

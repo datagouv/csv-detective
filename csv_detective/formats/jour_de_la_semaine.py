@@ -1,15 +1,13 @@
-
-
 proportion = 0.8
 tags = ["fr", "temp"]
 labels = [
-        "jour semaine",
-        "type jour",
-        "jour de la semaine",
-        "saufjour",
-        "nomjour",
-        "jour",
-        "jour de fermeture",
+    "jour semaine",
+    "type jour",
+    "jour de la semaine",
+    "saufjour",
+    "nomjour",
+    "jour",
+    "jour de fermeture",
 ]
 
 jours = {
@@ -38,6 +36,6 @@ def _is(val):
 
 
 _test_values = {
-        True: ["lundi"],
-        False: ["jour de la biere"],
+    True: ["lundi"],
+    False: ["jour de la biere"],
 }

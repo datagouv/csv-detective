@@ -1,8 +1,7 @@
 from .float import _is as is_float
 
 proportion = 0.8
-labels = ["budget", "salaire", "euro", "euros", "prêt", "montant"
-]
+labels = ["budget", "salaire", "euro", "euros", "prêt", "montant"]
 
 currencies = {"€", "$", "£", "¥"}
 
@@ -14,6 +13,6 @@ def _is(val):
 
 
 _test_values = {
-        True: ["120€", "-20.2$"],
-        False: ["200", "100 euros"],
+    True: ["120€", "-20.2$"],
+    False: ["200", "100 euros"],
 }

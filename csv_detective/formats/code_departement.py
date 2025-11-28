@@ -3,11 +3,11 @@ from frformat import Millesime, NumeroDepartement, Options
 proportion = 1
 tags = ["fr", "geo"]
 labels = [
-        "code departement",
-        "code_departement",
-        "dep",
-        "departement",
-        "dept",
+    "code departement",
+    "code_departement",
+    "dep",
+    "departement",
+    "dept",
 ]
 
 _options = Options(
@@ -24,6 +24,6 @@ def _is(val):
 
 
 _test_values = {
-        True: ["75", "2A", "2b", "974", "01"],
-        False: ["00", "96", "101"],
+    True: ["75", "2A", "2b", "974", "01"],
+    False: ["00", "96", "101"],
 }

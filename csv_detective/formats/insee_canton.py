@@ -3,10 +3,10 @@ from frformat import Canton, Millesime, Options
 proportion = 0.9
 tags = ["fr", "geo"]
 labels = [
-        "insee canton",
-        "canton",
-        "cant",
-        "nom canton",
+    "insee canton",
+    "canton",
+    "cant",
+    "nom canton",
 ]
 
 _options = Options(
@@ -23,6 +23,6 @@ def _is(val):
 
 
 _test_values = {
-        True: ["nantua"],
-        False: ["california"],
+    True: ["nantua"],
+    False: ["california"],
 }

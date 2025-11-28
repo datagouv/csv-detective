@@ -29,6 +29,6 @@ def _is(val):
 
 
 _test_values = {
-        True: ["oui", "0", "1", "yes", "false", "True"],
-        False: ["nein", "ja", "2", "-0"],
+    True: ["oui", "0", "1", "yes", "false", "True"],
+    False: ["nein", "ja", "2", "-0"],
 }
