@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "csv-detective"
 version = "0.9.3.dev"
 description = "Detect tabular files column content"
-authors = [{ name = "Etalab", email = "opendatateam@data.gouv.fr" }]
+authors = [{ name = "data.gouv.fr", email = "opendatateam@data.gouv.fr" }]
 dependencies = [
     "dateparser>=1.2.0,<2",
     "faust-cchardet==2.1.19",
