@@ -30,16 +30,24 @@ def test_col_val(
 
     # TODO : change for a cleaner method and only test columns in modules labels
     def apply_test_func(serie: pd.Series, test_func: Callable, _range: int):
-        return serie.sample(n=_range).apply(test_func)
+        # Optimization: if _range == len(serie), no need to sample
+        if _range >= len(serie):
+            return serie.apply(test_func)
+        else:
+            return serie.sample(n=_range).apply(test_func)
 
     try:
         if skipna:
-            serie = serie[serie.notnull()]
+            # Optimization: avoid creating a new Series if possible
+            non_null_mask = serie.notnull()
+            if not non_null_mask.all():
+                serie = serie[non_null_mask]
         ser_len = len(serie)
         if ser_len == 0:
             # being here means the whole column is NaN, so if skipna it's a pass
             return 1.0 if skipna else 0.0
         if not limited_output:
+            # Optimization: when not limited_output and _range == ser_len, skip sample
             result = apply_test_func(serie, test_func, ser_len).sum() / ser_len
             return result if result >= proportion else 0.0
         else:
@@ -94,17 +102,16 @@ def test_col(
             start_type = time()
             logging.info(f"\t- Starting with type '{name}'")
         # improvement lead : put the longest tests behind and make them only if previous tests not satisfactory
-        # => the following needs to change, "apply" means all columns are tested for one type at once
-        return_table.loc[name] = table.apply(
-            lambda serie: test_col_val(
-                serie,
+        # Optimization: use explicit loop instead of apply for better performance and cache locality
+        for col in table.columns:
+            return_table.loc[name, col] = test_col_val(
+                table[col],
                 attributes["func"],
                 attributes["prop"],
                 skipna=skipna,
                 limited_output=limited_output,
                 verbose=verbose,
             )
-        )
         if verbose:
             display_logs_depending_process_time(
                 f'\t> Done with type "{name}" in {round(time() - start_type, 3)}s ({idx + 1}/{len(all_tests)})',
@@ -168,7 +175,10 @@ def test_col_chunks(
     remaining_tests_per_col = build_remaining_tests_per_col(return_table)
 
     # hashing rows to get nb_duplicates
-    row_hashes_count = table.apply(lambda row: hash(tuple(row)), axis=1).value_counts()
+    # Optimization: use itertuples which is faster than apply(axis=1)
+    row_hashes_count = pd.Series(
+        [hash(tuple(row)) for row in table.itertuples(index=False, name=None)], index=table.index
+    ).value_counts()
     # getting values for profile to read the file only once
     col_values = {col: table[col].value_counts(dropna=False) for col in table.columns}
 
