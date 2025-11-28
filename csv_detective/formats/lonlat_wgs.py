@@ -1,6 +1,6 @@
 from .latitude_wgs import _is as is_lat
-from .longitude_wgs import _is as is_lon
 from .latlon_wgs import COMMON_COORDS_LABELS
+from .longitude_wgs import _is as is_lon
 
 proportion = 1
 tags = ["geo"]
