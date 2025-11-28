@@ -7,7 +7,7 @@ from csv_detective.detection.variables import (
     detect_categorical_variable,
     # detect_continuous_variable,
 )
-from csv_detective.load_tests import return_all_tests
+from csv_detective.format import Format, FormatsManager
 from csv_detective.output.utils import prepare_output_dict
 from csv_detective.parsing.columns import (
     MAX_NUMBER_CATEGORICAL_VALUES,
@@ -16,12 +16,13 @@ from csv_detective.parsing.columns import (
     test_label,
 )
 
+fmtm = FormatsManager()
 
 def detect_formats(
     table: pd.DataFrame,
     analysis: dict,
     file_path: str,
-    user_input_tests: str | list[str] = "ALL",
+    tags: list[str] | None = None,
     limited_output: bool = True,
     skipna: bool = True,
     verbose: bool = False,
@@ -29,15 +30,14 @@ def detect_formats(
     in_chunks = analysis.get("total_lines") is None
 
     # list testing to be performed
-    all_tests_fields = return_all_tests(
-        user_input_tests, detect_type="detect_fields"
-    )  # list all tests for the fields
-    all_tests_labels = return_all_tests(
-        user_input_tests, detect_type="detect_labels"
-    )  # list all tests for the labels
+    formats: dict[str, Format] = (
+        fmtm.get_formats_from_tags(tags)
+        if tags is not None
+        else fmtm.formats
+    )
 
     # if no testing then return
-    if not all_tests_fields and not all_tests_labels:
+    if len(formats) == 0:
         return analysis, None
 
     # Perform testing on fields
@@ -45,7 +45,7 @@ def detect_formats(
         # table is small enough to be tested in one go
         scores_table_fields = test_col(
             table=table,
-            all_tests=all_tests_fields,
+            formats=formats,
             limited_output=limited_output,
             skipna=skipna,
             verbose=verbose,
@@ -62,7 +62,7 @@ def detect_formats(
             table=table,
             file_path=file_path,
             analysis=analysis,
-            all_tests=all_tests_fields,
+            formats=formats,
             limited_output=limited_output,
             skipna=skipna,
             verbose=verbose,
@@ -71,7 +71,7 @@ def detect_formats(
 
     # Perform testing on labels
     scores_table_labels = test_label(
-        analysis["header"], all_tests_labels, limited_output, verbose=verbose
+        analysis["header"], formats, limited_output, verbose=verbose
     )
     analysis["columns_labels"] = prepare_output_dict(scores_table_labels, limited_output)
 

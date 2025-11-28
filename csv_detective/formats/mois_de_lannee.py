@@ -1,7 +1,9 @@
 from unidecode import unidecode
 
 proportion = 1
-labels = ["fr", "temp"]
+tags = ["fr", "temp"]
+labels = ["mois", "month"]
+
 mois = {
     "janvier",
     "fevrier",
@@ -38,3 +40,9 @@ def _is(val):
         return False
     val = unidecode(val.lower())
     return val in mois
+
+
+_test_values = {
+    True: ["JUIN", "décembre"],
+    False: ["november"],
+}

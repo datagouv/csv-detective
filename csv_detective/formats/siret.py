@@ -1,7 +1,7 @@
 import re
 
 proportion = 0.8
-
+tags = ["fr"]
 labels = [
     "siret",
     "siret d",
@@ -11,8 +11,6 @@ labels = [
     "coll siret",
     "epci",
 ]
-
-tags = ["fr"]
 
 
 def _is(val):
@@ -41,3 +39,9 @@ def _is(val):
         cle += y // 10 + y % 10
         pair = not pair
     return cle % 10 == 0
+
+
+_test_values = {
+    True: ["13002526500013", "130 025 265 00013"],
+    False: ["13002526500012"],
+}

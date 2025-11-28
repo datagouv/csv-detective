@@ -15,7 +15,7 @@ logging.basicConfig(level=logging.INFO)
 def routine(
     file_path: str,
     num_rows: int = 500,
-    user_input_tests: str | list[str] = "ALL",
+    tags: list[str] | None = None,
     limited_output: bool = True,
     save_results: bool | str = True,
     encoding: str | None = None,
@@ -35,7 +35,7 @@ def routine(
         file_path: local path or URL to file
         num_rows: number of rows to sample from the file for analysis ; -1 for analysis
         of the whole file
-        user_input_tests: tests to run on the file
+        tags: tags to filter formats
         limited_output: whether or not to return all possible types or only the most likely one for each column
         save_results: whether or not to save the results in a json file, or the path where to dump the output
         output_profile: whether or not to add the 'profile' field to the output
@@ -74,7 +74,7 @@ def routine(
         table=table,
         analysis=analysis,
         file_path=file_path,
-        user_input_tests=user_input_tests,
+        tags=tags,
         limited_output=limited_output,
         skipna=skipna,
         verbose=verbose,
@@ -107,7 +107,7 @@ def validate_then_detect(
     file_path: str,
     previous_analysis: dict,
     num_rows: int = 500,
-    user_input_tests: str | list[str] = "ALL",
+    tags: list[str] | None = None,
     limited_output: bool = True,
     save_results: bool | str = True,
     skipna: bool = True,
@@ -140,7 +140,7 @@ def validate_then_detect(
             table=table,
             analysis=analysis,
             file_path=file_path,
-            user_input_tests=user_input_tests,
+            tags=tags,
             limited_output=limited_output,
             skipna=skipna,
             verbose=verbose,

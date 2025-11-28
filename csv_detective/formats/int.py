@@ -14,3 +14,9 @@ def _is(val):
         return True
     except ValueError:
         return False
+
+
+_test_values = {
+    True: ["1", "0", "1764", "-24"],
+    False: ["01053", "1.2", "123_456", "+35"],
+}

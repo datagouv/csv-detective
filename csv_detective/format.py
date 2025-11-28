@@ -8,24 +8,25 @@ class Format:
         self,
         name: str,
         func: Callable,
+        _test_values: dict[bool, list[str]],
         labels: list[str] = [],
         proportion: float = 1,
         tags: list[str] = [],
     ) -> None:
-        self.name = name
-        self.func = func
-        self.labels = labels
+        self.name: str = name
+        self.func: Callable = func
+        self._test_values: dict[bool, list[str]] = _test_values
+        self.labels: list[str] = labels
         self.proportion: float = proportion
-        self.tags = tags
-    
-    def is_valid_value(self, val: str) -> bool:
-        return self.func(val)
+        self.tags: list[str] = tags
     
     def is_valid_label(self, val: str) -> float:
         return header_score(val, self.labels)
 
 
 class FormatsManager:
+    formats: dict[str, Format]
+
     def __init__(self) -> None:
         import csv_detective.formats as formats
         format_labels = [
@@ -33,10 +34,11 @@ class FormatsManager:
             if "_is" in dir(getattr(formats, f))
         ]
         assert len(format_labels) == len(set(format_labels)), "Format labels must be unique"
-        self.formats = [
-            Format(
+        self.formats = {
+            label: Format(
                 name=label,
                 func=(module := getattr(formats, label))._is,
+                _test_values=module._test_values,
                 **{
                     attr: val
                     for attr in ["labels", "proportion", "tags"]
@@ -44,7 +46,15 @@ class FormatsManager:
                 },
             )
             for label in format_labels
-        ]
+        }
     
-    def get_formats_from_tags(self, tags: list[str]) -> list[Format]:
-        return [f for f in self.formats if all(tag in f.tags for tag in tags)]
+    def get_formats_from_tags(self, tags: list[str]) -> dict[str, Format]:
+        # allowed to skip with -temp
+        return {
+            label: fmt
+            for label, fmt in self.formats.items()
+            if all(tag in fmt.tags for tag in tags)
+        }
+
+    def available_tags(self) -> set[str]:
+        return set(tag for format in self.formats.values() for tag in format.tags)

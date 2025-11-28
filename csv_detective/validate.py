@@ -2,13 +2,13 @@ import logging
 
 import pandas as pd
 
-from csv_detective.load_tests import return_all_tests
+from csv_detective.format import FormatsManager
 from csv_detective.parsing.columns import MAX_NUMBER_CATEGORICAL_VALUES, test_col_val
 
 VALIDATION_CHUNK_SIZE = int(1e5)
 logging.basicConfig(level=logging.INFO)
 
-tests = return_all_tests("ALL", "detect_fields")
+formats = FormatsManager().formats
 
 
 def validate(
@@ -101,8 +101,8 @@ def validate(
                 continue
             test_result: float = test_col_val(
                 serie=chunk[col_name],
-                test_func=tests[args["format"]]["func"],
-                proportion=tests[args["format"]]["prop"],
+                test_func=formats[args["format"]].func,
+                proportion=formats[args["format"]].proportion,
                 skipna=skipna,
             )
             if not bool(test_result):
