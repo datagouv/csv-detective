@@ -17,6 +17,7 @@ from csv_detective.parsing.columns import test_col as col_test  # to prevent pyt
 
 fmtm = FormatsManager()
 
+
 def test_all_format_funcs_return_bool():
     for format in fmtm.formats.values():
         for tmp in ["a", "9", "3.14", "[]", float("nan"), "2021-06-22 10:20:10"]:

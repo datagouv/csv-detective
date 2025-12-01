@@ -4,6 +4,7 @@ from csv_detective.format import FormatsManager
 
 fmtm = FormatsManager()
 
+
 # money labels
 def test_money_labels():
     header = "Montant total"

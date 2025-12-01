@@ -1,6 +1,6 @@
 import re
 
-from .date import aaaammjj_pattern, date_casting, SHARED_DATE_LABELS
+from .date import SHARED_DATE_LABELS, aaaammjj_pattern, date_casting
 
 proportion = 1
 tags = ["temp", "type"]
