@@ -1,5 +1,5 @@
 from .latitude_wgs import _is as is_lat
-from .latlon_wgs import COMMON_COORDS_LABELS
+from .latlon_wgs import SHARED_COORDS_LABELS
 from .longitude_wgs import _is as is_lon
 
 proportion = 1
@@ -14,9 +14,9 @@ specific = [
 
 # we aim wide to catch exact matches if possible for the highest possible score
 words = (
-    COMMON_COORDS_LABELS
+    SHARED_COORDS_LABELS
     + specific
-    + [w + sep + suf for suf in specific for w in COMMON_COORDS_LABELS for sep in ["", " "]]
+    + [w + sep + suf for suf in specific for w in SHARED_COORDS_LABELS for sep in ["", " "]]
 )
 
 

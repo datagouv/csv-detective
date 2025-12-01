@@ -1,10 +1,10 @@
 import re
 
-from .date import aaaammjj_pattern, date_casting
+from .date import aaaammjj_pattern, date_casting, SHARED_DATE_LABELS
 
 proportion = 1
-tags = ["temp"]
-labels = []
+tags = ["temp", "type"]
+labels = SHARED_DATE_LABELS + ["datetime", "timestamp"]
 
 threshold = 0.7
 pat = (

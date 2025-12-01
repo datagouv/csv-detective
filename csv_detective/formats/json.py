@@ -2,8 +2,7 @@ import json
 from json import JSONDecodeError
 
 proportion = 1
-tags = []
-labels = []
+tags = ["type"]
 
 
 def _is(val):

@@ -1,7 +1,6 @@
 import re
 
 proportion = 0.9
-tags = []
 labels = [
     "email",
     "mail",

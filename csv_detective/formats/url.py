@@ -1,7 +1,6 @@
 import re
 
 proportion = 1
-tags = []
 labels = [
     "url",
     "url source",

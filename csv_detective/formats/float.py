@@ -1,5 +1,5 @@
 proportion = 1
-tags = []
+tags = ["type"]
 labels = ["part", "ratio", "taux"]
 
 

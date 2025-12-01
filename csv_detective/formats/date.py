@@ -6,25 +6,21 @@ from dateutil.parser import ParserError
 from dateutil.parser import parse as dateutil_parser
 
 proportion = 1
-tags = ["temp"]
-labels = [
+tags = ["temp", "type"]
+SHARED_DATE_LABELS = [
     "date",
-    "jour",
-    "date de mise a jour",
-    "sns date",
-    "date maj",
-    "rem date",
-    "periode",
-    "date de publication",
-    "dpc",
-    "extract date",
-    "date immatriculation",
-    "date jeu donnees",
+    "mise à jour",
+    "modifie",
+    "maj",
     "datemaj",
-    "dateouv",
-    "date der maj",
-    "dmaj",
+    "update",
+    "created",
+    "modified",
+]
+labels = SHARED_DATE_LABELS + [
     "jour",
+    "periode",
+    "dpc",
     "yyyymmdd",
     "aaaammjj",
 ]

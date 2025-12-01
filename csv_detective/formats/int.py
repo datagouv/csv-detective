@@ -1,4 +1,5 @@
 labels = ["nb", "nombre", "nbre"]
+tag = ["type"]
 
 
 def _is(val):

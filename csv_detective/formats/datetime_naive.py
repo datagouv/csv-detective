@@ -2,10 +2,10 @@ import re
 from typing import Any
 
 from .date import aaaammjj_pattern, date_casting
+from .datetime_aware import labels  # noqa
 
 proportion = 1
-tags = ["temp"]
-labels = []
+tags = ["temp", "type"]
 threshold = 0.7
 
 # matches AAAA-MM-JJTHH:MM:SS(.dddddd)Z with any of the listed separators for the date OR NO SEPARATOR

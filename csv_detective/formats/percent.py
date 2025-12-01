@@ -1,7 +1,6 @@
 from .float import _is as is_float
 
 proportion = 0.8
-tags = []
 labels = []
 
 

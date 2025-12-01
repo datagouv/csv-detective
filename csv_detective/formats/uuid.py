@@ -1,8 +1,7 @@
 import re
 
 proportion = 0.8
-tags = []
-labels = []
+labels = ["id", "identifiant"]
 
 
 def _is(val) -> bool:

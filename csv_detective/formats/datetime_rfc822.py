@@ -1,19 +1,9 @@
 import re
 
+from .datetime_aware import labels  # noqa
+
 proportion = 1
-tags = ["temp"]
-labels = [
-    "datetime",
-    "timestamp",
-    "osm_timestamp",
-    "date",
-    "created at",
-    "last update",
-    "date maj",
-    "createdat",
-    "date naissance",
-    "date donnees",
-]
+tags = ["temp", "type"]
 
 
 def _is(val):

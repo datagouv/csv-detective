@@ -4,7 +4,7 @@ from .longitude_wgs import _is as is_lon
 proportion = 1
 tags = ["geo"]
 
-COMMON_COORDS_LABELS = [
+SHARED_COORDS_LABELS = [
     "ban",
     "coordinates",
     "coordonnees",
@@ -31,9 +31,9 @@ specific = [
 
 # we aim wide to catch exact matches if possible for the highest possible score
 labels = (
-    COMMON_COORDS_LABELS
+    SHARED_COORDS_LABELS
     + specific
-    + [w + sep + suf for suf in specific for w in COMMON_COORDS_LABELS for sep in ["", " "]]
+    + [w + sep + suf for suf in specific for w in SHARED_COORDS_LABELS for sep in ["", " "]]
 )
 
 
