@@ -1,12 +1,13 @@
 import pytest
 
-from csv_detective.detect_labels import latitude_wgs, money
+from csv_detective.format import FormatsManager
 
+fmtm = FormatsManager()
 
 # money labels
 def test_money_labels():
     header = "Montant total"
-    assert money._is(header) == 0.5
+    assert fmtm.formats["money"].is_valid_label(header) == 0.5
 
 
 @pytest.mark.parametrize(
@@ -21,4 +22,4 @@ def test_money_labels():
 )
 def test_latitude(params):
     header, expected = params
-    assert expected == latitude_wgs._is(header)
+    assert expected == fmtm.formats["latitude_wgs"].is_valid_label(header)
