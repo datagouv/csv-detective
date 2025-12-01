@@ -1,14 +1,14 @@
-from frformat import CodeRNA
+import re
 
 proportion = 0.9
 tags = ["fr"]
 labels = ["code waldec", "waldec"]
 
-_code_rna = CodeRNA()
+regex = r"^W\d[\dA-Z]\d{7}$"
 
 
 def _is(val):
-    return isinstance(val, str) and _code_rna.is_valid(val)
+    return isinstance(val, str) and bool(re.match(regex, val))
 
 
 _test_values = {
