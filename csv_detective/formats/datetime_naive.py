@@ -1,8 +1,8 @@
 import re
 from typing import Any
 
-from .date import aaaammjj_pattern, date_casting
-from .datetime_aware import labels  # noqa
+from csv_detective.formats.date import aaaammjj_pattern, date_casting
+from csv_detective.formats.datetime_aware import labels  # noqa
 
 proportion = 1
 tags = ["temp", "type"]
