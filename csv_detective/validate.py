@@ -101,8 +101,7 @@ def validate(
                 continue
             test_result: float = test_col_val(
                 serie=chunk[col_name],
-                test_func=formats[args["format"]].func,
-                proportion=formats[args["format"]].proportion,
+                format=formats[args["format"]],
                 skipna=skipna,
             )
             if not bool(test_result):
