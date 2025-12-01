@@ -31,7 +31,6 @@ class FormatsManager:
         import csv_detective.formats as formats
 
         format_labels = [f for f in dir(formats) if "_is" in dir(getattr(formats, f))]
-        assert len(format_labels) == len(set(format_labels)), "Format labels must be unique"
         self.formats = {
             label: Format(
                 name=label,
