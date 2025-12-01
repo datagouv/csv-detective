@@ -46,7 +46,6 @@ class FormatsManager:
         }
 
     def get_formats_from_tags(self, tags: list[str]) -> dict[str, Format]:
-        # allowed to skip with -temp
         return {
             label: fmt
             for label, fmt in self.formats.items()
