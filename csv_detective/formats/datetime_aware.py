@@ -1,6 +1,6 @@
 import re
 
-from .date import SHARED_DATE_LABELS, aaaammjj_pattern, date_casting
+from csv_detective.formats.date import SHARED_DATE_LABELS, aaaammjj_pattern, date_casting
 
 proportion = 1
 tags = ["temp", "type"]

@@ -1,5 +1,5 @@
-from .latitude_wgs import _is as is_lat
-from .longitude_wgs import _is as is_lon
+from csv_detective.formats.latitude_wgs import _is as is_lat
+from csv_detective.formats.longitude_wgs import _is as is_lon
 
 proportion = 1
 tags = ["geo"]

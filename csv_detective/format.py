@@ -1,6 +1,6 @@
 from typing import Callable
 
-from .parsing.text import header_score
+from csv_detective.parsing.text import header_score
 
 
 class Format:

@@ -1,6 +1,6 @@
 import re
 
-from ..parsing.text import _process_text
+from csv_detective.parsing.text import _process_text
 
 proportion = 1
 tags = ["fr", "temp"]

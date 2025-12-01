@@ -1,7 +1,7 @@
 from frformat import LatitudeL93
 
-from .float import _is as is_float
-from .float import float_casting
+from csv_detective.formats.float import _is as is_float
+from csv_detective.formats.float import float_casting
 
 proportion = 1
 tags = ["fr", "geo"]

@@ -1,4 +1,4 @@
-from .float import _is as is_float
+from csv_detective.formats.float import _is as is_float
 
 proportion = 1
 tags = ["geo"]
