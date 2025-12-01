@@ -112,7 +112,7 @@ def detect_formats(
         "float": "float",
         "string": "string",
         "json": "json",
-        "json_geojson": "json",
+        "geojson": "json",
         "datetime_aware": "datetime",
         "datetime_naive": "datetime",
         "datetime_rfc822": "datetime",
