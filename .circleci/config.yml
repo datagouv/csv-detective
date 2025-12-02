@@ -7,7 +7,7 @@ parameters:
     default: "3.11"
   publish-branch:
     type: string
-    default: "master"
+    default: "main"
   cache-prefix:
     type: string
     default: "py-cache"

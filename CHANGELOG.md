@@ -17,6 +17,7 @@
 - Handle column named `count` in profile creation [#171](https://github.com/datagouv/csv-detective/pull/171)
 - Prevent `NaN` in headers [#173](https://github.com/datagouv/csv-detective/pull/173)
 - Refactor formats structure in the repo (/!\ breaking changes) [#170](https://github.com/datagouv/csv-detective/pull/170)
+- Adapt to main branch change [#177](https://github.com/datagouv/csv-detective/pull/177)
 - Add new `binary` format [#176](https://github.com/datagouv/csv-detective/pull/176)
 
 ## 0.9.2 (2025-08-26)
