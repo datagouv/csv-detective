@@ -1,1 +1,0 @@
-Folder for French standards.

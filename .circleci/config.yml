@@ -7,7 +7,7 @@ parameters:
     default: "3.11"
   publish-branch:
     type: string
-    default: "master"
+    default: "main"
   cache-prefix:
     type: string
     default: "py-cache"
@@ -79,7 +79,15 @@ jobs:
           command: |
             source venv/bin/activate
             pip install build twine
-            python -m build --wheel
+            # Build a wheel release
+            if [[ $CIRCLE_TAG ]]; then
+                # This is a tagged release, version should be handled upstream
+                python -m build --wheel
+            else
+                pip install toml
+                python update_version.py
+                python -m build --wheel
+            fi
             twine check dist/*
       - store_artifacts:
           path: dist

@@ -12,14 +12,13 @@ from csv_detective.detection.engine import (
 )
 from csv_detective.detection.headers import detect_headers
 from csv_detective.detection.separator import detect_separator
-from csv_detective.utils import is_url
-
-from .compression import unzip
-from .csv import parse_csv
-from .excel import (
+from csv_detective.parsing.compression import unzip
+from csv_detective.parsing.csv import parse_csv
+from csv_detective.parsing.excel import (
     XLS_LIKE_EXT,
     parse_excel,
 )
+from csv_detective.utils import is_url
 
 
 def load_file(
@@ -44,7 +43,11 @@ def load_file(
             sheet_name=sheet_name,
             verbose=verbose,
         )
+        if table.empty:
+            raise ValueError("Table seems to be empty")
         header = table.columns.to_list()
+        if any(col.startswith("Unnamed") for col in header):
+            raise ValueError("Could not retrieve headers")
         analysis = {
             "engine": engine,
             "sheet_name": sheet_name,
@@ -66,34 +69,43 @@ def load_file(
             binary_file.seek(0)
         # decoding and reading file
         if is_url(file_path) or engine in COMPRESSION_ENGINES:
-            str_file = StringIO(binary_file.read().decode(encoding=encoding))
+            str_file = StringIO()
+            while True:
+                chunk = binary_file.read(1024**2)
+                if not chunk:
+                    break
+                str_file.write(chunk.decode(encoding=encoding))
+            del binary_file
+            str_file.seek(0)
         else:
             str_file = open(file_path, "r", encoding=encoding)
         if sep is None:
             sep = detect_separator(str_file, verbose=verbose)
         header_row_idx, header = detect_headers(str_file, sep, verbose=verbose)
-        if header is None:
-            return {"error": True}
-        elif isinstance(header, list):
-            if any([x is None for x in header]):
-                return {"error": True}
+        if header is None or (isinstance(header, list) and any([h is None for h in header])):
+            raise ValueError("Could not retrieve headers")
         heading_columns = detect_heading_columns(str_file, sep, verbose=verbose)
         trailing_columns = detect_trailing_columns(str_file, sep, heading_columns, verbose=verbose)
         table, total_lines, nb_duplicates = parse_csv(
             str_file, encoding, sep, num_rows, header_row_idx, verbose=verbose
         )
+        del str_file
+        if table.empty:
+            raise ValueError("Table seems to be empty")
         analysis = {
             "encoding": encoding,
             "separator": sep,
             "heading_columns": heading_columns,
             "trailing_columns": trailing_columns,
         }
-    analysis.update(
-        {
-            "header_row_idx": header_row_idx,
-            "header": header,
-            "total_lines": total_lines,
-            "nb_duplicates": nb_duplicates,
-        }
-    )
+        if engine is not None:
+            analysis["compression"] = engine
+    analysis |= {
+        "header_row_idx": header_row_idx,
+        "header": header,
+    }
+    if total_lines is not None:
+        analysis["total_lines"] = total_lines
+    if nb_duplicates is not None:
+        analysis["nb_duplicates"] = nb_duplicates
     return table, analysis

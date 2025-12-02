@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pandas as pd
 import pytest
@@ -6,15 +6,19 @@ import responses
 
 from csv_detective import routine
 from csv_detective.output.profile import create_profile
-from csv_detective.parsing.columns import MAX_ROWS_ANALYSIS
+from csv_detective.parsing.csv import CHUNK_SIZE
 
 
 @pytest.mark.parametrize(
-    "max_rows_analysis",
-    (100, int(1e5)),
+    "chunk_size",
+    (100, 404, int(1e5)),
 )
-def test_columns_output_on_file(max_rows_analysis):
-    with patch("csv_detective.detection.formats.MAX_ROWS_ANALYSIS", max_rows_analysis):
+def test_columns_output_on_file(chunk_size):
+    with (
+        # maybe we should refactor later to avoid having to patch everywhere
+        patch("csv_detective.parsing.csv.CHUNK_SIZE", chunk_size),
+        patch("csv_detective.parsing.columns.CHUNK_SIZE", chunk_size),
+    ):
         output = routine(
             file_path="tests/data/a_test_file.csv",
             num_rows=-1,
@@ -45,7 +49,7 @@ def test_columns_output_on_file(max_rows_analysis):
         assert output["columns"]["STRUCTURED_INFO"]["python_type"] == "json"
         assert output["columns"]["STRUCTURED_INFO"]["format"] == "json"
         assert output["columns"]["GEO_INFO"]["python_type"] == "json"
-        assert output["columns"]["GEO_INFO"]["format"] == "json_geojson"
+        assert output["columns"]["GEO_INFO"]["format"] == "geojson"
 
 
 def test_profile_output_on_file():
@@ -248,17 +252,23 @@ def mocked_responses():
 def test_urls(mocked_responses, params):
     file_name, checks = params
     url = f"http://example.com/{file_name}"
+    expected_content = open(f"tests/data/{file_name}", "rb").read()
     mocked_responses.get(
         url,
-        body=open(f"tests/data/{file_name}", "rb").read(),
+        body=expected_content,
         status=200,
     )
-    _ = routine(
-        file_path=url,
-        num_rows=-1,
-        output_profile=False,
-        save_results=False,
-    )
+    with patch("urllib.request.urlopen") as mock_urlopen:
+        mock_response = MagicMock()
+        mock_response.read.return_value = expected_content
+        mock_response.__enter__.return_value = mock_response
+        mock_urlopen.return_value = mock_response
+        _ = routine(
+            file_path=url,
+            num_rows=-1,
+            output_profile=False,
+            save_results=False,
+        )
     for k, v in checks.items():
         if v is None:
             assert not _.get(k)
@@ -289,13 +299,14 @@ def test_nan_values(expected_type):
 
 
 def test_output_df():
-    output, df = routine(
+    output, df_chunks = routine(
         file_path="tests/data/b_test_file.csv",
         num_rows=-1,
         output_profile=False,
         save_results=False,
         output_df=True,
     )
+    df = pd.concat(df_chunks, ignore_index=True)
     assert isinstance(output, dict)
     assert isinstance(df, pd.DataFrame)
     assert len(df) == 6
@@ -317,14 +328,20 @@ def test_cast_json(mocked_responses, cast_json):
         body=expected_content,
         status=200,
     )
-    analysis, df = routine(
-        file_path="http://example.com/test.csv",
-        num_rows=-1,
-        output_profile=False,
-        save_results=False,
-        output_df=True,
-        cast_json=cast_json,
-    )
+    with patch("urllib.request.urlopen") as mock_urlopen:
+        mock_response = MagicMock()
+        mock_response.read.return_value = expected_content.encode("utf-8")
+        mock_response.__enter__.return_value = mock_response
+        mock_urlopen.return_value = mock_response
+        analysis, df_chunks = routine(
+            file_path="http://example.com/test.csv",
+            num_rows=-1,
+            output_profile=False,
+            save_results=False,
+            output_df=True,
+            cast_json=cast_json,
+        )
+    df = pd.concat(df_chunks, ignore_index=True)
     assert analysis["columns"]["a_simple_dict"]["python_type"] == "json"
     assert isinstance(df["a_simple_dict"][0], expected_type)
 
@@ -337,27 +354,60 @@ def test_almost_uniform_column(mocked_responses):
         body=expected_content,
         status=200,
     )
-    analysis = routine(
-        file_path="http://example.com/test.csv",
-        num_rows=-1,
-        output_profile=False,
-        save_results=False,
-    )
+    with patch("urllib.request.urlopen") as mock_urlopen:
+        mock_response = MagicMock()
+        mock_response.read.return_value = expected_content.encode("utf-8")
+        mock_response.__enter__.return_value = mock_response
+        mock_urlopen.return_value = mock_response
+        analysis = routine(
+            file_path="http://example.com/test.csv",
+            num_rows=-1,
+            output_profile=False,
+            save_results=False,
+        )
     assert analysis["columns"][col_name]["format"] == "int"
 
 
 def test_full_nan_column(mocked_responses):
     # we want a file that needs sampling
-    expected_content = "only_nan,second_col\n" + ",1\n" * (MAX_ROWS_ANALYSIS + 1)
+    col_name = "only_nan"
+    expected_content = f"{col_name},second_col\n" + ",1\n" * (CHUNK_SIZE + 1)
     mocked_responses.get(
         "http://example.com/test.csv",
         body=expected_content,
         status=200,
     )
-    # just testing it doesn't fail
-    routine(
-        file_path="http://example.com/test.csv",
-        num_rows=-1,
-        output_profile=False,
-        save_results=False,
+    with patch("urllib.request.urlopen") as mock_urlopen:
+        mock_response = MagicMock()
+        mock_response.read.return_value = expected_content.encode("utf-8")
+        mock_response.__enter__.return_value = mock_response
+        mock_urlopen.return_value = mock_response
+        # only NaNs should return "string"
+        analysis = routine(
+            file_path="http://example.com/test.csv",
+            num_rows=-1,
+            output_profile=False,
+            save_results=False,
+        )
+        assert analysis["columns"][col_name]["format"] == "string"
+
+
+def test_count_column(mocked_responses):
+    expected_content = "count,_count\n" + "a,1\n" * 100
+    mocked_responses.get(
+        "http://example.com/test.csv",
+        body=expected_content,
+        status=200,
     )
+    with patch("urllib.request.urlopen") as mock_urlopen:
+        mock_response = MagicMock()
+        mock_response.read.return_value = expected_content.encode("utf-8")
+        mock_response.__enter__.return_value = mock_response
+        mock_urlopen.return_value = mock_response
+        # only testing it doesn't fail with output_profile=True
+        routine(
+            file_path="http://example.com/test.csv",
+            num_rows=-1,
+            output_profile=True,
+            save_results=False,
+        )
