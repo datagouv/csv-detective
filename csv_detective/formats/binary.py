@@ -5,7 +5,7 @@ tags = ["type"]
 labels = ["bytes", "binary", "image", "encode", "content"]
 
 
-def cast_binary(val: str) -> bytes:
+def binary_casting(val: str) -> bytes:
     return codecs.escape_decode(val[2:-1])[0]
 
 
@@ -14,7 +14,7 @@ def _is(val) -> bool:
         (val.startswith("b'") and val.endswith("'")) or (val.startswith('b"') and val.endswith('"'))
     ):
         try:
-            return isinstance(cast_binary(val), bytes)
+            return isinstance(binary_casting(val), bytes)
         except Exception:
             return False
     return False
