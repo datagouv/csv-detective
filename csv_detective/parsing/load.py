@@ -12,14 +12,13 @@ from csv_detective.detection.engine import (
 )
 from csv_detective.detection.headers import detect_headers
 from csv_detective.detection.separator import detect_separator
-from csv_detective.utils import is_url
-
-from .compression import unzip
-from .csv import parse_csv
-from .excel import (
+from csv_detective.parsing.compression import unzip
+from csv_detective.parsing.csv import parse_csv
+from csv_detective.parsing.excel import (
     XLS_LIKE_EXT,
     parse_excel,
 )
+from csv_detective.utils import is_url
 
 
 def load_file(
