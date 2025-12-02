@@ -15,7 +15,7 @@ logging.basicConfig(level=logging.INFO)
 def routine(
     file_path: str,
     num_rows: int = 500,
-    user_input_tests: str | list[str] = "ALL",
+    tags: list[str] | None = None,
     limited_output: bool = True,
     save_results: bool | str = True,
     encoding: str | None = None,
@@ -28,14 +28,13 @@ def routine(
     verbose: bool = False,
     sheet_name: str | int | None = None,
 ) -> dict | tuple[dict, pd.DataFrame]:
-    """Returns a dict with information about the table and possible
-    column contents, and if requested the DataFrame with columns cast according to analysis.
+    """
+    Returns a dict with information about the table and possible column contents, and if requested the DataFrame with columns cast according to analysis.
 
     Args:
         file_path: local path or URL to file
-        num_rows: number of rows to sample from the file for analysis ; -1 for analysis
-        of the whole file
-        user_input_tests: tests to run on the file
+        num_rows: number of rows to sample from the file for analysis ; -1 for analysis of the whole file
+        tags: tags to filter formats (for instance ["geo", "fr] to run only the checks related to geo and French formats)
         limited_output: whether or not to return all possible types or only the most likely one for each column
         save_results: whether or not to save the results in a json file, or the path where to dump the output
         output_profile: whether or not to add the 'profile' field to the output
@@ -74,7 +73,7 @@ def routine(
         table=table,
         analysis=analysis,
         file_path=file_path,
-        user_input_tests=user_input_tests,
+        tags=tags,
         limited_output=limited_output,
         skipna=skipna,
         verbose=verbose,
@@ -107,7 +106,7 @@ def validate_then_detect(
     file_path: str,
     previous_analysis: dict,
     num_rows: int = 500,
-    user_input_tests: str | list[str] = "ALL",
+    tags: list[str] | None = None,
     limited_output: bool = True,
     save_results: bool | str = True,
     skipna: bool = True,
@@ -117,6 +116,26 @@ def validate_then_detect(
     cast_json: bool = True,
     verbose: bool = False,
 ):
+    """
+    Performs a validation of the given file against the given analysis.
+    If the validation fails, performs a full analysis and return it.
+    Otherwise return the previous analysis (which is therefore still valid).
+    NB: if asked, the profile is recreated in both cases.
+
+    Args:
+        file_path: the path of the file to validate.
+        previous_analysis: the previous analysis to validate against (expected in the same structure as the output of the routine)
+        num_rows: number of rows to sample from the file for analysis ; -1 for analysis of the whole file
+        tags: tags to filter formats (for instance ["geo", "fr] to run only the checks related to geo and French formats)
+        limited_output: whether or not to return all possible types or only the most likely one for each column
+        save_results: whether or not to save the results in a json file, or the path where to dump the output
+        skipna: whether to ignore NaN values in the checks
+        output_profile: whether or not to add the 'profile' field to the output
+        output_schema: whether or not to add the 'schema' field to the output (tableschema)
+        output_df: whether or not to return the loaded DataFrame along with the analysis report
+        cast_json: whether or not to cast json columns into objects (otherwise they are returned as strings)
+        verbose: whether the code displays the steps it's going through
+    """
     if verbose:
         start_routine = time()
         if is_url(file_path):
@@ -140,7 +159,7 @@ def validate_then_detect(
             table=table,
             analysis=analysis,
             file_path=file_path,
-            user_input_tests=user_input_tests,
+            tags=tags,
             limited_output=limited_output,
             skipna=skipna,
             verbose=verbose,

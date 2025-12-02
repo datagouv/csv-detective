@@ -5,9 +5,9 @@ from typing import Iterator
 
 import pandas as pd
 
-from csv_detective.detect_fields.other.booleen import bool_casting
-from csv_detective.detect_fields.other.float import float_casting
-from csv_detective.detect_fields.temp.date import date_casting
+from csv_detective.formats.booleen import bool_casting
+from csv_detective.formats.date import date_casting
+from csv_detective.formats.float import float_casting
 from csv_detective.parsing.csv import CHUNK_SIZE
 from csv_detective.utils import display_logs_depending_process_time
 

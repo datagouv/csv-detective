@@ -5,6 +5,7 @@ from typing import Callable
 import pandas as pd
 from more_itertools import peekable
 
+from csv_detective.format import Format
 from csv_detective.parsing.csv import CHUNK_SIZE
 from csv_detective.utils import display_logs_depending_process_time
 
@@ -14,15 +15,13 @@ MAX_NUMBER_CATEGORICAL_VALUES = 25
 
 def test_col_val(
     serie: pd.Series,
-    test_func: Callable,
-    proportion: float = 0.9,
+    format: Format,
     skipna: bool = True,
     limited_output: bool = False,
     verbose: bool = False,
 ) -> float:
     """Tests values of the serie using test_func.
-         - skipna : if True indicates that NaNs are not counted as False
-         - proportion :  indicates the proportion of values that have to pass the test
+         - skipna : if True indicates that NaNs are considered True
     for the serie to be detected as a certain format
     """
     if verbose:
@@ -34,28 +33,28 @@ def test_col_val(
 
     try:
         if skipna:
-            serie = serie[serie.notnull()]
+            serie = serie.loc[serie.notnull()]
         ser_len = len(serie)
         if ser_len == 0:
             # being here means the whole column is NaN, so if skipna it's a pass
             return 1.0 if skipna else 0.0
         if not limited_output:
-            result = apply_test_func(serie, test_func, ser_len).sum() / ser_len
-            return result if result >= proportion else 0.0
+            result = apply_test_func(serie, format.func, ser_len).sum() / ser_len
+            return result if result >= format.proportion else 0.0
         else:
-            if proportion == 1:
+            if format.proportion == 1:
                 # early stops (1 then 5 rows) to not waste time if directly unsuccessful
                 for _range in [
                     min(1, ser_len),
                     min(5, ser_len),
                     ser_len,
                 ]:
-                    if not all(apply_test_func(serie, test_func, _range)):
+                    if not all(apply_test_func(serie, format.func, _range)):
                         return 0.0
                 return 1.0
             else:
-                result = apply_test_func(serie, test_func, ser_len).sum() / ser_len
-                return result if result >= proportion else 0.0
+                result = apply_test_func(serie, format.func, ser_len).sum() / ser_len
+                return result if result >= format.proportion else 0.0
     finally:
         if verbose and time() - start > 3:
             display_logs_depending_process_time(
@@ -64,42 +63,27 @@ def test_col_val(
             )
 
 
-def test_col_label(
-    label: str, test_func: Callable, proportion: float = 1, limited_output: bool = False
-):
-    """Tests label (from header) using test_func.
-    - proportion :  indicates the minimum score to pass the test for the serie
-    to be detected as a certain format
-    """
-    if not limited_output:
-        return test_func(label)
-    else:
-        result = test_func(label)
-        return result if result >= proportion else 0
-
-
 def test_col(
     table: pd.DataFrame,
-    all_tests: dict[str, dict],
+    formats: dict[str, Format],
     limited_output: bool,
     skipna: bool = True,
     verbose: bool = False,
 ):
     if verbose:
         start = time()
-        logging.info("Testing columns to get types")
+        logging.info("Testing columns to get formats")
     return_table = pd.DataFrame(columns=table.columns)
-    for idx, (name, attributes) in enumerate(all_tests.items()):
+    for idx, (label, format) in enumerate(formats.items()):
         if verbose:
             start_type = time()
-            logging.info(f"\t- Starting with type '{name}'")
+            logging.info(f"\t- Starting with format '{label}'")
         # improvement lead : put the longest tests behind and make them only if previous tests not satisfactory
         # => the following needs to change, "apply" means all columns are tested for one type at once
-        return_table.loc[name] = table.apply(
+        return_table.loc[label] = table.apply(
             lambda serie: test_col_val(
                 serie,
-                attributes["func"],
-                attributes["prop"],
+                format,
                 skipna=skipna,
                 limited_output=limited_output,
                 verbose=verbose,
@@ -107,7 +91,7 @@ def test_col(
         )
         if verbose:
             display_logs_depending_process_time(
-                f'\t> Done with type "{name}" in {round(time() - start_type, 3)}s ({idx + 1}/{len(all_tests)})',
+                f'\t> Done with type "{label}" in {round(time() - start_type, 3)}s ({idx + 1}/{len(formats)})',
                 time() - start_type,
             )
     if verbose:
@@ -118,23 +102,20 @@ def test_col(
 
 
 def test_label(
-    columns: list[str], all_tests: dict[str, dict], limited_output: bool, verbose: bool = False
+    columns: list[str], formats: dict[str, Format], limited_output: bool, verbose: bool = False
 ):
     if verbose:
         start = time()
         logging.info("Testing labels to get types")
 
     return_table = pd.DataFrame(columns=columns)
-    for idx, (key, value) in enumerate(all_tests.items()):
+    for idx, (label, format) in enumerate(formats.items()):
         if verbose:
             start_type = time()
-        return_table.loc[key] = [
-            test_col_label(col_name, value["func"], value["prop"], limited_output=limited_output)
-            for col_name in columns
-        ]
+        return_table.loc[label] = [format.is_valid_label(col_name) for col_name in columns]
         if verbose:
             display_logs_depending_process_time(
-                f'\t- Done with type "{key}" in {round(time() - start_type, 3)}s ({idx + 1}/{len(all_tests)})',
+                f'\t- Done with type "{label}" in {round(time() - start_type, 3)}s ({idx + 1}/{len(formats)})',
                 time() - start_type,
             )
     if verbose:
@@ -148,23 +129,28 @@ def test_col_chunks(
     table: pd.DataFrame,
     file_path: str,
     analysis: dict,
-    all_tests: list,
+    formats: dict[str, Format],
     limited_output: bool,
     skipna: bool = True,
     verbose: bool = False,
 ) -> tuple[pd.DataFrame, dict, dict[str, pd.Series]]:
     def build_remaining_tests_per_col(return_table: pd.DataFrame) -> dict[str, list[str]]:
+        # returns a dict with the table's columns as keys and the list of remaining format labels to apply
         return {
-            col: [test for test in return_table.index if return_table.loc[test, col] > 0]
+            col: [
+                fmt_label
+                for fmt_label in return_table.index
+                if return_table.loc[fmt_label, col] > 0
+            ]
             for col in return_table.columns
         }
 
     if verbose:
         start = time()
-        logging.info("Testing columns to get types on chunks")
+        logging.info("Testing columns to get formats on chunks")
 
     # analysing the sample to get a first guess
-    return_table = test_col(table, all_tests, limited_output, skipna=skipna, verbose=verbose)
+    return_table = test_col(table, formats, limited_output, skipna=skipna, verbose=verbose)
     remaining_tests_per_col = build_remaining_tests_per_col(return_table)
 
     # hashing rows to get nb_duplicates
@@ -217,23 +203,22 @@ def test_col_chunks(
         if not any(remaining_tests for remaining_tests in remaining_tests_per_col.values()):
             # no more potential tests to do on any column, early stop
             break
-        for col, tests in remaining_tests_per_col.items():
+        for col, fmt_labels in remaining_tests_per_col.items():
             # testing each column with the tests that are still competing
             # after previous batchs analyses
-            for test in tests:
+            for label in fmt_labels:
                 batch_col_test = test_col_val(
                     batch[col],
-                    all_tests[test]["func"],
-                    all_tests[test]["prop"],
+                    formats[label],
                     limited_output=limited_output,
                     skipna=skipna,
                 )
-                return_table.loc[test, col] = (
+                return_table.loc[label, col] = (
                     # if this batch's column tested 0 then test fails overall
                     0
                     if batch_col_test == 0
                     # otherwise updating the score with weighted average
-                    else ((return_table.loc[test, col] * idx + batch_col_test) / (idx + 1))
+                    else ((return_table.loc[label, col] * idx + batch_col_test) / (idx + 1))
                 )
         remaining_tests_per_col = build_remaining_tests_per_col(return_table)
         batch, batch_number = [], batch_number + 1

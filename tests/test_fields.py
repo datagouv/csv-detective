@@ -6,87 +6,22 @@ import pandas as pd
 import pytest
 from numpy import random
 
-from csv_detective.detect_fields.FR.geo import (
-    adresse,
-    code_commune_insee,
-    code_departement,
-    code_fantoir,
-    code_postal,
-    code_region,
-    commune,
-    departement,
-    insee_canton,
-    latitude_l93,
-    latitude_wgs_fr_metropole,
-    longitude_l93,
-    longitude_wgs_fr_metropole,
-    pays,
-    region,
-)
-from csv_detective.detect_fields.FR.other import (
-    code_csp_insee,
-    code_import,
-    code_rna,
-    code_waldec,
-    csp_insee,
-    date_fr,
-    insee_ape700,
-    sexe,
-    siren,
-    siret,
-    tel_fr,
-    uai,
-)
-from csv_detective.detect_fields.FR.temp import jour_de_la_semaine, mois_de_annee
-from csv_detective.detect_fields.geo import (
-    iso_country_code_alpha2,
-    iso_country_code_alpha3,
-    iso_country_code_numeric,
-    json_geojson,
-    latitude_wgs,
-    latlon_wgs,
-    longitude_wgs,
-    lonlat_wgs,
-)
-from csv_detective.detect_fields.other import (
-    booleen,
-    email,
-    json,
-    money,
-    mongo_object_id,
-    percent,
-    twitter,
-    url,
-    uuid,
-)
-from csv_detective.detect_fields.other import (
-    float as test_float,
-)
-from csv_detective.detect_fields.other import (
-    int as test_int,
-)
-from csv_detective.detect_fields.temp import (
-    date,
-    datetime_aware,
-    datetime_naive,
-    datetime_rfc822,
-    year,
-)
 from csv_detective.detection.variables import (
     detect_categorical_variable,
     detect_continuous_variable,
 )
-from csv_detective.load_tests import return_all_tests
+from csv_detective.format import FormatsManager
 from csv_detective.output.dataframe import cast
 from csv_detective.output.utils import prepare_output_dict
 from csv_detective.parsing.columns import test_col as col_test  # to prevent pytest from testing it
 
+fmtm = FormatsManager()
 
-def test_all_tests_return_bool():
-    all_tests = return_all_tests("ALL", "detect_fields")
-    for attr in all_tests.values():
+
+def test_all_format_funcs_return_bool():
+    for format in fmtm.formats.values():
         for tmp in ["a", "9", "3.14", "[]", float("nan"), "2021-06-22 10:20:10"]:
-            assert isinstance(attr["func"](tmp), bool)
+            assert isinstance(format.func(tmp), bool)
 
 
 # categorical
@@ -124,292 +59,37 @@ def test_detect_continuous_variable():
     assert res2.values and res2.values[0] == "cont"
 
 
-fields = {
-    adresse: {
-        True: ["rue du martyr"],
-        False: ["un batiment"],
-    },
-    code_commune_insee: {
-        True: ["91471", "01053"],
-        False: ["914712", "01000"],
-    },
-    code_departement: {
-        True: ["75", "2A", "2b", "974", "01"],
-        False: ["00", "96", "101"],
-    },
-    code_fantoir: {
-        True: ["7755A", "B150B", "ZA04C", "ZB03D"],
-        False: ["7755", "ZA99A"],
-    },
-    code_postal: {
-        True: ["75020", "01000"],
-        False: ["77777", "018339"],
-    },
-    code_region: {
-        True: ["32"],
-        False: ["55"],
-    },
-    commune: {
-        True: ["saint denis"],
-        False: ["new york", "lion"],
-    },
-    departement: {
-        True: ["essonne"],
-        False: ["alabama", "auvergne"],
-    },
-    insee_canton: {
-        True: ["nantua"],
-        False: ["california"],
-    },
-    latitude_l93: {
-        True: ["6037008", "7123528.5", "7124528,5"],
-        False: ["0", "-6734529.6", "7245669.8", "3422674,78", "32_34"],
-    },
-    longitude_l93: {
-        True: ["0", "-154", "1265783,45", "34723.4"],
-        False: ["1456669.8", "-776225", "346_3214"],
-    },
-    latitude_wgs_fr_metropole: {
-        True: ["42.5"],
-        False: ["22.5", "62.5"],
-    },
-    longitude_wgs_fr_metropole: {
-        True: ["-2.5"],
-        False: ["12.8"],
-    },
-    pays: {
-        True: ["france", "italie"],
-        False: ["amerique", "paris"],
-    },
-    region: {
-        True: ["bretagne", "ile-de-france"],
-        False: ["baviere", "overgne"],
-    },
-    code_csp_insee: {
-        True: ["121f"],
-        False: ["121x"],
-    },
-    code_rna: {
-        True: ["W751515517"],
-        False: [
-            "W111111111111111111111111111111111111",
-            "w143788974",
-            "W12",
-            "678W23456",
-            "165789325",
-            "Wa1#89sf&h",
-        ],
-    },
-    code_import: {
-        True: ["123S1871092288"],
-        False: ["AA751PEE00188854", "W123456789"],
-    },
-    code_waldec: {
-        True: ["W123456789", "W2D1234567"],
-        False: ["AA751PEE00188854"],
-    },
-    csp_insee: {
-        True: ["employes de la poste"],
-        False: ["super-heros"],
-    },
-    sexe: {
-        True: ["homme"],
-        False: ["hermaphrodite"],
-    },
-    siren: {
-        True: ["552 100 554", "552100554"],
-        False: ["42"],
-    },
-    siret: {
-        True: ["13002526500013", "130 025 265 00013"],
-        False: ["13002526500012"],
-    },
-    uai: {
-        True: ["0422170F"],
-        False: ["04292E"],
-    },
-    date_fr: {
-        True: ["13 fevrier 1996"],
-        False: ["44 march 2025"],
-    },
-    insee_ape700: {True: ["0116Z"], False: ["0116A"]},
-    tel_fr: {
-        True: ["0134643467"],
-        False: ["6625388263", "01288398"],
-    },
-    jour_de_la_semaine: {
-        True: ["lundi"],
-        False: ["jour de la biere"],
-    },
-    mois_de_annee: {
-        True: ["juin", "décembre"],
-        False: ["november"],
-    },
-    iso_country_code_alpha2: {
-        True: ["FR"],
-        False: ["XX", "A", "FRA"],
-    },
-    iso_country_code_alpha3: {
-        True: ["FRA"],
-        False: ["XXX", "FR", "A"],
-    },
-    iso_country_code_numeric: {
-        True: ["250"],
-        False: ["003"],
-    },
-    json_geojson: {
-        True: [
-            '{"coordinates": [45.783753, 3.049342], "type": "63870"}',
-            '{"geometry": {"coordinates": [45.783753, 3.049342]}}',
-        ],
-        False: ['{"pomme": "fruit", "reponse": 42}'],
-    },
-    latitude_wgs: {
-        True: ["43.2", "-22"],
-        False: ["100"],
-    },
-    latlon_wgs: {
-        True: ["43.2,-22.6", "-10.7,140", "-40.7, 10.8", "[12,-0.28]"],
-        False: ["0.1,192", "-102, 92", "[23.02,4.1", "23.02,4.1]", "160.1,-27"],
-    },
-    longitude_wgs: {
-        True: ["120", "-20.2"],
-        False: ["-200"],
-    },
-    lonlat_wgs: {
-        True: ["-22.6,43.2", "140,-10.7", "10.8, -40.7", "[-0.28,12]"],
-        False: ["192,0.1", "92, -102", "[4.1,23.02", "4.1,23.02]", "-27,160.1"],
-    },
-    booleen: {
-        True: ["oui", "0", "1", "yes", "false", "True"],
-        False: ["nein", "ja", "2", "-0"],
-    },
-    email: {
-        True: ["cdo_intern@data.gouv.fr", "P.NOM@CIE.LONGDOMAIN"],
-        False: ["cdo@@gouv.sfd"],
-    },
-    json: {
-        True: ['{"pomme": "fruit", "reponse": 42}', "[1,2,3,4]"],
-        False: ["5", '{"zefib":', '{"a"}'],
-    },
-    money: {
-        True: ["120€", "-20.2$"],
-        False: ["200", "100 euros"],
-    },
-    mongo_object_id: {
-        True: ["62320e50f981bc2b57bcc044"],
-        False: ["884762be-51f3-44c3-b811-1e14c5d89262", "0230240284a66e"],
-    },
-    percent: {
-        True: ["120%", "-20.2%"],
-        False: ["200", "100 pourcents"],
-    },
-    twitter: {
-        True: ["@accueil1"],
-        False: ["adresse@mail"],
-    },
-    url: {
-        True: [
-            "www.data.gouv.fr",
-            "http://data.gouv.fr",
-            "https://www.youtube.com/@data-gouv-fr",
-            (
-                "https://tabular-api.data.gouv.fr/api/resources/"
-                "aaaaaaaa-1111-bbbb-2222-cccccccccccc/data/"
-                "?score__greater=0.9&decompte__exact=13"
-            ),
-        ],
-        False: ["tmp@data.gouv.fr"],
-    },
-    uuid: {
-        True: ["884762be-51f3-44c3-b811-1e14c5d89262"],
-        False: ["0610928327"],
-    },
-    test_int: {
-        True: ["1", "0", "1764", "-24"],
-        False: ["01053", "1.2", "123_456", "+35"],
-    },
-    test_float: {
-        True: ["1", "0", "1764", "-24", "1.2", "1863.23", "-12.7", "0.1"],
-        False: ["01053", "01053.89", "1e3", "123_456", "123_456.78", "+35", "+35.9"],
-    },
-    date: {
-        True: [
-            "1960-08-07",
-            "12/02/2007",
-            "15 jan 1985",
-            "15 décembre 1985",
-            "02 05 2003",
-            "20030502",
-            "1993-12/02",
-        ],
-        False: [
-            "1993-1993-1993",
-            "39-10-1993",
-            "19-15-1993",
-            "15 tambour 1985",
-            "12152003",
-            "20031512",
-            "02052003",
-        ],
-    },
-    datetime_aware: {
-        True: [
-            "2021-06-22 10:20:10-04:00",
-            "2030-06-22 00:00:00.0028+02:00",
-            "2000-12-21 10:20:10.1Z",
-            "2024-12-19T10:53:36.428000+00:00",
-            "1996/06/22 10:20:10 GMT",
-        ],
-        False: ["2021-06-22T30:20:10", "Sun, 06 Nov 1994 08:49:37 GMT", "2021-06-44 10:20:10"],
-    },
-    datetime_naive: {
-        True: [
-            "2021-06-22 10:20:10",
-            "2030/06-22   00:00:00",
-            "2030/06/22 00:00:00.0028",
-        ],
-        False: [
-            "2021-06-22T30:20:10",
-            "Sun, 06 Nov 1994 08:49:37 GMT",
-            "2021-06-44 10:20:10+02:00",
-            "1999-12-01T00:00:00Z",
-            "2021-06-44",
-            "15 décembre 1985",
-        ],
-    },
-    datetime_rfc822: {
-        True: ["Sun, 06 Nov 1994 08:49:37 GMT"],
-        False: ["2021-06-22T10:20:10"],
-    },
-    year: {
-        True: ["2015"],
-        False: ["20166"],
-    },
-}
-
 # we could also have a function here to add all True values of (almost)
-# each field to the False values of all others
+# each field to the False values of all others (to do when parenthood is added)
 
 
 def test_all_fields_have_tests():
-    all_tests = return_all_tests("ALL", "detect_fields")
-    for attr in all_tests.values():
-        assert fields.get(attr["module"])
+    for format in fmtm.formats.values():
+        valid = format._test_values
+        # checking structure
+        assert all(
+            isinstance(key, bool)
+            and isinstance(vals, list)
+            and all(isinstance(val, str) for val in vals)
+            for key, vals in valid.items()
+        )
+        # checking that we have valid and invalid cases for each
+        assert all(b in valid.keys() for b in [True, False])
 
 
+# this is based on the _test_values of each <format>.py file
 @pytest.mark.parametrize(
     "args",
     (
-        (field, value, valid)
-        for field in fields
+        (format.func, value, valid)
         for valid in [True, False]
-        for value in fields[field][valid]
+        for format in fmtm.formats.values()
+        for value in format._test_values[valid]
     ),
 )
 def test_fields_with_values(args):
-    field, value, valid = args
-    assert field._is(value) is valid
+    func, value, valid = args
+    assert func(value) is valid
 
 
 @pytest.mark.parametrize(
@@ -456,37 +136,32 @@ def test_priority(args):
 @pytest.mark.parametrize(
     "args",
     (
-        ("1996-02-13", date),
-        ("28/01/2000", date),
-        ("2025-08-20T14:30:00+02:00", datetime_aware),
-        ("2025/08/20 14:30:00.2763-12:00", datetime_aware),
-        ("1925_12_20T14:30:00.2763", datetime_naive),
-        ("1925 12 20 14:30:00Z", datetime_aware),
+        ("1996-02-13", fmtm.formats["date"]),
+        ("28/01/2000", fmtm.formats["date"]),
+        ("2025-08-20T14:30:00+02:00", fmtm.formats["datetime_aware"]),
+        ("2025/08/20 14:30:00.2763-12:00", fmtm.formats["datetime_aware"]),
+        ("1925_12_20T14:30:00.2763", fmtm.formats["datetime_naive"]),
+        ("1925 12 20 14:30:00Z", fmtm.formats["datetime_aware"]),
     ),
 )
 def test_early_detection(args):
-    value, module = args
-    with patch("csv_detective.detect_fields.temp.date.date_casting") as mock_func:
-        res = module._is(value)
+    value, format = args
+    with patch("csv_detective.formats.date.date_casting") as mock_func:
+        res = format.func(value)
         assert res
         mock_func.assert_not_called()
 
 
 def test_all_proportion_1():
-    all_tests = return_all_tests("ALL", "detect_fields")
-    prop_1 = {
-        name: eval(name if name not in ["int", "float"] else "test_" + name)
-        for name, attr in all_tests.items()
-        if attr["prop"] == 1
-    }
     # building a table that uses only correct values for these formats, except on one row
     table = pd.DataFrame(
         {
-            test_name: (fields[test_module][True] * 100)[:100] + ["not_suitable"]
-            for test_name, test_module in prop_1.items()
+            name: (format._test_values[True] * 100)[:100] + ["not_suitable"]
+            for name, format in fmtm.formats.items()
+            if format.proportion == 1
         }
     )
     # testing columns for all formats
-    returned_table = col_test(table, all_tests, limited_output=True)
+    returned_table = col_test(table, fmtm.formats, limited_output=True)
     # the analysis should have found no match on any format
     assert all(returned_table[col].sum() == 0 for col in table.columns)

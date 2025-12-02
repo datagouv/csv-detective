@@ -81,7 +81,7 @@
         },
         "GEO_INFO": {
             "python_type": "json",
-            "format": "json_geojson",
+            "format": "geojson",
             "score": 1.0
         }
     },
@@ -195,7 +195,7 @@
         },
         "GEO_INFO": {
             "python_type": "json",
-            "format": "json_geojson",
+            "format": "geojson",
             "score": 1.0
         }
     },
@@ -226,7 +226,7 @@
         "json": [
             "STRUCTURED_INFO"
         ],
-        "json_geojson": [
+        "geojson": [
             "GEO_INFO"
         ]
     },

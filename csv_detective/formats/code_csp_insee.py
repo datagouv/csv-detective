@@ -1,0 +1,36 @@
+import re
+
+from csv_detective.parsing.text import _process_text
+
+proportion = 1
+tags = ["fr"]
+labels = ["code csp insee", "code csp"]
+
+
+def _is(val):
+    if not isinstance(val, str):
+        return False
+    val = _process_text(val)
+    if len(val) != 4:
+        return False
+    a = bool(re.match(r"^[123456][0-9]{2}[abcdefghijkl]$", val))
+    b = val in {
+        "7100",
+        "7200",
+        "7400",
+        "7500",
+        "7700",
+        "7800",
+        "8100",
+        "8300",
+        "8400",
+        "8500",
+        "8600",
+    }
+    return a or b
+
+
+_test_values = {
+    True: ["121f"],
+    False: ["121x"],
+}

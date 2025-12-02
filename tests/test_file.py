@@ -49,7 +49,7 @@ def test_columns_output_on_file(chunk_size):
         assert output["columns"]["STRUCTURED_INFO"]["python_type"] == "json"
         assert output["columns"]["STRUCTURED_INFO"]["format"] == "json"
         assert output["columns"]["GEO_INFO"]["python_type"] == "json"
-        assert output["columns"]["GEO_INFO"]["format"] == "json_geojson"
+        assert output["columns"]["GEO_INFO"]["format"] == "geojson"
 
 
 def test_profile_output_on_file():

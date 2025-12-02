@@ -2,7 +2,7 @@
 
 This is a package to **automatically detect column content in tabular files**. The script reads either the whole file or the first few rows and performs various checks (regex, casting, comparison with official lists...) to see for each column if it matches with various content types.
 
-Currently supported file types: csv, xls, xlsx, ods.
+Currently supported file types: csv(.gz), xls, xlsx, ods.
 
 You can also directly feed the URL of a remote file (from data.gouv.fr for instance).
 
@@ -35,6 +35,7 @@ inspection_results = routine(
   save_results=False, # Default False. If True, it will save result output into the same directory as the analyzed file, using the same name as your file and .json extension
   output_profile=True, # Default False. If True, returned dict will contain a property "profile" indicating profile (min, max, mean, tops...) of every column of your csv
   output_schema=True, # Default False. If True, returned dict will contain a property "schema" containing basic [tableschema](https://specs.frictionlessdata.io/table-schema/) of your file. This can be used to validate structure of other csv which should match same structure. 
+  tags=["fr"],  # Default None. If set as a list of strings, only performs checks related to the specified tags (you can see the available tags with FormatsManager().available_tags())
 )
 ```
 
@@ -42,7 +43,7 @@ inspection_results = routine(
 
 ### Output
 
-The program creates a `Python` dictionary with the following information :
+The program creates a `python` dictionary with the following information :
 
 ```
 {
@@ -185,7 +186,7 @@ Only the format with highest score is present in the output.
 ## Improvement suggestions
 
 - Smarter refactors
-- Improve performances
+- Performances improvements
 - Test other ways to load and process data (`pandas` alternatives)
 - Add more and more detection modules...
 

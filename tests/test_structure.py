@@ -1,41 +1,45 @@
 import os
 
-from csv_detective import detect_fields, detect_labels  # noqa
-from csv_detective.load_tests import return_all_tests
+import pytest
 
+from csv_detective.format import Format, FormatsManager
 
-def tests_conformity():
-    """
-    Check that all tests are properly structured:
-        - an __init__.py file in the test folder
-        - an _is function in the __init__.py file
-    """
-    for _type in ["fields", "labels"]:
-        _dir = f"csv_detective/detect_{_type}"
-        subfolders = []
-        for dirpath, dirnames, _ in os.walk(_dir):
-            for dirname in dirnames:
-                if "__pycache__" not in dirname:
-                    subfolders.append(os.path.join(dirpath, dirname))
-        final_subfolders = [
-            sf
-            for sf in subfolders
-            if not any(other_sf.startswith(sf) for other_sf in subfolders if sf != other_sf)
-        ]
-        for f_sf in final_subfolders:
-            assert "__init__.py" in os.listdir(f_sf)
-            _package = eval(
-                f_sf.replace("csv_detective/", "")
-                # locally we have "\\", but in CI for instance there is "/"
-                .replace("\\", ".")
-                .replace("/", ".")
-            )
-            assert "_is" in dir(_package)
+fmtm = FormatsManager()
 
 
 def test_all_tests_have_unique_name():
-    names = [
-        attr["module"].__name__.split(".")[-1]
-        for attr in return_all_tests("ALL", "detect_fields").values()
-    ]
-    assert len(names) == len(set(names))
+    formats: list[str] = os.listdir("csv_detective/formats")
+    assert "__init__.py" in formats
+    assert len(formats) == len(set(formats))
+
+
+def test_conformity():
+    for name, format in fmtm.formats.items():
+        assert isinstance(name, str)
+        assert isinstance(format, Format)
+        assert all(
+            getattr(format, attr) is not None
+            for attr in [
+                "name",
+                "func",
+                "_test_values",
+                "labels",
+                "proportion",
+                "tags",
+            ]
+        )
+
+
+@pytest.mark.parametrize(
+    "tags",
+    (
+        ["type"],
+        ["temp", "fr"],
+    ),
+)
+def test_get_from_tags(tags):
+    fmts = fmtm.get_formats_from_tags(tags)
+    assert len(fmts)
+    for fmt in fmts.values():
+        for tag in tags:
+            assert tag in fmt.tags
