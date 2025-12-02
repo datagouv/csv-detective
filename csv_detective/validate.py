@@ -19,6 +19,12 @@ def validate(
 ) -> tuple[bool, pd.DataFrame | None, dict | None, dict[str, pd.Series] | None]:
     """
     Verify is the given file has the same fields and types as in the given analysis.
+
+    Args:
+        file_path: the path of the file to validate
+        previous_analysis: the previous analysis to validate against (expected in the same structure as the output of the routine)
+        verbose: whether the code displays the steps it's going through
+        skipna: whether to ignore NaN values in the checks
     """
     try:
         if previous_analysis.get("separator"):

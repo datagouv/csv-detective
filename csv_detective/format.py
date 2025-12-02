@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Any, Callable
 
 from csv_detective.parsing.text import header_score
 
@@ -7,23 +7,28 @@ class Format:
     def __init__(
         self,
         name: str,
-        func: Callable,
+        func: Callable[[Any], bool],
         _test_values: dict[bool, list[str]],
         labels: list[str] = [],
         proportion: float = 1,
         tags: list[str] = [],
     ) -> None:
+        """
+        Instanciates a Format object.
+
+        Args:
+            name: the name of the format.
+            func: the value test for the format (returns whether a string is valid).
+            _test_values: lists of valid and invalid values, used in the tests
+            labels: the list of hint headers for the header score
+            proportion: the tolerance (between 0 and 1) to say a column is valid for a format. (1 => 100% of the column has to pass the func check for the column to be considered valid)
+            tags: to allow users to submit a file to only a subset of formats
+        """
         self.name: str = name
-        # func is the value test for the format (returns whether a string is valid)
         self.func: Callable = func
-        # _test_values are lists of valid and invalid values, used in the tests
         self._test_values: dict[bool, list[str]] = _test_values
-        # labels is the list of hint headers for the header score
         self.labels: list[str] = labels
-        # proportion is the tolerance (between 0 and 1) to say a column is valid for a format
-        # (1 => 100% of the column has to pass the func check for the column to be considered valid)
         self.proportion: float = proportion
-        # tags are to allow users to submit a file to only a subset of formats
         self.tags: list[str] = tags
 
     def is_valid_label(self, val: str) -> float:
