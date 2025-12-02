@@ -18,6 +18,7 @@
 - Prevent `NaN` in headers [#173](https://github.com/datagouv/csv-detective/pull/173)
 - Refactor formats structure in the repo (/!\ breaking changes) [#176](https://github.com/datagouv/csv-detective/pull/176)
 - Adapt to main branch change [#177](https://github.com/datagouv/csv-detective/pull/177)
+- Add lock file and unpin dependencies [#166](https://github.com/datagouv/csv-detective/pull/166)
 
 ## 0.9.2 (2025-08-26)
 
