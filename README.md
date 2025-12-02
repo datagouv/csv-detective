@@ -2,17 +2,17 @@
 
 This is a package to **automatically detect column content in tabular files**. The script reads either the whole file or the first few rows and performs various checks (regex, casting, comparison with official lists...) to see for each column if it matches with various content types.
 
-Currently supported file types: csv, xls, xlsx, ods.
+Currently supported file types: csv(.gz), xls, xlsx, ods.
 
 You can also directly feed the URL of a remote file (from data.gouv.fr for instance).
 
-## How To ?
+## How To?
 
 ### Install the package
 
-You need to have python >= 3.9 installed. We recommend using a virtual environement.
+You need to have Python >= 3.10 installed. We recommend using a virtual environment.
 
-```
+```bash
 pip install csv-detective
 ```
 
@@ -33,8 +33,9 @@ inspection_results = routine(
   file_path, # or file URL
   num_rows=-1, # Value -1 will analyze all lines of your file, you can change with the number of lines you wish to analyze
   save_results=False, # Default False. If True, it will save result output into the same directory as the analyzed file, using the same name as your file and .json extension
-  output_profile=True, # Default False. If True, returned dict will contain a property "profile" indicating profile (min, max, mean, tops...) of every column of you csv
-  output_schema=True, # Default False. If True, returned dict will contain a property "schema" containing basic [tableschema](https://specs.frictionlessdata.io/table-schema/) of your file. This can be use to validate structure of other csv which should match same structure. 
+  output_profile=True, # Default False. If True, returned dict will contain a property "profile" indicating profile (min, max, mean, tops...) of every column of your csv
+  output_schema=True, # Default False. If True, returned dict will contain a property "schema" containing basic [tableschema](https://specs.frictionlessdata.io/table-schema/) of your file. This can be used to validate structure of other csv which should match same structure. 
+  tags=["fr"],  # Default None. If set as a list of strings, only performs checks related to the specified tags (you can see the available tags with FormatsManager().available_tags())
 )
 ```
 
@@ -42,7 +43,7 @@ inspection_results = routine(
 
 ### Output
 
-The program creates a `Python` dictionnary with the following information :
+The program creates a `python` dictionary with the following information :
 
 ```
 {
@@ -79,7 +80,7 @@ The program creates a `Python` dictionnary with the following information :
     "profile": {
       "column_name" : {
         "min": 1, # only int and float
-        "max: 12, # only int and float
+        "max": 12, # only int and float
         "mean": 5, # only int and float
         "std": 5, # only int and float
         "tops": [  # 10 most frequent values in the column
@@ -129,11 +130,11 @@ The program creates a `Python` dictionnary with the following information :
 
 The output slightly differs depending on the file format:
 - csv files have `encoding` and `separator` (and `compression` if relevant)
-- xls, xls, ods files have `engine` and `sheet_name`
+- xls, xlsx, ods files have `engine` and `sheet_name`
 
 You may also set `output_df` to `True`, in which case the output is a tuple of two elements:
 - the analysis (as described above)
-- an iteror of `pd.DataFrame`s which contain the columns cast with the detected types (which can be used with `pd.concat` or in a loop):
+- an iterator of `pd.DataFrame`s which contain the columns cast with the detected types (which can be used with `pd.concat` or in a loop):
 ```python
 inspection, df_chunks = routine(
     file_path=file_path,
@@ -156,7 +157,7 @@ Includes :
 - UUIDs, Mongo ObjectIds
 
 ### Validation
-If you have a pre-made analysis of a file, you can check whether an other file conforms to the same analysis:
+If you have a pre-made analysis of a file, you can check whether another file conforms to the same analysis:
 ```python
 from csv_detective import validate
 is_valid, *_ = validate(
@@ -185,7 +186,7 @@ Only the format with highest score is present in the output.
 ## Improvement suggestions
 
 - Smarter refactors
-- Improve performances
+- Performances improvements
 - Test other ways to load and process data (`pandas` alternatives)
 - Add more and more detection modules...
 
@@ -194,7 +195,7 @@ Related ideas:
 - store column names to make a learning model based on column names for (possible pre-screen)
 - entity resolution (good luck...)
 
-## Why Could This Be of Any Use ?
+## Why Could This Be of Any Use?
 
 Organisations such as [data.gouv.fr](http://data.gouv.fr) aggregate huge amounts of un-normalised data. Performing cross-examination across datasets can be difficult. This tool could help enrich the datasets metadata and facilitate linking them together.
 
@@ -215,6 +216,8 @@ ruff format .
 
 The release process uses the [`tag_version.sh`](tag_version.sh) script to create git tags and update [CHANGELOG.md](CHANGELOG.md) and [pyproject.toml](pyproject.toml) automatically.
 
+**Prerequisites**: [GitHub CLI](https://cli.github.com/) (`gh`) must be installed and authenticated, and you must be on the main branch with a clean working directory.
+
 ```bash
 # Create a new release
 ./tag_version.sh <version>
@@ -226,11 +229,9 @@ The release process uses the [`tag_version.sh`](tag_version.sh) script to create
 ./tag_version.sh 2.5.0 --dry-run
 ```
 
-**Prerequisites**: GitHub CLI (`gh`) must be installed and authenticated, and you must be on the main branch with a clean working directory.
-
 The script automatically:
-- Updates the version in pyproject.toml
-- Extracts commits since the last tag and formats them for CHANGELOG.md
+- Updates the version in `pyproject.toml`
+- Extracts commits since the last tag and formats them for `CHANGELOG.md`
 - Identifies breaking changes (commits with `!:` in the subject)
 - Creates a git tag and pushes it to the remote repository
 - Creates a GitHub release with the changelog content

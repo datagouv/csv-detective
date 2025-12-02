@@ -1,12 +1,11 @@
 import logging
 from collections import defaultdict
 from time import time
-from typing import Optional
 
 import numpy as np
 import pandas as pd
 
-from csv_detective.detect_fields.other.float import float_casting
+from csv_detective.formats.float import float_casting
 from csv_detective.utils import cast_prevent_nan, display_logs_depending_process_time
 
 
@@ -17,7 +16,7 @@ def create_profile(
     limited_output: bool = True,
     cast_json: bool = True,
     verbose: bool = False,
-    _col_values: Optional[dict[str, pd.Series]] = None,
+    _col_values: dict[str, pd.Series] | None = None,
 ) -> dict:
     if verbose:
         start = time()

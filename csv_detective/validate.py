@@ -2,13 +2,13 @@ import logging
 
 import pandas as pd
 
-from csv_detective.load_tests import return_all_tests
+from csv_detective.format import FormatsManager
 from csv_detective.parsing.columns import MAX_NUMBER_CATEGORICAL_VALUES, test_col_val
 
 VALIDATION_CHUNK_SIZE = int(1e5)
 logging.basicConfig(level=logging.INFO)
 
-tests = return_all_tests("ALL", "detect_fields")
+formats = FormatsManager().formats
 
 
 def validate(
@@ -19,6 +19,12 @@ def validate(
 ) -> tuple[bool, pd.DataFrame | None, dict | None, dict[str, pd.Series] | None]:
     """
     Verify is the given file has the same fields and types as in the given analysis.
+
+    Args:
+        file_path: the path of the file to validate
+        previous_analysis: the previous analysis to validate against (expected in the same structure as the output of the routine)
+        verbose: whether the code displays the steps it's going through
+        skipna: whether to ignore NaN values in the checks
     """
     try:
         if previous_analysis.get("separator"):
@@ -101,8 +107,7 @@ def validate(
                 continue
             test_result: float = test_col_val(
                 serie=chunk[col_name],
-                test_func=tests[args["format"]]["func"],
-                proportion=tests[args["format"]]["prop"],
+                format=formats[args["format"]],
                 skipna=skipna,
             )
             if not bool(test_result):

@@ -1,6 +1,6 @@
 import logging
 from time import time
-from typing import Optional, TextIO
+from typing import TextIO
 
 import pandas as pd
 
@@ -18,7 +18,7 @@ def parse_csv(
     skiprows: int,
     random_state: int = 42,
     verbose: bool = False,
-) -> tuple[pd.DataFrame, Optional[int], Optional[int]]:
+) -> tuple[pd.DataFrame, int | None, int | None]:
     if verbose:
         start = time()
         logging.info("Parsing table")
