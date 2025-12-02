@@ -11,8 +11,7 @@ def cast_binary(val: str) -> bytes:
 
 def _is(val) -> bool:
     if isinstance(val, str) and (
-        (val.startswith("b'") and val.endswith("'"))
-        or (val.startswith('b"') and val.endswith('"'))
+        (val.startswith("b'") and val.endswith("'")) or (val.startswith('b"') and val.endswith('"'))
     ):
         try:
             return isinstance(cast_binary(val), bytes)
