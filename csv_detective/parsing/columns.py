@@ -38,23 +38,21 @@ def test_col_val(
         if ser_len == 0:
             # being here means the whole column is NaN, so if skipna it's a pass
             return 1.0 if skipna else 0.0
-        if not limited_output:
-            result = apply_test_func(serie, format.func, ser_len).sum() / ser_len
+        if not limited_output or format.proportion < 1:
+            # we want or have to go through the whole column to have the proportion
+            result: float = serie.apply(format.func).sum() / ser_len
             return result if result >= format.proportion else 0.0
         else:
-            if format.proportion == 1:
-                # early stops (1 then 5 rows) to not waste time if directly unsuccessful
-                for _range in [
-                    min(1, ser_len),
-                    min(5, ser_len),
-                    ser_len,
-                ]:
-                    if not all(apply_test_func(serie, format.func, _range)):
-                        return 0.0
-                return 1.0
-            else:
-                result = apply_test_func(serie, format.func, ser_len).sum() / ser_len
-                return result if result >= format.proportion else 0.0
+            # the whole column has to be valid so we have early stops (1 then 5 rows)
+            # to not waste time if directly unsuccessful
+            for _range in [
+                min(1, ser_len),
+                min(5, ser_len),
+                ser_len,
+            ]:
+                if not all(apply_test_func(serie, format.func, _range)):
+                    return 0.0
+            return 1.0
     finally:
         if verbose and time() - start > 3:
             display_logs_depending_process_time(
@@ -80,15 +78,14 @@ def test_col(
             logging.info(f"\t- Starting with format '{label}'")
         # improvement lead : put the longest tests behind and make them only if previous tests not satisfactory
         # => the following needs to change, "apply" means all columns are tested for one type at once
-        return_table.loc[label] = table.apply(
-            lambda serie: test_col_val(
-                serie,
+        for col in table.columns:
+            return_table.loc[label, col] = test_col_val(
+                table[col],
                 format,
                 skipna=skipna,
                 limited_output=limited_output,
                 verbose=verbose,
             )
-        )
         if verbose:
             display_logs_depending_process_time(
                 f'\t> Done with type "{label}" in {round(time() - start_type, 3)}s ({idx + 1}/{len(formats)})',
@@ -154,7 +151,7 @@ def test_col_chunks(
     remaining_tests_per_col = build_remaining_tests_per_col(return_table)
 
     # hashing rows to get nb_duplicates
-    row_hashes_count = table.apply(lambda row: hash(tuple(row)), axis=1).value_counts()
+    row_hashes_count = pd.util.hash_pandas_object(table, index=False).value_counts()
     # getting values for profile to read the file only once
     col_values = {col: table[col].value_counts(dropna=False) for col in table.columns}
 
@@ -192,7 +189,7 @@ def test_col_chunks(
         batch = pd.concat(batch, ignore_index=True)
         analysis["total_lines"] += len(batch)
         row_hashes_count = row_hashes_count.add(
-            batch.apply(lambda row: hash(tuple(row)), axis=1).value_counts(),
+            pd.util.hash_pandas_object(batch, index=False).value_counts(),
             fill_value=0,
         )
         for col in batch.columns:
