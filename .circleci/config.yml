@@ -25,11 +25,9 @@ jobs:
           keys:
             - << pipeline.parameters.cache-prefix >>-{{ arch }}-{{ checksum "pyproject.toml" }}
       - run:
-          name: Install python dependencies
+          name: Install Python dependencies and dev dependencies
           command: |
-            virtualenv venv
-            source venv/bin/activate
-            pip install -e .[dev]
+            uv sync --frozen --extra dev
       - save_cache:
           key: << pipeline.parameters.cache-prefix >>-{{ arch }}-{{ checksum "pyproject.toml" }}
           paths:
@@ -50,9 +48,8 @@ jobs:
           # ruff check . : check linting and imports sorting without fixing (to fix, use --fix)
           # ruff format --check . : check code formatting without fixing (to fix, remove --check)
           command: |
-            source venv/bin/activate
-            ruff check .
-            ruff format --check .
+            uv run ruff check --select I .
+            uv run ruff format --check .
 
   tests:
     docker:
@@ -63,8 +60,7 @@ jobs:
       - run:
           name: Run tests
           command: |
-            source venv/bin/activate
-            pytest -s tests/ --junitxml=reports/python/tests.xml -p no:sugar --color=yes
+            uv run pytest -s tests/ --junitxml=reports/python/tests.xml -p no:sugar --color=yes
       - store_test_results:
           path: reports/python
 
@@ -105,9 +101,7 @@ jobs:
       - run:
           name: Publish on PyPI
           command: |
-            source venv/bin/activate
-            pip install twine
-            twine upload --username "${PYPI_USERNAME}" --password "${PYPI_PASSWORD}" dist/*.whl
+            uv publish --username "${PYPI_USERNAME}" --password "${PYPI_PASSWORD}" dist/*
 
 workflows:
   build-deploy-publish:
