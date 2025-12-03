@@ -78,15 +78,14 @@ def test_col(
             logging.info(f"\t- Starting with format '{label}'")
         # improvement lead : put the longest tests behind and make them only if previous tests not satisfactory
         # => the following needs to change, "apply" means all columns are tested for one type at once
-        return_table.loc[label] = table.apply(
-            lambda serie: test_col_val(
-                serie,
+        for col in table.columns:
+            return_table.loc[label, col] = test_col_val(
+                table[col],
                 format,
                 skipna=skipna,
                 limited_output=limited_output,
                 verbose=verbose,
             )
-        )
         if verbose:
             display_logs_depending_process_time(
                 f'\t> Done with type "{label}" in {round(time() - start_type, 3)}s ({idx + 1}/{len(formats)})',
