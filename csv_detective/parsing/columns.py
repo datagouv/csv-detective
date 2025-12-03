@@ -154,7 +154,7 @@ def test_col_chunks(
     remaining_tests_per_col = build_remaining_tests_per_col(return_table)
 
     # hashing rows to get nb_duplicates
-    row_hashes_count = table.apply(lambda row: hash(tuple(row)), axis=1).value_counts()
+    row_hashes_count = pd.util.hash_pandas_object(table, index=False).value_counts()
     # getting values for profile to read the file only once
     col_values = {col: table[col].value_counts(dropna=False) for col in table.columns}
 
@@ -192,7 +192,7 @@ def test_col_chunks(
         batch = pd.concat(batch, ignore_index=True)
         analysis["total_lines"] += len(batch)
         row_hashes_count = row_hashes_count.add(
-            batch.apply(lambda row: hash(tuple(row)), axis=1).value_counts(),
+            pd.util.hash_pandas_object(batch, index=False).value_counts(),
             fill_value=0,
         )
         for col in batch.columns:
