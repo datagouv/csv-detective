@@ -104,6 +104,7 @@ jobs:
             source venv/bin/activate
             pip install twine
             twine upload --username "${PYPI_USERNAME}" --password "${PYPI_PASSWORD}" dist/*.whl
+
 workflows:
   build-deploy-publish:
     jobs:
