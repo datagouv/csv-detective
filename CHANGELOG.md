@@ -20,6 +20,7 @@
 - Adapt to main branch change [#177](https://github.com/datagouv/csv-detective/pull/177)
 - Add lock file and unpin dependencies [#166](https://github.com/datagouv/csv-detective/pull/166)
 - Use uv as the build backend instead of setuptools [#165](https://github.com/datagouv/csv-detective/pull/165)
+- Allow accents and spaces in URLs [#178](https://github.com/datagouv/csv-detective/pull/178)
 
 ## 0.9.2 (2025-08-26)
 
