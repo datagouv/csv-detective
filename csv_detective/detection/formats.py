@@ -123,6 +123,7 @@ def detect_formats(
         "longitude_l93": "float",
         "longitude_wgs": "float",
         "longitude_wgs_fr_metropole": "float",
+        "binary": "binary",
     }
 
     if not limited_output:

@@ -16,11 +16,12 @@
 - Process big csv files in chunks (/!\ breaking changes) [#159](https://github.com/datagouv/csv-detective/pull/159)
 - Handle column named `count` in profile creation [#171](https://github.com/datagouv/csv-detective/pull/171)
 - Prevent `NaN` in headers [#173](https://github.com/datagouv/csv-detective/pull/173)
-- Refactor formats structure in the repo (/!\ breaking changes) [#176](https://github.com/datagouv/csv-detective/pull/176)
+- Refactor formats structure in the repo (/!\ breaking changes) [#170](https://github.com/datagouv/csv-detective/pull/170)
 - Adapt to main branch change [#177](https://github.com/datagouv/csv-detective/pull/177)
 - Add lock file and unpin dependencies [#166](https://github.com/datagouv/csv-detective/pull/166)
 - Use uv as the build backend instead of setuptools [#165](https://github.com/datagouv/csv-detective/pull/165)
 - Allow accents and spaces in URLs [#178](https://github.com/datagouv/csv-detective/pull/178)
+- Add new `binary` format [#176](https://github.com/datagouv/csv-detective/pull/176)
 
 ## 0.9.2 (2025-08-26)
 

@@ -5,6 +5,7 @@ from typing import Iterator
 
 import pandas as pd
 
+from csv_detective.formats.binary import binary_casting
 from csv_detective.formats.booleen import bool_casting
 from csv_detective.formats.date import date_casting
 from csv_detective.formats.float import float_casting
@@ -12,23 +13,27 @@ from csv_detective.parsing.csv import CHUNK_SIZE
 from csv_detective.utils import display_logs_depending_process_time
 
 
-def cast(value: str, _type: str) -> str | float | bool | date | datetime | None:
+def cast(value: str, _type: str) -> str | float | bool | date | datetime | bytes | None:
     if not isinstance(value, str) or not value:
         # None is the current default value in hydra, should we keep this?
         return None
-    if _type == "float":
-        return float_casting(value)
-    if _type == "bool":
-        return bool_casting(value)
-    if _type == "json":
-        # in hydra json are given to postgres as strings, conversion is done by postgres
-        return json.loads(value)
-    if _type == "date":
-        _date = date_casting(value)
-        return _date.date() if _date else None
-    if _type == "datetime":
-        return date_casting(value)
-    raise ValueError(f"Unknown type `{_type}`")
+    match _type:
+        case "float":
+            return float_casting(value)
+        case "bool":
+            return bool_casting(value)
+        case "json":
+            # in hydra json are given to postgres as strings, conversion is done by postgres
+            return json.loads(value)
+        case "date":
+            _date = date_casting(value)
+            return _date.date() if _date else None
+        case "datetime":
+            return date_casting(value)
+        case "binary":
+            return binary_casting(value)
+        case _:
+            raise ValueError(f"Unknown type `{_type}`")
 
 
 def cast_df(
