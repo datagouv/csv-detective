@@ -42,17 +42,7 @@ def detect_continuous_variable(
     if verbose:
         start = time()
         logging.info("Detecting continuous columns")
-    # Optimization: avoid double apply by using explicit loop
-    res = pd.Series(index=table.columns, dtype=bool)
-    for col in table.columns:
-        types_series = table[col].apply(parses_to_integer)
-        count = types_series.value_counts().to_dict()
-        total_nb = len(types_series)
-        if float in count:
-            nb_floats = count[float]
-            res[col] = (nb_floats / total_nb) >= continuous_th if total_nb > 0 else False
-        else:
-            res[col] = False
+    res = table.apply(lambda serie: check_threshold(serie.apply(parses_to_integer), continuous_th))
     if verbose:
         display_logs_depending_process_time(
             f"Detected {sum(res)} continuous columns in {round(time() - start, 3)}s",

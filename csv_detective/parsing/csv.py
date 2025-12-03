@@ -42,8 +42,7 @@ def parse_csv(
                 logging.warning(f"File is too long, analysing in chunks of {CHUNK_SIZE} rows")
             total_lines, nb_duplicates = None, None
         else:
-            # Optimization: use sum() on boolean mask instead of len() on filtered DataFrame
-            nb_duplicates = table.duplicated().sum()
+            nb_duplicates = len(table.loc[table.duplicated()])
         if num_rows > 0:
             num_rows = min(num_rows, total_lines or len(table))
             table = table.sample(num_rows, random_state=random_state)
