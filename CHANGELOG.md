@@ -22,6 +22,7 @@
 - Use uv as the build backend instead of setuptools [#165](https://github.com/datagouv/csv-detective/pull/165)
 - Allow accents and spaces in URLs [#178](https://github.com/datagouv/csv-detective/pull/178)
 - Add new `binary` format [#176](https://github.com/datagouv/csv-detective/pull/176)
+- Performances improvements [#179](https://github.com/datagouv/csv-detective/pull/179)
 
 ## 0.9.2 (2025-08-26)
 
