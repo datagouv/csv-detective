@@ -82,7 +82,7 @@ def validate(
         )
 
     # hashing rows to get nb_duplicates
-    row_hashes_count = first_chunk.apply(lambda row: hash(tuple(row)), axis=1).value_counts()
+    row_hashes_count = pd.util.hash_pandas_object(first_chunk, index=False).value_counts()
     # getting values for profile to read the file only once
     col_values = {col: first_chunk[col].value_counts(dropna=False) for col in first_chunk.columns}
     analysis["total_lines"] = 0
@@ -91,7 +91,7 @@ def validate(
             logging.info(f"> Testing chunk number {idx}")
         analysis["total_lines"] += len(chunk)
         row_hashes_count = row_hashes_count.add(
-            chunk.apply(lambda row: hash(tuple(row)), axis=1).value_counts(),
+            pd.util.hash_pandas_object(chunk, index=False).value_counts(),
             fill_value=0,
         )
         for col in chunk.columns:
