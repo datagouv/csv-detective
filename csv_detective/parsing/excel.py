@@ -124,7 +124,7 @@ def parse_excel(
             )
         table, header_row_idx = remove_empty_first_rows(table)
         total_lines = len(table)
-        nb_duplicates = len(table.loc[table.duplicated()])
+        nb_duplicates = table.duplicated().sum()
         if num_rows > 0:
             num_rows = min(num_rows - 1, total_lines)
             table = table.sample(num_rows, random_state=random_state)
@@ -155,7 +155,7 @@ def parse_excel(
     )
     table, header_row_idx = remove_empty_first_rows(table)
     total_lines = len(table)
-    nb_duplicates = len(table.loc[table.duplicated()])
+    nb_duplicates = table.duplicated().sum()
     if num_rows > 0:
         num_rows = min(num_rows - 1, total_lines)
         table = table.sample(num_rows, random_state=random_state)
