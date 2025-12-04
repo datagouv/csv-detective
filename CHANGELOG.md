@@ -23,6 +23,7 @@
 - Allow accents and spaces in URLs [#178](https://github.com/datagouv/csv-detective/pull/178)
 - Add new `binary` format [#176](https://github.com/datagouv/csv-detective/pull/176)
 - Performances improvements [#179](https://github.com/datagouv/csv-detective/pull/179) [#180](https://github.com/datagouv/csv-detective/pull/180) [#181](https://github.com/datagouv/csv-detective/pull/181) [#182](https://github.com/datagouv/csv-detective/pull/182) [#183](https://github.com/datagouv/csv-detective/pull/183)
+- `float` accepts sientific notation [#184](https://github.com/datagouv/csv-detective/pull/184)
 
 ## 0.9.2 (2025-08-26)
 
