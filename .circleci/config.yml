@@ -78,11 +78,11 @@ jobs:
             # Build a wheel release
             if [[ $CIRCLE_TAG ]]; then
                 # This is a tagged release, version should be handled upstream
-                python -m build --wheel
+                .venv/bin/python -m build --wheel
             else
                 pip install toml
-                python update_version.py
-                python -m build --wheel
+                .venv/bin/python update_version.py
+                .venv/bin/python -m build --wheel
             fi
             twine check dist/*
       - store_artifacts:
