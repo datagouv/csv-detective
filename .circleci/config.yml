@@ -31,7 +31,7 @@ jobs:
       - save_cache:
           key: << pipeline.parameters.cache-prefix >>-{{ arch }}-{{ checksum "pyproject.toml" }}
           paths:
-            - venv
+            - .venv
       - persist_to_workspace:
           root: .
           paths:
@@ -73,7 +73,7 @@ jobs:
       - run:
           name: Build a distributable package
           command: |
-            source venv/bin/activate
+            source .venv/bin/activate
             pip install build twine
             # Build a wheel release
             if [[ $CIRCLE_TAG ]]; then
@@ -101,7 +101,7 @@ jobs:
       - run:
           name: Publish on PyPI
           command: |
-            source venv/bin/activate
+            source .venv/bin/activate
             pip install twine
             twine upload --username "${PYPI_USERNAME}" --password "${PYPI_PASSWORD}" dist/*.whl
 
