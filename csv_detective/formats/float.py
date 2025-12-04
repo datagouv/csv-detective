@@ -20,9 +20,8 @@ def _is(val):
             or (val.startswith("0") and len(val) > 1 and val[1] not in [".", ","])
         ):
             return False
-        elif (
-            any([k in val for k in ["+", "e", "E"]])
-            and not re.match(scientific_notation_pattern, val)
+        elif any([k in val for k in ["+", "e", "E"]]) and not re.match(
+            scientific_notation_pattern, val
         ):
             return False
         float_casting(val)
