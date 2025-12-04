@@ -1,6 +1,6 @@
 # Changelog
 
-## Current (in progress)
+## 0.10.0 (2025-12-04)
 
 - Better email detection [#151](https://github.com/datagouv/csv-detective/pull/151)
 - Sample can handle full NaN columns [#152](https://github.com/datagouv/csv-detective/pull/152)
