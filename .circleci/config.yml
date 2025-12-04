@@ -73,17 +73,17 @@ jobs:
       - run:
           name: Build a distributable package
           command: |
-            .venv/bin/pip install build twine
+            uv pip install build twine
             # Build a wheel release
             if [[ $CIRCLE_TAG ]]; then
                 # This is a tagged release, version should be handled upstream
-                .venv/bin/python -m build --wheel
+                uv run python -m build --wheel
             else
-                .venv/bin/pip install toml
-                .venv/bin/python update_version.py
-                .venv/bin/python -m build --wheel
+                uv pip install toml
+                uv run python update_version.py
+                uv run python -m build --wheel
             fi
-            .venv/bin/twine check dist/*
+            uv run twine check dist/*
       - store_artifacts:
           path: dist
       - persist_to_workspace:
@@ -100,8 +100,8 @@ jobs:
       - run:
           name: Publish on PyPI
           command: |
-            .venv/bin/pip install twine
-            .venv/bin/twine upload --username "${PYPI_USERNAME}" --password "${PYPI_PASSWORD}" dist/*.whl
+            uv pip install twine
+            uv run twine upload --username "${PYPI_USERNAME}" --password "${PYPI_PASSWORD}" dist/*.whl
 
 workflows:
   build-deploy-publish:
