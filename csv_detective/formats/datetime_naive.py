@@ -2,7 +2,7 @@ import re
 from typing import Any
 
 from csv_detective.formats.date import aaaammjj_pattern, date_casting
-from csv_detective.formats.datetime_aware import labels  # noqa
+from csv_detective.formats.datetime_aware import labels, prefix  # noqa
 
 proportion = 1
 tags = ["temp", "type"]
@@ -20,7 +20,7 @@ def _is(val: Any | None) -> bool:
     # early stops, to cut processing time
     # 15 is the minimal length of a datetime format YYMMDDTHH:MM:SS
     # 26 is the maximal length of an ISO datetime format YYYY-MM-DDTHH:MM:SS.dddddd, keeping some slack
-    if not isinstance(val, str) or len(val) > 30 or len(val) < 15:
+    if not isinstance(val, str) or len(val) > 30 or len(val) < 15 or not re.match(prefix, val):
         return False
     # if usual format, no need to parse
     if bool(re.match(pat, val)):
@@ -44,5 +44,6 @@ _test_values = {
         "1999-12-01T00:00:00Z",
         "2021-06-44",
         "15 décembre 1985",
+        "0.001175692961729795",
     ],
 }
