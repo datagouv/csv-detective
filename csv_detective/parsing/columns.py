@@ -48,11 +48,10 @@ def test_col_val(
             for _range in [
                 min(1, ser_len),
                 min(5, ser_len),
-                ser_len,
             ]:
                 if not all(apply_test_func(serie, format.func, _range)):
                     return 0.0
-            return 1.0
+            return float(serie.apply(format.func).sum() == ser_len)
     finally:
         if verbose and time() - start > 3:
             display_logs_depending_process_time(
