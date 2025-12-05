@@ -2,6 +2,7 @@ import json
 from json import JSONDecodeError
 
 proportion = 1
+python_type = "json"
 tags = ["type"]
 
 

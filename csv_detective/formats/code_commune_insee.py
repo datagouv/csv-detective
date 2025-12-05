@@ -2,6 +2,7 @@ from frformat import CodeCommuneInsee, Millesime
 
 proportion = 0.75
 tags = ["fr", "geo"]
+mandatory_label = True
 labels = [
     "code commune insee",
     "code insee",

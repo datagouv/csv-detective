@@ -1,5 +1,6 @@
 proportion = 1
 tags = ["temp"]
+python_type = "int"
 labels = [
     "year",
     "annee",

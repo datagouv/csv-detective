@@ -2,6 +2,7 @@ import json
 
 proportion = 1
 tags = ["geo"]
+python_type = "json"
 labels = [
     "json geojson",
     "json",

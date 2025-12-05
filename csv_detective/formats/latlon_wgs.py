@@ -3,6 +3,7 @@ from csv_detective.formats.longitude_wgs import _is as is_lon
 
 proportion = 1
 tags = ["geo"]
+mandatory_label = True
 
 SHARED_COORDS_LABELS = [
     "ban",

@@ -6,6 +6,7 @@ from csv_detective.formats.datetime_aware import labels, prefix  # noqa
 
 proportion = 1
 tags = ["temp", "type"]
+python_type = "datetime"
 threshold = 0.7
 
 # matches AAAA-MM-JJTHH:MM:SS(.dddddd)Z with any of the listed separators for the date OR NO SEPARATOR

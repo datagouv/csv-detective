@@ -2,6 +2,7 @@ import codecs
 
 proportion = 1
 tags = ["type"]
+python_type = "binary"
 labels = ["bytes", "binary", "image", "encode", "content"]
 
 

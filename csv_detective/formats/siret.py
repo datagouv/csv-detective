@@ -2,6 +2,7 @@ import re
 
 proportion = 0.8
 tags = ["fr"]
+mandatory_label = True
 labels = [
     "siret",
     "siret d",

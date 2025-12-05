@@ -1,5 +1,6 @@
-labels = ["nb", "nombre", "nbre"]
 tag = ["type"]
+python_type = "int"
+labels = ["nb", "nombre", "nbre"]
 
 
 def _is(val):

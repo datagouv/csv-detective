@@ -82,22 +82,7 @@ def detect_formats(
     # To reduce false positives: ensure these formats are detected only if the label yields
     # a detection (skipping the ones that have been excluded by the users).
     formats_with_mandatory_label = [
-        f
-        for f in [
-            "code_departement",
-            "code_commune_insee",
-            "code_postal",
-            "code_fantoir",
-            "latitude_wgs",
-            "longitude_wgs",
-            "latitude_wgs_fr_metropole",
-            "longitude_wgs_fr_metropole",
-            "latitude_l93",
-            "longitude_l93",
-            "siren",
-            "siret",
-        ]
-        if f in scores_table.index
+        f for f in fmtm.get_formats_with_mandatory_label() if f in scores_table.index
     ]
     scores_table.loc[formats_with_mandatory_label, :] = np.where(
         scores_table_labels.loc[formats_with_mandatory_label, :],
@@ -106,32 +91,16 @@ def detect_formats(
     )
     analysis["columns"] = prepare_output_dict(scores_table, limited_output)
 
-    metier_to_python_type = {
-        "booleen": "bool",
-        "int": "int",
-        "float": "float",
-        "string": "string",
-        "json": "json",
-        "geojson": "json",
-        "datetime_aware": "datetime",
-        "datetime_naive": "datetime",
-        "datetime_rfc822": "datetime",
-        "date": "date",
-        "latitude_l93": "float",
-        "latitude_wgs": "float",
-        "latitude_wgs_fr_metropole": "float",
-        "longitude_l93": "float",
-        "longitude_wgs": "float",
-        "longitude_wgs_fr_metropole": "float",
-        "binary": "binary",
-    }
-
     if not limited_output:
         for detection_method in ["columns_fields", "columns_labels", "columns"]:
             analysis[detection_method] = {
                 col_name: [
                     {
-                        "python_type": metier_to_python_type.get(detection["format"], "string"),
+                        "python_type": (
+                            "string"
+                            if detection["format"] == "string"
+                            else fmtm.formats[detection["format"]].python_type
+                        ),
                         **detection,
                     }
                     for detection in detections
@@ -142,7 +111,11 @@ def detect_formats(
         for detection_method in ["columns_fields", "columns_labels", "columns"]:
             analysis[detection_method] = {
                 col_name: {
-                    "python_type": metier_to_python_type.get(detection["format"], "string"),
+                    "python_type": (
+                        "string"
+                        if detection["format"] == "string"
+                        else fmtm.formats[detection["format"]].python_type
+                    ),
                     **detection,
                 }
                 for col_name, detection in analysis[detection_method].items()
