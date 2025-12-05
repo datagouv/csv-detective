@@ -93,32 +93,12 @@ def detect_formats(
     )
     analysis["columns"] = prepare_output_dict(scores_table, limited_output)
 
-    metier_to_python_type = {
-        "booleen": "bool",
-        "int": "int",
-        "float": "float",
-        "string": "string",
-        "json": "json",
-        "geojson": "json",
-        "datetime_aware": "datetime",
-        "datetime_naive": "datetime",
-        "datetime_rfc822": "datetime",
-        "date": "date",
-        "latitude_l93": "float",
-        "latitude_wgs": "float",
-        "latitude_wgs_fr_metropole": "float",
-        "longitude_l93": "float",
-        "longitude_wgs": "float",
-        "longitude_wgs_fr_metropole": "float",
-        "binary": "binary",
-    }
-
     if not limited_output:
         for detection_method in ["columns_fields", "columns_labels", "columns"]:
             analysis[detection_method] = {
                 col_name: [
                     {
-                        "python_type": metier_to_python_type.get(detection["format"], "string"),
+                        "python_type": fmtm.formats[detection["format"]].python_type,
                         **detection,
                     }
                     for detection in detections
@@ -129,7 +109,7 @@ def detect_formats(
         for detection_method in ["columns_fields", "columns_labels", "columns"]:
             analysis[detection_method] = {
                 col_name: {
-                    "python_type": metier_to_python_type.get(detection["format"], "string"),
+                    "python_type": fmtm.formats[detection["format"]].python_type,
                     **detection,
                 }
                 for col_name, detection in analysis[detection_method].items()

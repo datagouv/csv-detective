@@ -6,6 +6,7 @@ from csv_detective.formats.float import float_casting
 proportion = 1
 tags = ["fr", "geo"]
 mandatory_label = True
+python_type = "float"
 labels = [
     "longitude",
     "lon",
