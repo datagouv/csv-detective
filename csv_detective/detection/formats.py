@@ -83,20 +83,7 @@ def detect_formats(
     # a detection (skipping the ones that have been excluded by the users).
     formats_with_mandatory_label = [
         f
-        for f in [
-            "code_departement",
-            "code_commune_insee",
-            "code_postal",
-            "code_fantoir",
-            "latitude_wgs",
-            "longitude_wgs",
-            "latitude_wgs_fr_metropole",
-            "longitude_wgs_fr_metropole",
-            "latitude_l93",
-            "longitude_l93",
-            "siren",
-            "siret",
-        ]
+        for f in fmtm.get_formats_with_mandatory_label()
         if f in scores_table.index
     ]
     scores_table.loc[formats_with_mandatory_label, :] = np.where(

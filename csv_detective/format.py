@@ -12,6 +12,7 @@ class Format:
         labels: list[str] = [],
         proportion: float = 1,
         tags: list[str] = [],
+        mandatory_label: bool = False,
     ) -> None:
         """
         Instanciates a Format object.
@@ -30,6 +31,7 @@ class Format:
         self.labels: list[str] = labels
         self.proportion: float = proportion
         self.tags: list[str] = tags
+        self.mandatory_label: bool = mandatory_label
 
     def is_valid_label(self, val: str) -> float:
         return header_score(val, self.labels)
@@ -49,7 +51,7 @@ class FormatsManager:
                 _test_values=module._test_values,
                 **{
                     attr: val
-                    for attr in ["labels", "proportion", "tags"]
+                    for attr in ["labels", "proportion", "tags", "mandatory_label"]
                     if (val := getattr(module, attr, None))
                 },
             )
@@ -61,6 +63,13 @@ class FormatsManager:
             label: fmt
             for label, fmt in self.formats.items()
             if all(tag in fmt.tags for tag in tags)
+        }
+
+    def get_formats_with_mandatory_label(self) -> dict[str, Format]:
+        return {
+            label: fmt
+            for label, fmt in self.formats.items()
+            if fmt.mandatory_label
         }
 
     def available_tags(self) -> set[str]:

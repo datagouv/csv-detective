@@ -2,6 +2,7 @@ from frformat import CodePostal
 
 proportion = 0.9
 tags = ["fr", "geo"]
+mandatory_label = True
 labels = [
     "code postal",
     "postal code",

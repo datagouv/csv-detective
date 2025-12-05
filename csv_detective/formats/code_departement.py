@@ -2,6 +2,7 @@ from frformat import Millesime, NumeroDepartement, Options
 
 proportion = 1
 tags = ["fr", "geo"]
+mandatory_label = True
 labels = [
     "code departement",
     "code_departement",
