@@ -1,5 +1,6 @@
 import logging
 from time import time
+from typing import Iterator
 
 import pandas as pd
 
@@ -27,7 +28,7 @@ def routine(
     cast_json: bool = True,
     verbose: bool = False,
     sheet_name: str | int | None = None,
-) -> dict | tuple[dict, pd.DataFrame]:
+) -> dict | tuple[dict, Iterator[pd.DataFrame]]:
     """
     Returns a dict with information about the table and possible column contents, and if requested the DataFrame with columns cast according to analysis.
 
