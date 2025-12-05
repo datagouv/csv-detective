@@ -68,11 +68,7 @@ class FormatsManager:
         }
 
     def get_formats_with_mandatory_label(self) -> dict[str, Format]:
-        return {
-            label: fmt
-            for label, fmt in self.formats.items()
-            if fmt.mandatory_label
-        }
+        return {label: fmt for label, fmt in self.formats.items() if fmt.mandatory_label}
 
     def available_tags(self) -> set[str]:
         return set(tag for format in self.formats.values() for tag in format.tags)
