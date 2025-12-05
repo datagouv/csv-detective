@@ -12,7 +12,9 @@ pat = (
     + r"(T|\s)(0\d|1[0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])(.\d{1,6})"
     + r"?(([+-](0\d|1[0-9]|2[0-3]):([0-5][0-9]))|Z)$"
 )
-prefix = r"^\d{4}"
+# date_casting is very (too?) good at finding date(time)s where there sometimes is just a number
+# this prefix check asserts we only consider strings that have a somewhat fine structure trying to cast
+prefix = r"^\d{2}[-/:]?\d{2}"
 
 
 def _is(val):
@@ -41,6 +43,8 @@ _test_values = {
         "2000-12-21 10:20:10.1Z",
         "2024-12-19T10:53:36.428000+00:00",
         "1996/06/22 10:20:10 GMT",
+        "12/31/2022 12:00:00-04:00",
+        "12:00:00-04:00 12/31/2022",
     ],
     False: [
         "2021-06-22T30:20:10",
