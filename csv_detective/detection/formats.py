@@ -82,7 +82,9 @@ def detect_formats(
     # To reduce false positives: ensure these formats are detected only if the label yields
     # a detection (skipping the ones that have been excluded by the users).
     formats_with_mandatory_label = [
-        f for f in fmtm.get_formats_with_mandatory_label() if f in scores_table.index
+        f
+        for f in fmtm.get_formats_with_mandatory_label()
+        if f in scores_table.index
     ]
     scores_table.loc[formats_with_mandatory_label, :] = np.where(
         scores_table_labels.loc[formats_with_mandatory_label, :],
@@ -96,7 +98,10 @@ def detect_formats(
             analysis[detection_method] = {
                 col_name: [
                     {
-                        "python_type": fmtm.formats[detection["format"]].python_type,
+                        "python_type": (
+                            "string" if detection["format"] == "string"
+                            else fmtm.formats[detection["format"]].python_type
+                        ),
                         **detection,
                     }
                     for detection in detections
@@ -107,7 +112,10 @@ def detect_formats(
         for detection_method in ["columns_fields", "columns_labels", "columns"]:
             analysis[detection_method] = {
                 col_name: {
-                    "python_type": fmtm.formats[detection["format"]].python_type,
+                    "python_type": (
+                        "string" if detection["format"] == "string"
+                        else fmtm.formats[detection["format"]].python_type
+                    ),
                     **detection,
                 }
                 for col_name, detection in analysis[detection_method].items()
