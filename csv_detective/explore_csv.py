@@ -116,7 +116,7 @@ def validate_then_detect(
     output_df: bool = False,
     cast_json: bool = True,
     verbose: bool = False,
-):
+) -> dict | tuple[dict, Iterator[pd.DataFrame]]:
     """
     Performs a validation of the given file against the given analysis.
     If the validation fails, performs a full analysis and return it.
