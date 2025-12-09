@@ -411,3 +411,27 @@ def test_count_column(mocked_responses):
             output_profile=True,
             save_results=False,
         )
+
+
+def test_unique_columns(mocked_responses):
+    lat, not_lat = "latitude_obj", "latin"
+    lon, not_lon = "longitude_obj", "longueur"
+    expected_content = (
+        f"{lat},{lon},{not_lat},{not_lon}\n"
+        + "1.0,-1.0,1.0,-1.0\n" * 10
+    )
+    mocked_responses.get(
+        "http://example.com/test.csv",
+        body=expected_content,
+        status=200,
+    )
+    analysis = routine(
+        file_path="http://example.com/test.csv",
+        num_rows=-1,
+        output_profile=False,
+        save_results=False,
+    )
+    assert analysis["columns"][lat]["format"] == "latitude_wgs"
+    assert analysis["columns"][not_lat]["format"] == "float"
+    assert analysis["columns"][lon]["format"] == "longitude_wgs"
+    assert analysis["columns"][not_lon]["format"] == "float"
