@@ -7,6 +7,7 @@ from dateutil.parser import parse as dateutil_parser
 
 proportion = 1
 tags = ["temp", "type"]
+python_type = "date"
 SHARED_DATE_LABELS = [
     "date",
     "mise à jour",

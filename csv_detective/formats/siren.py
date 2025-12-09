@@ -2,6 +2,7 @@ import re
 
 proportion = 0.9
 tags = ["fr"]
+mandatory_label = True
 labels = [
     "siren",
     "siren organisme designe",

@@ -2,6 +2,7 @@ from frformat import CodeFantoir
 
 proportion = 1
 tags = ["fr", "geo"]
+mandatory_label = True
 labels = [
     "cadastre1",
     "code fantoir",

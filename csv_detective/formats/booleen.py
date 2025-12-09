@@ -1,5 +1,6 @@
 proportion = 1
 tags = ["type"]
+python_type = "bool"
 labels = ["is ", "has ", "est "]
 
 bool_mapping = {
