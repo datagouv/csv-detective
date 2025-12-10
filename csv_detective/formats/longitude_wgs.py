@@ -22,9 +22,7 @@ labels = [
 def _is(val):
     try:
         return is_float(val) and float(val) >= -180 and float(val) <= 180
-    except ValueError:
-        return False
-    except OverflowError:
+    except Exception:
         return False
 
 

@@ -32,9 +32,7 @@ labels = [
 def _is(val):
     try:
         return is_float(val) and float(val) >= 41.3 and float(val) <= 51.3
-    except ValueError:
-        return False
-    except OverflowError:
+    except Exception:
         return False
 
 

@@ -22,9 +22,7 @@ labels = [
 def _is(val):
     try:
         return is_float(val) and float(val) >= -5.5 and float(val) <= 9.8
-    except ValueError:
-        return False
-    except OverflowError:
+    except Exception:
         return False
 
 

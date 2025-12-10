@@ -19,6 +19,7 @@ labels = [
     "x",
     "xf",
     "xd",
+    "lambx",
 ]
 
 _longitudel93 = LongitudeL93()

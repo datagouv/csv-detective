@@ -28,6 +28,7 @@ labels = [
     "googlemap latitude",
     "latitudelieu",
     "latitude googlemap",
+    "lamby",
 ]
 
 _latitudel93 = LatitudeL93()
