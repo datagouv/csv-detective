@@ -44,11 +44,14 @@ def header_score(header: str, valid_headers: dict[str, float]) -> float:
     processed_header = _process_text(header)
 
     header_matches_valid = max(
-        (valid == processed_header) * credibility
-        for valid, credibility in valid_headers.items()
+        (valid == processed_header) * credibility for valid, credibility in valid_headers.items()
     )
 
-    return max(header_matches_valid, 0.5 * max(
-        is_word_in_string(valid, processed_header) * credibility
-        for valid, credibility in valid_headers.items()
-    ))
+    return max(
+        header_matches_valid,
+        0.5
+        * max(
+            is_word_in_string(valid, processed_header) * credibility
+            for valid, credibility in valid_headers.items()
+        ),
+    )

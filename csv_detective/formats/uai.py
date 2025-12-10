@@ -17,7 +17,6 @@ labels = {
     "cd rne": 1,
     "numerouai": 1,
     "numero d etablissement": 1,
-    "code etablissement": 1,
     "numero etablissement": 1,
 }
 
