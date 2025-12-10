@@ -437,7 +437,6 @@ def test_multiple_geo_columns(mocked_responses):
     # both cases are acceptable
     assert analysis["columns"][lat]["format"] == "latitude_wgs"
     assert analysis["columns"][lon]["format"] == "longitude_wgs"
-    breakpoint()
     assert (
         analysis["columns"][not_lat]["format"] == "float"
         or (
