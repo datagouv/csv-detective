@@ -4,11 +4,12 @@ from csv_detective.parsing.text import _process_text
 
 proportion = 1
 tags = ["fr"]
-labels = [
-    "csp insee",
-    "csp",
-    "categorie socioprofessionnelle",
-]
+labels = {
+    "csp insee": 1,
+    "csp": 0.75,
+    "categorie socioprofessionnelle": 1,
+    "sociopro": 1,
+}
 
 f = open(join(dirname(__file__), "data", "csp_insee.txt"), "r")
 codes_insee = f.read().split("\n")

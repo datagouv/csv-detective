@@ -2,25 +2,17 @@ from frformat import LongitudeL93
 
 from csv_detective.formats.float import _is as is_float
 from csv_detective.formats.float import float_casting
+from csv_detective.formats.longitude_wgs import SHARED_LONGITUDE_LABELS
 
 proportion = 1
 tags = ["fr", "geo"]
 mandatory_label = True
 python_type = "float"
-labels = [
-    "longitude",
-    "lon",
-    "long",
-    "geocodage x gps",
-    "location longitude",
-    "xlongitude",
-    "lng",
-    "xlong",
-    "x",
-    "xf",
-    "xd",
-    "lambx",
-]
+labels = SHARED_LONGITUDE_LABELS | {
+    "x l93": 1,
+    "longitude lb93": 1,
+    "lambx": 1,
+}
 
 _longitudel93 = LongitudeL93()
 

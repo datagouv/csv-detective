@@ -1,18 +1,12 @@
 proportion = 1
 tags = ["temp"]
 python_type = "int"
-labels = [
-    "year",
-    "annee",
-    "annee depot",
-    "an nais",
-    "exercice",
-    "data year",
-    "annee de publication",
-    "exercice comptable",
-    "annee de naissance",
-    "annee ouverture",
-]
+labels = {
+    "year": 1,
+    "annee": 1,
+    "naissance": 1,
+    "exercice": 1,
+}
 
 
 def _is(val):

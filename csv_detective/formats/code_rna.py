@@ -2,12 +2,13 @@ from frformat import CodeRNA
 
 proportion = 0.9
 tags = ["fr"]
-labels = [
-    "code rna",
-    "rna",
-    "n° inscription association",
-    "identifiant association",
-]
+labels = {
+    "code rna": 1,
+    "rna": 1,
+    "n° inscription association": 1,
+    "identifiant association": 1,
+    "asso": 0.75,
+}
 
 _code_rna = CodeRNA()
 

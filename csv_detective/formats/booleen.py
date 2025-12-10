@@ -1,7 +1,7 @@
 proportion = 1
 tags = ["type"]
 python_type = "bool"
-labels = ["is ", "has ", "est "]
+labels = {"is ": 1, "has ": 1, "est ": 1}
 
 bool_mapping = {
     "1": True,
@@ -22,7 +22,7 @@ bool_mapping = {
 liste_bool = set(bool_mapping.keys())
 
 
-def bool_casting(val: str) -> bool:
+def bool_casting(val: str) -> bool | None:
     return bool_mapping.get(val.lower())
 
 

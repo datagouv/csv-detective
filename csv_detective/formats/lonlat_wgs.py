@@ -6,18 +6,18 @@ proportion = 1
 tags = ["geo"]
 mandatory_label = True
 
-specific = [
-    "lonlat",
-    "lon lat",
-    "y x",
-    "yx",
-]
+specific = {
+    "lonlat": 1,
+    "lon lat": 1,
+    "y x": 0.75,
+    "yx": 0.75,
+}
 
 # we aim wide to catch exact matches if possible for the highest possible score
-words = (
+labels = (
     SHARED_COORDS_LABELS
-    + specific
-    + [w + sep + suf for suf in specific for w in SHARED_COORDS_LABELS for sep in ["", " "]]
+    | specific
+    | {w + sep + suf: 1 for suf in specific for w in SHARED_COORDS_LABELS for sep in ["", " "]}
 )
 
 

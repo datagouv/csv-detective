@@ -1,32 +1,10 @@
 from csv_detective.formats.float import _is as is_float
+from csv_detective.formats.latitude_wgs import labels  # noqa
 
 proportion = 1
 tags = ["fr", "geo"]
 mandatory_label = True
 python_type = "float"
-labels = [
-    "latitude",
-    "lat",
-    "y",
-    "yf",
-    "yd",
-    "coordonnee y",
-    "coord y",
-    "ycoord",
-    "geocodage y gps",
-    "location latitude",
-    "ylatitude",
-    "ylat",
-    "latitude (y)",
-    "latitudeorg",
-    "coordinates.latitude",
-    "googlemap latitude",
-    "latitudelieu",
-    "latitude googlemap",
-    "latitude wgs84",
-    "y wgs84",
-    "latitude (wgs84)",
-]
 
 
 def _is(val):

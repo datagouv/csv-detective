@@ -1,6 +1,6 @@
 tag = ["type"]
 python_type = "int"
-labels = ["nb", "nombre", "nbre"]
+labels = {"nb": 0.75, "nombre": 1, "nbre": 0.75}
 
 
 def _is(val):

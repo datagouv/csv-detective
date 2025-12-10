@@ -1,17 +1,10 @@
 import re
 from os.path import dirname, join
 
+from csv_detective.formats.iso_country_code_alpha2 import labels  # noqa
+
 proportion = 1
 tags = ["geo"]
-labels = [
-    "iso country code",
-    "code pays",
-    "pays",
-    "country",
-    "nation",
-    "pays code",
-    "code pays (iso)",
-]
 
 with open(join(dirname(__file__), "data", "iso_country_code_alpha3.txt"), "r") as iofile:
     liste_pays = iofile.read().split("\n")

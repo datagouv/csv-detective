@@ -2,34 +2,17 @@ from frformat import LatitudeL93
 
 from csv_detective.formats.float import _is as is_float
 from csv_detective.formats.float import float_casting
+from csv_detective.formats.latitude_wgs import SHARED_LATITUDE_LABELS
 
 proportion = 1
 tags = ["fr", "geo"]
 mandatory_label = True
 python_type = "float"
-labels = [
-    "latitude",
-    "lat",
-    "y",
-    "yf",
-    "yd",
-    "y l93",
-    "coordonnee y",
-    "latitude lb93",
-    "coord y",
-    "ycoord",
-    "geocodage y gps",
-    "location latitude",
-    "ylatitude",
-    "ylat",
-    "latitude (y)",
-    "latitudeorg",
-    "coordinates.latitude",
-    "googlemap latitude",
-    "latitudelieu",
-    "latitude googlemap",
-    "lamby",
-]
+labels = SHARED_LATITUDE_LABELS | {
+    "y l93": 1,
+    "latitude lb93": 1,
+    "lamby": 1,
+}
 
 _latitudel93 = LatitudeL93()
 

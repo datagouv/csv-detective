@@ -1,7 +1,7 @@
 import re
 
 proportion = 1
-labels = ["account", "username", "user"]
+labels = {"account": 1, "username": 1, "user": 0.75}
 
 
 def _is(val):

@@ -4,6 +4,11 @@ from json import JSONDecodeError
 proportion = 1
 python_type = "json"
 tags = ["type"]
+labels = {
+    "list": 1,
+    "dict": 1,
+    "complex": 1,
+}
 
 
 def _is(val):

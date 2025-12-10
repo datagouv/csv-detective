@@ -2,15 +2,15 @@ from csv_detective.parsing.text import _process_text
 
 proportion = 0.55
 tags = ["fr", "geo"]
-labels = [
-    "adresse",
-    "localisation",
-    "adresse postale",
-    "adresse geographique",
-    "adr",
-    "adresse complete",
-    "adresse station",
-]
+labels = {
+    "adresse": 1,
+    "localisation": 1,
+    "adresse postale": 1,
+    "adresse geographique": 1,
+    "adr": 0.5,
+    "adresse complete": 1,
+    "adresse station": 1,
+}
 
 voies = {
     "aire ",

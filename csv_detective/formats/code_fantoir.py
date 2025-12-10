@@ -3,11 +3,11 @@ from frformat import CodeFantoir
 proportion = 1
 tags = ["fr", "geo"]
 mandatory_label = True
-labels = [
-    "cadastre1",
-    "code fantoir",
-    "fantoir",
-]
+labels = {
+    "cadastre1": 1,
+    "code fantoir": 1,
+    "fantoir": 1,
+}
 
 _code_fantoir = CodeFantoir()
 

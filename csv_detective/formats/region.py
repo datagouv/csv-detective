@@ -2,19 +2,19 @@ from frformat import Millesime, Options, Region
 
 proportion = 1
 tags = ["fr", "geo"]
-labels = [
-    "region",
-    "libelle region",
-    "nom region",
-    "libelle reg",
-    "nom reg",
-    "reg libusage",
-    "nom de la region",
-    "regionorg",
-    "regionlieu",
-    "reg",
-    "nom officiel region",
-]
+labels = {
+    "region": 1,
+    "libelle region": 1,
+    "nom region": 1,
+    "libelle reg": 1,
+    "nom reg": 1,
+    "reg libusage": 1,
+    "nom de la region": 1,
+    "regionorg": 1,
+    "regionlieu": 1,
+    "reg": 0.5,
+    "nom officiel region": 1,
+}
 
 _extra_valid_values_set = frozenset(
     {

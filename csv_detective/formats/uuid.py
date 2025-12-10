@@ -1,7 +1,7 @@
 import re
 
 proportion = 0.8
-labels = ["id", "identifiant"]
+labels = {"id": 1, "identifiant": 1}
 
 
 def _is(val) -> bool:

@@ -3,13 +3,13 @@ from frformat import Millesime, NumeroDepartement, Options
 proportion = 1
 tags = ["fr", "geo"]
 mandatory_label = True
-labels = [
-    "code departement",
-    "code_departement",
-    "dep",
-    "departement",
-    "dept",
-]
+labels = {
+    "code departement": 1,
+    "code_departement": 1,
+    "dep": 0.5,
+    "departement": 1,
+    "dept": 0.75,
+}
 
 _options = Options(
     ignore_case=True,

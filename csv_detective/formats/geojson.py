@@ -3,16 +3,15 @@ import json
 proportion = 1
 tags = ["geo"]
 python_type = "json"
-labels = [
-    "json geojson",
-    "json",
-    "geojson",
-    "geo shape",
-    "geom",
-    "geometry",
-    "geo shape",
-    "geoshape",
-]
+labels = {
+    "json geojson": 1,
+    "json": 1,
+    "geojson": 1,
+    "geo shape": 1,
+    "geom": 0.75,
+    "geometry": 1,
+    "geoshape": 1,
+}
 
 
 def _is(val) -> bool:

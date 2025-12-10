@@ -2,19 +2,17 @@ from frformat import Millesime, Options, Pays
 
 proportion = 0.6
 tags = ["fr", "geo"]
-labels = [
-    "pays",
-    "payslieu",
-    "paysorg",
-    "country",
-    "pays lib",
-    "lieupays",
-    "pays beneficiaire",
-    "nom du pays",
-    "journey start country",
-    "libelle pays",
-    "journey end country",
-]
+labels = {
+    "pays": 1,
+    "payslieu": 1,
+    "paysorg": 1,
+    "country": 1,
+    "pays lib": 1,
+    "lieupays": 1,
+    "pays beneficiaire": 1,
+    "nom du pays": 1,
+    "libelle pays": 1,
+}
 
 _options = Options(
     ignore_case=True,

@@ -36,21 +36,19 @@ def is_word_in_string(word: str, string: str):
     return len(word) > 2 and word in string
 
 
-def header_score(header: str, words_combinations_list: list[str]) -> float:
+def header_score(header: str, valid_headers: dict[str, float]) -> float:
     """Returns:
-    - 1 if the header is exactly in the specified list
-    - 0.5 if any of the words is within the header
+    - the valid header's credibility if the header is exactly in the valid list
+    - 0.5*credibility if any of the words is within the valid list
     - 0 otherwise"""
     processed_header = _process_text(header)
 
-    header_matches_words_combination = float(
-        any(words_combination == processed_header for words_combination in words_combinations_list)
-    )
-    words_combination_in_header = 0.5 * (
-        any(
-            is_word_in_string(words_combination, processed_header)
-            for words_combination in words_combinations_list
-        )
+    header_matches_valid = max(
+        (valid == processed_header) * credibility
+        for valid, credibility in valid_headers.items()
     )
 
-    return max(header_matches_words_combination, words_combination_in_header)
+    return max(header_matches_valid, 0.5 * max(
+        is_word_in_string(valid, processed_header) * credibility
+        for valid, credibility in valid_headers.items()
+    ))

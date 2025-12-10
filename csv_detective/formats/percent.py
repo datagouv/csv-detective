@@ -1,7 +1,7 @@
 from csv_detective.formats.float import _is as is_float
 
 proportion = 0.8
-labels = []
+labels = {"pourcent": 1, "part": 0.75, "pct": 0.75}
 
 
 def _is(val):

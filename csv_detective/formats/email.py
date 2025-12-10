@@ -1,19 +1,19 @@
 import re
 
 proportion = 0.9
-labels = [
-    "email",
-    "mail",
-    "courriel",
-    "contact",
-    "mel",
-    "lieucourriel",
-    "coordinates.emailcontact",
-    "e mail",
-    "mo mail",
-    "adresse mail",
-    "adresse email",
-]
+labels = {
+    "email": 1,
+    "mail": 1,
+    "courriel": 1,
+    "contact": 1,
+    "mel": 1,
+    "lieucourriel": 1,
+    "coordinates.emailcontact": 1,
+    "e mail": 1,
+    "mo mail": 1,
+    "adresse mail": 1,
+    "adresse email": 1,
+}
 
 
 def _is(val):

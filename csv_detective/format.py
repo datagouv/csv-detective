@@ -9,7 +9,7 @@ class Format:
         name: str,
         func: Callable[[Any], bool],
         _test_values: dict[bool, list[str]],
-        labels: list[str] = [],
+        labels: dict[str, float] = {},
         proportion: float = 1,
         tags: list[str] = [],
         mandatory_label: bool = False,
@@ -22,14 +22,14 @@ class Format:
             name: the name of the format.
             func: the value test for the format (returns whether a string is valid).
             _test_values: lists of valid and invalid values, used in the tests
-            labels: the list of hint headers for the header score
+            labels: the dict of hint headers and their credibilty for the header score (NB: credibility is relative witin a single format, should be used to rank the valid labels)
             proportion: the tolerance (between 0 and 1) to say a column is valid for a format. (1 => 100% of the column has to pass the func check for the column to be considered valid)
             tags: to allow users to submit a file to only a subset of formats
         """
         self.name: str = name
         self.func: Callable = func
         self._test_values: dict[bool, list[str]] = _test_values
-        self.labels: list[str] = labels
+        self.labels: dict[str, float] = labels
         self.proportion: float = proportion
         self.tags: list[str] = tags
         self.mandatory_label: bool = mandatory_label

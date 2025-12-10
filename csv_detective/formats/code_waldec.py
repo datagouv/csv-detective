@@ -2,7 +2,7 @@ import re
 
 proportion = 0.9
 tags = ["fr"]
-labels = ["code waldec", "waldec"]
+labels = {"code waldec": 1, "waldec": 1}
 
 regex = r"^W\d[\dA-Z]\d{7}$"
 

@@ -5,36 +5,36 @@ proportion = 1
 tags = ["geo"]
 mandatory_label = True
 
-SHARED_COORDS_LABELS = [
-    "ban",
-    "coordinates",
-    "coordonnees",
-    "coordonnees insee",
-    "geo",
-    "geopoint",
-    "geoloc",
-    "geolocalisation",
-    "geom",
-    "geometry",
-    "gps",
-    "localisation",
-    "point",
-    "position",
-    "wgs84",
-]
+SHARED_COORDS_LABELS = {
+    "ban": 1,
+    "coordinates": 1,
+    "coordonnees": 1,
+    "coordonnees insee": 1,
+    "geo": 0.5,
+    "geopoint": 1,
+    "geoloc": 1,
+    "geolocalisation": 1,
+    "geom": 0.75,
+    "geometry": 1,
+    "gps": 1,
+    "localisation": 1,
+    "point": 1,
+    "position": 1,
+    "wgs84": 1,
+}
 
-specific = [
-    "latlon",
-    "lat lon",
-    "x y",
-    "xy",
-]
+specific = {
+    "latlon": 1,
+    "lat lon": 1,
+    "x y": 0.75,
+    "xy": 0.75,
+}
 
 # we aim wide to catch exact matches if possible for the highest possible score
 labels = (
     SHARED_COORDS_LABELS
-    + specific
-    + [w + sep + suf for suf in specific for w in SHARED_COORDS_LABELS for sep in ["", " "]]
+    | specific
+    | {w + sep + suf: 1 for suf in specific for w in SHARED_COORDS_LABELS for sep in ["", " "]}
 )
 
 

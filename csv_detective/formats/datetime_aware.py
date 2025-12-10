@@ -5,7 +5,7 @@ from csv_detective.formats.date import SHARED_DATE_LABELS, aaaammjj_pattern, dat
 proportion = 1
 tags = ["temp", "type"]
 python_type = "datetime"
-labels = SHARED_DATE_LABELS + ["datetime", "timestamp"]
+labels = SHARED_DATE_LABELS | {"datetime": 1, "timestamp": 1}
 
 threshold = 0.7
 pat = (
