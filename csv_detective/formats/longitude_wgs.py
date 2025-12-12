@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from csv_detective.formats.float import _is as is_float
 
 proportion = 1
@@ -29,12 +31,17 @@ labels = SHARED_LONGITUDE_LABELS | {
 
 def _is(val):
     try:
-        return is_float(val) and float(val) >= -180 and float(val) <= 180
+        return (
+            is_float(val)
+            and -180 <= float(val) <= 180
+            # we want at (the very) least two decimals
+            and Decimal(val).as_tuple().exponent < -1
+        )
     except Exception:
         return False
 
 
 _test_values = {
-    True: ["120", "-20.2"],
-    False: ["-200"],
+    True: ["120.8263", "-20.27", "31.00"],
+    False: ["-200", "20.2"],
 }

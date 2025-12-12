@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from csv_detective.formats.float import _is as is_float
 
 proportion = 1
@@ -26,12 +28,17 @@ labels = SHARED_LATITUDE_LABELS | {
 
 def _is(val):
     try:
-        return is_float(val) and float(val) >= -90 and float(val) <= 90
+        return (
+            is_float(val)
+            and -90 <= float(val) <= 90
+            # we want at (the very) least two decimals
+            and Decimal(val).as_tuple().exponent < -1
+        )
     except Exception:
         return False
 
 
 _test_values = {
-    True: ["43.2", "-22"],
-    False: ["100"],
+    True: ["43.2872", "-22.61", "31.00"],
+    False: ["100.1973", "40", "-21.2"],
 }
