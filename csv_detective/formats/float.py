@@ -3,7 +3,7 @@ import re
 proportion = 1
 tags = ["type"]
 python_type = "float"
-labels = ["part", "ratio", "taux"]
+labels = {"part": 1, "ratio": 1, "taux": 1}
 
 scientific_notation_pattern = r"\d+\.\d+[e|E][+|-]?\d+"
 

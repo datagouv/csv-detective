@@ -2,12 +2,12 @@ from frformat import Canton, Millesime, Options
 
 proportion = 0.9
 tags = ["fr", "geo"]
-labels = [
-    "insee canton",
-    "canton",
-    "cant",
-    "nom canton",
-]
+labels = {
+    "insee canton": 1,
+    "canton": 1,
+    "cant": 0.5,
+    "nom canton": 1,
+}
 
 _options = Options(
     ignore_case=True,

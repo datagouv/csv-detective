@@ -1,14 +1,14 @@
 proportion = 0.8
 tags = ["fr", "temp"]
-labels = [
-    "jour semaine",
-    "type jour",
-    "jour de la semaine",
-    "saufjour",
-    "nomjour",
-    "jour",
-    "jour de fermeture",
-]
+labels = {
+    "jour semaine": 1,
+    "type jour": 1,
+    "jour de la semaine": 1,
+    "saufjour": 1,
+    "nomjour": 1,
+    "jour": 0.75,
+    "jour de fermeture": 1,
+}
 
 jours = {
     "lundi",
@@ -31,11 +31,10 @@ jours = {
 def _is(val):
     if not isinstance(val, str):
         return False
-    val = val.lower()
-    return val in jours
+    return val.lower() in jours
 
 
 _test_values = {
     True: ["lundi"],
-    False: ["jour de la biere"],
+    False: ["jour"],
 }

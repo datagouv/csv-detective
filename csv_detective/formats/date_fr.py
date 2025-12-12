@@ -4,7 +4,7 @@ from csv_detective.parsing.text import _process_text
 
 proportion = 1
 tags = ["fr", "temp"]
-labels = ["date"]
+labels = {"date": 1}
 
 pattern = (
     r"^(0?[1-9]|[12][0-9]|3[01])[ \-/](janvier|fevrier|mars|avril|mai|juin|juillet|aout|septembre"

@@ -3,15 +3,14 @@ import re
 proportion = 0.8
 tags = ["fr"]
 mandatory_label = True
-labels = [
-    "siret",
-    "siret d",
-    "num siret",
-    "siretacheteur",
-    "n° siret",
-    "coll siret",
-    "epci",
-]
+labels = {
+    "siret": 1,
+    "num siret": 1,
+    "siretacheteur": 1,
+    "n° siret": 1,
+    "coll siret": 1,
+    "epci": 1,
+}
 
 
 def _is(val):

@@ -3,15 +3,15 @@ from frformat import CodePostal
 proportion = 0.9
 tags = ["fr", "geo"]
 mandatory_label = True
-labels = [
-    "code postal",
-    "postal code",
-    "postcode",
-    "post code",
-    "cp",
-    "codes postaux",
-    "location postcode",
-]
+labels = {
+    "code postal": 1,
+    "postal code": 1,
+    "postcode": 1,
+    "post code": 1,
+    "cp": 0.5,
+    "codes postaux": 1,
+    "location postcode": 1,
+}
 
 _code_postal = CodePostal()
 

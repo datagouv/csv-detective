@@ -3,7 +3,7 @@ import codecs
 proportion = 1
 tags = ["type"]
 python_type = "binary"
-labels = ["bytes", "binary", "image", "encode", "content"]
+labels = {"bytes": 1, "binary": 1, "image": 1, "encode": 1, "content": 1}
 
 
 def binary_casting(val: str) -> bytes:

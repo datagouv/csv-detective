@@ -1,22 +1,22 @@
 import re
 
 proportion = 1
-labels = [
-    "url",
-    "url source",
-    "site web",
-    "source url",
-    "site internet",
-    "remote url",
-    "web",
-    "site",
-    "lien",
-    "site data",
-    "lien url",
-    "lien vers le fichier",
-    "sitweb",
-    "interneturl",
-]
+labels = {
+    "url": 1,
+    "url source": 1,
+    "site web": 1,
+    "source url": 1,
+    "site internet": 1,
+    "remote url": 1,
+    "web": 1,
+    "site": 1,
+    "lien": 1,
+    "site data": 1,
+    "lien url": 1,
+    "lien vers le fichier": 1,
+    "sitweb": 1,
+    "interneturl": 1,
+}
 
 pattern = re.compile(
     r"^((https?|ftp)://|www\.)(([A-Za-z0-9-]+\.)+[A-Za-z]{2,6})"

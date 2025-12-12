@@ -2,24 +2,23 @@ import re
 
 proportion = 0.8
 tags = ["fr"]
-labels = [
-    "uai",
-    "code etablissement",
-    "code uai",
-    "uai - identifiant",
-    "numero uai",
-    "rne",
-    "numero de l'etablissement",
-    "code rne",
-    "codeetab",
-    "code uai de l'etablissement",
-    "ref uai",
-    "cd rne",
-    "numerouai",
-    "numero d etablissement",
-    "code etablissement",
-    "numero etablissement",
-]
+labels = {
+    "uai": 1,
+    "code etablissement": 1,
+    "code uai": 1,
+    "uai - identifiant": 1,
+    "numero uai": 1,
+    "rne": 0.75,
+    "numero de l'etablissement": 1,
+    "code rne": 1,
+    "codeetab": 1,
+    "code uai de l'etablissement": 1,
+    "ref uai": 1,
+    "cd rne": 1,
+    "numerouai": 1,
+    "numero d etablissement": 1,
+    "numero etablissement": 1,
+}
 
 
 def _is(val):

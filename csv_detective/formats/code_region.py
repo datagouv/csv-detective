@@ -3,12 +3,12 @@ from frformat import CodeRegion, Millesime
 proportion = 1
 tags = ["fr", "geo"]
 mandatory_label = True
-labels = [
-    "code region",
-    "reg",
-    "code insee region",
-    "region",
-]
+labels = {
+    "code region": 1,
+    "reg": 0.5,
+    "code insee region": 1,
+    "region": 1,
+}
 
 _code_region = CodeRegion(Millesime.LATEST)
 

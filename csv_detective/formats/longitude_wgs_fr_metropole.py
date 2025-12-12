@@ -1,30 +1,16 @@
 from csv_detective.formats.float import _is as is_float
+from csv_detective.formats.longitude_wgs import labels  # noqa
 
 proportion = 1
 tags = ["fr", "geo"]
 mandatory_label = True
 python_type = "float"
-labels = [
-    "longitude",
-    "lon",
-    "long",
-    "geocodage x gps",
-    "location longitude",
-    "xlongitude",
-    "lng",
-    "xlong",
-    "x",
-    "xf",
-    "xd",
-]
 
 
 def _is(val):
     try:
         return is_float(val) and float(val) >= -5.5 and float(val) <= 9.8
-    except ValueError:
-        return False
-    except OverflowError:
+    except Exception:
         return False
 
 

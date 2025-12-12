@@ -2,7 +2,7 @@ from unidecode import unidecode
 
 proportion = 1
 tags = ["fr", "temp"]
-labels = ["mois", "month"]
+labels = {"mois": 1, "month": 1}
 
 mois = {
     "janvier",

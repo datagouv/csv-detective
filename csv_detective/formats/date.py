@@ -8,23 +8,23 @@ from dateutil.parser import parse as dateutil_parser
 proportion = 1
 tags = ["temp", "type"]
 python_type = "date"
-SHARED_DATE_LABELS = [
-    "date",
-    "mise à jour",
-    "modifie",
-    "maj",
-    "datemaj",
-    "update",
-    "created",
-    "modified",
-]
-labels = SHARED_DATE_LABELS + [
-    "jour",
-    "periode",
-    "dpc",
-    "yyyymmdd",
-    "aaaammjj",
-]
+SHARED_DATE_LABELS = {
+    "date": 1,
+    "mise à jour": 1,
+    "modifie": 1,
+    "maj": 0.75,
+    "datemaj": 1,
+    "update": 1,
+    "created": 1,
+    "modified": 1,
+}
+labels = SHARED_DATE_LABELS | {
+    "jour": 0.75,
+    "periode": 0.75,
+    "dpc": 0.5,
+    "yyyymmdd": 1,
+    "aaaammjj": 1,
+}
 
 
 def date_casting(val: str) -> datetime | None:

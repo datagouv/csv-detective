@@ -15,9 +15,9 @@ def test_money_labels():
     "params",
     [
         ("latitude", 1.0),
-        ("lat", 1.0),
-        ("coord_lat", 0.5),
-        ("y", 1.0),
+        ("lat", 0.75),
+        ("coord_lat", 0.375),
+        ("y", 0.5),
         ("nb_cycles", 0.0),
     ],
 )

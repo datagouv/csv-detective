@@ -4,27 +4,33 @@ proportion = 1
 tags = ["geo"]
 mandatory_label = True
 python_type = "float"
-labels = [
-    "longitude",
-    "lon",
-    "long",
-    "geocodage x gps",
-    "location longitude",
-    "xlongitude",
-    "lng",
-    "xlong",
-    "x",
-    "xf",
-    "xd",
-]
+SHARED_LONGITUDE_LABELS = {
+    "longitude": 1,
+    "long": 0.75,
+    "lon": 0.75,
+    "lng": 0.5,
+    "x": 0.5,
+    "xf": 0.5,
+    "xd": 0.5,
+    "coordonnee x": 1,
+    "coord x": 1,
+    "xcoord": 1,
+    "xlon": 1,
+    "xlong": 1,
+}
+labels = SHARED_LONGITUDE_LABELS | {
+    "x gps": 1,
+    "longitude wgs84": 1,
+    "x wgs84": 1,
+    "wsg": 0.75,
+    "gps": 0.5,
+}
 
 
 def _is(val):
     try:
         return is_float(val) and float(val) >= -180 and float(val) <= 180
-    except ValueError:
-        return False
-    except OverflowError:
+    except Exception:
         return False
 
 

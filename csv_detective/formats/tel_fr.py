@@ -2,19 +2,13 @@ import re
 
 proportion = 0.7
 tags = ["fr"]
-labels = [
-    "telephone",
-    "tel",
-    "tel1",
-    "tel2",
-    "phone",
-    "num tel",
-    "tel mob",
-    "telephone sav",
-    "telephone1",
-    "coordinates.phone",
-    "telephone du lieu",
-]
+labels = {
+    "telephone": 1,
+    "tel": 1,
+    "phone": 1,
+    "num tel": 1,
+    "tel mob": 1,
+}
 
 
 def _is(val):
