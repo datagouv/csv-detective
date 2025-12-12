@@ -15,17 +15,16 @@ labels = {
 }
 
 with open(join(dirname(__file__), "data", "iso_country_code_alpha2.txt"), "r") as iofile:
-    liste_pays = iofile.read().split("\n")
-liste_pays = set(liste_pays)
+    liste_pays = set(iofile.read().split("\n"))
 
 
 def _is(val):
-    if not isinstance(val, str) or not bool(re.match(r"[A-Z]{2}$", val)):
+    if not isinstance(val, str) or not bool(re.match(r"[a-zA-Z]{2}$", val)):
         return False
-    return val in liste_pays
+    return val.upper() in liste_pays
 
 
 _test_values = {
-    True: ["FR"],
+    True: ["FR", "sj"],
     False: ["XX", "A", "FRA"],
 }
