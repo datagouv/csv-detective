@@ -1,5 +1,4 @@
-from csv_detective.formats.float import _is as is_float
-from csv_detective.formats.longitude_wgs import labels  # noqa
+from csv_detective.formats.longitude_wgs import _is as is_longitude, labels  # noqa
 
 proportion = 1
 tags = ["fr", "geo"]
@@ -9,12 +8,12 @@ python_type = "float"
 
 def _is(val):
     try:
-        return is_float(val) and float(val) >= -5.5 and float(val) <= 9.8
+        return is_longitude(val) and -5.5 <= float(val) <= 9.8
     except Exception:
         return False
 
 
 _test_values = {
-    True: ["-2.5"],
+    True: ["-2.01", "8.0"],
     False: ["12.8"],
 }

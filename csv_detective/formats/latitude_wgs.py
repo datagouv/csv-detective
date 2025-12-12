@@ -1,4 +1,5 @@
 from csv_detective.formats.float import _is as is_float
+from csv_detective.formats.int import _is as is_int
 
 proportion = 1
 tags = ["geo"]
@@ -26,12 +27,18 @@ labels = SHARED_LATITUDE_LABELS | {
 
 def _is(val):
     try:
-        return is_float(val) and float(val) >= -90 and float(val) <= 90
+        return (
+            is_float(val)
+            and -90 <= float(val) <= 90
+            # we ideally would like a certain level of decimal precision
+            # but 1.200 is saved as 1.2 in csv so we just discriminate ints
+            and not is_int(val)
+        )
     except Exception:
         return False
 
 
 _test_values = {
-    True: ["43.2", "-22"],
-    False: ["100"],
+    True: ["43.2872", "-22.61", "-3.0"],
+    False: ["100.1973", "40"],
 }
