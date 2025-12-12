@@ -416,7 +416,7 @@ def test_count_column(mocked_responses):
 def test_multiple_geo_columns(mocked_responses):
     lat, not_lat = "latitude_obj", "latin"
     lon, not_lon = "longitude_obj", "longueur"
-    expected_content = f"{lat},{lon},{not_lat},{not_lon}\n" + "1.00,-10.00,1.00,-10.00\n" * 10
+    expected_content = f"{lat},{lon},{not_lat},{not_lon}\n" + "1.0,-10.0,1.0,-10.0\n" * 10
     mocked_responses.get(
         "http://example.com/test.csv",
         body=expected_content,

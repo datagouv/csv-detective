@@ -1,6 +1,5 @@
-from decimal import Decimal
-
 from csv_detective.formats.float import _is as is_float
+from csv_detective.formats.int import _is as is_int
 
 proportion = 1
 tags = ["geo"]
@@ -31,14 +30,15 @@ def _is(val):
         return (
             is_float(val)
             and -90 <= float(val) <= 90
-            # we want at (the very) least two decimals
-            and Decimal(val).as_tuple().exponent < -1
+            # we ideally would like a certain level of decimal precision
+            # but 1.200 is saved as 1.2 in csv so we just discriminate ints
+            and not is_int(val)
         )
     except Exception:
         return False
 
 
 _test_values = {
-    True: ["43.2872", "-22.61", "31.00"],
-    False: ["100.1973", "40", "-21.2"],
+    True: ["43.2872", "-22.61", "-3.0"],
+    False: ["100.1973", "40"],
 }

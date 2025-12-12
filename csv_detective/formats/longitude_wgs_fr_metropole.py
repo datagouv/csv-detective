@@ -14,6 +14,6 @@ def _is(val):
 
 
 _test_values = {
-    True: ["-2.01"],
-    False: ["12.8", "-2.5"],
+    True: ["-2.01", "8.0"],
+    False: ["12.8"],
 }
