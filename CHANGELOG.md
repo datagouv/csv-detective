@@ -215,7 +215,7 @@ Details :
  * Push automatically new versions to PyPI
  * Use semantic versioning
 
-## 0.2 - [#1](https://github.com/etalab/csv_d-tective/pull/1)
+## 0.2 - [#1](https://github.com/etalab/csv-detective/pull/1)
 
 Port from python2 to python3
 
