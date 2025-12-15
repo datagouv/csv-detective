@@ -81,7 +81,11 @@ def create_profile(
             del cast_col
         # for all formats we want most frequent values, nb unique values and nb missing values
         tops_bruts = (
-            (table[c].value_counts() if _col_values is None else _col_values[c].sort_values())
+            (
+                table[c].value_counts()
+                if _col_values is None
+                else (s := _col_values[c]).loc[s.index.notna()].sort_values(ascending=False)
+            )
             .reset_index(name=_count_col)
             .iloc[:10]
             .to_dict(orient="records")
