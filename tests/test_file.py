@@ -392,8 +392,12 @@ def test_full_nan_column(mocked_responses):
         assert analysis["columns"][col_name]["format"] == "string"
 
 
-def test_count_column(mocked_responses):
-    expected_content = "count,_count\n" + "a,1\n" * 100
+@pytest.mark.parametrize(
+    "nb_rows",
+    (100, CHUNK_SIZE + 1),
+)
+def test_count_column(mocked_responses, nb_rows):
+    expected_content = "count,_count\n" + "a,1\n" * nb_rows
     mocked_responses.get(
         "http://example.com/test.csv",
         body=expected_content,
