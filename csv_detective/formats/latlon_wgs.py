@@ -10,6 +10,7 @@ SHARED_COORDS_LABELS = {
     "coordinates": 1,
     "coordonnees": 1,
     "coordonnees insee": 1,
+    "coord": 1,
     "geo": 0.5,
     "geopoint": 1,
     "geoloc": 1,
