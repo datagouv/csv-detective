@@ -19,6 +19,7 @@ def cast(value: str, _type: str) -> str | int | float | bool | date | datetime |
         return None
     match _type:
         case "string":
+            # not used here, convenience for external use (cc hydra)
             return value
         case "int":
             return int(value)
