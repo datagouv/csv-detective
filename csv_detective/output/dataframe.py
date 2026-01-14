@@ -13,11 +13,15 @@ from csv_detective.parsing.csv import CHUNK_SIZE
 from csv_detective.utils import display_logs_depending_process_time
 
 
-def cast(value: str, _type: str) -> str | float | bool | date | datetime | bytes | None:
+def cast(value: str, _type: str) -> str | int | float | bool | date | datetime | bytes | None:
     if not isinstance(value, str) or not value:
         # None is the current default value in hydra, should we keep this?
         return None
     match _type:
+        case "string":
+            return value
+        case "int":
+            return int(value)
         case "float":
             return float_casting(value)
         case "bool":
