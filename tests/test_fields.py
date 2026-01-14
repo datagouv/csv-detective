@@ -95,6 +95,8 @@ def test_fields_with_values(args):
 @pytest.mark.parametrize(
     "args",
     (
+        ("Valeur", "string", str),
+        ("-17", "int", int),
         ("1.9", "float", float),
         ("oui", "bool", bool),
         ("[1, 2]", "json", list),
