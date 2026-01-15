@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "csv-detective"
-version = "0.10.1.dev"
+version = "0.10.1"
 description = "Detect tabular files column content"
 authors = [{ name = "data.gouv.fr", email = "opendatateam@data.gouv.fr" }]
 dependencies = [

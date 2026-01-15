@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.10.1 (2026-01-15)
+
+- Add missing casting types ([#197](https://github.com/etalab/csv-detective/pull/197))
+- Fix `latlon` labels ([#195](https://github.com/etalab/csv-detective/pull/195))
+- Fix count in profile when chunking ([#196](https://github.com/etalab/csv-detective/pull/196))
+- Fix hint type ([#187](https://github.com/etalab/csv-detective/pull/187))
+- Fix references ([#194](https://github.com/etalab/csv-detective/pull/194))
+- Improve codes ISO alpha ([#192](https://github.com/etalab/csv-detective/pull/192))
+- Improve header score ([#190](https://github.com/etalab/csv-detective/pull/190))
+- Improve latitude and longitude detection ([#191](https://github.com/etalab/csv-detective/pull/191))
+- Less strict datetimes prefix ([#188](https://github.com/etalab/csv-detective/pull/188))
+- Move stuff to `Format`'s attributes ([#189](https://github.com/etalab/csv-detective/pull/189))
+- Update to version 0.10.1.dev for next development cycle
+
+
 ## 0.10.0 (2025-12-04)
 
 - Better email detection [#151](https://github.com/datagouv/csv-detective/pull/151)
