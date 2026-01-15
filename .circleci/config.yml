@@ -16,7 +16,7 @@ parameters:
 jobs:
   install:
     docker:
-      - image: cimg/python:<< pipeline.parameters.python-version >>
+      - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-bookworm
     steps:
       - checkout
       - run:
@@ -40,7 +40,7 @@ jobs:
 
   lint:
     docker:
-      - image: cimg/python:<< pipeline.parameters.python-version >>
+      - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-bookworm
     steps:
       - attach_workspace:
           at: .
@@ -55,7 +55,7 @@ jobs:
 
   tests:
     docker:
-      - image: cimg/python:<< pipeline.parameters.python-version >>
+      - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-bookworm
     steps:
       - attach_workspace:
           at: .
