@@ -1,10 +1,10 @@
 [build-system]
-requires = ["uv_build>=0.9.0,<0.10.0"]
-build-backend = "uv_build"
+requires = ["setuptools>=68", "wheel", "setuptools_scm"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "csv-detective"
-version = "0.10.1"
+dynamic = ["version"]
 description = "Detect tabular files column content"
 authors = [{ name = "data.gouv.fr", email = "opendatateam@data.gouv.fr" }]
 dependencies = [
@@ -49,6 +49,10 @@ where = ["."]
 
 [tool.setuptools.package-data]
 csv_detective = ["CHANGELOG.md", "LICENSE", "README.md"]
+
+[tool.setuptools_scm]
+version_scheme = "guess-next-dev"
+local_scheme = "no-local-version"
 
 [tool.ruff]
 lint = { extend-select = ["I"] } # ["I"] is to also sort imports with an isort rule

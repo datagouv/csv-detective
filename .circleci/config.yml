@@ -8,6 +8,7 @@ parameters:
   publish-branch:
     type: string
     default: "main"
+    description: "Branch to publish to PyPI and trigger the Gitlab CI/CD pipeline when pushed to"
   cache-prefix:
     type: string
     default: "py-cache"
@@ -15,7 +16,7 @@ parameters:
 jobs:
   install:
     docker:
-      - image: cimg/python:<< pipeline.parameters.python-version >>
+      - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-bookworm
     steps:
       - checkout
       - run:
@@ -39,7 +40,7 @@ jobs:
 
   lint:
     docker:
-      - image: cimg/python:<< pipeline.parameters.python-version >>
+      - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-bookworm
     steps:
       - attach_workspace:
           at: .
@@ -48,12 +49,13 @@ jobs:
           # ruff check . : check linting and imports sorting without fixing (to fix, use --fix)
           # ruff format --check . : check code formatting without fixing (to fix, remove --check)
           command: |
+            uv run ruff --version
             uv run ruff check --select I .
             uv run ruff format --check .
 
   tests:
     docker:
-      - image: cimg/python:<< pipeline.parameters.python-version >>
+      - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-bookworm
     steps:
       - attach_workspace:
           at: .
@@ -66,42 +68,52 @@ jobs:
 
   build:
     docker:
-      - image: cimg/python:<< pipeline.parameters.python-version >>
+      - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-bookworm  # needs git for setuptools_scm
     steps:
       - attach_workspace:
           at: .
       - run:
-          name: Build a distributable package
+          name: Install build tools
           command: |
-            uv pip install build twine
-            # Build a wheel release
-            if [[ $CIRCLE_TAG ]]; then
-                # This is a tagged release, version should be handled upstream
-                uv run python -m build --wheel
-            else
-                uv pip install toml
-                uv run python update_version.py
-                uv run python -m build --wheel
-            fi
-            uv run twine check dist/*
+            uv pip install setuptools-scm
+      - run:
+          name: Compute RELEASE_VERSION via setuptools_scm
+          command: |
+            # derive from setuptools_scm or base version + build number
+            RELEASE_VERSION=$(uv run python -m setuptools_scm)
+            echo "export RELEASE_VERSION=$RELEASE_VERSION" > version.sh
+            chmod +x version.sh
+      - run:
+          name: Display build info for debugging
+          command: |
+            source version.sh
+            echo "Building a wheel release with version $RELEASE_VERSION"
+            echo "Build number: $CIRCLE_BUILD_NUM"
+            echo "Commit hash: ${CIRCLE_SHA1:0:7}"
+            echo "Git tag: $CIRCLE_TAG"
+      - run:
+          name: Build a distributable package as a wheel release
+          command: |
+            uv build --wheel
+      # Build already executed above; artifacts are in dist/
       - store_artifacts:
           path: dist
       - persist_to_workspace:
           root: .
           paths:
             - .
+            - version.sh
 
   publish:
     docker:
-      - image: cimg/python:<< pipeline.parameters.python-version >>
+      - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-bookworm
     steps:
       - attach_workspace:
           at: .
       - run:
           name: Publish on PyPI
           command: |
-            uv pip install twine
-            uv run twine upload --username "${PYPI_USERNAME}" --password "${PYPI_PASSWORD}" dist/*.whl
+            uv publish --username "${PYPI_USERNAME}" --password "${PYPI_PASSWORD}" dist/*
 
 workflows:
   build-deploy-publish:
