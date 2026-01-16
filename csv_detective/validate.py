@@ -102,6 +102,12 @@ def validate(
         for col_name, args in previous_analysis["columns"].items():
             if verbose:
                 logging.info(f"- Testing {col_name} for {args['format']}")
+            if args["format"] not in formats:
+                if verbose:
+                    logging.warning(
+                        f"> Unknown format `{args['format']}`, proceeding with full analysis"
+                    )
+                return False, first_chunk, analysis, None
             if args["format"] == "string":
                 # no test for columns that have not been recognized as a specific format
                 continue
