@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.10.2 (2026-01-16)
+
+- Dynamic versionning ([#198](https://github.com/etalab/csv-detective/pull/198))
+- Fix `tag_version.py` script from template ([#199](https://github.com/etalab/csv-detective/pull/199))
+- Handle deprecated or unknown format in validation ([#200](https://github.com/etalab/csv-detective/pull/200))
+- Update lock ([#201](https://github.com/etalab/csv-detective/pull/201))
+
+
 ## 0.10.1 (2026-01-15)
 
 - Add missing casting types ([#197](https://github.com/etalab/csv-detective/pull/197))
