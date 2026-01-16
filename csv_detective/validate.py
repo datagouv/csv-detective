@@ -99,21 +99,21 @@ def validate(
                 chunk[col].value_counts(dropna=False),
                 fill_value=0,
             )
-        for col_name, args in previous_analysis["columns"].items():
+        for col_name, detected in previous_analysis["columns"].items():
             if verbose:
-                logging.info(f"- Testing {col_name} for {args['format']}")
-            if args["format"] not in formats:
-                if verbose:
-                    logging.warning(
-                        f"> Unknown format `{args['format']}`, proceeding with full analysis"
-                    )
-                return False, first_chunk, analysis, None
-            if args["format"] == "string":
+                logging.info(f"- Testing {col_name} for {detected['format']}")
+            if detected["format"] == "string":
                 # no test for columns that have not been recognized as a specific format
                 continue
+            if detected["format"] not in formats:
+                if verbose:
+                    logging.warning(
+                        f"> Unknown format `{detected['format']}`, proceeding with full analysis"
+                    )
+                return False, first_chunk, analysis, None
             test_result: float = test_col_val(
                 serie=chunk[col_name],
-                format=formats[args["format"]],
+                format=formats[detected["format"]],
                 skipna=skipna,
             )
             if not bool(test_result):
