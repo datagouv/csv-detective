@@ -5,8 +5,6 @@ from dateparser import parse as date_parser
 from dateutil.parser import ParserError
 from dateutil.parser import parse as dateutil_parser
 
-from csv_detective.formats.float import _is as is_float
-
 proportion = 1
 tags = ["temp", "type"]
 python_type = "date"
@@ -73,10 +71,13 @@ def _is(val):
         ]
     ):
         return True
+    if re.match(r"^-?\d+[\.|,]\d+$", val):
+        # regular floats are excluded
+        return False
+    # not enough digits => not a date (slightly arbitrary)
     if sum([char.isdigit() for char in val]) / len(val) < threshold:
         return False
-    if is_float(val):
-        return False
+    # last resort
     res = date_casting(val)
     if not res or res.hour or res.minute or res.second:
         return False
@@ -91,6 +92,7 @@ _test_values = {
         "15 décembre 1985",
         "02 05 2003",
         "20030502",
+        "2003.05.02",
         "1993-12/02",
     ],
     False: [
