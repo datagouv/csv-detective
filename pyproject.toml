@@ -28,7 +28,7 @@ license = { text = "MIT" }
 readme = "README.md"
 keywords = ["CSV", "data processing", "encoding", "guess", "parser", "tabular"]
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
     "pytest>=8.3.0",
     "responses>=0.25.0",
