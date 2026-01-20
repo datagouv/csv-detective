@@ -57,7 +57,9 @@ string_month_pattern = (
 
 
 def _is(val):
-    # early stops, to cut processing time
+    # many early stops, to cut processing time
+    # and avoid the costly use of date_casting as much as possible
+    # /!\ timestamps are considered ints, not dates
     if not isinstance(val, str) or len(val) > 20 or len(val) < 8:
         return False
     # if it's a usual date pattern
@@ -70,8 +72,13 @@ def _is(val):
         ]
     ):
         return True
+    if re.match(r"^-?\d+[\.|,]\d+$", val):
+        # regular floats are excluded
+        return False
+    # not enough digits => not a date (slightly arbitrary)
     if sum([char.isdigit() for char in val]) / len(val) < threshold:
         return False
+    # last resort
     res = date_casting(val)
     if not res or res.hour or res.minute or res.second:
         return False
@@ -86,6 +93,7 @@ _test_values = {
         "15 décembre 1985",
         "02 05 2003",
         "20030502",
+        "2003.05.02",
         "1993-12/02",
     ],
     False: [
@@ -96,5 +104,6 @@ _test_values = {
         "12152003",
         "20031512",
         "02052003",
+        "6.27367393749392839",
     ],
 }
