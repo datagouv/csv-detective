@@ -74,7 +74,7 @@ def validate(
         for k in range(len(previous_analysis["header"]))
     ):
         if verbose:
-            logging.warning("> Columns do not match, proceeding with full analysis")
+            logging.warning("> Columns in the file do not match those of the analysis")
         return False, None, None, None
     if verbose:
         logging.info(
@@ -108,7 +108,7 @@ def validate(
             if detected["format"] not in formats:
                 if verbose:
                     logging.warning(
-                        f"> Unknown format `{detected['format']}`, proceeding with full analysis"
+                        f"> Unknown format `{detected['format']}` in analysis"
                     )
                 return False, first_chunk, analysis, None
             test_result: float = test_col_val(
@@ -118,7 +118,7 @@ def validate(
             )
             if not bool(test_result):
                 if verbose:
-                    logging.warning("> Test failed, proceeding with full analysis")
+                    logging.warning(f"> Test failed for column {col_name} with format {detected['format']}")
                 return False, first_chunk, analysis, None
     if verbose:
         logging.info("> All checks successful")
