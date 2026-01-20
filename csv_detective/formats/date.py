@@ -59,7 +59,7 @@ string_month_pattern = (
 def _is(val):
     # many early stops, to cut processing time
     # and avoid the costly use of date_casting as much as possible
-    # /!\ timestamps are considered ints, not dates 
+    # /!\ timestamps are considered ints, not dates
     if not isinstance(val, str) or len(val) > 20 or len(val) < 8:
         return False
     # if it's a usual date pattern
