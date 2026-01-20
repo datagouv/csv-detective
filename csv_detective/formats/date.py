@@ -5,6 +5,8 @@ from dateparser import parse as date_parser
 from dateutil.parser import ParserError
 from dateutil.parser import parse as dateutil_parser
 
+from csv_detective.formats.float import _is as is_float
+
 proportion = 1
 tags = ["temp", "type"]
 python_type = "date"
@@ -57,7 +59,8 @@ string_month_pattern = (
 
 
 def _is(val):
-    # early stops, to cut processing time
+    # many early stops, to cut processing time
+    # and avoid the costly use of date_casting as much as possible
     if not isinstance(val, str) or len(val) > 20 or len(val) < 8:
         return False
     # if it's a usual date pattern
@@ -71,6 +74,8 @@ def _is(val):
     ):
         return True
     if sum([char.isdigit() for char in val]) / len(val) < threshold:
+        return False
+    if is_float(val):
         return False
     res = date_casting(val)
     if not res or res.hour or res.minute or res.second:
@@ -96,5 +101,6 @@ _test_values = {
         "12152003",
         "20031512",
         "02052003",
+        "6.27367393749392839",
     ],
 }
