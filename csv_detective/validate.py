@@ -18,7 +18,7 @@ def validate(
     skipna: bool = True,
 ) -> tuple[bool, pd.DataFrame | None, dict | None, dict[str, pd.Series] | None]:
     """
-    Verify is the given file has the same fields and types as in the given analysis.
+    Verify is the given file has the same fields and formats as in the given analysis.
 
     Args:
         file_path: the path of the file to validate
@@ -110,7 +110,7 @@ def validate(
                     logging.warning(
                         f"> Unknown format `{detected['format']}` in analysis"
                     )
-                return False, first_chunk, analysis, None
+                return False, None, None, None
             test_result: float = test_col_val(
                 serie=chunk[col_name],
                 format=formats[detected["format"]],
@@ -119,7 +119,7 @@ def validate(
             if not bool(test_result):
                 if verbose:
                     logging.warning(f"> Test failed for column {col_name} with format {detected['format']}")
-                return False, first_chunk, analysis, None
+                return False, None, None, None
     if verbose:
         logging.info("> All checks successful")
     analysis["nb_duplicates"] = sum(row_hashes_count > 1)
