@@ -23,7 +23,7 @@ def parse_excel(
     file_path: str,
     num_rows: int = -1,
     engine: str | None = None,
-    sheet_name: str | None = None,
+    sheet_name: str | int | None = None,
     random_state: int = 42,
     verbose: bool = False,
 ) -> tuple[pd.DataFrame, int, int, str, str, int]:
