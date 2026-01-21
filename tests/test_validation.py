@@ -26,12 +26,12 @@ def get_nested_value(source_dict: dict, key_chain: list[str]):
 @pytest.mark.parametrize(
     "_params",
     (
-        ((True, pd.DataFrame, dict), {}),
-        ((False, None, None), {"separator": "|"}),
-        ((False, None, None), {"encoding": "unknown"}),
-        ((False, None, None), {"header": ["a", "b"]}),
+        ((True, dict), {}),
+        ((False, None), {"separator": "|"}),
+        ((False, None), {"encoding": "unknown"}),
+        ((False, None), {"header": ["a", "b"]}),
         (
-            (False, pd.DataFrame, dict),
+            (False, None),
             {
                 "columns.NUMCOM": {
                     "python_type": "int",
@@ -43,31 +43,23 @@ def get_nested_value(source_dict: dict, key_chain: list[str]):
     ),
 )
 def test_validation(_params):
-    (should_be_valid, table_type, analysis_type), modif_previous_analysis = _params
+    (should_be_valid, analysis_type), modif_previous_analysis = _params
     with open("tests/data/a_test_file.json", "r") as f:
         previous_analysis = json.load(f)
     for dotkey in modif_previous_analysis:
         keys = dotkey.split(".")
         set_nested_value(previous_analysis, keys, modif_previous_analysis[dotkey])
-    is_valid, table, analysis, col_values = validate(
+    is_valid, analysis, col_values = validate(
         "tests/data/a_test_file.csv",
         previous_analysis=previous_analysis,
     )
     assert is_valid == should_be_valid
-    if table_type is None:
-        assert table is None
-    else:
-        assert isinstance(table, table_type)
     if analysis_type is None:
         assert analysis is None
     else:
         assert isinstance(analysis, analysis_type)
     if should_be_valid:
         assert isinstance(col_values, dict)
-        assert all(
-            col in table.columns and isinstance(values, pd.Series)
-            for col, values in col_values.items()
-        )
     else:
         assert col_values is None
 
