@@ -1,5 +1,5 @@
-from collections import defaultdict
 import logging
+from collections import defaultdict
 
 import pandas as pd
 
@@ -101,10 +101,14 @@ def validate(
             fill_value=0,
         )
         for col in chunk.columns:
-            col_values[col] = col_values[col].add(
-                chunk[col].value_counts(dropna=False),
-                fill_value=0,
-            ).rename_axis(col)  # rename_axis because *sometimes* pandas doesn't pass on the column's name ¯\_(ツ)_/¯
+            col_values[col] = (
+                col_values[col]
+                .add(
+                    chunk[col].value_counts(dropna=False),
+                    fill_value=0,
+                )
+                .rename_axis(col)
+            )  # rename_axis because *sometimes* pandas doesn't pass on the column's name ¯\_(ツ)_/¯
         for col_name, detected in previous_analysis["columns"].items():
             if verbose:
                 logging.info(f"- Testing {col_name} for {detected['format']}")
@@ -113,9 +117,7 @@ def validate(
                 continue
             if detected["format"] not in formats:
                 if verbose:
-                    logging.warning(
-                        f"> Unknown format `{detected['format']}` in analysis"
-                    )
+                    logging.warning(f"> Unknown format `{detected['format']}` in analysis")
                 return False, None, None
             test_result: float = test_col_val(
                 serie=chunk[col_name],
@@ -124,7 +126,9 @@ def validate(
             )
             if not bool(test_result):
                 if verbose:
-                    logging.warning(f"> Test failed for column {col_name} with format {detected['format']}")
+                    logging.warning(
+                        f"> Test failed for column {col_name} with format {detected['format']}"
+                    )
                 return False, None, None
         del chunk
     if verbose:
