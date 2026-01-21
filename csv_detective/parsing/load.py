@@ -1,3 +1,4 @@
+import codecs
 from io import BytesIO, StringIO
 
 import pandas as pd
@@ -69,12 +70,13 @@ def load_file(
             binary_file.seek(0)
         # decoding and reading file
         if is_url(file_path) or engine in COMPRESSION_ENGINES:
+            decoder = codecs.getincrementaldecoder(encoding)()
             str_file = StringIO()
             while True:
                 chunk = binary_file.read(1024**2)
                 if not chunk:
                     break
-                str_file.write(chunk.decode(encoding=encoding))
+                str_file.write(decoder.decode(chunk))
             del binary_file
             str_file.seek(0)
         else:
