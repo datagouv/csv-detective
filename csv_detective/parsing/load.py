@@ -28,12 +28,12 @@ def load_file(
     encoding: str | None = None,
     sep: str | None = None,
     verbose: bool = False,
+    engine: str | None = None,
     sheet_name: str | int | None = None,
 ) -> tuple[pd.DataFrame, dict]:
     file_name = file_path.split("/")[-1]
-    engine = None
-    if "." not in file_name or not file_name.endswith("csv"):
-        # file has no extension, we'll investigate how to read it
+    if ("." not in file_name or not file_name.endswith("csv")) and engine is None and sep is None:
+        # file has no extension and we don't have insights from arguments, we'll investigate how to read it
         engine = detect_engine(file_path, verbose=verbose)
 
     if engine in EXCEL_ENGINES or any([file_path.endswith(k) for k in XLS_LIKE_EXT]):

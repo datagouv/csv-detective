@@ -23,7 +23,7 @@ def create_profile(
         logging.info("Creating profile")
 
     if num_rows > 0:
-        raise ValueError("To create profiles num_rows has to be set to -1")
+        raise ValueError("To create profile `num_rows` must be set to -1")
     if not limited_output:
         columns = {
             k: v[0] if v else {"python_type": "string", "format": "string", "score": 1.0}

@@ -1,3 +1,4 @@
+from collections import defaultdict
 import logging
 
 import pandas as pd
@@ -5,6 +6,8 @@ import pandas as pd
 from csv_detective.format import FormatsManager
 from csv_detective.parsing.columns import MAX_NUMBER_CATEGORICAL_VALUES, test_col_val
 
+# VALIDATION_CHUNK_SIZE is bigger than (analysis) CHUNK_SIZE because
+# it's faster to validate so we can afford to load more rows
 VALIDATION_CHUNK_SIZE = int(1e5)
 logging.basicConfig(level=logging.INFO)
 
@@ -16,7 +19,7 @@ def validate(
     previous_analysis: dict,
     verbose: bool = False,
     skipna: bool = True,
-) -> tuple[bool, pd.DataFrame | None, dict | None, dict[str, pd.Series] | None]:
+) -> tuple[bool, dict | None, dict[str, pd.Series] | None]:
     """
     Verify is the given file has the same fields and formats as in the given analysis.
 
@@ -58,37 +61,40 @@ def validate(
                 ]
             )
             analysis = {k: v for k, v in previous_analysis.items() if k in ["engine", "sheet_name"]}
-        first_chunk = next(chunks)
         analysis.update(
             {k: v for k, v in previous_analysis.items() if k in ["header_row_idx", "header"]}
         )
     except Exception as e:
         if verbose:
             logging.warning(f"> Could not load the file with previous analysis values: {e}")
-        return False, None, None, None
+        return False, None, None
     if verbose:
         logging.info("Comparing table with the previous analysis")
-        logging.info("- Checking if all columns match")
-    if len(first_chunk.columns) != len(previous_analysis["header"]) or any(
-        list(first_chunk.columns)[k] != previous_analysis["header"][k]
-        for k in range(len(previous_analysis["header"]))
-    ):
-        if verbose:
-            logging.warning("> Columns in the file do not match those of the analysis")
-        return False, None, None, None
-    if verbose:
         logging.info(
             f"Testing previously detected formats on chunks of {VALIDATION_CHUNK_SIZE} rows"
         )
 
-    # hashing rows to get nb_duplicates
-    row_hashes_count = pd.util.hash_pandas_object(first_chunk, index=False).value_counts()
-    # getting values for profile to read the file only once
-    col_values = {col: first_chunk[col].value_counts(dropna=False) for col in first_chunk.columns}
+    # will contain hashes of each row of the file as index and the number of times
+    # each hash was seen as values; used to compute nb_duplicates
+    row_hashes_count = pd.Series()
+    # will contain the number of times each value of each column is seen in the whole file
+    # used for profile to read the file only once
+    # naming it "count" to be iso with how col_values are made in detect_formats
+    col_values: defaultdict[str, pd.Series] = defaultdict(lambda: pd.Series(name="count"))
     analysis["total_lines"] = 0
-    for idx, chunk in enumerate([first_chunk, *chunks]):
+    for idx, chunk in enumerate(chunks):
         if verbose:
             logging.info(f"> Testing chunk number {idx}")
+        if idx == 0:
+            if verbose:
+                logging.info("- Checking if all columns match")
+            if len(chunk.columns) != len(previous_analysis["header"]) or any(
+                list(chunk.columns)[k] != previous_analysis["header"][k]
+                for k in range(len(previous_analysis["header"]))
+            ):
+                if verbose:
+                    logging.warning("> Columns in the file do not match those of the analysis")
+                return False, None, None
         analysis["total_lines"] += len(chunk)
         row_hashes_count = row_hashes_count.add(
             pd.util.hash_pandas_object(chunk, index=False).value_counts(),
@@ -98,7 +104,7 @@ def validate(
             col_values[col] = col_values[col].add(
                 chunk[col].value_counts(dropna=False),
                 fill_value=0,
-            )
+            ).rename_axis(col)  # rename_axis because *sometimes* pandas doesn't pass on the column's name ¯\_(ツ)_/¯
         for col_name, detected in previous_analysis["columns"].items():
             if verbose:
                 logging.info(f"- Testing {col_name} for {detected['format']}")
@@ -110,7 +116,7 @@ def validate(
                     logging.warning(
                         f"> Unknown format `{detected['format']}` in analysis"
                     )
-                return False, None, None, None
+                return False, None, None
             test_result: float = test_col_val(
                 serie=chunk[col_name],
                 format=formats[detected["format"]],
@@ -119,16 +125,17 @@ def validate(
             if not bool(test_result):
                 if verbose:
                     logging.warning(f"> Test failed for column {col_name} with format {detected['format']}")
-                return False, None, None, None
+                return False, None, None
+        del chunk
     if verbose:
         logging.info("> All checks successful")
     analysis["nb_duplicates"] = sum(row_hashes_count > 1)
+    del row_hashes_count
     analysis["categorical"] = [
         col for col, values in col_values.items() if len(values) <= MAX_NUMBER_CATEGORICAL_VALUES
     ]
     return (
         True,
-        first_chunk,
         analysis
         | {
             k: previous_analysis[k]
