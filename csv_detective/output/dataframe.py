@@ -14,8 +14,8 @@ from csv_detective.utils import display_logs_depending_process_time
 
 
 def cast(value: str, _type: str) -> str | int | float | bool | date | datetime | bytes | None:
-    if not isinstance(value, str) or not value:
-        # None is the current default value in hydra, should we keep this?
+    if not isinstance(value, str) or value in pd._libs.parsers.STR_NA_VALUES:
+        # STR_NA_VALUES are directly ingested as NaN by pandas, we avoid trying to cast them (into int for instance)
         return None
     match _type:
         case "string":
