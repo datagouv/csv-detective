@@ -166,7 +166,7 @@ def validate_then_detect(
         )
     else:
         # successful validation means we have a correct analysis and col_values
-        # only need to reload the table, and we already know how
+        # only need to reload the table (in case file is fully loaded), and we already know how
         table, _ = load_file(
             file_path=file_path,
             num_rows=num_rows,
