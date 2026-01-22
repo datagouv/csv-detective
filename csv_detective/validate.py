@@ -139,7 +139,6 @@ def validate(
         del chunk
     # finally we loop through the formats that accept less than 100% valid values to check the proportion
     for col_name, detected in previous_analysis["columns"].items():
-        print(col_name, checked_values[col_name], valid_values[col_name])
         if (
             checked_values[col_name] > 0
             and valid_values[col_name] / checked_values[col_name] < formats[detected["format"]].proportion
