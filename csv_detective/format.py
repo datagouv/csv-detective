@@ -27,7 +27,7 @@ class Format:
             tags: to allow users to submit a file to only a subset of formats
         """
         self.name: str = name
-        self.func: Callable = func
+        self.func: Callable[[Any], bool] = func
         self._test_values: dict[bool, list[str]] = _test_values
         self.labels: dict[str, float] = labels
         self.proportion: float = proportion
