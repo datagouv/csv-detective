@@ -2,7 +2,7 @@ import pandas as pd
 
 
 def remove_empty_first_rows(table: pd.DataFrame) -> tuple[pd.DataFrame, int]:
-    """Analog process to detect_headers for csv files, determines how many rows to skip
+    """Analog process to detect_header_position for csv files, determines how many rows to skip
     to end up with the header at the right place"""
     idx = 0
     if all([str(c).startswith("Unnamed:") for c in table.columns]):
