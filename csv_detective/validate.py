@@ -29,6 +29,15 @@ def validate(
         verbose: whether the code displays the steps it's going through
         skipna: whether to ignore NaN values in the checks
     """
+    if verbose:
+        logging.info(f"Checking given formats exist")
+    for col_name, detected in previous_analysis["columns"].items():
+        if detected["format"] == "string":
+            continue
+        elif detected["format"] not in formats:
+            if verbose:
+                logging.warning(f"> Unknown format `{detected['format']}` in analysis")
+            return False, None, None
     try:
         if previous_analysis.get("separator"):
             # loading the table in chunks
@@ -82,12 +91,14 @@ def validate(
     # naming it "count" to be iso with how col_values are made in detect_formats
     col_values: defaultdict[str, pd.Series] = defaultdict(lambda: pd.Series(name="count"))
     analysis["total_lines"] = 0
+    checked_values: dict[str, int] = {col_name: 0 for col_name in previous_analysis["columns"]}
+    valid_values: dict[str, int] = {col_name: 0 for col_name in previous_analysis["columns"]}
     for idx, chunk in enumerate(chunks):
         if verbose:
-            logging.info(f"> Testing chunk number {idx}")
+            logging.info(f"- Testing chunk number {idx}")
         if idx == 0:
             if verbose:
-                logging.info("- Checking if all columns match")
+                logging.info("Checking if all columns match")
             if len(chunk.columns) != len(previous_analysis["header"]) or any(
                 list(chunk.columns)[k] != previous_analysis["header"][k]
                 for k in range(len(previous_analysis["header"]))
@@ -100,37 +111,44 @@ def validate(
             pd.util.hash_pandas_object(chunk, index=False).value_counts(),
             fill_value=0,
         )
-        for col in chunk.columns:
-            col_values[col] = (
-                col_values[col]
-                .add(
-                    chunk[col].value_counts(dropna=False),
-                    fill_value=0,
-                )
-                .rename_axis(col)
-            )  # rename_axis because *sometimes* pandas doesn't pass on the column's name ¯\_(ツ)_/¯
         for col_name, detected in previous_analysis["columns"].items():
             if verbose:
                 logging.info(f"- Testing {col_name} for {detected['format']}")
             if detected["format"] == "string":
                 # no test for columns that have not been recognized as a specific format
                 continue
-            if detected["format"] not in formats:
-                if verbose:
-                    logging.warning(f"> Unknown format `{detected['format']}` in analysis")
-                return False, None, None
-            test_result: float = test_col_val(
-                serie=chunk[col_name],
-                format=formats[detected["format"]],
-                skipna=skipna,
-            )
-            if not bool(test_result):
+            to_check = chunk[col_name].dropna() if skipna else chunk[col_name]
+            chunk_valid_values = sum(to_check.apply(formats[detected["format"]].func))
+            if formats[detected["format"]].proportion == 1 and chunk_valid_values < len(to_check):
+                # we can early stop in this case, not all values are valid while we want 100%
                 if verbose:
                     logging.warning(
                         f"> Test failed for column {col_name} with format {detected['format']}"
                     )
                 return False, None, None
+            checked_values[col_name] += len(to_check)
+            valid_values[col_name] += chunk_valid_values
+            col_values[col_name] = (
+                col_values[col_name]
+                .add(
+                    chunk[col_name].value_counts(dropna=False),
+                    fill_value=0,
+                )
+                .rename_axis(col_name)
+            )  # rename_axis because *sometimes* pandas doesn't pass on the column's name ¯\_(ツ)_/¯
         del chunk
+    # finally we loop through the formats that accept less than 100% valid values to check the proportion
+    for col_name, detected in previous_analysis["columns"].items():
+        print(col_name, checked_values[col_name], valid_values[col_name])
+        if (
+            checked_values[col_name] > 0
+            and valid_values[col_name] / checked_values[col_name] < formats[detected["format"]].proportion
+        ):
+            if verbose:
+                logging.warning(
+                    f"> Test failed for column {col_name} with format {detected['format']}"
+                )
+            return False, None, None
     if verbose:
         logging.info("> All checks successful")
     analysis["nb_duplicates"] = sum(row_hashes_count > 1)
