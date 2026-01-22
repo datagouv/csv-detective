@@ -9,6 +9,12 @@ from csv_detective.output.profile import create_profile
 from csv_detective.parsing.csv import CHUNK_SIZE
 
 
+@pytest.fixture
+def mocked_responses():
+    with responses.RequestsMock() as rsps:
+        yield rsps
+
+
 @pytest.mark.parametrize(
     "chunk_size",
     (100, 404, int(1e5)),
@@ -165,6 +171,26 @@ def test_exception_different_number_of_columns():
         )
 
 
+def test_exception_malformed_columns(mocked_responses):
+    """
+    A ValueError should be raised if any column is Unnamed
+    """
+    url = f"http://example.com/bad_cols.csv"
+    expected_content = b"col1,col2,\n1,2,\n3,4,"
+    mocked_responses.get(
+        url,
+        body=expected_content,
+        status=200,
+    )
+    with patch("urllib.request.urlopen") as mock_urlopen:
+        mock_response = MagicMock()
+        mock_response.read.return_value = expected_content
+        mock_response.__enter__.return_value = mock_response
+        mock_urlopen.return_value = mock_response
+        with pytest.raises(ValueError):
+            routine(file_path=url)
+
+
 def test_code_dep_reg_on_file():
     output = routine(
         file_path="tests/data/b_test_file.csv",
@@ -235,12 +261,6 @@ def test_non_csv_files(params):
             assert eval(func)(_[key]) == v
         else:
             assert _[k] == v
-
-
-@pytest.fixture
-def mocked_responses():
-    with responses.RequestsMock() as rsps:
-        yield rsps
 
 
 @pytest.mark.parametrize(
