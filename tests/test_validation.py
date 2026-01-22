@@ -71,10 +71,20 @@ def test_validation(_params):
         # int: proportion = 1, should fail (early)
         ("12", "1.2", {"python_type": "int", "format": "int", "score": 1.5}, False),
         # siren: proportion = 0.9, should fail (later)
-        ("130025265", "A13794BC", {"python_type": "string", "format": "siren", "score": 1.5}, False),
+        (
+            "130025265",
+            "A13794BC",
+            {"python_type": "string", "format": "siren", "score": 1.5},
+            False,
+        ),
         # siret: proportion = 0.8, should succeed
-        ("13002526500013", "A13794BC", {"python_type": "string", "format": "siret", "score": 1.5}, True),
-    )
+        (
+            "13002526500013",
+            "A13794BC",
+            {"python_type": "string", "format": "siret", "score": 1.5},
+            True,
+        ),
+    ),
 )
 def test_validation_with_proportions(_params):
     # testing the behaviour for a file that has 15% invalid values, but all in a single chunk
@@ -101,7 +111,7 @@ def test_validation_with_proportions(_params):
         "columns_fields": {},
         "columns_labels": {},
         "formats": {},
-}
+    }
     with (
         patch("urllib.request.urlopen") as mock_urlopen,
         patch("csv_detective.validate.VALIDATION_CHUNK_SIZE", 10),

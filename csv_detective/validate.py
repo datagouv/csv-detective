@@ -141,7 +141,8 @@ def validate(
     for col_name, detected in previous_analysis["columns"].items():
         if (
             checked_values[col_name] > 0
-            and valid_values[col_name] / checked_values[col_name] < formats[detected["format"]].proportion
+            and valid_values[col_name] / checked_values[col_name]
+            < formats[detected["format"]].proportion
         ):
             if verbose:
                 logging.warning(
