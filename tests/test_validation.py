@@ -1,4 +1,5 @@
 import json
+from unittest.mock import MagicMock, patch
 
 import pandas as pd
 import pytest
@@ -62,6 +63,58 @@ def test_validation(_params):
         assert isinstance(col_values, dict)
     else:
         assert col_values is None
+
+
+@pytest.mark.parametrize(
+    "_params",
+    (
+        # int: proportion = 1, should fail (early)
+        ("12", "1.2", {"python_type": "int", "format": "int", "score": 1.5}, False),
+        # siren: proportion = 0.9, should fail (later)
+        ("130025265", "A13794BC", {"python_type": "string", "format": "siren", "score": 1.5}, False),
+        # siret: proportion = 0.8, should succeed
+        ("13002526500013", "A13794BC", {"python_type": "string", "format": "siret", "score": 1.5}, True),
+    )
+)
+def test_validation_with_proportions(_params):
+    # testing the behaviour for a file that has 15% invalid values, but all in a single chunk
+    valid_value, invalid_value, detected, should_be_valid = _params
+    url = f"http://example.com/test.csv"
+    expected_content = "col\n"
+    for _ in range(60):
+        # 60 rows of valid values
+        expected_content += f"{valid_value}\n"
+    for _ in range(15):
+        # 15 rows of invalid values
+        expected_content += f"{invalid_value}\n"
+    for _ in range(25):
+        # 25 rows of valid values
+        expected_content += f"{valid_value}\n"
+    previous_analysis = {
+        "encoding": "utf-8",
+        "separator": ",",
+        "header_row_idx": 0,
+        "header": ["col"],
+        "columns": {"col": detected},
+        # just setting these keys when validation is successful, they're not used for the validation itself
+        "categorical": [],
+        "columns_fields": {},
+        "columns_labels": {},
+        "formats": {},
+}
+    with (
+        patch("urllib.request.urlopen") as mock_urlopen,
+        patch("csv_detective.validate.VALIDATION_CHUNK_SIZE", 10),
+    ):
+        mock_response = MagicMock()
+        mock_response.read.return_value = expected_content.encode("utf-8")
+        mock_response.__enter__.return_value = mock_response
+        mock_urlopen.return_value = mock_response
+        is_valid, *_ = validate(
+            file_path=url,
+            previous_analysis=previous_analysis,
+        )
+    assert is_valid == should_be_valid
 
 
 @pytest.mark.parametrize(
