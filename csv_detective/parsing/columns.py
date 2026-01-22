@@ -33,7 +33,7 @@ def test_col_val(
 
     try:
         if skipna:
-            serie = serie.loc[serie.notnull()]
+            serie = serie.dropna()
         ser_len = len(serie)
         if ser_len == 0:
             # being here means the whole column is NaN, so if skipna it's a pass
