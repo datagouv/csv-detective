@@ -1,10 +1,13 @@
 import logging
+from collections import defaultdict
 
 import pandas as pd
 
 from csv_detective.format import FormatsManager
 from csv_detective.parsing.columns import MAX_NUMBER_CATEGORICAL_VALUES, test_col_val
 
+# VALIDATION_CHUNK_SIZE is bigger than (analysis) CHUNK_SIZE because
+# it's faster to validate so we can afford to load more rows
 VALIDATION_CHUNK_SIZE = int(1e5)
 logging.basicConfig(level=logging.INFO)
 
@@ -16,9 +19,9 @@ def validate(
     previous_analysis: dict,
     verbose: bool = False,
     skipna: bool = True,
-) -> tuple[bool, pd.DataFrame | None, dict | None, dict[str, pd.Series] | None]:
+) -> tuple[bool, dict | None, dict[str, pd.Series] | None]:
     """
-    Verify is the given file has the same fields and types as in the given analysis.
+    Verify is the given file has the same fields and formats as in the given analysis.
 
     Args:
         file_path: the path of the file to validate
@@ -26,6 +29,15 @@ def validate(
         verbose: whether the code displays the steps it's going through
         skipna: whether to ignore NaN values in the checks
     """
+    if verbose:
+        logging.info(f"Checking given formats exist")
+    for col_name, detected in previous_analysis["columns"].items():
+        if detected["format"] == "string":
+            continue
+        elif detected["format"] not in formats:
+            if verbose:
+                logging.warning(f"> Unknown format `{detected['format']}` in analysis")
+            return False, None, None
     try:
         if previous_analysis.get("separator"):
             # loading the table in chunks
@@ -58,77 +70,94 @@ def validate(
                 ]
             )
             analysis = {k: v for k, v in previous_analysis.items() if k in ["engine", "sheet_name"]}
-        first_chunk = next(chunks)
         analysis.update(
             {k: v for k, v in previous_analysis.items() if k in ["header_row_idx", "header"]}
         )
     except Exception as e:
         if verbose:
             logging.warning(f"> Could not load the file with previous analysis values: {e}")
-        return False, None, None, None
+        return False, None, None
     if verbose:
         logging.info("Comparing table with the previous analysis")
-        logging.info("- Checking if all columns match")
-    if len(first_chunk.columns) != len(previous_analysis["header"]) or any(
-        list(first_chunk.columns)[k] != previous_analysis["header"][k]
-        for k in range(len(previous_analysis["header"]))
-    ):
-        if verbose:
-            logging.warning("> Columns do not match, proceeding with full analysis")
-        return False, None, None, None
-    if verbose:
         logging.info(
             f"Testing previously detected formats on chunks of {VALIDATION_CHUNK_SIZE} rows"
         )
 
-    # hashing rows to get nb_duplicates
-    row_hashes_count = pd.util.hash_pandas_object(first_chunk, index=False).value_counts()
-    # getting values for profile to read the file only once
-    col_values = {col: first_chunk[col].value_counts(dropna=False) for col in first_chunk.columns}
+    # will contain hashes of each row of the file as index and the number of times
+    # each hash was seen as values; used to compute nb_duplicates
+    row_hashes_count = pd.Series()
+    # will contain the number of times each value of each column is seen in the whole file
+    # used for profile to read the file only once
+    # naming it "count" to be iso with how col_values are made in detect_formats
+    col_values: defaultdict[str, pd.Series] = defaultdict(lambda: pd.Series(name="count"))
     analysis["total_lines"] = 0
-    for idx, chunk in enumerate([first_chunk, *chunks]):
+    checked_values: dict[str, int] = {col_name: 0 for col_name in previous_analysis["columns"]}
+    valid_values: dict[str, int] = {col_name: 0 for col_name in previous_analysis["columns"]}
+    for idx, chunk in enumerate(chunks):
         if verbose:
-            logging.info(f"> Testing chunk number {idx}")
+            logging.info(f"- Testing chunk number {idx}")
+        if idx == 0:
+            if verbose:
+                logging.info("Checking if all columns match")
+            if len(chunk.columns) != len(previous_analysis["header"]) or any(
+                list(chunk.columns)[k] != previous_analysis["header"][k]
+                for k in range(len(previous_analysis["header"]))
+            ):
+                if verbose:
+                    logging.warning("> Columns in the file do not match those of the analysis")
+                return False, None, None
         analysis["total_lines"] += len(chunk)
         row_hashes_count = row_hashes_count.add(
             pd.util.hash_pandas_object(chunk, index=False).value_counts(),
             fill_value=0,
         )
-        for col in chunk.columns:
-            col_values[col] = col_values[col].add(
-                chunk[col].value_counts(dropna=False),
-                fill_value=0,
-            )
         for col_name, detected in previous_analysis["columns"].items():
             if verbose:
                 logging.info(f"- Testing {col_name} for {detected['format']}")
             if detected["format"] == "string":
                 # no test for columns that have not been recognized as a specific format
                 continue
-            if detected["format"] not in formats:
+            to_check = chunk[col_name].dropna() if skipna else chunk[col_name]
+            chunk_valid_values = sum(to_check.apply(formats[detected["format"]].func))
+            if formats[detected["format"]].proportion == 1 and chunk_valid_values < len(to_check):
+                # we can early stop in this case, not all values are valid while we want 100%
                 if verbose:
                     logging.warning(
-                        f"> Unknown format `{detected['format']}`, proceeding with full analysis"
+                        f"> Test failed for column {col_name} with format {detected['format']}"
                     )
-                return False, first_chunk, analysis, None
-            test_result: float = test_col_val(
-                serie=chunk[col_name],
-                format=formats[detected["format"]],
-                skipna=skipna,
-            )
-            if not bool(test_result):
-                if verbose:
-                    logging.warning("> Test failed, proceeding with full analysis")
-                return False, first_chunk, analysis, None
+                return False, None, None
+            checked_values[col_name] += len(to_check)
+            valid_values[col_name] += chunk_valid_values
+            col_values[col_name] = (
+                col_values[col_name]
+                .add(
+                    chunk[col_name].value_counts(dropna=False),
+                    fill_value=0,
+                )
+                .rename_axis(col_name)
+            )  # rename_axis because *sometimes* pandas doesn't pass on the column's name ¯\_(ツ)_/¯
+        del chunk
+    # finally we loop through the formats that accept less than 100% valid values to check the proportion
+    for col_name, detected in previous_analysis["columns"].items():
+        if (
+            checked_values[col_name] > 0
+            and valid_values[col_name] / checked_values[col_name]
+            < formats[detected["format"]].proportion
+        ):
+            if verbose:
+                logging.warning(
+                    f"> Test failed for column {col_name} with format {detected['format']}"
+                )
+            return False, None, None
     if verbose:
         logging.info("> All checks successful")
     analysis["nb_duplicates"] = sum(row_hashes_count > 1)
+    del row_hashes_count
     analysis["categorical"] = [
         col for col, values in col_values.items() if len(values) <= MAX_NUMBER_CATEGORICAL_VALUES
     ]
     return (
         True,
-        first_chunk,
         analysis
         | {
             k: previous_analysis[k]

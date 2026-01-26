@@ -142,20 +142,19 @@ def validate_then_detect(
         if is_url(file_path):
             logging.info("Path recognized as a URL")
 
-    is_valid, table, analysis, col_values = validate(
+    is_valid, analysis, col_values = validate(
         file_path=file_path,
         previous_analysis=previous_analysis,
         verbose=verbose,
         skipna=skipna,
     )
-    if analysis is None:
-        # if loading failed in validate, we load it from scratch
+    if not is_valid:
+        # if loading failed in validate, we load it from scratch and initiate an analysis
         table, analysis = load_file(
             file_path=file_path,
             num_rows=num_rows,
             verbose=verbose,
         )
-    if not is_valid:
         analysis, col_values = detect_formats(
             table=table,
             analysis=analysis,
@@ -164,6 +163,18 @@ def validate_then_detect(
             limited_output=limited_output,
             skipna=skipna,
             verbose=verbose,
+        )
+    else:
+        # successful validation means we have a correct analysis and col_values
+        # only need to reload the table, and we already know how
+        table, _ = load_file(
+            file_path=file_path,
+            num_rows=num_rows,
+            verbose=verbose,
+            sep=analysis.get("separator"),
+            encoding=analysis.get("encoding"),
+            engine=analysis.get("engine"),
+            sheet_name=analysis.get("sheet_name"),
         )
     try:
         return generate_output(
