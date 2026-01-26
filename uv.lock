@@ -134,7 +134,7 @@ dependencies = [
     { name = "xlrd" },
 ]
 
-[package.optional-dependencies]
+[package.dev-dependencies]
 dev = [
     { name = "pytest" },
     { name = "responses" },
@@ -151,17 +151,20 @@ requires-dist = [
     { name = "odfpy", specifier = ">=1.4.1" },
     { name = "openpyxl", specifier = ">=3.1.5" },
     { name = "pandas", specifier = ">=2.2.0,<3" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.3.0" },
     { name = "python-dateutil", specifier = ">=2.8.2,<3" },
     { name = "python-magic", specifier = ">=0.4.27" },
     { name = "requests", specifier = ">=2.32.3,<3" },
-    { name = "responses", marker = "extra == 'dev'", specifier = ">=0.25.0" },
     { name = "rstr", specifier = ">=3.2.2" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.9.3" },
     { name = "unidecode", specifier = ">=1.3.6,<2" },
     { name = "xlrd", specifier = ">=2.0.1" },
 ]
-provides-extras = ["dev"]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "pytest", specifier = ">=8.3.0" },
+    { name = "responses", specifier = ">=0.25.0" },
+    { name = "ruff", specifier = ">=0.9.3" },
+]
 
 [[package]]
 name = "dateparser"
