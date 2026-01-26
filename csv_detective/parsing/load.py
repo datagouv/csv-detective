@@ -11,7 +11,7 @@ from csv_detective.detection.engine import (
     EXCEL_ENGINES,
     detect_engine,
 )
-from csv_detective.detection.headers import detect_headers
+from csv_detective.detection.headers import detect_header_position
 from csv_detective.detection.separator import detect_separator
 from csv_detective.parsing.compression import unzip
 from csv_detective.parsing.csv import parse_csv
@@ -83,9 +83,7 @@ def load_file(
             str_file = open(file_path, "r", encoding=encoding)
         if sep is None:
             sep = detect_separator(str_file, verbose=verbose)
-        header_row_idx, header = detect_headers(str_file, sep, verbose=verbose)
-        if header is None or (isinstance(header, list) and any([h is None for h in header])):
-            raise ValueError("Could not retrieve headers")
+        header_row_idx = detect_header_position(str_file, verbose=verbose)
         heading_columns = detect_heading_columns(str_file, sep, verbose=verbose)
         trailing_columns = detect_trailing_columns(str_file, sep, heading_columns, verbose=verbose)
         table, total_lines, nb_duplicates = parse_csv(
@@ -102,9 +100,11 @@ def load_file(
         }
         if engine is not None:
             analysis["compression"] = engine
+    if any(col.startswith("Unnamed:") for col in table.columns):
+        raise ValueError("Columns are not properly set")
     analysis |= {
         "header_row_idx": header_row_idx,
-        "header": header,
+        "header": list(table.columns),
     }
     if total_lines is not None:
         analysis["total_lines"] = total_lines
