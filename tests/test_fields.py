@@ -104,11 +104,17 @@ def test_fields_with_values(args):
         ("2022-08-01", "date", _date),
         ("2024-09-23 17:32:07", "datetime", _datetime),
         ("2024-09-23 17:32:07+02:00", "datetime", _datetime),
+        ("N/A", "int", None),
+        ("nan", "bool", None),
+        ("", "date", None),  # all NaN-like values should be cast as None for all type
     ),
 )
 def test_cast(args):
     value, detected_type, cast_type = args
-    assert isinstance(cast(value, detected_type), cast_type)
+    if cast_type is None:
+        assert cast(value, detected_type) is None
+    else:
+        assert isinstance(cast(value, detected_type), cast_type)
 
 
 @pytest.mark.parametrize(
