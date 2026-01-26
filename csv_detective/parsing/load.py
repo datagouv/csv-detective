@@ -100,8 +100,8 @@ def load_file(
         }
         if engine is not None:
             analysis["compression"] = engine
-    if any(col.startswith("Unnamed:") for col in table.columns):
-        raise ValueError("Columns are not properly set")
+    if any(not isinstance(col, str) or col.startswith("Unnamed:") for col in table.columns):
+        raise ValueError("Could not accurately detect the file's columns")
     analysis |= {
         "header_row_idx": header_row_idx,
         "header": list(table.columns),
