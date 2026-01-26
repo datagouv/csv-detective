@@ -23,4 +23,4 @@ def detect_header_position(file: TextIO, verbose: bool = False) -> int:
                     time() - start,
                 )
             return i
-    raise ValueError("Could not retrieve headers")
+    raise ValueError("Could not accurately retrieve headers position")
