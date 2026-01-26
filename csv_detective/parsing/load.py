@@ -46,9 +46,6 @@ def load_file(
         )
         if table.empty:
             raise ValueError("Table seems to be empty")
-        header = table.columns.to_list()
-        if any(col.startswith("Unnamed") for col in header):
-            raise ValueError("Could not retrieve headers")
         analysis = {
             "engine": engine,
             "sheet_name": sheet_name,
