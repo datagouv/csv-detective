@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.10.3 (2026-01-27)
+
+- Avoid considering floats as dates ([#202](https://github.com/etalab/csv-detective/pull/202))
+- Fix casting for NaN-like values ([#208](https://github.com/etalab/csv-detective/pull/208))
+- Fix streaming issue when analyzing from URL ([#204](https://github.com/etalab/csv-detective/pull/204))
+- Fix validation ([#205](https://github.com/etalab/csv-detective/pull/205))
+- Prevent `NaN` in headers ([#209](https://github.com/etalab/csv-detective/pull/209))
+- Stricter column detection ([#207](https://github.com/etalab/csv-detective/pull/207))
+- Use dependency-groups in pyproject ([#203](https://github.com/etalab/csv-detective/pull/203))
+
+
 ## 0.10.2 (2026-01-16)
 
 - Dynamic versionning ([#198](https://github.com/etalab/csv-detective/pull/198))
