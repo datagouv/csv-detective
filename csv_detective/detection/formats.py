@@ -11,6 +11,7 @@ from csv_detective.format import Format, FormatsManager
 from csv_detective.output.utils import prepare_output_dict
 from csv_detective.parsing.columns import (
     MAX_NUMBER_CATEGORICAL_VALUES,
+    handle_empty_columns,
     test_col,
     test_col_chunks,
     test_label,
@@ -49,6 +50,7 @@ def detect_formats(
             skipna=skipna,
             verbose=verbose,
         )
+        handle_empty_columns(scores_table_fields)
         res_categorical, _ = detect_categorical_variable(
             table,
             max_number_categorical_values=MAX_NUMBER_CATEGORICAL_VALUES,

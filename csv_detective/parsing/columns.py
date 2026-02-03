@@ -13,6 +13,13 @@ from csv_detective.utils import display_logs_depending_process_time
 MAX_NUMBER_CATEGORICAL_VALUES = 25
 
 
+def handle_empty_columns(return_table: pd.DataFrame):
+    # handling that empty columns score 1 everywhere
+    for col in return_table.columns:
+        if sum(return_table[col]) == len(return_table):
+            return_table[col] = 0
+
+
 def test_col_val(
     serie: pd.Series,
     format: Format,
@@ -222,10 +229,7 @@ def test_col_chunks(
     analysis["categorical"] = [
         col for col, values in col_values.items() if len(values) <= MAX_NUMBER_CATEGORICAL_VALUES
     ]
-    # handling that empty columns score 1 everywhere
-    for col in return_table.columns:
-        if sum(return_table[col]) == len(return_table):
-            return_table[col] = 0
+    handle_empty_columns(return_table)
     if verbose:
         display_logs_depending_process_time(
             f"Done testing chunks in {round(time() - start, 3)}s", time() - start
