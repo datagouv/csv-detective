@@ -388,10 +388,11 @@ def test_almost_uniform_column(mocked_responses):
     assert analysis["columns"][col_name]["format"] == "int"
 
 
-def test_full_nan_column(mocked_responses):
+@pytest.mark.parametrize("nb_rows", (CHUNK_SIZE // 10, CHUNK_SIZE + 1))
+def test_full_nan_column(mocked_responses, nb_rows):
     # we want a file that needs sampling
     col_name = "only_nan"
-    expected_content = f"{col_name},second_col\n" + ",1\n" * (CHUNK_SIZE + 1)
+    expected_content = f"{col_name},second_col\n" + ",1\n" * nb_rows
     mocked_responses.get(
         "http://example.com/test.csv",
         body=expected_content,
