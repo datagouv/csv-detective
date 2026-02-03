@@ -94,7 +94,7 @@ def test_col(
             )
         if verbose:
             display_logs_depending_process_time(
-                f'\t> Done with type "{label}" in {round(time() - start_type, 3)}s ({idx + 1}/{len(formats)})',
+                f'\t> Done with format "{label}" in {round(time() - start_type, 3)}s ({idx + 1}/{len(formats)})',
                 time() - start_type,
             )
     if verbose:
@@ -109,7 +109,7 @@ def test_label(
 ):
     if verbose:
         start = time()
-        logging.info("Testing labels to get types")
+        logging.info("Testing labels to get formats")
 
     return_table = pd.DataFrame(columns=columns)
     for idx, (label, format) in enumerate(formats.items()):
@@ -118,7 +118,7 @@ def test_label(
         return_table.loc[label] = [format.is_valid_label(col_name) for col_name in columns]
         if verbose:
             display_logs_depending_process_time(
-                f'\t- Done with type "{label}" in {round(time() - start_type, 3)}s ({idx + 1}/{len(formats)})',
+                f'\t- Done with format "{label}" in {round(time() - start_type, 3)}s ({idx + 1}/{len(formats)})',
                 time() - start_type,
             )
     if verbose:
