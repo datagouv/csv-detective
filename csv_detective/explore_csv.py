@@ -36,7 +36,7 @@ def routine(
         file_path: local path or URL to file
         num_rows: number of rows to sample from the file for analysis ; -1 for analysis of the whole file
         tags: tags to filter formats (for instance ["geo", "fr] to run only the checks related to geo and French formats)
-        limited_output: whether or not to return all possible types or only the most likely one for each column
+        limited_output: whether or not to return all possible formats or only the most likely one for each column
         save_results: whether or not to save the results in a json file, or the path where to dump the output
         output_profile: whether or not to add the 'profile' field to the output
         output_schema: whether or not to add the 'schema' field to the output (tableschema)
@@ -47,7 +47,7 @@ def routine(
         skipna: whether to keep NaN (empty cells) for tests
 
     Returns:
-        dict: a dict with information about the csv and possible types for each column
+        dict: a dict with information about the csv and possible formats for each column
     """
 
     if not (

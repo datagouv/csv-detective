@@ -25,6 +25,8 @@ class Format:
             labels: the dict of hint headers and their credibilty for the header score (NB: credibility is relative witin a single format, should be used to rank the valid labels)
             proportion: the tolerance (between 0 and 1) to say a column is valid for a format. (1 => 100% of the column has to pass the func check for the column to be considered valid)
             tags: to allow users to submit a file to only a subset of formats
+            mandatory_label: whether the format can only be considered if the column passes both field and label tests
+            python_type: the python type related to the format (less specific, used for downstream casting)
         """
         self.name: str = name
         self.func: Callable[[Any], bool] = func
