@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.10.4 (2026-02-09)
+
+- Handle full `NaN`  in short files ([#210](https://github.com/etalab/csv-detective/pull/210))
+- Improve wording ([#211](https://github.com/etalab/csv-detective/pull/211))
+- Upgrade minimal `pandas` version ([#212](https://github.com/etalab/csv-detective/pull/212))
+
+
 ## 0.10.3 (2026-01-27)
 
 - Avoid considering floats as dates ([#202](https://github.com/etalab/csv-detective/pull/202))
