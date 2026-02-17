@@ -28,6 +28,7 @@ def routine(
     cast_json: bool = True,
     verbose: bool = False,
     sheet_name: str | int | None = None,
+    custom_proportions: float | int | dict[str, float | int] | None = None,
 ) -> dict | tuple[dict, Iterator[pd.DataFrame]]:
     """
     Returns a dict with information about the table and possible column contents, and if requested the DataFrame with columns cast according to analysis.
@@ -45,6 +46,7 @@ def routine(
         verbose: whether or not to print process logs in console
         sheet_name: if reading multi-sheet file (xls-like), which sheet to consider
         skipna: whether to keep NaN (empty cells) for tests
+        custom_proportions: allows to set a custom level of tolerance for all or specific formats
 
     Returns:
         dict: a dict with information about the csv and possible formats for each column
@@ -77,6 +79,7 @@ def routine(
         tags=tags,
         limited_output=limited_output,
         skipna=skipna,
+        custom_proportions=custom_proportions,
         verbose=verbose,
     )
 
@@ -115,6 +118,7 @@ def validate_then_detect(
     output_schema: bool = False,
     output_df: bool = False,
     cast_json: bool = True,
+    custom_proportions: float | int | dict[str, float | int] | None = None,
     verbose: bool = False,
 ) -> dict | tuple[dict, Iterator[pd.DataFrame]]:
     """
@@ -135,6 +139,7 @@ def validate_then_detect(
         output_schema: whether or not to add the 'schema' field to the output (tableschema)
         output_df: whether or not to return the loaded DataFrame along with the analysis report
         cast_json: whether or not to cast json columns into objects (otherwise they are returned as strings)
+        custom_proportions: allows to set a custom level of tolerance for all or specific formats
         verbose: whether the code displays the steps it's going through
     """
     if verbose:
@@ -146,6 +151,7 @@ def validate_then_detect(
         file_path=file_path,
         previous_analysis=previous_analysis,
         verbose=verbose,
+        custom_proportions=custom_proportions,
         skipna=skipna,
     )
     if not is_valid:
@@ -162,6 +168,7 @@ def validate_then_detect(
             tags=tags,
             limited_output=limited_output,
             skipna=skipna,
+            custom_proportions=custom_proportions,
             verbose=verbose,
         )
     else:

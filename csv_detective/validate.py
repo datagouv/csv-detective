@@ -11,14 +11,13 @@ from csv_detective.parsing.columns import MAX_NUMBER_CATEGORICAL_VALUES, test_co
 VALIDATION_CHUNK_SIZE = int(1e5)
 logging.basicConfig(level=logging.INFO)
 
-formats = FormatsManager().formats
-
 
 def validate(
     file_path: str,
     previous_analysis: dict,
     verbose: bool = False,
     skipna: bool = True,
+    custom_proportions: float | int | dict[str, float | int] | None = None,
 ) -> tuple[bool, dict | None, dict[str, pd.Series] | None]:
     """
     Verify is the given file has the same fields and formats as in the given analysis.
@@ -27,8 +26,10 @@ def validate(
         file_path: the path of the file to validate
         previous_analysis: the previous analysis to validate against (expected in the same structure as the output of the routine)
         verbose: whether the code displays the steps it's going through
+        custom_proportions: allows to set a custom level of tolerance for all or specific formats
         skipna: whether to ignore NaN values in the checks
     """
+    formats = FormatsManager(custom_proportions=custom_proportions).formats
     if verbose:
         logging.info(f"Checking given formats exist")
     for col_name, detected in previous_analysis["columns"].items():

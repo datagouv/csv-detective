@@ -173,3 +173,31 @@ def test_all_proportion_1():
     returned_table = col_test(table, fmtm.formats, limited_output=True)
     # the analysis should have found no match on any format
     assert all(returned_table[col].sum() == 0 for col in table.columns)
+
+
+@pytest.mark.parametrize(
+    "custom_prop, should_crash",
+    (
+        (2, True),
+        ([1], True),
+        ({"code_commune_insee": "0.8", "int": 0.8}, True),
+        (0.4, False),
+        (1, False),
+        ({"code_commune_insee": 0.4, "int": 0.8}, False),
+    ),
+)
+def test_custom_proportions(custom_prop, should_crash):
+    if should_crash:
+        with pytest.raises(ValueError):
+            FormatsManager(custom_proportions=custom_prop)
+    else:
+        custom_fmtm = FormatsManager(custom_proportions=custom_prop)
+        if isinstance(custom_prop, (float, int)):
+            assert all(fmt.proportion == custom_prop for fmt in custom_fmtm.formats.values())
+        else:
+            for fmt in fmtm.formats:
+                # checking that the specified formats have been set, and the others remain unchanged
+                if fmt in custom_prop:
+                    assert custom_fmtm.formats[fmt].proportion == custom_prop[fmt]
+                else:
+                    assert custom_fmtm.formats[fmt].proportion == fmtm.formats[fmt].proportion
