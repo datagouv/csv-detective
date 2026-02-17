@@ -17,8 +17,6 @@ from csv_detective.parsing.columns import (
     test_label,
 )
 
-fmtm = FormatsManager()
-
 
 def detect_formats(
     table: pd.DataFrame,
@@ -27,8 +25,10 @@ def detect_formats(
     tags: list[str] | None = None,
     limited_output: bool = True,
     skipna: bool = True,
+    custom_proportions: float | int | dict[str, float | int] | None = None,
     verbose: bool = False,
 ) -> tuple[dict, dict[str, pd.Series] | None]:
+    fmtm = FormatsManager(custom_proportions=custom_proportions)
     in_chunks = analysis.get("total_lines") is None
 
     # list testing to be performed
