@@ -50,7 +50,9 @@ class Format:
 class FormatsManager:
     formats: dict[str, Format]
 
-    def __init__(self, custom_proportions: float | int | dict[str, float | int] | None = None) -> None:
+    def __init__(
+        self, custom_proportions: float | int | dict[str, float | int] | None = None
+    ) -> None:
         import csv_detective.formats as formats
 
         if custom_proportions is not None and not isinstance(
@@ -62,9 +64,7 @@ class FormatsManager:
             )
         format_labels: list[str] = [f for f in dir(formats) if "_is" in dir(getattr(formats, f))]
         if isinstance(custom_proportions, dict) and not all(
-            isinstance(label, str)
-            and isinstance(prop, (float, int))
-            and label in format_labels
+            isinstance(label, str) and isinstance(prop, (float, int)) and label in format_labels
             for label, prop in custom_proportions.items()
         ):
             raise ValueError(
@@ -79,13 +79,16 @@ class FormatsManager:
                     attr: val
                     for attr in ["labels", "tags", "mandatory_label", "python_type"]
                     if (val := getattr(module, attr, None))
-                } | {
+                }
+                | {
                     "proportion": (
-                        custom_proportions if isinstance(custom_proportions, (float, int))
+                        custom_proportions
+                        if isinstance(custom_proportions, (float, int))
                         else (
                             # default to the internal value if not custom
                             custom_proportions.get(label, getattr(module, "proportion", 1))
-                        ) if isinstance(custom_proportions, dict)
+                        )
+                        if isinstance(custom_proportions, dict)
                         else getattr(module, "proportion", 1)
                     )
                 },
