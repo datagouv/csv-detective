@@ -51,7 +51,7 @@ def test_columns_output_on_file(chunk_size):
         assert output["nb_duplicates"] == 7
         assert output["columns"]["NOMCOM"]["format"] == "commune"
         assert output["columns"]["NOMDEP"]["format"] == "departement"
-        assert output["columns"]["NUMEPCI"]["format"] == "siren"
+        assert output["columns"]["NUMEPCI"]["format"] == "code_epci"
         assert output["columns"]["STRUCTURED_INFO"]["python_type"] == "json"
         assert output["columns"]["STRUCTURED_INFO"]["format"] == "json"
         assert output["columns"]["GEO_INFO"]["python_type"] == "json"
@@ -474,7 +474,7 @@ def test_multiple_geo_columns(mocked_responses):
     (
         ("siren", "552100554", "siren"),
         ("epci", "552100554", "siren"),
-        ("EPCI", "200000172", "epci"),
+        ("EPCI", "200000172", "code_epci"),
         ("siren", "200000172", "siren"),
         ("numero", "200000172", "int"),
     ),
