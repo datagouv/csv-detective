@@ -51,7 +51,7 @@ def test_columns_output_on_file(chunk_size):
         assert output["nb_duplicates"] == 7
         assert output["columns"]["NOMCOM"]["format"] == "commune"
         assert output["columns"]["NOMDEP"]["format"] == "departement"
-        assert output["columns"]["NUMEPCI"]["format"] == "siren"
+        assert output["columns"]["NUMEPCI"]["format"] == "code_epci"
         assert output["columns"]["STRUCTURED_INFO"]["python_type"] == "json"
         assert output["columns"]["STRUCTURED_INFO"]["format"] == "json"
         assert output["columns"]["GEO_INFO"]["python_type"] == "json"
@@ -467,3 +467,35 @@ def test_multiple_geo_columns(mocked_responses):
         analysis["columns"][not_lon]["format"] == "longitude_wgs"
         and analysis["columns"][not_lon]["score"] < analysis["columns"][lon]["score"]
     )
+
+
+@pytest.mark.parametrize(
+    "col_name, value, expected",
+    (
+        ("siren", "552100554", "siren"),
+        ("epci", "552100554", "siren"),
+        ("EPCI", "200000172", "code_epci"),
+        ("siren", "200000172", "siren"),
+        ("numero", "200000172", "int"),
+    ),
+)
+def test_diff_epci_siren(col_name, value, expected, mocked_responses):
+    url = f"http://example.com/file.csv"
+    expected_content = f"{col_name},ratio\n" + f"{value},10.0\n" * 50
+    mocked_responses.get(
+        url,
+        body=expected_content,
+        status=200,
+    )
+    with patch("urllib.request.urlopen") as mock_urlopen:
+        mock_response = MagicMock()
+        mock_response.read.return_value = expected_content
+        mock_response.__enter__.return_value = mock_response
+        mock_urlopen.return_value = mock_response
+        analysis = routine(
+            file_path=url,
+            num_rows=-1,
+            output_profile=False,
+            save_results=False,
+        )
+    assert analysis["columns"][col_name]["format"] == expected
