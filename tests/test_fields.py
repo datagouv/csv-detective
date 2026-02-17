@@ -180,10 +180,10 @@ def test_all_proportion_1():
     (
         (2, True),
         ([1], True),
-        ({"code_commune_insee": "0.8", "int": 0.8}, True),
+        ({"code_commune": "0.8", "int": 0.8}, True),
         (0.4, False),
         (1, False),
-        ({"code_commune_insee": 0.4, "int": 0.8}, False),
+        ({"code_commune": 0.4, "int": 0.8}, False),
     ),
 )
 def test_custom_proportions(custom_prop, should_crash):

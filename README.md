@@ -59,21 +59,21 @@ The program creates a `python` dictionary with the following information :
     "columns": { # Property that conciliate detection from labels and content of a column
         "Code commune": {
             "python_type": "string",
-            "format": "code_commune_insee",
+            "format": "code_commune",
             "score": 1.0
         },
     },
     "columns_labels": { # Property that return detection from header columns
         "Code commune": {
             "python_type": "string",
-            "format": "code_commune_insee",
+            "format": "code_commune",
             "score": 0.5
         },
     },
     "columns_fields": { # Property that return detection from content columns
         "Code commune": {
             "python_type": "string",
-            "format": "code_commune_insee",
+            "format": "code_commune",
             "score": 1.25
         },
     },
@@ -117,7 +117,7 @@ The program creates a `python` dictionary with the following information :
           "description": "Le code INSEE de la commune",
           "example": "23150",
           "type": "string",
-          "formatFR": "code_commune_insee",
+          "formatFR": "code_commune",
           "constraints": {
             "required": False,
             "pattern": "^([013-9]\\d|2[AB1-9])\\d{3}$",
