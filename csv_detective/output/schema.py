@@ -10,7 +10,7 @@ def get_description(format: str) -> str:
     """Returns generic description for specific field"""
     format_to_desc = {
         "adresse": "Adresse",
-        "code_commune_insee": "Le code INSEE de la commune",
+        "code_commune": "Le code INSEE de la commune",
         "code_departement": "Le code INSEE du département",
         "code_region": "Le code INSEE de la région",
         "code_fantoir": "Le code FANTOIR de la voie ou du lieu-dit",
@@ -67,7 +67,7 @@ def get_pattern(format: str) -> str:
     format_to_pattern = {
         "siren": r"^\d{9}$",
         "siret": r"^\d{14}$",
-        "code_commune_insee": r"^([013-9]\d|2[AB1-9])\d{3}$",
+        "code_commune": r"^([013-9]\d|2[AB1-9])\d{3}$",
         "code_postal": r"^([013-9]\d|2[AB1-9])\d{3}$",
         "code_departement": r"^(([013-9]\d|2[AB1-9])$|9\d{2}$)",
         "code_region": r"^\d{2}$",
@@ -128,7 +128,7 @@ def get_example(format: str) -> str:
         "string": "Lorem ipsum dolor sit amet",
         "adresse": "28 rue Ledion, 75014 Paris",
         "insee_canton": "Pont-d'Ain",
-        "code_commune_insee": "27501",
+        "code_commune": "27501",
         "code_csp_insee": "233c",
         "code_departement": "2A",
         "code_fantoir": "A633",
