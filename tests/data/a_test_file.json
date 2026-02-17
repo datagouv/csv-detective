@@ -31,7 +31,7 @@
     "columns_fields": {
         "NUMCOM": {
             "python_type": "string",
-            "format": "code_commune_insee",
+            "format": "code_commune",
             "score": 1.0
         },
         "NOMCOM": {
@@ -88,7 +88,7 @@
     "columns_labels": {
         "NUMCOM": {
             "python_type": "string",
-            "format": "code_commune_insee",
+            "format": "code_commune",
             "score": 0.5
         },
         "NOMCOM": {
@@ -118,7 +118,7 @@
         },
         "TXCOUVGLO_COM_2014": {
             "python_type": "string",
-            "format": "code_commune_insee",
+            "format": "code_commune",
             "score": 0.5
         },
         "TXCOUVGLO_DEP_2014": {
@@ -145,7 +145,7 @@
     "columns": {
         "NUMCOM": {
             "python_type": "string",
-            "format": "code_commune_insee",
+            "format": "code_commune",
             "score": 1.125
         },
         "NOMCOM": {
@@ -200,7 +200,7 @@
         }
     },
     "formats": {
-        "code_commune_insee": [
+        "code_commune": [
             "NUMCOM"
         ],
         "int": [
