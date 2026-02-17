@@ -7,9 +7,9 @@ labels = {
     "epci": 1,
 }
 
+
 def _is(val) -> bool:
-    """Repere les codes EPCI (SIRENs spécifiques)
-    NB : """
+    """Repere les codes EPCI (SIRENs spécifiques)"""
     if not isinstance(val, str):
         return False
     # this is the most specific test we can do without an external fetch

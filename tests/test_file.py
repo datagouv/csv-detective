@@ -481,7 +481,6 @@ def test_multiple_geo_columns(mocked_responses):
 )
 def test_diff_epci_siren(col_name, value, expected, mocked_responses):
     url = f"http://example.com/file.csv"
-    
     expected_content = f"{col_name},ratio\n" + f"{value},10.0\n" * 50
     mocked_responses.get(
         url,
@@ -493,5 +492,10 @@ def test_diff_epci_siren(col_name, value, expected, mocked_responses):
         mock_response.read.return_value = expected_content
         mock_response.__enter__.return_value = mock_response
         mock_urlopen.return_value = mock_response
-        analysis = routine(file_path=url)
+        analysis = routine(
+            file_path=url,
+            num_rows=-1,
+            output_profile=False,
+            save_results=False,
+        )
     assert analysis["columns"][col_name]["format"] == expected
