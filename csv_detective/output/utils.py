@@ -40,6 +40,7 @@ def prepare_output_dict(return_table: pd.DataFrame, limited_output: bool):
             ("longitude_wgs", ("longitude_l93",)),
             ("code_region", ("code_departement",)),
             ("datetime_rfc822", ("datetime_aware",)),
+            ("epci", ("siren",)),
         ]
         detected_formats = set(x["format"] for x in output_dict[column_name])
         formats_to_remove = set()

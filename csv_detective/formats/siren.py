@@ -9,11 +9,11 @@ labels = {
     "siren organisme": 1,
     "siren titulaire": 1,
     "numero siren": 1,
-    "epci": 1,
+    "epci": 0.9,
 }
 
 
-def _is(val):
+def _is(val) -> bool:
     """Repere les codes SIREN"""
     if not isinstance(val, str):
         return False
