@@ -5,13 +5,13 @@ parameters:
   python-version:
     type: string
     default: "3.11"
-  cache-prefix:
-    type: string
-    default: "py-cache"
   publish-branch:
     type: string
     default: "main"
     description: "Branch to publish to PyPI and trigger the Gitlab CI/CD pipeline when pushed to"
+  cache-prefix:
+    type: string
+    default: "py-cache"
 
 jobs:
   install:
