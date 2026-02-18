@@ -8,6 +8,10 @@ parameters:
   cache-prefix:
     type: string
     default: "py-cache"
+  publish-branch:
+    type: string
+    default: "main"
+    description: "Branch to publish to PyPI and trigger the Gitlab CI/CD pipeline when pushed to"
 
 jobs:
   install:
@@ -130,7 +134,5 @@ workflows:
             - build
           filters:
             branches:
-              ignore: /.*/
-            tags:
-              only: /v[0-9]+(\.[0-9]+)*/
+              only: << pipeline.parameters.publish-branch >>
           context: org-global
