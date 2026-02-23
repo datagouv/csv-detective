@@ -15,6 +15,7 @@ logging.basicConfig(level=logging.INFO)
 
 def routine(
     file_path: str,
+    *,
     num_rows: int = 500,
     tags: list[str] | None = None,
     limited_output: bool = True,
@@ -109,6 +110,7 @@ def routine(
 def validate_then_detect(
     file_path: str,
     previous_analysis: dict,
+    *,
     num_rows: int = 500,
     tags: list[str] | None = None,
     limited_output: bool = True,

@@ -4,7 +4,7 @@ from collections import defaultdict
 import pandas as pd
 
 from csv_detective.format import FormatsManager
-from csv_detective.parsing.columns import MAX_NUMBER_CATEGORICAL_VALUES, test_col_val
+from csv_detective.parsing.columns import MAX_NUMBER_CATEGORICAL_VALUES
 
 # VALIDATION_CHUNK_SIZE is bigger than (analysis) CHUNK_SIZE because
 # it's faster to validate so we can afford to load more rows
@@ -15,6 +15,7 @@ logging.basicConfig(level=logging.INFO)
 def validate(
     file_path: str,
     previous_analysis: dict,
+    *,
     verbose: bool = False,
     skipna: bool = True,
     custom_proportions: float | int | dict[str, float | int] | None = None,
