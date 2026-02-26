@@ -2,7 +2,7 @@ import logging
 from io import BytesIO
 from time import time
 
-from cchardet import detect
+from chardet import detect
 
 from csv_detective.utils import display_logs_depending_process_time
 
