@@ -5,7 +5,20 @@ Command line client for csv_detective
 import argparse
 import json
 
+import numpy as np
+
 from csv_detective.explore_csv import routine
+
+
+class _NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        if isinstance(obj, np.floating):
+            return float(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return super().default(obj)
 
 
 def run():
@@ -16,7 +29,7 @@ def run():
         "--num_rows",
         dest="num_rows",
         type=int,
-        nargs="?",
+        default=500,
         help="Number of rows to use for detection (default 500)",
     )
     explorer.add_argument(
@@ -24,33 +37,33 @@ def run():
         "--sep",
         dest="sep",
         type=str,
-        nargs="?",
+        default=None,
         help="Columns separator (detected if not specified)",
     )
     explorer.add_argument(
         "--save",
         dest="save_results",
-        type=int,
-        nargs="?",
-        help="Whether to save the resulting analysis to json (1 = save, 0 = don't)",
+        action="store_true",
+        default=False,
+        help="Save the resulting analysis to json",
     )
     explorer.add_argument(
         "-v",
         "--verbose",
         dest="verbose",
-        type=int,
-        nargs="?",
-        help="Verbose (0 = quiet, 1 = details)",
+        action="store_true",
+        default=False,
+        help="Verbose output",
     )
 
     opts = explorer.parse_args()
 
     inspection_results = routine(
-        csv_file_path=opts.file_path,
+        file_path=opts.file_path,
         num_rows=opts.num_rows,
         sep=opts.sep,
-        save_results=bool(opts.save_results),
-        verbose=bool(opts.verbose),
+        save_results=opts.save_results,
+        verbose=opts.verbose,
     )
 
-    print(json.dumps(inspection_results, indent=4, ensure_ascii=False))
+    print(json.dumps(inspection_results, indent=4, ensure_ascii=False, cls=_NumpyEncoder))
