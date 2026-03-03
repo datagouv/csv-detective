@@ -46,7 +46,7 @@ def run():
     opts = explorer.parse_args()
 
     inspection_results = routine(
-        csv_file_path=opts.file_path,
+        file_path=opts.file_path,
         num_rows=opts.num_rows,
         sep=opts.sep,
         save_results=bool(opts.save_results),
