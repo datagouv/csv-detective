@@ -178,7 +178,6 @@ def test_profile_nb_distinct_with_col_values():
         num_rows=-1,
         _col_values=col_values,
     )
-    # mostly_null has 2 distinct values (NA and "unique_value"), not 2 (number of columns)
     assert profile["mostly_null"]["nb_distinct"] == 2
     assert profile["other_col"]["nb_distinct"] == 3
 
