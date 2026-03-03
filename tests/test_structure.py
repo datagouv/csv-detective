@@ -33,6 +33,8 @@ def test_conformity():
                 "tags",
             ]
         )
+        # all formats should have at least one label, for the header_score to work
+        assert format.labels
 
 
 @pytest.mark.parametrize(
