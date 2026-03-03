@@ -170,9 +170,7 @@ def test_profile_nb_distinct_with_col_values():
         "mostly_null": {"python_type": "string", "format": "string", "score": 1.0},
         "other_col": {"python_type": "string", "format": "string", "score": 1.0},
     }
-    col_values = {
-        col: table[col].value_counts(dropna=False) for col in table.columns
-    }
+    col_values = {col: table[col].value_counts(dropna=False) for col in table.columns}
     profile = create_profile(
         table=table,
         columns=columns,
