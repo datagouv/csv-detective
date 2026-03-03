@@ -97,7 +97,6 @@ def routine(
             output_df=output_df,
             cast_json=cast_json,
             verbose=verbose,
-            sheet_name=sheet_name,
             _col_values=_col_values,
         )
     finally:
@@ -198,7 +197,6 @@ def validate_then_detect(
             output_df=output_df,
             cast_json=cast_json,
             verbose=verbose,
-            sheet_name=analysis.get("sheet_name"),
             _col_values=col_values,
         )
     finally:

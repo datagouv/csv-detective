@@ -22,7 +22,6 @@ def generate_output(
     output_df: bool = False,
     cast_json: bool = True,
     verbose: bool = False,
-    sheet_name: str | int | None = None,
     _col_values: dict[str, pd.Series] | None = None,
 ) -> dict | tuple[dict, Iterator[pd.DataFrame]]:
     if output_profile:
