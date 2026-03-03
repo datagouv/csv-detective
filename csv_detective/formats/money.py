@@ -7,7 +7,7 @@ currencies = {"€", "$", "£", "¥"}
 
 
 def _is(val):
-    if not isinstance(val, str) or val[-1] not in currencies:
+    if not isinstance(val, str) or not val or val[-1] not in currencies:
         return False
     return is_float(val[:-1])
 

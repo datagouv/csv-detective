@@ -5,7 +5,7 @@ labels = {"pourcent": 1, "part": 0.75, "pct": 0.75}
 
 
 def _is(val):
-    if not isinstance(val, str) or val[-1] != "%":
+    if not isinstance(val, str) or not val or val[-1] != "%":
         return False
     return is_float(val[:-1])
 
