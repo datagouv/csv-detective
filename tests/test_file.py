@@ -169,8 +169,7 @@ def test_profile_missing_values_with_col_values():
     col_with_missing = "TXCOUVGLO_COM_2014"
     col_values = {col: table[col].value_counts(dropna=False) for col in table.columns}
     columns = {
-        col: {"python_type": "string", "format": "string", "score": 1.0}
-        for col in table.columns
+        col: {"python_type": "string", "format": "string", "score": 1.0} for col in table.columns
     }
     profile = create_profile(
         table=table,
