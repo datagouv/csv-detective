@@ -29,7 +29,7 @@ def _is(val):
         cle += y // 10 + y % 10
         pair = not pair
     if cle % 10 != 0:
-        return cle % 10 == 0
+        return False
 
     # Vérification par clé de luhn du SIRET
     cle = 0
