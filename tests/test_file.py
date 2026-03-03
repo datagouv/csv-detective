@@ -158,6 +158,30 @@ def test_profile_specific_cases(params):
     }
 
 
+def test_profile_nb_distinct_with_col_values():
+    """nb_distinct should count distinct values per column, not the number of columns"""
+    table = pd.DataFrame(
+        {
+            "mostly_null": [pd.NA, pd.NA, "unique_value"],
+            "other_col": ["a", "b", "c"],
+        }
+    )
+    columns = {
+        "mostly_null": {"python_type": "string", "format": "string", "score": 1.0},
+        "other_col": {"python_type": "string", "format": "string", "score": 1.0},
+    }
+    col_values = {col: table[col].value_counts(dropna=False) for col in table.columns}
+    profile = create_profile(
+        table=table,
+        columns=columns,
+        limited_output=True,
+        num_rows=-1,
+        _col_values=col_values,
+    )
+    assert profile["mostly_null"]["nb_distinct"] == 2
+    assert profile["other_col"]["nb_distinct"] == 3
+
+
 def test_profile_missing_values_with_col_values():
     """nb_missing_values should count NaN values when using chunked reading"""
     table = pd.read_csv(

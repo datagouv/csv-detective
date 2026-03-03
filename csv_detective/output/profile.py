@@ -106,7 +106,7 @@ def create_profile(
                     else table[c].astype(str).nunique()
                 )
                 if _col_values is None
-                else len(_col_values)
+                else len(_col_values[c])
             ),
             nb_missing_values=(
                 len(table[c].loc[table[c].isna()])
