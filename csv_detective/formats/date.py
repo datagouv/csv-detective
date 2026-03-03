@@ -51,7 +51,7 @@ aaaammjj_pattern = r"^((19|20)\d{2})SEP(0[1-9]|1[0-2])SEP(0[1-9]|[12][0-9]|3[01]
 string_month_pattern = (
     r"^(0[1-9]|[12][0-9]|3[01])SEP(jan|fev|feb|mar|avr|apr"
     r"|mai|may|jun|jui|jul|aou|aug|sep|oct|nov|dec|janvier|fevrier|mars|avril|"
-    r"mai|juin|jullet|aout|septembre|octobre|novembre|decembre)SEP"
+    r"mai|juin|juillet|aout|septembre|octobre|novembre|decembre)SEP"
     r"([0-9]{2}$|(19|20)[0-9]{2}$)"
 ).replace("SEP", seps + "?")
 
