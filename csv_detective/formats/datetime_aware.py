@@ -10,8 +10,8 @@ labels = SHARED_DATE_LABELS | {"datetime": 1, "timestamp": 1}
 threshold = 0.7
 pat = (
     aaaammjj_pattern.replace("$", "")
-    + r"(T|\s)(0\d|1[0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])(.\d{1,6})"
-    + r"?(([+-](0\d|1[0-9]|2[0-3]):([0-5][0-9]))|Z)$"
+    + r"(T|\s)(0\d|1[0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])(\.\d{1,6})?"
+    + r"(([+-](0\d|1[0-9]|2[0-3]):([0-5][0-9]))|Z)$"
 )
 # date_casting is very (too?) good at finding date(time)s where there sometimes is just a number
 # this prefix check asserts we only consider strings that have a somewhat fine structure trying to cast
@@ -52,5 +52,6 @@ _test_values = {
         "Sun, 06 Nov 1994 08:49:37 GMT",
         "2021-06-44 10:20:10",
         "0.001175692961729795",
+        "2030-06-22 00:00:00X0028+02:00",
     ],
 }
