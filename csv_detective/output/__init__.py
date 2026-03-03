@@ -22,7 +22,6 @@ def generate_output(
     output_df: bool = False,
     cast_json: bool = True,
     verbose: bool = False,
-    sheet_name: str | int | None = None,
     _col_values: dict[str, pd.Series] | None = None,
 ) -> dict | tuple[dict, Iterator[pd.DataFrame]]:
     if output_profile:
@@ -44,7 +43,7 @@ def generate_output(
             if is_url(output_path):
                 output_path = output_path.split("/")[-1]
             if analysis.get("sheet_name"):
-                output_path += "_sheet-" + str(sheet_name)
+                output_path += "_sheet-" + str(analysis["sheet_name"])
             output_path += ".json"
         with open(output_path, "w", encoding="utf8") as fp:
             json.dump(
