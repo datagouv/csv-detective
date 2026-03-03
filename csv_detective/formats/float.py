@@ -5,7 +5,7 @@ tags = ["type"]
 python_type = "float"
 labels = {"part": 1, "ratio": 1, "taux": 1}
 
-scientific_notation_pattern = r"-?\d+\.\d+[eE][+-]?\d+"
+scientific_notation_pattern = r"^-?\d+\.\d+[eE][+-]?\d+$"
 
 
 def float_casting(val: str) -> float:
