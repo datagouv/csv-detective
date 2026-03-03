@@ -158,6 +158,31 @@ def test_profile_specific_cases(params):
     }
 
 
+def test_profile_missing_values_with_col_values():
+    """nb_missing_values should count NaN values when using chunked reading"""
+    table = pd.read_csv(
+        "tests/data/a_test_file.csv",
+        dtype=str,
+        sep=";",
+        skiprows=2,
+    )
+    col_with_missing = "TXCOUVGLO_COM_2014"
+    col_values = {col: table[col].value_counts(dropna=False) for col in table.columns}
+    columns = {
+        col: {"python_type": "string", "format": "string", "score": 1.0} for col in table.columns
+    }
+    profile = create_profile(
+        table=table,
+        columns=columns,
+        limited_output=True,
+        num_rows=-1,
+        _col_values=col_values,
+    )
+    assert profile[col_with_missing]["nb_missing_values"] == len(
+        table[col_with_missing].loc[table[col_with_missing].isna()]
+    )
+
+
 def test_exception_different_number_of_columns():
     """
     A ValueError should be raised if the number of columns differs between the first rows

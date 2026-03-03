@@ -111,7 +111,7 @@ def create_profile(
             nb_missing_values=(
                 len(table[c].loc[table[c].isna()])
                 if _col_values is None
-                else (_col_values[c].loc[pd.NA] if pd.NA in _col_values[c].index else 0)
+                else _col_values[c].loc[_col_values[c].index.isna()].sum()
             ),
         )
     if verbose:
