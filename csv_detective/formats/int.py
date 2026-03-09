@@ -9,6 +9,7 @@ def _is(val):
         not isinstance(val, str)
         or any([v in val for v in [".", "_", "+"]])
         or (val.startswith("0") and len(val) > 1)
+        or len(val) >= 20
     ):
         return False
     try:
@@ -20,5 +21,5 @@ def _is(val):
 
 _test_values = {
     True: ["1", "0", "1764", "-24"],
-    False: ["01053", "1.2", "123_456", "+35"],
+    False: ["01053", "1.2", "123_456", "+35", "14292405299487610865"],
 }
