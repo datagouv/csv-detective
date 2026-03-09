@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.11.0 (2026-03-09)
+
+- Add `code_epci` format ([#214](https://github.com/etalab/csv-detective/pull/214))
+- Add a test to assert all formats have labels ([#231](https://github.com/etalab/csv-detective/pull/231))
+- Allow to set custom format proportions ([#213](https://github.com/etalab/csv-detective/pull/213))
+- Change encoding detection lib ([#218](https://github.com/etalab/csv-detective/pull/218))
+- Fix `datetime_aware.py` regex pattern ([#227](https://github.com/etalab/csv-detective/pull/227))
+- Fix `datetime_rfc822.py` regex pattern ([#226](https://github.com/etalab/csv-detective/pull/226))
+- Fix examples in schema output ([#224](https://github.com/etalab/csv-detective/pull/224))
+- Fix nb_distinct in chunked profile ([#219](https://github.com/etalab/csv-detective/pull/219))
+- Fix nb_missing_values always returning 0 in chunked profile
+- Fix scientific notation detection for negative numbers ([#229](https://github.com/etalab/csv-detective/pull/229))
+- Fix scientific notation regex pattern ([#225](https://github.com/etalab/csv-detective/pull/225))
+- Fix sheet name in export file name ([#230](https://github.com/etalab/csv-detective/pull/230))
+- Fix typo in date regex pattern ([#223](https://github.com/etalab/csv-detective/pull/223))
+- Handle empty string in percent and money detection ([#222](https://github.com/etalab/csv-detective/pull/222))
+- Only publish when commit on main ([#216](https://github.com/etalab/csv-detective/pull/216))
+- Remove dead code in `siret.py` ([#228](https://github.com/etalab/csv-detective/pull/228))
+- Rename `code_commune_insee` into `code_commune` for better consistency ([#215](https://github.com/etalab/csv-detective/pull/215))
+- Restrain the number of positional arguments of the main functions ([#217](https://github.com/etalab/csv-detective/pull/217))
+- Skip step in validation if detected format is string ([#232](https://github.com/etalab/csv-detective/pull/232))
+- Use the new kwarg name in CLI and add tests ([#221](https://github.com/etalab/csv-detective/pull/221))
+- fix lint
+
+
 ## 0.10.4 (2026-02-09)
 
 - Handle full `NaN`  in short files ([#210](https://github.com/etalab/csv-detective/pull/210))
