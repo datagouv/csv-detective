@@ -19,7 +19,7 @@ def _is(val):
             not isinstance(val, str)
             or "_" in val
             or (val.startswith("0") and len(val) > 1 and val[1] not in [".", ","])
-            or ("." not in val and "." not in val and len(val) >= 20)
+            or ("." not in val and "," not in val and len(val) >= 20)
         ):
             return False
         elif any([k in val for k in ["+", "e", "E"]]) and not re.match(
@@ -46,6 +46,7 @@ _test_values = {
         "19.01e-29",
         "-9.1e-9",
         "1.4292405299487610865",
+        "1,4292405299487610865",
     ],
     False: [
         "01053",
