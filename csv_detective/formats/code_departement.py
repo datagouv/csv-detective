@@ -1,4 +1,4 @@
-from frformat import Millesime, CodeDepartement, Options
+from frformat import CodeDepartement, Millesime, Options
 
 proportion = 1
 tags = ["fr", "geo"]
