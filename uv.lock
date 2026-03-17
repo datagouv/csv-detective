@@ -146,7 +146,7 @@ requires-dist = [
     { name = "charset-normalizer", specifier = ">=3.4.4,<4" },
     { name = "dateparser", specifier = ">=1.2.0,<2" },
     { name = "faker", specifier = ">=33.0.0" },
-    { name = "frformat", specifier = "==0.4.2.dev17" },
+    { name = "frformat", specifier = "==0.5.0" },
     { name = "more-itertools", specifier = ">=10.8.0" },
     { name = "odfpy", specifier = ">=1.4.1" },
     { name = "openpyxl", specifier = ">=3.1.5" },
@@ -225,14 +225,14 @@ wheels = [
 
 [[package]]
 name = "frformat"
-version = "0.4.2.dev17"
+version = "0.5.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "python-stdnum" },
     { name = "shapely" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e6/9e/3695892670d5f3f4d4dc9b54ad0662a889bcb52d683200fb046941effccb/frformat-0.4.2.dev17-py3-none-any.whl", hash = "sha256:57dfec9fabc29df1f2190c0d50158e422054ee4f698e855bce1b9b68a09c8c21", size = 804275, upload-time = "2026-03-13T11:00:28.929Z" },
+    { url = "https://files.pythonhosted.org/packages/41/6e/297b9511d5b84beb4daeef8e4eb45c0b362cdde5d5000da16a959eed3f76/frformat-0.5.0-py3-none-any.whl", hash = "sha256:f7f8763598b702ad62e33d4587f669a9f8cd92dd86cf24efa8524fd8d92b88f0", size = 804201, upload-time = "2026-03-17T16:26:39.108Z" },
 ]
 
 [[package]]
