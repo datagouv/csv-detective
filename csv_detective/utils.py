@@ -31,13 +31,13 @@ def is_url(file_path: str) -> bool:
     return file_path.startswith("http")
 
 
-def sanitize(to_export):
+def sanitize_for_json(to_export):
     """json.dumps allows Infinity and NaN in the dump while they are not valid per RFC8259
     so we preprocess before exporting"""
     if isinstance(to_export, dict):
-        return {str(k): sanitize(v) for k, v in to_export.items()}
+        return {str(k): sanitize_for_json(v) for k, v in to_export.items()}
     elif isinstance(to_export, list):
-        return [sanitize(v) for v in to_export]
+        return [sanitize_for_json(v) for v in to_export]
     elif pd.isna(to_export) or (isinstance(to_export, float) and math.isinf(to_export)):
         return None
     return to_export

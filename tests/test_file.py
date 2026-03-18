@@ -7,7 +7,7 @@ import responses
 from csv_detective import routine
 from csv_detective.output.profile import create_profile
 from csv_detective.parsing.csv import CHUNK_SIZE
-from csv_detective.utils import sanitize
+from csv_detective.utils import sanitize_for_json
 
 
 @pytest.fixture
@@ -561,5 +561,5 @@ def test_diff_epci_siren(col_name, value, expected, mocked_responses):
         ({"a": [float("nan"), 1]}, {"a": [None, 1]}),
     ),
 )
-def test_sanitize(to_export, expected):
-    assert sanitize(to_export) == expected
+def test_sanitize_for_json(to_export, expected):
+    assert sanitize_for_json(to_export) == expected
