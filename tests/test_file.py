@@ -6,8 +6,8 @@ import responses
 
 from csv_detective import routine
 from csv_detective.output.profile import create_profile
-from csv_detective.utils import sanitize
 from csv_detective.parsing.csv import CHUNK_SIZE
+from csv_detective.utils import sanitize
 
 
 @pytest.fixture

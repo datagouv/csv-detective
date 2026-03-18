@@ -47,7 +47,12 @@ def generate_output(
             output_path += ".json"
         with open(output_path, "w", encoding="utf8") as fp:
             json.dump(
-                sanitize(analysis), fp, indent=4, separators=(",", ": "), ensure_ascii=False, default=str
+                sanitize(analysis),
+                fp,
+                indent=4,
+                separators=(",", ": "),
+                ensure_ascii=False,
+                default=str,
             )
 
     if output_schema:
