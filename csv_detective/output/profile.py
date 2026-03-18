@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 from csv_detective.formats.float import float_casting
-from csv_detective.utils import cast_prevent_nan, display_logs_depending_process_time
+from csv_detective.utils import display_logs_depending_process_time
 
 
 def create_profile(
@@ -47,10 +47,10 @@ def create_profile(
                     else table[c].apply(lambda x: float_casting(x) if isinstance(x, str) else pd.NA)
                 )
                 stats = {
-                    "min": cast_prevent_nan(cast_col.min(), columns[c]["python_type"]),
-                    "mean": cast_prevent_nan(cast_col.mean(), columns[c]["python_type"]),
-                    "max": cast_prevent_nan(cast_col.max(), columns[c]["python_type"]),
-                    "std": cast_prevent_nan(cast_col.std(), columns[c]["python_type"]),
+                    "min": cast_col.min(),
+                    "mean": cast_col.mean(),
+                    "max": cast_col.max(),
+                    "std": cast_col.std(),
                 }
             else:
                 cast_col = _col_values[c].reset_index()
@@ -63,19 +63,13 @@ def create_profile(
                     )
                 )
                 stats = {
-                    "min": cast_prevent_nan(cast_col[c].min(), columns[c]["python_type"]),
-                    "mean": cast_prevent_nan(
-                        (cast_col[c] * cast_col["count"]).sum() / sum(cast_col["count"]),
-                        columns[c]["python_type"],
-                    ),
-                    "max": cast_prevent_nan(cast_col[c].max(), columns[c]["python_type"]),
+                    "min": cast_col[c].min(),
+                    "mean": (cast_col[c] * cast_col["count"]).sum() / sum(cast_col["count"]),
+                    "max": cast_col[c].max(),
                 }
-                stats["std"] = cast_prevent_nan(
-                    np.sqrt(
-                        sum(cast_col["count"] * (cast_col[c] - stats["mean"]) ** 2)
-                        / sum(cast_col["count"])
-                    ),
-                    columns[c]["python_type"],
+                stats["std"] = np.sqrt(
+                    sum(cast_col["count"] * (cast_col[c] - stats["mean"]) ** 2)
+                    / sum(cast_col["count"])
                 )
             profile[c].update(**stats)
             del cast_col
