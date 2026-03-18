@@ -7,7 +7,7 @@ import pandas as pd
 from csv_detective.output.dataframe import cast_df_chunks
 from csv_detective.output.profile import create_profile
 from csv_detective.output.schema import generate_table_schema
-from csv_detective.utils import is_url
+from csv_detective.utils import is_url, sanitize
 
 
 def generate_output(
@@ -47,7 +47,7 @@ def generate_output(
             output_path += ".json"
         with open(output_path, "w", encoding="utf8") as fp:
             json.dump(
-                analysis, fp, indent=4, separators=(",", ": "), ensure_ascii=False, default=str
+                sanitize(analysis), fp, indent=4, separators=(",", ": "), ensure_ascii=False, default=str
             )
 
     if output_schema:
