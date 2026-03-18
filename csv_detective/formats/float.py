@@ -47,6 +47,9 @@ _test_values = {
         "-9.1e-9",
         "1.4292405299487610865",
         "1,4292405299487610865",
+        # for the record, these are valid for now
+        "inf",
+        "nan",
     ],
     False: [
         "01053",
