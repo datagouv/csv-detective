@@ -1,7 +1,7 @@
 from csv_detective.parsing.text import _process_text
 
 proportion = 0.55
-description = "French address."
+description = "French address"
 tags = ["fr", "geo"]
 labels = {
     "adresse": 1,
