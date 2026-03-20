@@ -1,3 +1,4 @@
+import os
 from csv_detective.format import FormatsManager
 
 
@@ -13,14 +14,14 @@ def generate():
     for label, fmt in fmtm.formats.items():
         md += template.format(
             label,
-            "TBD",
+            fmt.description,
             fmt.python_type,
             ", ".join(fmt.tags),
             fmt.proportion,
             fmt.mandatory_label,
             fmt._test_values[True][0],
         )
-    with open("./formats.md", "w") as f:
+    with open(os.path.dirname(os.path.abspath(__file__)) + "/formats.md", "w") as f:
         f.write(md)
 
 if __name__ == "__main__":
