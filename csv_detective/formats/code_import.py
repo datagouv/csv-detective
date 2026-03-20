@@ -1,7 +1,7 @@
 import re
 
 proportion = 0.9
-description = "Code from the Import reference source"
+description = "Code from the [Import registry](https://www.data.gouv.fr/datasets/repertoire-national-des-associations)"
 tags = ["fr"]
 labels = {"code": 0.5}
 

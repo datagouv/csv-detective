@@ -1,7 +1,7 @@
 import re
 
 proportion = 0.8
-description = "Universally unique identifier (UUID)"
+description = "Universally unique identifier ([UUID](https://fr.wikipedia.org/wiki/Universally_unique_identifier))"
 labels = {"id": 1, "identifiant": 1}
 
 

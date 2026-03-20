@@ -1,7 +1,7 @@
 from frformat import IdRNB
 
 proportion = 1
-description = "Building identifier from the French national building reference source (RNB)"
+description = "Building identifier from the French national building reference source ([RNB](https://rnb.beta.gouv.fr/definition))"
 tags = ["fr", "geo"]
 mandatory_label = True
 labels = {"rnb": 1, "batid": 1}

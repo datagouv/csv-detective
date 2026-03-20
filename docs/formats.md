@@ -9,12 +9,12 @@
 | code_csp_insee | French socio-professional category code, from the INSEE reference source | string | fr | 1 | False | `121f` |
 | code_departement | French département code | string | fr, geo | 1 | True | `75` |
 | code_epci | French EPCI (group of communes) code, subgroup of SIREN | string | fr, geo | 0.9 | True | `200000172` |
-| code_fantoir | Code from the FANTOIR reference source (deprecated since july 2023) | string | fr, geo | 1 | True | `7755A` |
-| code_import | Code from the Import reference source | string | fr | 0.9 | False | `123S1871092288` |
-| code_postal | French postcode | string | fr, geo | 0.9 | True | `75020` |
+| code_fantoir | Code from the [FANTOIR reference source](https://www.data.gouv.fr/datasets/fichier-fantoir-des-voies-et-lieux-dits) (deprecated since july 2023) | string | fr, geo | 1 | True | `7755A` |
+| code_import | Code from the [Import registry](https://www.data.gouv.fr/datasets/repertoire-national-des-associations) | string | fr | 0.9 | False | `123S1871092288` |
+| code_postal | French postcode from [La Poste registry](https://www.data.gouv.fr/datasets/base-officielle-des-codes-postaux) | string | fr, geo | 0.9 | True | `75020` |
 | code_region | French région code | string | fr, geo | 1 | True | `32` |
-| code_rna | French association identifier, from the national assiocation registry (RNA) | string | fr | 0.9 | False | `W751515517` |
-| code_waldec | French association identifier, from the WALDEC registry | string | fr | 0.9 | False | `W123456789` |
+| code_rna | French association identifier, from the national assiocation registry ([RNA](https://www.data.gouv.fr/datasets/repertoire-national-des-associations)) | string | fr | 0.9 | False | `W751515517` |
+| code_waldec | French association identifier, from the [WALDEC registry](https://www.data.gouv.fr/datasets/repertoire-national-des-associations) | string | fr | 0.9 | False | `W123456789` |
 | commune | French commune name | string | fr, geo | 0.8 | False | `saint denis` |
 | csp_insee | French socio-professional category label, from the INSEE reference source | string | fr | 1 | False | `employes de la poste` |
 | date | Date (flexible formats) | date | temp, type | 1 | False | `1960-08-07` |
@@ -25,14 +25,14 @@
 | departement | French département name | string | fr, geo | 0.9 | False | `essonne` |
 | email | Email | string |  | 0.9 | False | `cdo_intern@data.gouv.fr` |
 | float | Float number (with a dot or a comma as decimal separator) | float | type | 1 | False | `1` |
-| geojson | JSON object in the GEOJSON format | json | geo | 1 | False | `{"coordinates": [45.783753, 3.049342], "type": "63870"}` |
-| id_rnb | Building identifier from the French national building reference source (RNB) | string | fr, geo | 1 | True | `FT4RKBXBVH9S` |
+| geojson | JSON object in the [GeoJSON](https://fr.wikipedia.org/wiki/GeoJSON) format | json | geo | 1 | False | `{"coordinates": [45.783753, 3.049342], "type": "63870"}` |
+| id_rnb | Building identifier from the French national building reference source ([RNB](https://rnb.beta.gouv.fr/definition)) | string | fr, geo | 1 | True | `FT4RKBXBVH9S` |
 | insee_ape700 | French acitvity code from the INSEE reference source (APE) | string | fr | 0.8 | False | `0116Z` |
 | insee_canton | French canton name | string | fr, geo | 0.9 | False | `nantua` |
 | int | Integer | int |  | 1 | False | `1` |
-| iso_country_code_alpha2 | ISO alpha 2 country code | string | geo | 1 | False | `FR` |
-| iso_country_code_alpha3 | ISO alpha 3 country code | string | geo | 1 | False | `FRA` |
-| iso_country_code_numeric | ISO numeric country code | string | geo | 1 | False | `250` |
+| iso_country_code_alpha2 | [ISO alpha 2](https://fr.wikipedia.org/wiki/ISO_3166-1_alpha-2) country code | string | geo | 1 | False | `FR` |
+| iso_country_code_alpha3 | [ISO alpha 3](https://fr.wikipedia.org/wiki/ISO_3166-1) country code | string | geo | 1 | False | `FRA` |
+| iso_country_code_numeric | [ISO numeric](https://fr.wikipedia.org/wiki/ISO_3166-1) country code | string | geo | 1 | False | `250` |
 | jour_de_la_semaine | Weekday name in French | string | fr, temp | 0.8 | False | `lundi` |
 | json | JSON object | json | type | 1 | False | `{"pomme": "fruit", "reponse": 42}` |
 | latitude_l93 | Latitude in the Lambert 93 format | float | fr, geo | 1 | True | `6037008` |
@@ -56,5 +56,5 @@
 | uai | French educational struture identifier from the Ministry of education reference source (UAI) | string | fr | 0.8 | False | `0422170F` |
 | url | Web URL | string |  | 1 | False | `www.data.gouv.fr` |
 | username | Username | string |  | 1 | False | `@accueil1` |
-| uuid | Universally unique identifier (UUID) | string |  | 0.8 | False | `884762be-51f3-44c3-b811-1e14c5d89262` |
+| uuid | Universally unique identifier ([UUID](https://fr.wikipedia.org/wiki/Universally_unique_identifier)) | string |  | 0.8 | False | `884762be-51f3-44c3-b811-1e14c5d89262` |
 | year | Year | int | temp | 1 | False | `2015` |

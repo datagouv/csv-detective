@@ -4,7 +4,7 @@ from os.path import dirname, join
 from csv_detective.formats.iso_country_code_alpha2 import labels  # noqa
 
 proportion = 1
-description = "ISO alpha 3 country code"
+description = "[ISO alpha 3](https://fr.wikipedia.org/wiki/ISO_3166-1) country code"
 tags = ["geo"]
 
 with open(join(dirname(__file__), "data", "iso_country_code_alpha3.txt"), "r") as iofile:
