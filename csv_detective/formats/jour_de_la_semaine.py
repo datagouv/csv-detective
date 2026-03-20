@@ -1,4 +1,5 @@
 proportion = 0.8
+description = "Weekday name in French"
 tags = ["fr", "temp"]
 labels = {
     "jour semaine": 1,
@@ -28,7 +29,7 @@ jours = {
 }
 
 
-def _is(val):
+def _is(val) -> bool:
     if not isinstance(val, str):
         return False
     return val.lower() in jours

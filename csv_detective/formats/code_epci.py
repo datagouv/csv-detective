@@ -1,6 +1,7 @@
 from csv_detective.formats.siren import _is as is_siren
 
 proportion = 0.9
+description = "French EPCI (group of communes) code, subgroup of SIREN"
 tags = ["fr", "geo"]
 mandatory_label = True
 labels = {
@@ -9,7 +10,6 @@ labels = {
 
 
 def _is(val) -> bool:
-    """Repere les codes EPCI (SIRENs spécifiques)"""
     if not isinstance(val, str):
         return False
     # this is the most specific test we can do without an external fetch

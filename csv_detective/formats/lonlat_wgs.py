@@ -3,6 +3,7 @@ from csv_detective.formats.latlon_wgs import SHARED_COORDS_LABELS
 from csv_detective.formats.longitude_wgs import _is as is_lon
 
 proportion = 1
+description = "Longitude and latitude pair in the WGS format"
 tags = ["geo"]
 mandatory_label = True
 
@@ -21,7 +22,7 @@ labels = (
 )
 
 
-def _is(val):
+def _is(val) -> bool:
     if not isinstance(val, str) or val.count(",") != 1:
         return False
     lon, lat = val.split(",")

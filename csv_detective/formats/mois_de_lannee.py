@@ -1,6 +1,7 @@
 from unidecode import unidecode
 
 proportion = 1
+description = "Month name in French"
 tags = ["fr", "temp"]
 labels = {"mois": 1, "month": 1}
 
@@ -34,7 +35,7 @@ mois = {
 }
 
 
-def _is(val):
+def _is(val) -> bool:
     """Renvoie True si les champs peuvent être des mois de l'année"""
     if not isinstance(val, str):
         return False

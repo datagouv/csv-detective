@@ -2,6 +2,7 @@ import json
 from json import JSONDecodeError
 
 proportion = 1
+description = "JSON object"
 python_type = "json"
 tags = ["type"]
 labels = {
@@ -11,7 +12,7 @@ labels = {
 }
 
 
-def _is(val):
+def _is(val) -> bool:
     try:
         loaded = json.loads(val)
         # we don't want to consider integers for instance

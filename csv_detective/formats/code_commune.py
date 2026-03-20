@@ -1,6 +1,7 @@
 from frformat import CodeCommuneInsee, Millesime
 
 proportion = 0.75
+description = "French commune code, from the INSEE reference source"
 tags = ["fr", "geo"]
 mandatory_label = True
 labels = {
@@ -18,7 +19,7 @@ labels = {
 _code_commune_insee = CodeCommuneInsee(Millesime.LATEST)
 
 
-def _is(val):
+def _is(val) -> bool:
     return isinstance(val, str) and _code_commune_insee.is_valid(val)
 
 

@@ -1,6 +1,7 @@
 import codecs
 
 proportion = 1
+description = "Binary data (bytes string)"
 tags = ["type"]
 python_type = "binary"
 labels = {"bytes": 1, "binary": 1, "image": 1, "encode": 1, "content": 1}

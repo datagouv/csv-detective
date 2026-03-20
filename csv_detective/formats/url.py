@@ -1,6 +1,7 @@
 import re
 
 proportion = 1
+description = "Web URL"
 labels = {
     "url": 1,
     "url source": 1,

@@ -5,6 +5,7 @@ from csv_detective.formats.float import float_casting
 from csv_detective.formats.longitude_wgs import SHARED_LONGITUDE_LABELS
 
 proportion = 1
+description = "Longitude in the Lambert 93 format"
 tags = ["fr", "geo"]
 mandatory_label = True
 python_type = "float"
@@ -17,7 +18,7 @@ labels = SHARED_LONGITUDE_LABELS | {
 _longitudel93 = LongitudeL93()
 
 
-def _is(val):
+def _is(val) -> bool:
     try:
         if isinstance(val, str) and is_float(val):
             return _longitudel93.is_valid(float_casting(val))

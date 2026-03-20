@@ -1,6 +1,7 @@
 import re
 
 proportion = 1
+description = "Float number (with a dot or a comma as decimal separator)"
 tags = ["type"]
 python_type = "float"
 labels = {"part": 1, "ratio": 1, "taux": 1}
@@ -12,8 +13,7 @@ def float_casting(val: str) -> float:
     return float(val.replace(",", "."))
 
 
-def _is(val):
-    """Detects floats (including scientific notation), unless there is an underscore or a plus sign (bad practice)."""
+def _is(val) -> bool:
     try:
         if (
             not isinstance(val, str)

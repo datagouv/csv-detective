@@ -1,4 +1,5 @@
 proportion = 1
+description = "Year"
 tags = ["temp"]
 python_type = "int"
 labels = {

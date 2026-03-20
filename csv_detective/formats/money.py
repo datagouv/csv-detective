@@ -1,12 +1,13 @@
 from csv_detective.formats.float import _is as is_float
 
 proportion = 0.8
+description = "Money amount"
 labels = {"budget": 1, "salaire": 1, "euro": 1, "euros": 1, "prêt": 1, "montant": 1}
 
 currencies = {"€", "$", "£", "¥"}
 
 
-def _is(val):
+def _is(val) -> bool:
     if not isinstance(val, str) or not val or val[-1] not in currencies:
         return False
     return is_float(val[:-1])

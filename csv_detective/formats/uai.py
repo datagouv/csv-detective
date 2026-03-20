@@ -1,6 +1,7 @@
 import re
 
 proportion = 0.8
+description = "French educational struture identifier from the Ministry of education reference source (UAI)"
 tags = ["fr"]
 labels = {
     "uai": 1,

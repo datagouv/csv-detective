@@ -1,6 +1,7 @@
 import re
 
 proportion = 0.9
+description = "Email"
 labels = {
     "email": 1,
     "mail": 1,
@@ -16,7 +17,7 @@ labels = {
 }
 
 
-def _is(val):
+def _is(val) -> bool:
     return isinstance(val, str) and bool(
         re.match(r"^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$", val, re.IGNORECASE)
     )

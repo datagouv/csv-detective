@@ -2,6 +2,7 @@ import re
 from os.path import dirname, join
 
 proportion = 1
+description = "ISO alpha 2 country code"
 tags = ["geo"]
 labels = {
     "iso country code": 1,
@@ -18,7 +19,7 @@ with open(join(dirname(__file__), "data", "iso_country_code_alpha2.txt"), "r") a
     liste_pays = set(iofile.read().split("\n"))
 
 
-def _is(val):
+def _is(val) -> bool:
     if not isinstance(val, str) or not bool(re.match(r"[a-zA-Z]{2}$", val)):
         return False
     return val.upper() in liste_pays

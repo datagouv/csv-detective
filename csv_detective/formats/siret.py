@@ -1,6 +1,7 @@
 import re
 
 proportion = 0.8
+description = "French business establishment identifier, from the INSEE reference source (SIRENE)"
 tags = ["fr"]
 mandatory_label = True
 labels = {
@@ -14,7 +15,6 @@ labels = {
 
 
 def _is(val):
-    """Détection des identifiants SIRET (SIRENE)"""
     if not isinstance(val, str):
         return False
     val = val.replace(" ", "")
