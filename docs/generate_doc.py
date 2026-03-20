@@ -1,4 +1,5 @@
 import os
+
 from csv_detective.format import FormatsManager
 
 
@@ -23,6 +24,7 @@ def generate():
         )
     with open(os.path.dirname(os.path.abspath(__file__)) + "/formats.md", "w") as f:
         f.write(md)
+
 
 if __name__ == "__main__":
     generate()
