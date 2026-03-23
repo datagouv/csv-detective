@@ -3,6 +3,7 @@ import re
 from csv_detective.formats.date import SHARED_DATE_LABELS, aaaammjj_pattern, date_casting
 
 proportion = 1
+description = "Datetime with timezone information (flexible formats)"
 tags = ["temp", "type"]
 python_type = "datetime"
 labels = SHARED_DATE_LABELS | {"datetime": 1, "timestamp": 1}
@@ -18,7 +19,7 @@ pat = (
 prefix = r"^\d{2}[-/:]?\d{2}"
 
 
-def _is(val):
+def _is(val) -> bool:
     # early stops, to cut processing time
     # 16 is the minimal length of a datetime format YYMMDDTHH:MM:SSZ
     # 32 is the maximal length of an ISO datetime format YYYY-MM-DDTHH:MM:SS.dddddd+HH:MM, keeping some slack

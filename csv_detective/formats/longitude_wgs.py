@@ -2,6 +2,7 @@ from csv_detective.formats.float import _is as is_float
 from csv_detective.formats.int import _is as is_int
 
 proportion = 1
+description = "Longitude in the WGS format"
 tags = ["geo"]
 mandatory_label = True
 python_type = "float"
@@ -28,7 +29,7 @@ labels = SHARED_LONGITUDE_LABELS | {
 }
 
 
-def _is(val):
+def _is(val) -> bool:
     try:
         return (
             is_float(val)

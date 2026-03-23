@@ -1,6 +1,7 @@
 from csv_detective.parsing.text import _process_text
 
 proportion = 0.55
+description = "French address"
 tags = ["fr", "geo"]
 labels = {
     "adresse": 1,
@@ -102,8 +103,7 @@ voies = {
 }
 
 
-def _is(val):
-    """Repere des adresses"""
+def _is(val) -> bool:
     if not isinstance(val, str) or len(val) > 150:
         return False
     val = _process_text(val)

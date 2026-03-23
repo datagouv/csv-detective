@@ -3,11 +3,12 @@ import re
 from csv_detective.formats.datetime_aware import labels  # noqa
 
 proportion = 1
+description = "Datetime in the RFC822 format"
 tags = ["temp", "type"]
 python_type = "datetime"
 
 
-def _is(val):
+def _is(val) -> bool:
     return isinstance(val, str) and bool(
         re.match(
             r"^[A-Za-z]{3}, (0[1-9]|[1-2][0-9]|3[01]) [A-Za-z]{3} \d{4} "

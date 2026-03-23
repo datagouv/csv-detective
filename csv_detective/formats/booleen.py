@@ -1,4 +1,5 @@
 proportion = 1
+description = "Boolean or boolean-like value (yes/no, 1/0...)"
 tags = ["type"]
 python_type = "bool"
 labels = {"is ": 1, "has ": 1, "est ": 1}
@@ -26,7 +27,7 @@ def bool_casting(val: str) -> bool | None:
     return bool_mapping.get(val.lower())
 
 
-def _is(val):
+def _is(val) -> bool:
     return isinstance(val, str) and val.lower() in liste_bool
 
 

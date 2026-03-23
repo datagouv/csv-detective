@@ -2,6 +2,7 @@ from csv_detective.formats.latitude_wgs import _is as is_lat
 from csv_detective.formats.longitude_wgs import _is as is_lon
 
 proportion = 1
+description = "Latitude and longitude pair in the WGS format"
 tags = ["geo"]
 mandatory_label = True
 
@@ -39,7 +40,7 @@ labels = (
 )
 
 
-def _is(val):
+def _is(val) -> bool:
     if not isinstance(val, str) or val.count(",") != 1:
         return False
     lat, lon = val.split(",")

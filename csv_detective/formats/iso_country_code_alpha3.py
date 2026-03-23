@@ -4,13 +4,14 @@ from os.path import dirname, join
 from csv_detective.formats.iso_country_code_alpha2 import labels  # noqa
 
 proportion = 1
+description = "[ISO alpha 3](https://fr.wikipedia.org/wiki/ISO_3166-1) country code"
 tags = ["geo"]
 
 with open(join(dirname(__file__), "data", "iso_country_code_alpha3.txt"), "r") as iofile:
     liste_pays = set(iofile.read().split("\n"))
 
 
-def _is(val):
+def _is(val) -> bool:
     """Renvoie True si val peut etre un code iso pays alpha-3, False sinon"""
     if not isinstance(val, str) or not bool(re.match(r"[a-zA-Z]{3}$", val)):
         return False

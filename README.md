@@ -156,6 +156,8 @@ Includes :
 - Years, Dates, Jours de la Semaine FR
 - UUIDs, Mongo ObjectIds
 
+See the complete list [here](./docs/formats.md).
+
 ### Validation
 If you have a pre-made analysis of a file, you can check whether another file conforms to the same analysis:
 ```python
@@ -202,36 +204,3 @@ Organisations such as [data.gouv.fr](http://data.gouv.fr) aggregate huge amounts
 [`udata-hydra`](https://github.com/etalab/udata-hydra) is a crawler that checks, analyzes (using `csv-detective`) and APIfies all tabular files from [data.gouv.fr](http://data.gouv.fr).
 
 An early version of this analysis of all resources on data.gouv.fr can be found [here](https://github.com/Leobouloc/data.gouv-exploration).
-
-## Linting
-
-Remember to format, lint, and sort imports with [Ruff](https://docs.astral.sh/ruff/) before committing (checks will remind you anyway):
-```bash
-pip install .[dev]
-ruff check --fix .
-ruff format .
-```
-
-### 🏷️ Release
-
-The release process uses the [`tag_version.sh`](tag_version.sh) script to create git tags and update [CHANGELOG.md](CHANGELOG.md) and [pyproject.toml](pyproject.toml) automatically.
-
-**Prerequisites**: [GitHub CLI](https://cli.github.com/) (`gh`) must be installed and authenticated, and you must be on the main branch with a clean working directory.
-
-```bash
-# Create a new release
-./tag_version.sh <version>
-
-# Example
-./tag_version.sh 2.5.0
-
-# Dry run to see what would happen
-./tag_version.sh 2.5.0 --dry-run
-```
-
-The script automatically:
-- Updates the version in `pyproject.toml`
-- Extracts commits since the last tag and formats them for `CHANGELOG.md`
-- Identifies breaking changes (commits with `!:` in the subject)
-- Creates a git tag and pushes it to the remote repository
-- Creates a GitHub release with the changelog content

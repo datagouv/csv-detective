@@ -66,6 +66,18 @@ jobs:
       - store_test_results:
           path: reports/python
 
+  check-doc:
+    docker:
+      - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-bookworm
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Check that documentation is up to date
+          command: uv run python ./docs/generate_doc.py && git add ./docs/formats.md && git diff --cached --exit-code
+      - store_test_results:
+          path: reports/python
+
   build:
     docker:
       - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-bookworm  # needs git for setuptools_scm
@@ -125,10 +137,14 @@ workflows:
       - tests:
           requires:
             - install
+      - check-doc:
+          requires:
+            - install
       - build:
           requires:
             - tests
             - lint
+            - check-doc
       - publish:
           requires:
             - build

@@ -1,6 +1,7 @@
 from frformat import CodeRNA
 
 proportion = 0.9
+description = "French association identifier, from the national assiocation registry ([RNA](https://www.data.gouv.fr/datasets/repertoire-national-des-associations))"
 tags = ["fr"]
 labels = {
     "code rna": 1,
@@ -13,7 +14,7 @@ labels = {
 _code_rna = CodeRNA()
 
 
-def _is(val):
+def _is(val) -> bool:
     return isinstance(val, str) and _code_rna.is_valid(val)
 
 

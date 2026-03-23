@@ -1,6 +1,7 @@
 import json
 
 proportion = 1
+description = "JSON object in the [GeoJSON](https://fr.wikipedia.org/wiki/GeoJSON) format"
 tags = ["geo"]
 python_type = "json"
 labels = {

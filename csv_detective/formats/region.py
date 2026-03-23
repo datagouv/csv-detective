@@ -1,6 +1,7 @@
 from frformat import Millesime, Options, Region
 
 proportion = 1
+description = "French région name"
 tags = ["fr", "geo"]
 labels = {
     "region": 1,
@@ -60,7 +61,6 @@ _region = Region(Millesime.LATEST, _options)
 
 
 def _is(val):
-    """Match avec le nom des regions"""
     return isinstance(val, str) and _region.is_valid(val)
 
 

@@ -6,6 +6,7 @@ from dateutil.parser import ParserError
 from dateutil.parser import parse as dateutil_parser
 
 proportion = 1
+description = "Date (flexible formats)"
 tags = ["temp", "type"]
 python_type = "date"
 SHARED_DATE_LABELS = {
@@ -56,7 +57,7 @@ string_month_pattern = (
 ).replace("SEP", seps + "?")
 
 
-def _is(val):
+def _is(val) -> bool:
     # many early stops, to cut processing time
     # and avoid the costly use of date_casting as much as possible
     # /!\ timestamps are considered ints, not dates

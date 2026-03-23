@@ -1,6 +1,7 @@
 from frformat import CodeFantoir
 
 proportion = 1
+description = "Code from the [FANTOIR reference source](https://www.data.gouv.fr/datasets/fichier-fantoir-des-voies-et-lieux-dits) (deprecated since july 2023)"
 tags = ["fr", "geo"]
 mandatory_label = True
 labels = {
@@ -12,7 +13,7 @@ labels = {
 _code_fantoir = CodeFantoir()
 
 
-def _is(val):
+def _is(val) -> bool:
     return isinstance(val, str) and _code_fantoir.is_valid(val)
 
 

@@ -1,6 +1,7 @@
 from frformat import Commune, Millesime, Options
 
 proportion = 0.8
+description = "French commune name"
 tags = ["fr", "geo"]
 labels = {
     "commune": 1,
@@ -17,7 +18,7 @@ _options = Options(
 _commune = Commune(Millesime.LATEST, _options)
 
 
-def _is(val):
+def _is(val) -> bool:
     return isinstance(val, str) and _commune.is_valid(val)
 
 

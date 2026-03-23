@@ -3,6 +3,7 @@ from os.path import dirname, join
 from csv_detective.parsing.text import _process_text
 
 proportion = 1
+description = "French socio-professional category label, from the INSEE reference source"
 tags = ["fr"]
 labels = {
     "csp insee": 1,
@@ -19,7 +20,7 @@ codes_insee = set(codes_insee)
 f.close()
 
 
-def _is(val):
+def _is(val) -> bool:
     if not isinstance(val, str):
         return False
     val = _process_text(val)

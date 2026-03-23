@@ -3,6 +3,7 @@ import re
 from csv_detective.parsing.text import _process_text
 
 proportion = 1
+description = "Full text date in French"
 tags = ["fr", "temp"]
 labels = {"date": 1}
 
@@ -12,7 +13,7 @@ pattern = (
 )
 
 
-def _is(val):
+def _is(val) -> bool:
     return isinstance(val, str) and bool(re.match(pattern, _process_text(val)))
 
 

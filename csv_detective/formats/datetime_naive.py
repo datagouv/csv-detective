@@ -5,6 +5,7 @@ from csv_detective.formats.date import aaaammjj_pattern, date_casting
 from csv_detective.formats.datetime_aware import labels, prefix  # noqa
 
 proportion = 1
+description = "Datetime with no timezone information (flexible formats)"
 tags = ["temp", "type"]
 python_type = "datetime"
 threshold = 0.7
@@ -17,7 +18,6 @@ pat = (
 
 
 def _is(val: Any | None) -> bool:
-    """Detects naive datetimes only"""
     # early stops, to cut processing time
     # 15 is the minimal length of a datetime format YYMMDDTHH:MM:SS
     # 26 is the maximal length of an ISO datetime format YYYY-MM-DDTHH:MM:SS.dddddd, keeping some slack

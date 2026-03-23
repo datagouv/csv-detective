@@ -1,6 +1,7 @@
 from frformat import CodeDepartement, Millesime, Options
 
 proportion = 1
+description = "French département code"
 tags = ["fr", "geo"]
 mandatory_label = True
 labels = {
@@ -20,7 +21,7 @@ _options = Options(
 _code_departement = CodeDepartement(Millesime.LATEST, _options)
 
 
-def _is(val):
+def _is(val) -> bool:
     return isinstance(val, str) and _code_departement.is_valid(val)
 
 

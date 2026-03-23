@@ -1,6 +1,7 @@
 from frformat import Millesime, Options, Pays
 
 proportion = 0.6
+description = "Country name in French"
 tags = ["fr", "geo"]
 labels = {
     "pays": 1,
@@ -23,7 +24,7 @@ _options = Options(
 _pays = Pays(Millesime.LATEST, _options)
 
 
-def _is(val):
+def _is(val) -> bool:
     return isinstance(val, str) and _pays.is_valid(val)
 
 

@@ -1,6 +1,7 @@
 from frformat import CodePostal
 
 proportion = 0.9
+description = "French postcode from [La Poste registry](https://www.data.gouv.fr/datasets/base-officielle-des-codes-postaux)"
 tags = ["fr", "geo"]
 mandatory_label = True
 labels = {
@@ -16,7 +17,7 @@ labels = {
 _code_postal = CodePostal()
 
 
-def _is(val):
+def _is(val) -> bool:
     return isinstance(val, str) and _code_postal.is_valid(val)
 
 

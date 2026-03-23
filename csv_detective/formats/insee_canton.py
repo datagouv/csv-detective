@@ -1,6 +1,7 @@
 from frformat import Canton, Millesime, Options
 
 proportion = 0.9
+description = "French canton name"
 tags = ["fr", "geo"]
 labels = {
     "insee canton": 1,
@@ -18,7 +19,7 @@ _options = Options(
 _canton = Canton(Millesime.LATEST, _options)
 
 
-def _is(val):
+def _is(val) -> bool:
     return isinstance(val, str) and _canton.is_valid(val)
 
 

@@ -1,10 +1,11 @@
 import re
 
 proportion = 0.8
+description = "Mongo object identifier"
 labels = {"id": 1, "objectid": 1}
 
 
-def _is(val):
+def _is(val) -> bool:
     return isinstance(val, str) and bool(re.match(r"^[0-9a-fA-F]{24}$", val))
 
 

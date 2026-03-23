@@ -7,6 +7,7 @@ class Format:
     def __init__(
         self,
         name: str,
+        description: str,
         func: Callable[[Any], bool],
         _test_values: dict[bool, list[str]],
         labels: dict[str, float] = {},
@@ -20,6 +21,7 @@ class Format:
 
         Args:
             name: the name of the format.
+            descrption: a short description of the format.
             func: the value test for the format (returns whether a string is valid).
             _test_values: lists of valid and invalid values, used in the tests
             labels: the dict of hint headers and their credibilty for the header score (NB: credibility is relative witin a single format, should be used to rank the valid labels)
@@ -29,6 +31,7 @@ class Format:
             python_type: the python type related to the format (less specific, used for downstream casting)
         """
         self.name: str = name
+        self.description: str = description
         self.func: Callable[[Any], bool] = func
         self._test_values: dict[bool, list[str]] = _test_values
         self.labels: dict[str, float] = labels
@@ -51,7 +54,9 @@ class FormatsManager:
     formats: dict[str, Format]
 
     def __init__(
-        self, custom_proportions: float | int | dict[str, float | int] | None = None
+        self,
+        *,
+        custom_proportions: float | int | dict[str, float | int] | None = None,
     ) -> None:
         import csv_detective.formats as formats
 
@@ -77,7 +82,7 @@ class FormatsManager:
                 _test_values=module._test_values,
                 **{
                     attr: val
-                    for attr in ["labels", "tags", "mandatory_label", "python_type"]
+                    for attr in ["labels", "description", "tags", "mandatory_label", "python_type"]
                     if (val := getattr(module, attr, None))
                 }
                 | {

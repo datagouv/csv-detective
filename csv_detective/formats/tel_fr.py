@@ -1,6 +1,7 @@
 import re
 
 proportion = 0.7
+description = "French phone number"
 tags = ["fr"]
 labels = {
     "telephone": 1,
