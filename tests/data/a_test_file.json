@@ -1,5 +1,5 @@
 {
-    "encoding": "ascii",
+    "encoding": "utf-8",
     "separator": ";",
     "header_row_idx": 2,
     "header": [

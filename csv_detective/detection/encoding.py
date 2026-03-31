@@ -14,7 +14,13 @@ def detect_encoding(binary_file: BytesIO, verbose: bool = False) -> str:
     if verbose:
         start = time()
         logging.info("Detecting encoding")
-    encoding_dict = detect(binary_file.read())
+    read = binary_file.read()
+    try:
+        # utf-8 is the most common encoding, we should start there
+        read.decode("utf-8")
+        encoding_dict = {"encoding": "utf-8", "confidence": 1}
+    except Exception:
+        encoding_dict = detect(read)
     if not encoding_dict["encoding"]:
         raise ValueError(
             "Could not detect the file's encoding. Consider specifying it in the routine call."
