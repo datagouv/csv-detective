@@ -10,7 +10,7 @@ You can also directly feed the URL of a remote file (from data.gouv.fr for insta
 
 ### Install the package
 
-You need to have Python >= 3.10 installed. We recommend using a virtual environment.
+You need to have Python >= 3.11 installed. We recommend using a virtual environment.
 
 ```bash
 pip install csv-detective
