@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.11.1 (2026-04-01)
+
+- Add formats documentation and restructure docs ([#237](https://github.com/etalab/csv-detective/pull/237))
+- Don't consider too long ints as `int` or `float` ([#233](https://github.com/etalab/csv-detective/pull/233))
+- New format `id_rnb` (along with a `frformat` upgrade) ([#234](https://github.com/etalab/csv-detective/pull/234))
+- Prevent `NaN` and `inf` in profile at dump time ([#235](https://github.com/etalab/csv-detective/pull/235))
+- Prioritize `utf-8` in encoding detection ([#238](https://github.com/etalab/csv-detective/pull/238))
+- Upgrade pandas to 3.0 ([#236](https://github.com/etalab/csv-detective/pull/236))
+- docs: update minimal python version
+
+
 ## 0.11.0 (2026-03-09)
 
 - Add `code_epci` format ([#214](https://github.com/etalab/csv-detective/pull/214))
