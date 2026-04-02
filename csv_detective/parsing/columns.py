@@ -144,6 +144,7 @@ def test_col_chunks(
                 fmt_label
                 for fmt_label in return_table.index
                 if return_table.loc[fmt_label, col] > 0
+                and fmt_label not in mandatory_label_skip.get(col, set())
             ]
             for col in return_table.columns
         }
@@ -154,6 +155,16 @@ def test_col_chunks(
 
     # analysing the sample to get a first guess
     return_table = test_col(table, formats, limited_output, skipna=skipna, verbose=verbose)
+    # mandatory_label formats are zeroed out at the end if the label doesn't match,
+    # so there's no point running the expensive field tests on those columns
+    mandatory_label_skip: dict[str, set[str]] = {
+        col: {
+            fmt_label
+            for fmt_label, fmt in formats.items()
+            if fmt.mandatory_label and fmt.is_valid_label(col) == 0
+        }
+        for col in table.columns
+    }
     remaining_tests_per_col = build_remaining_tests_per_col(return_table)
 
     # hashing rows to get nb_duplicates
