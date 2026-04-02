@@ -17,7 +17,7 @@ def handle_empty_columns(return_table: pd.DataFrame):
     # handling that empty columns score 1 everywhere
     for col in return_table.columns:
         if sum(return_table[col]) == len(return_table):
-            return_table[col] = 0
+            return_table[col] = 0.0
 
 
 def test_col_val(
