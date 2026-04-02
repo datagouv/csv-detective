@@ -17,7 +17,7 @@ def handle_empty_columns(return_table: pd.DataFrame):
     # handling that empty columns score 1 everywhere
     for col in return_table.columns:
         if sum(return_table[col]) == len(return_table):
-            return_table[col] = 0
+            return_table[col] = 0.0
 
 
 def test_col_val(
@@ -165,6 +165,8 @@ def test_col_chunks(
         }
         for col in table.columns
     }
+    handle_empty_columns(return_table)
+    empty_cols = {col for col in table.columns if table[col].dropna().empty}
     remaining_tests_per_col = build_remaining_tests_per_col(return_table)
 
     # hashing rows to get nb_duplicates
@@ -214,6 +216,14 @@ def test_col_chunks(
                 batch[col].value_counts(dropna=False),
                 fill_value=0,
             )
+        for col in list(empty_cols):
+            if not batch[col].dropna().empty:
+                empty_cols.discard(col)
+                remaining_tests_per_col[col] = [
+                    fmt_label
+                    for fmt_label in formats.keys()
+                    if fmt_label not in mandatory_label_skip.get(col, set())
+                ]
         if not any(remaining_tests for remaining_tests in remaining_tests_per_col.values()):
             # no more potential tests to do on any column, early stop
             break
