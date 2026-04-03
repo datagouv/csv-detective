@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.11.2 (2026-04-03)
+
+- feat: do not run any tests on empty columns ([#240](https://github.com/etalab/csv-detective/pull/240))
+- feat: skip tests for mandatory labels columns ([#239](https://github.com/etalab/csv-detective/pull/239))
+
+
 ## 0.11.1 (2026-04-01)
 
 - Add formats documentation and restructure docs ([#237](https://github.com/etalab/csv-detective/pull/237))
