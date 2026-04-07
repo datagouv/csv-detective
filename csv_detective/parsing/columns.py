@@ -60,8 +60,7 @@ def test_col_val(
             ]:
                 if not all(apply_test_func(serie, format.func, _range)):
                     return 0.0
-            unique_results = serie.unique()
-            return float(pd.Series(unique_results).apply(format.func).all())
+            return float(all(format.func(v) for v in serie.unique()))
     finally:
         if verbose and time() - start > 3:
             display_logs_depending_process_time(

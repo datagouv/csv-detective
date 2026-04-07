@@ -120,7 +120,9 @@ def validate(
                 # no test for columns that have not been recognized as a specific format
                 continue
             to_check = chunk[col_name].dropna() if skipna else chunk[col_name]
-            chunk_valid_values = sum(to_check.apply(formats[detected["format"]].func))
+            value_counts = to_check.value_counts()
+            unique_results = value_counts.index.to_series().apply(formats[detected["format"]].func)
+            chunk_valid_values = (unique_results * value_counts.values).sum()
             if formats[detected["format"]].proportion == 1 and chunk_valid_values < len(to_check):
                 # we can early stop in this case, not all values are valid while we want 100%
                 if verbose:
