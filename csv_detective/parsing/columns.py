@@ -168,9 +168,7 @@ def test_col_chunks(
     handle_empty_columns(return_table)
     empty_cols = (
         # if NA values should be considered valid, then we can skip empty columns
-        {col for col in table.columns if table[col].isna().all()}
-        if skipna
-        else {}
+        {col for col in table.columns if table[col].isna().all()} if skipna else {}
     )
     remaining_tests_per_col = build_remaining_tests_per_col(return_table)
 
