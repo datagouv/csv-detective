@@ -47,7 +47,9 @@ def test_col_val(
             return 1.0 if skipna else 0.0
         if not limited_output or format.proportion < 1:
             # we want or have to go through the whole column to have the proportion
-            result: float = serie.apply(format.func).sum() / ser_len
+            value_counts = serie.value_counts()
+            unique_results = value_counts.index.to_series().apply(format.func)
+            result: float = (unique_results * value_counts.values).sum() / ser_len
             return result if result >= format.proportion else 0.0
         else:
             # the whole column has to be valid so we have early stops (1 then 5 rows)
@@ -58,7 +60,7 @@ def test_col_val(
             ]:
                 if not all(apply_test_func(serie, format.func, _range)):
                     return 0.0
-            return float(serie.apply(format.func).sum() == ser_len)
+            return float(all(format.func(v) for v in serie.unique()))
     finally:
         if verbose and time() - start > 3:
             display_logs_depending_process_time(
