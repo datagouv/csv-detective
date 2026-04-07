@@ -64,13 +64,11 @@ def _is(val) -> bool:
     if not isinstance(val, str) or len(val) > 20 or len(val) < 8:
         return False
     # if it's a usual date pattern
-    if any(
+    if (
         # with this syntax, if any of the first value is True, the next ones are not computed
-        [
-            bool(re.match(jjmmaaaa_pattern, val))
-            or bool(re.match(aaaammjj_pattern, val))
-            or bool(re.match(string_month_pattern, val, re.IGNORECASE))
-        ]
+        bool(re.match(jjmmaaaa_pattern, val))
+        or bool(re.match(aaaammjj_pattern, val))
+        or bool(re.match(string_month_pattern, val, re.IGNORECASE))
     ):
         return True
     if re.match(r"^-?\d+[\.|,]\d+$", val):

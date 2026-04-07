@@ -36,7 +36,7 @@ def load_file(
         # file has no extension and we don't have insights from arguments, we'll investigate how to read it
         engine = detect_engine(file_path, verbose=verbose)
 
-    if engine in EXCEL_ENGINES or any([file_path.endswith(k) for k in XLS_LIKE_EXT]):
+    if engine in EXCEL_ENGINES or any(file_path.endswith(k) for k in XLS_LIKE_EXT):
         table, total_lines, nb_duplicates, sheet_name, engine, header_row_idx = parse_excel(
             file_path=file_path,
             num_rows=num_rows,
