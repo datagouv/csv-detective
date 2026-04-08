@@ -1,5 +1,6 @@
 import logging
 from collections import defaultdict
+from datetime import datetime
 
 import pandas as pd
 
@@ -123,7 +124,20 @@ def validate(
             if to_check.empty:
                 continue
             value_counts = to_check.value_counts()
-            unique_results = value_counts.index.to_series().apply(formats[detected["format"]].func)
+            date_formats = detected.get("date_format")
+            if date_formats:
+                def _fast_is(val, _fmts=date_formats):
+                    for fmt in _fmts:
+                        try:
+                            datetime.strptime(val, fmt)
+                            return True
+                        except (ValueError, TypeError):
+                            continue
+                    return False
+
+                unique_results = value_counts.index.to_series().apply(_fast_is)
+            else:
+                unique_results = value_counts.index.to_series().apply(formats[detected["format"]].func)
             chunk_valid_values = (unique_results * value_counts.values).sum()
             if formats[detected["format"]].proportion == 1 and chunk_valid_values < len(to_check):
                 # we can early stop in this case, not all values are valid while we want 100%

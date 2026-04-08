@@ -13,7 +13,21 @@ from csv_detective.parsing.csv import CHUNK_SIZE
 from csv_detective.utils import display_logs_depending_process_time
 
 
-def cast(value: str, _type: str) -> str | int | float | bool | date | datetime | bytes | None:
+def fast_date_casting(val: str, date_formats: list[str] | None) -> datetime | None:
+    if date_formats:
+        for fmt in date_formats:
+            try:
+                return datetime.strptime(val, fmt)
+            except (ValueError, TypeError):
+                continue
+    return date_casting(val)
+
+
+def cast(
+    value: str,
+    _type: str,
+    date_format: list[str] | None = None,
+) -> str | int | float | bool | date | datetime | bytes | None:
     if not isinstance(value, str) or value in pd._libs.parsers.STR_NA_VALUES:
         # STR_NA_VALUES are directly ingested as NaN by pandas, we avoid trying to cast them (into int for instance)
         return None
@@ -31,10 +45,10 @@ def cast(value: str, _type: str) -> str | int | float | bool | date | datetime |
             # in hydra json are given to postgres as strings, conversion is done by postgres
             return json.loads(value)
         case "date":
-            _date = date_casting(value)
+            _date = fast_date_casting(value, date_format)
             return _date.date() if _date else None
         case "datetime":
-            return date_casting(value)
+            return fast_date_casting(value, date_format)
         case "binary":
             return binary_casting(value)
         case _:
@@ -57,7 +71,12 @@ def cast_df(
             # to allow having ints and NaN in the same column
             df[col_name] = df[col_name].astype(pd.Int64Dtype())
         else:
-            df[col_name] = df[col_name].apply(lambda col: cast(col, _type=detection["python_type"]))
+            date_format = detection.get("date_format")
+            df[col_name] = df[col_name].apply(
+                lambda col, _type=detection["python_type"], _df=date_format: cast(
+                    col, _type=_type, date_format=_df
+                )
+            )
     if verbose:
         display_logs_depending_process_time(
             f"Casting columns completed in {round(time() - start, 3)}s",

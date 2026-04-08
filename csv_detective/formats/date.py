@@ -57,31 +57,93 @@ string_month_pattern = (
 ).replace("SEP", seps + "?")
 
 
-def _is(val) -> bool:
+def _is(val, meta=None) -> bool:
     # many early stops, to cut processing time
     # and avoid the costly use of date_casting as much as possible
     # /!\ timestamps are considered ints, not dates
     if not isinstance(val, str) or len(val) > 20 or len(val) < 8:
         return False
     # if it's a usual date pattern
-    if (
-        # with this syntax, if any of the first value is True, the next ones are not computed
-        bool(re.match(jjmmaaaa_pattern, val))
-        or bool(re.match(aaaammjj_pattern, val))
-        or bool(re.match(string_month_pattern, val, re.IGNORECASE))
-    ):
+    if re.match(jjmmaaaa_pattern, val):
+        if meta is not None:
+            fmt = detect_strptime_format(val)
+            if fmt:
+                meta.setdefault("date_format", set()).add(fmt)
+        return True
+    if re.match(aaaammjj_pattern, val):
+        if meta is not None:
+            fmt = detect_strptime_format(val)
+            if fmt:
+                meta.setdefault("date_format", set()).add(fmt)
+        return True
+    if re.match(string_month_pattern, val, re.IGNORECASE):
         return True
     if re.match(r"^-?\d+[\.|,]\d+$", val):
         # regular floats are excluded
         return False
     # not enough digits => not a date (slightly arbitrary)
-    if sum([char.isdigit() for char in val]) / len(val) < threshold:
+    if sum(char.isdigit() for char in val) / len(val) < threshold:
         return False
     # last resort
     res = date_casting(val)
     if not res or res.hour or res.minute or res.second:
         return False
     return True
+
+
+def detect_strptime_format(val: str) -> str | None:
+    """Returns the strptime format string for a date value, or None if format can't be determined."""
+    if not isinstance(val, str) or len(val) > 20 or len(val) < 8:
+        return None
+
+    if re.match(jjmmaaaa_pattern, val):
+        sep = val[2]
+        if val[5] != sep:
+            return None
+        return f"%d{sep}%m{sep}%Y"
+
+    if re.match(aaaammjj_pattern, val):
+        if len(val) == 8:
+            return "%Y%m%d"
+        sep = val[4]
+        if val[7] != sep:
+            return None
+        return f"%Y{sep}%m{sep}%d"
+
+    return None
+
+
+def detect_strptime_format_datetime(val: str) -> str | None:
+    """Returns the strptime format string for a datetime value, or None if format can't be determined."""
+    from csv_detective.formats.datetime_aware import pat as aware_pat
+    from csv_detective.formats.datetime_naive import pat as naive_pat
+
+    if not isinstance(val, str) or len(val) < 15:
+        return None
+
+    for pat, has_tz in [(naive_pat, False), (aware_pat, True)]:
+        if not re.match(pat, val):
+            continue
+        sep = val[4]
+        if sep.isdigit():
+            sep = ""
+        elif val[7] != sep:
+            return None
+
+        date_end = 8 if not sep else 10
+        tsep = val[date_end]
+
+        time_part = val[date_end + 1 :]
+        has_microseconds = "." in time_part
+
+        fmt = f"%Y{sep}%m{sep}%d{tsep}%H:%M:%S"
+        if has_microseconds:
+            fmt += ".%f"
+        if has_tz:
+            fmt += "%z"
+        return fmt
+
+    return None
 
 
 _test_values = {

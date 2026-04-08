@@ -43,7 +43,7 @@ def detect_formats(
     # Perform testing on fields
     if not in_chunks:
         # table is small enough to be tested in one go
-        scores_table_fields = test_col(
+        scores_table_fields, all_meta = test_col(
             table=table,
             formats=formats,
             limited_output=limited_output,
@@ -59,7 +59,7 @@ def detect_formats(
         analysis["categorical"] = res_categorical
         col_values = None
     else:
-        scores_table_fields, analysis, col_values = test_col_chunks(
+        scores_table_fields, analysis, col_values, all_meta = test_col_chunks(
             table=table,
             file_path=file_path,
             analysis=analysis,
@@ -127,5 +127,23 @@ def detect_formats(
         analysis["formats"] = defaultdict(list)
         for header, col_metadata in analysis["columns"].items():
             analysis["formats"][col_metadata["format"]].append(header)
+
+    # enrich date/datetime columns with date_format from meta collected during detection
+    for col_name, detection in analysis["columns"].items():
+        if isinstance(detection, list):
+            detection = next(
+                (d for d in detection if d.get("python_type") in ("date", "datetime")),
+                None,
+            )
+            if detection is None:
+                continue
+        if detection.get("python_type") not in ("date", "datetime"):
+            continue
+        col_meta = all_meta.get(col_name, {}).get(detection["format"], {})
+        date_formats = col_meta.get("date_format", set())
+        if len(date_formats) == 1:
+            detection["date_format"] = list(date_formats)
+        else:
+            detection["date_format"] = None
 
     return analysis, col_values

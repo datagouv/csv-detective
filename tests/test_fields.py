@@ -11,6 +11,7 @@ from csv_detective.detection.variables import (
     detect_continuous_variable,
 )
 from csv_detective.format import FormatsManager
+from csv_detective.formats.date import detect_strptime_format, detect_strptime_format_datetime
 from csv_detective.output.dataframe import cast
 from csv_detective.output.utils import prepare_output_dict
 from csv_detective.parsing.columns import test_col as col_test  # to prevent pytest from testing it
@@ -170,9 +171,63 @@ def test_all_proportion_1():
         }
     )
     # testing columns for all formats
-    returned_table = col_test(table, fmtm.formats, limited_output=True)
+    returned_table, _ = col_test(table, fmtm.formats, limited_output=True)
     # the analysis should have found no match on any format
     assert all(returned_table[col].sum() == 0 for col in table.columns)
+
+
+@pytest.mark.parametrize(
+    "value, expected_format",
+    [
+        ("1960-08-07", "%Y-%m-%d"),
+        ("12/02/2007", "%d/%m/%Y"),
+        ("02 05 2003", "%d %m %Y"),
+        ("20030502", "%Y%m%d"),
+        ("2003.05.02", "%Y.%m.%d"),
+        ("15 jan 1985", None),
+        ("1993-12/02", None),  # mixed separators
+    ],
+)
+def test_detect_strptime_format(value, expected_format):
+    assert detect_strptime_format(value) == expected_format
+
+
+@pytest.mark.parametrize(
+    "value, expected_format",
+    [
+        ("2021-06-22 10:20:10", "%Y-%m-%d %H:%M:%S"),
+        ("2030/06/22 00:00:00.0028", "%Y/%m/%d %H:%M:%S.%f"),
+        ("2021-06-22 10:20:10-04:00", "%Y-%m-%d %H:%M:%S%z"),
+        ("2030-06-22 00:00:00.0028+02:00", "%Y-%m-%d %H:%M:%S.%f%z"),
+        ("2000-12-21 10:20:10.1Z", "%Y-%m-%d %H:%M:%S.%f%z"),
+        ("2024-12-19T10:53:36.428000+00:00", "%Y-%m-%dT%H:%M:%S.%f%z"),
+        ("1925_12_20T14:30:00.2763", "%Y_%m_%dT%H:%M:%S.%f"),
+        ("1925 12 20 14:30:00Z", "%Y %m %d %H:%M:%S%z"),
+        ("Sun, 06 Nov 1994 08:49:37 GMT", None),  # rfc822
+        ("12/31/2022 12:00:00", None),  # mm/dd/yyyy not matched by aaaammjj
+    ],
+)
+def test_detect_strptime_format_datetime(value, expected_format):
+    assert detect_strptime_format_datetime(value) == expected_format
+
+
+@pytest.mark.parametrize(
+    "value, _type, date_format, expected",
+    [
+        ("2022-08-01", "date", ["%Y-%m-%d"], _date(2022, 8, 1)),
+        # dateutil interprets 12/02 as MM/DD (US), but csv-detective detects DD/MM
+        # strptime with the detected format gives the correct DD/MM interpretation
+        ("12/02/2007", "date", ["%d/%m/%Y"], _date(2007, 2, 12)),
+        (
+            "2024-09-23 17:32:07",
+            "datetime",
+            ["%Y-%m-%d %H:%M:%S"],
+            _datetime(2024, 9, 23, 17, 32, 7),
+        ),
+    ],
+)
+def test_cast_with_date_format(value, _type, date_format, expected):
+    assert cast(value, _type, date_format=date_format) == expected
 
 
 @pytest.mark.parametrize(
