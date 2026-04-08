@@ -75,17 +75,25 @@ def test_col(
     limited_output: bool,
     skipna: bool = True,
     verbose: bool = False,
+    parent_children: dict[str, list[str]] | None = None,
 ):
     if verbose:
         start = time()
         logging.info("Testing columns to get formats")
     return_table = pd.DataFrame(columns=table.columns)
-    for idx, (label, format) in enumerate(formats.items()):
+
+    if parent_children:
+        parent_names = set(parent_children.keys())
+        leaf_formats = {k: v for k, v in formats.items() if k not in parent_names}
+        parent_formats = {k: v for k, v in formats.items() if k in parent_names}
+    else:
+        leaf_formats = formats
+        parent_formats = {}
+
+    for idx, (label, format) in enumerate(leaf_formats.items()):
         if verbose:
             start_type = time()
             logging.info(f"\t- Starting with format '{label}'")
-        # improvement lead : put the longest tests behind and make them only if previous tests not satisfactory
-        # => the following needs to change, "apply" means all columns are tested for one type at once
         for col in table.columns:
             return_table.loc[label, col] = test_col_val(
                 table[col],
@@ -96,9 +104,38 @@ def test_col(
             )
         if verbose:
             display_logs_depending_process_time(
-                f'\t> Done with format "{label}" in {round(time() - start_type, 3)}s ({idx + 1}/{len(formats)})',
+                f'\t> Done with format "{label}" in {round(time() - start_type, 3)}s ({idx + 1}/{len(leaf_formats)})',
                 time() - start_type,
             )
+
+    for label, format in parent_formats.items():
+        if verbose:
+            start_type = time()
+            logging.info(f"\t- Propagating to parent format '{label}'")
+        children = parent_children[label]
+        for col in table.columns:
+            child_scores = [
+                return_table.loc[child, col]
+                for child in children
+                if child in return_table.index
+            ]
+            max_child = max(child_scores) if child_scores else 0
+            if max_child > 0:
+                return_table.loc[label, col] = max_child
+            else:
+                return_table.loc[label, col] = test_col_val(
+                    table[col],
+                    format,
+                    skipna=skipna,
+                    limited_output=limited_output,
+                    verbose=verbose,
+                )
+        if verbose:
+            display_logs_depending_process_time(
+                f'\t> Done with parent format "{label}" in {round(time() - start_type, 3)}s',
+                time() - start_type,
+            )
+
     if verbose:
         display_logs_depending_process_time(
             f"Done testing columns in {round(time() - start, 3)}s", time() - start
@@ -138,6 +175,7 @@ def test_col_chunks(
     limited_output: bool,
     skipna: bool = True,
     verbose: bool = False,
+    parent_children: dict[str, list[str]] | None = None,
 ) -> tuple[pd.DataFrame, dict, dict[str, pd.Series]]:
     def build_remaining_tests_per_col(return_table: pd.DataFrame) -> dict[str, list[str]]:
         # returns a dict with the table's columns as keys and the list of remaining format labels to apply
@@ -156,7 +194,10 @@ def test_col_chunks(
         logging.info("Testing columns to get formats on chunks")
 
     # analysing the sample to get a first guess
-    return_table = test_col(table, formats, limited_output, skipna=skipna, verbose=verbose)
+    return_table = test_col(
+        table, formats, limited_output, skipna=skipna, verbose=verbose,
+        parent_children=parent_children,
+    )
     # mandatory_label formats are zeroed out at the end if the label doesn't match,
     # so there's no point running the expensive field tests on those columns
     mandatory_label_skip: dict[str, set[str]] = {
@@ -229,10 +270,12 @@ def test_col_chunks(
         if not any(remaining_tests for remaining_tests in remaining_tests_per_col.values()):
             # no more potential tests to do on any column, early stop
             break
+        parent_names = set(parent_children.keys()) if parent_children else set()
         for col, fmt_labels in remaining_tests_per_col.items():
-            # testing each column with the tests that are still competing
-            # after previous batchs analyses
+            # testing each column with the leaf tests that are still competing
             for label in fmt_labels:
+                if label in parent_names:
+                    continue
                 batch_col_test = test_col_val(
                     batch[col],
                     formats[label],
@@ -240,12 +283,37 @@ def test_col_chunks(
                     skipna=skipna,
                 )
                 return_table.loc[label, col] = (
-                    # if this batch's column tested 0 then test fails overall
                     0
                     if batch_col_test == 0
-                    # otherwise updating the score with weighted average
                     else ((return_table.loc[label, col] * idx + batch_col_test) / (idx + 1))
                 )
+            # propagate to parent formats
+            for parent_label in fmt_labels:
+                if parent_label not in parent_names:
+                    continue
+                children = parent_children[parent_label]
+                child_scores = [
+                    return_table.loc[child, col]
+                    for child in children
+                    if child in return_table.index
+                ]
+                max_child = max(child_scores) if child_scores else 0
+                if max_child > 0:
+                    return_table.loc[parent_label, col] = max_child
+                else:
+                    batch_col_test = test_col_val(
+                        batch[col],
+                        formats[parent_label],
+                        limited_output=limited_output,
+                        skipna=skipna,
+                    )
+                    return_table.loc[parent_label, col] = (
+                        0
+                        if batch_col_test == 0
+                        else (
+                            (return_table.loc[parent_label, col] * idx + batch_col_test) / (idx + 1)
+                        )
+                    )
         remaining_tests_per_col = build_remaining_tests_per_col(return_table)
         batch, batch_number = [], batch_number + 1
     analysis["nb_duplicates"] = sum(row_hashes_count > 1)

@@ -1,3 +1,4 @@
+from collections import defaultdict
 from typing import Any, Callable
 
 from csv_detective.parsing.text import header_score
@@ -15,6 +16,7 @@ class Format:
         tags: list[str] = [],
         mandatory_label: bool = False,
         python_type: str = "string",
+        parent: str | None = None,
     ) -> None:
         """
         Instanciates a Format object.
@@ -39,6 +41,7 @@ class Format:
         self.tags: list[str] = tags
         self.mandatory_label: bool = mandatory_label
         self.python_type: str = python_type
+        self.parent: str | None = parent
 
     def is_valid_label(self, val: str) -> float:
         return header_score(val, self.labels)
@@ -82,7 +85,7 @@ class FormatsManager:
                 _test_values=module._test_values,
                 **{
                     attr: val
-                    for attr in ["labels", "description", "tags", "mandatory_label", "python_type"]
+                    for attr in ["labels", "description", "tags", "mandatory_label", "python_type", "parent"]
                     if (val := getattr(module, attr, None))
                 }
                 | {
@@ -100,6 +103,25 @@ class FormatsManager:
             )
             for label in format_labels
         }
+        self._children: dict[str, list[str]] = defaultdict(list)
+        for name, fmt in self.formats.items():
+            if fmt.parent is not None:
+                if fmt.parent not in self.formats:
+                    raise ValueError(
+                        f"Format '{name}' declares parent '{fmt.parent}' which does not exist"
+                    )
+                self._children[fmt.parent].append(name)
+
+    def get_leaf_formats(self) -> dict[str, Format]:
+        return {name: fmt for name, fmt in self.formats.items() if name not in self._children}
+
+    def get_ancestors(self, format_name: str) -> list[str]:
+        ancestors = []
+        current = format_name
+        while (parent := self.formats[current].parent) is not None:
+            ancestors.append(parent)
+            current = parent
+        return ancestors
 
     def get_formats_from_tags(self, tags: list[str]) -> dict[str, Format]:
         return {

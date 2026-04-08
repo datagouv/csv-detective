@@ -40,6 +40,13 @@ def detect_formats(
     if len(formats) == 0:
         return analysis, None
 
+    # filter parent-children to only active formats (tags may exclude some)
+    active_parent_children = {
+        parent: [c for c in children if c in formats]
+        for parent, children in fmtm._children.items()
+        if parent in formats
+    }
+
     # Perform testing on fields
     if not in_chunks:
         # table is small enough to be tested in one go
@@ -49,6 +56,7 @@ def detect_formats(
             limited_output=limited_output,
             skipna=skipna,
             verbose=verbose,
+            parent_children=active_parent_children,
         )
         handle_empty_columns(scores_table_fields)
         res_categorical, _ = detect_categorical_variable(
@@ -67,6 +75,7 @@ def detect_formats(
             limited_output=limited_output,
             skipna=skipna,
             verbose=verbose,
+            parent_children=active_parent_children,
         )
     analysis["columns_fields"] = prepare_output_dict(scores_table_fields, limited_output)
 

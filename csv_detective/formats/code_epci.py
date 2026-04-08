@@ -1,6 +1,7 @@
 from csv_detective.formats.siren import _is as is_siren
 
 proportion = 0.9
+parent = "siren"
 description = "French EPCI (group of communes) code, subgroup of SIREN"
 tags = ["fr", "geo"]
 mandatory_label = True
