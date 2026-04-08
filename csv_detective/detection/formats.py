@@ -1,4 +1,4 @@
-from collections import defaultdict
+from collections import Counter, defaultdict
 
 import numpy as np
 import pandas as pd
@@ -8,6 +8,7 @@ from csv_detective.detection.variables import (
     # detect_continuous_variable,
 )
 from csv_detective.format import Format, FormatsManager
+from csv_detective.formats.date import detect_strptime_format, detect_strptime_format_datetime
 from csv_detective.output.utils import prepare_output_dict
 from csv_detective.parsing.columns import (
     MAX_NUMBER_CATEGORICAL_VALUES,
@@ -16,6 +17,64 @@ from csv_detective.parsing.columns import (
     test_col_chunks,
     test_label,
 )
+
+DATE_FORMAT_COVERAGE_THRESHOLD = 0.95
+
+
+def _detect_date_formats_for_columns(
+    analysis: dict,
+    table: pd.DataFrame | None,
+    col_values: dict[str, pd.Series] | None,
+) -> None:
+    columns = analysis.get("columns", {})
+    for col_name, detection in columns.items():
+        if isinstance(detection, list):
+            # limited_output=False: list of detections, take the first date/datetime one
+            detection = next(
+                (d for d in detection if d.get("python_type") in ("date", "datetime")),
+                None,
+            )
+            if detection is None:
+                continue
+
+        if detection.get("python_type") not in ("date", "datetime"):
+            continue
+
+        if col_values is not None and col_name in col_values:
+            value_counts = col_values[col_name].dropna()
+        elif table is not None and col_name in table.columns:
+            value_counts = table[col_name].value_counts(dropna=True)
+        else:
+            detection["date_format"] = None
+            continue
+
+        detect_func = (
+            detect_strptime_format
+            if detection["python_type"] == "date"
+            else detect_strptime_format_datetime
+        )
+
+        format_counts: Counter[str | None] = Counter()
+        total = 0
+        for val, count in value_counts.items():
+            if not isinstance(val, str):
+                continue
+            fmt = detect_func(val)
+            format_counts[fmt] += count
+            total += count
+
+        if total == 0:
+            detection["date_format"] = None
+            continue
+
+        known_formats = [(fmt, count) for fmt, count in format_counts.items() if fmt is not None]
+        known_formats.sort(key=lambda x: -x[1])
+        known_total = sum(c for _, c in known_formats)
+
+        if known_total / total >= DATE_FORMAT_COVERAGE_THRESHOLD and len(known_formats) <= 3:
+            detection["date_format"] = [fmt for fmt, _ in known_formats]
+        else:
+            detection["date_format"] = None
 
 
 def detect_formats(
@@ -127,5 +186,11 @@ def detect_formats(
         analysis["formats"] = defaultdict(list)
         for header, col_metadata in analysis["columns"].items():
             analysis["formats"][col_metadata["format"]].append(header)
+
+    _detect_date_formats_for_columns(
+        analysis,
+        table=table if not in_chunks else None,
+        col_values=col_values,
+    )
 
     return analysis, col_values

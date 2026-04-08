@@ -84,6 +84,61 @@ def _is(val) -> bool:
     return True
 
 
+def detect_strptime_format(val: str) -> str | None:
+    """Returns the strptime format string for a date value, or None if format can't be determined."""
+    if not isinstance(val, str) or len(val) > 20 or len(val) < 8:
+        return None
+
+    if re.match(jjmmaaaa_pattern, val):
+        sep = val[2]
+        if val[5] != sep:
+            return None
+        return f"%d{sep}%m{sep}%Y"
+
+    if re.match(aaaammjj_pattern, val):
+        if len(val) == 8:
+            return "%Y%m%d"
+        sep = val[4]
+        if val[7] != sep:
+            return None
+        return f"%Y{sep}%m{sep}%d"
+
+    return None
+
+
+def detect_strptime_format_datetime(val: str) -> str | None:
+    """Returns the strptime format string for a datetime value, or None if format can't be determined."""
+    from csv_detective.formats.datetime_aware import pat as aware_pat
+    from csv_detective.formats.datetime_naive import pat as naive_pat
+
+    if not isinstance(val, str) or len(val) < 15:
+        return None
+
+    for pat, has_tz in [(naive_pat, False), (aware_pat, True)]:
+        if not re.match(pat, val):
+            continue
+        sep = val[4]
+        if sep.isdigit():
+            sep = ""
+        elif val[7] != sep:
+            return None
+
+        date_end = 8 if not sep else 10
+        tsep = val[date_end]
+
+        time_part = val[date_end + 1:]
+        has_microseconds = "." in time_part
+
+        fmt = f"%Y{sep}%m{sep}%d{tsep}%H:%M:%S"
+        if has_microseconds:
+            fmt += ".%f"
+        if has_tz:
+            fmt += "%z"
+        return fmt
+
+    return None
+
+
 _test_values = {
     True: [
         "1960-08-07",
