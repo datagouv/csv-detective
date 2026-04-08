@@ -4,7 +4,7 @@ from typing import Iterator
 
 import pandas as pd
 
-from csv_detective.detection.formats import _detect_date_formats_for_columns, detect_formats
+from csv_detective.detection.formats import detect_formats
 from csv_detective.output import generate_output
 from csv_detective.parsing.load import load_file
 from csv_detective.utils import display_logs_depending_process_time, is_url
@@ -175,7 +175,6 @@ def validate_then_detect(
     else:
         # successful validation means we have a correct analysis and col_values
         # only need to reload the table, and we already know how
-        _detect_date_formats_for_columns(analysis, table=None, col_values=col_values)
         table, _ = load_file(
             file_path=file_path,
             num_rows=num_rows,

@@ -19,7 +19,7 @@ pat = (
 prefix = r"^\d{2}[-/:]?\d{2}"
 
 
-def _is(val) -> bool:
+def _is(val, meta=None) -> bool:
     # early stops, to cut processing time
     # 16 is the minimal length of a datetime format YYMMDDTHH:MM:SSZ
     # 32 is the maximal length of an ISO datetime format YYYY-MM-DDTHH:MM:SS.dddddd+HH:MM, keeping some slack
@@ -27,8 +27,14 @@ def _is(val) -> bool:
         return False
     # if usual format, no need to parse
     if bool(re.match(pat, val)):
+        if meta is not None:
+            from csv_detective.formats.date import detect_strptime_format_datetime
+
+            fmt = detect_strptime_format_datetime(val)
+            if fmt:
+                meta.setdefault("date_format", set()).add(fmt)
         return True
-    if sum([char.isdigit() or char in {"-", "/", ":", " "} for char in val]) / len(val) < threshold:
+    if sum(char.isdigit() or char in {"-", "/", ":", " "} for char in val) / len(val) < threshold:
         return False
     res = date_casting(val)
     return (

@@ -57,25 +57,32 @@ string_month_pattern = (
 ).replace("SEP", seps + "?")
 
 
-def _is(val) -> bool:
+def _is(val, meta=None) -> bool:
     # many early stops, to cut processing time
     # and avoid the costly use of date_casting as much as possible
     # /!\ timestamps are considered ints, not dates
     if not isinstance(val, str) or len(val) > 20 or len(val) < 8:
         return False
     # if it's a usual date pattern
-    if (
-        # with this syntax, if any of the first value is True, the next ones are not computed
-        bool(re.match(jjmmaaaa_pattern, val))
-        or bool(re.match(aaaammjj_pattern, val))
-        or bool(re.match(string_month_pattern, val, re.IGNORECASE))
-    ):
+    if re.match(jjmmaaaa_pattern, val):
+        if meta is not None:
+            fmt = detect_strptime_format(val)
+            if fmt:
+                meta.setdefault("date_format", set()).add(fmt)
+        return True
+    if re.match(aaaammjj_pattern, val):
+        if meta is not None:
+            fmt = detect_strptime_format(val)
+            if fmt:
+                meta.setdefault("date_format", set()).add(fmt)
+        return True
+    if re.match(string_month_pattern, val, re.IGNORECASE):
         return True
     if re.match(r"^-?\d+[\.|,]\d+$", val):
         # regular floats are excluded
         return False
     # not enough digits => not a date (slightly arbitrary)
-    if sum([char.isdigit() for char in val]) / len(val) < threshold:
+    if sum(char.isdigit() for char in val) / len(val) < threshold:
         return False
     # last resort
     res = date_casting(val)

@@ -26,17 +26,24 @@ def test_col_val(
     skipna: bool = True,
     limited_output: bool = False,
     verbose: bool = False,
+    meta: dict | None = None,
 ) -> float:
     """Tests values of the serie using test_func.
          - skipna : if True indicates that NaNs are considered True
     for the serie to be detected as a certain format
+         - meta : if provided, passed to test_func to collect extra info (e.g. date_format)
     """
     if verbose:
         start = time()
 
+    if meta is not None and format.name in ("date", "datetime_naive", "datetime_aware"):
+        test_func = lambda v: format.func(v, meta)
+    else:
+        test_func = format.func
+
     # TODO : change for a cleaner method and only test columns in modules labels
-    def apply_test_func(serie: pd.Series, test_func: Callable, _range: int):
-        return serie.sample(n=_range).apply(test_func)
+    def apply_test_func(serie: pd.Series, _test_func: Callable, _range: int):
+        return serie.sample(n=_range).apply(_test_func)
 
     try:
         if skipna:
@@ -48,7 +55,7 @@ def test_col_val(
         if not limited_output or format.proportion < 1:
             # we want or have to go through the whole column to have the proportion
             value_counts = serie.value_counts()
-            unique_results = value_counts.index.to_series().apply(format.func)
+            unique_results = value_counts.index.to_series().apply(test_func)
             result: float = (unique_results * value_counts.values).sum() / ser_len
             return result if result >= format.proportion else 0.0
         else:
@@ -58,9 +65,9 @@ def test_col_val(
                 min(1, ser_len),
                 min(5, ser_len),
             ]:
-                if not all(apply_test_func(serie, format.func, _range)):
+                if not all(apply_test_func(serie, test_func, _range)):
                     return 0.0
-            return float(all(format.func(v) for v in serie.unique()))
+            return float(all(test_func(v) for v in serie.unique()))
     finally:
         if verbose and time() - start > 3:
             display_logs_depending_process_time(
@@ -75,25 +82,28 @@ def test_col(
     limited_output: bool,
     skipna: bool = True,
     verbose: bool = False,
-):
+) -> tuple[pd.DataFrame, dict[str, dict[str, dict]]]:
     if verbose:
         start = time()
         logging.info("Testing columns to get formats")
     return_table = pd.DataFrame(columns=table.columns)
+    all_meta: dict[str, dict[str, dict]] = {}
     for idx, (label, format) in enumerate(formats.items()):
         if verbose:
             start_type = time()
             logging.info(f"\t- Starting with format '{label}'")
-        # improvement lead : put the longest tests behind and make them only if previous tests not satisfactory
-        # => the following needs to change, "apply" means all columns are tested for one type at once
         for col in table.columns:
+            meta: dict = {}
             return_table.loc[label, col] = test_col_val(
                 table[col],
                 format,
                 skipna=skipna,
                 limited_output=limited_output,
                 verbose=verbose,
+                meta=meta,
             )
+            if meta:
+                all_meta.setdefault(col, {})[label] = meta
         if verbose:
             display_logs_depending_process_time(
                 f'\t> Done with format "{label}" in {round(time() - start_type, 3)}s ({idx + 1}/{len(formats)})',
@@ -103,7 +113,7 @@ def test_col(
         display_logs_depending_process_time(
             f"Done testing columns in {round(time() - start, 3)}s", time() - start
         )
-    return return_table
+    return return_table, all_meta
 
 
 def test_label(
@@ -138,7 +148,7 @@ def test_col_chunks(
     limited_output: bool,
     skipna: bool = True,
     verbose: bool = False,
-) -> tuple[pd.DataFrame, dict, dict[str, pd.Series]]:
+) -> tuple[pd.DataFrame, dict, dict[str, pd.Series], dict[str, dict[str, dict]]]:
     def build_remaining_tests_per_col(return_table: pd.DataFrame) -> dict[str, list[str]]:
         # returns a dict with the table's columns as keys and the list of remaining format labels to apply
         return {
@@ -156,7 +166,7 @@ def test_col_chunks(
         logging.info("Testing columns to get formats on chunks")
 
     # analysing the sample to get a first guess
-    return_table = test_col(table, formats, limited_output, skipna=skipna, verbose=verbose)
+    return_table, all_meta = test_col(table, formats, limited_output, skipna=skipna, verbose=verbose)
     # mandatory_label formats are zeroed out at the end if the label doesn't match,
     # so there's no point running the expensive field tests on those columns
     mandatory_label_skip: dict[str, set[str]] = {
@@ -257,4 +267,4 @@ def test_col_chunks(
         display_logs_depending_process_time(
             f"Done testing chunks in {round(time() - start, 3)}s", time() - start
         )
-    return return_table, analysis, col_values
+    return return_table, analysis, col_values, all_meta

@@ -171,7 +171,7 @@ def test_all_proportion_1():
         }
     )
     # testing columns for all formats
-    returned_table = col_test(table, fmtm.formats, limited_output=True)
+    returned_table, _ = col_test(table, fmtm.formats, limited_output=True)
     # the analysis should have found no match on any format
     assert all(returned_table[col].sum() == 0 for col in table.columns)
 
