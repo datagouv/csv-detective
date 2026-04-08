@@ -33,7 +33,7 @@ def parse_excel(
     no_sheet_specified = sheet_name is None
 
     if engine in ["openpyxl", "xlrd"] or any(
-        [file_path.endswith(k) for k in NEW_EXCEL_EXT + OLD_EXCEL_EXT]
+        file_path.endswith(k) for k in NEW_EXCEL_EXT + OLD_EXCEL_EXT
     ):
         remote_content = None
         if is_url(file_path):
@@ -41,7 +41,7 @@ def parse_excel(
             r.raise_for_status()
             remote_content = BytesIO(r.content)
         if not engine:
-            if any([file_path.endswith(k) for k in NEW_EXCEL_EXT]):
+            if any(file_path.endswith(k) for k in NEW_EXCEL_EXT):
                 engine = "openpyxl"
             else:
                 engine = "xlrd"
@@ -85,7 +85,7 @@ def parse_excel(
                     )
                 engine = "odf"
 
-    if engine == "odf" or any([file_path.endswith(k) for k in OPEN_OFFICE_EXT]):
+    if engine == "odf" or any(file_path.endswith(k) for k in OPEN_OFFICE_EXT):
         # for ODS files, no way to get sheets' sizes without
         # loading the file one way or another (pandas or pure odfpy)
         # so all in one
