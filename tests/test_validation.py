@@ -127,6 +127,35 @@ def test_validation_with_proportions(_params):
     assert is_valid == should_be_valid
 
 
+def test_validate_with_all_nan_column():
+    """Column entirely NaN in a chunk must not crash validate.
+
+    In some pandas versions, an empty Series with StringDtype (from read_csv(dtype=str))
+    returns "" from .sum() instead of 0, causing TypeError on comparison.
+    """
+    previous_analysis = {
+        "header": ["a", "b"],
+        "columns": {
+            "a": {"format": "int", "python_type": "int", "score": 1.0},
+            "b": {"format": "int", "python_type": "int", "score": 1.0},
+        },
+        "encoding": "utf-8",
+        "separator": "|",
+        "header_row_idx": 0,
+        "heading_columns": 0,
+        "trailing_columns": 0,
+        "categorical": [],
+        "columns_fields": {},
+        "columns_labels": {},
+        "formats": {},
+    }
+    is_valid, _, _ = validate(
+        pd.io.common.StringIO("a|b\n1|\n2|\n"),
+        previous_analysis,
+    )
+    assert is_valid
+
+
 @pytest.mark.parametrize(
     "modif_previous_analysis",
     (
