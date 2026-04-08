@@ -126,7 +126,7 @@ def detect_strptime_format_datetime(val: str) -> str | None:
         date_end = 8 if not sep else 10
         tsep = val[date_end]
 
-        time_part = val[date_end + 1:]
+        time_part = val[date_end + 1 :]
         has_microseconds = "." in time_part
 
         fmt = f"%Y{sep}%m{sep}%d{tsep}%H:%M:%S"

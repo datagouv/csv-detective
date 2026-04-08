@@ -13,9 +13,7 @@ from csv_detective.parsing.csv import CHUNK_SIZE
 from csv_detective.utils import display_logs_depending_process_time
 
 
-def fast_date_casting(
-    val: str, date_formats: list[str] | None
-) -> datetime | None:
+def fast_date_casting(val: str, date_formats: list[str] | None) -> datetime | None:
     if date_formats:
         for fmt in date_formats:
             try:

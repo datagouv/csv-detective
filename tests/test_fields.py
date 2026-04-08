@@ -218,7 +218,12 @@ def test_detect_strptime_format_datetime(value, expected_format):
         # dateutil interprets 12/02 as MM/DD (US), but csv-detective detects DD/MM
         # strptime with the detected format gives the correct DD/MM interpretation
         ("12/02/2007", "date", ["%d/%m/%Y"], _date(2007, 2, 12)),
-        ("2024-09-23 17:32:07", "datetime", ["%Y-%m-%d %H:%M:%S"], _datetime(2024, 9, 23, 17, 32, 7)),
+        (
+            "2024-09-23 17:32:07",
+            "datetime",
+            ["%Y-%m-%d %H:%M:%S"],
+            _datetime(2024, 9, 23, 17, 32, 7),
+        ),
     ],
 )
 def test_cast_with_date_format(value, _type, date_format, expected):
