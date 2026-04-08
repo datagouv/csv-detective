@@ -120,6 +120,8 @@ def validate(
                 # no test for columns that have not been recognized as a specific format
                 continue
             to_check = chunk[col_name].dropna() if skipna else chunk[col_name]
+            if to_check.empty:
+                continue
             value_counts = to_check.value_counts()
             unique_results = value_counts.index.to_series().apply(formats[detected["format"]].func)
             chunk_valid_values = (unique_results * value_counts.values).sum()
