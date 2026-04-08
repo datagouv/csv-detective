@@ -5,6 +5,7 @@ from csv_detective.formats.float import float_casting
 from csv_detective.formats.longitude_wgs import SHARED_LONGITUDE_LABELS
 
 proportion = 1
+parent = "float"
 description = "Longitude in the Lambert 93 format"
 tags = ["fr", "geo"]
 mandatory_label = True
