@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
-"""Compare csv-detective Python vs Rust outputs on test files."""
+"""Compare csv-detective Python vs Rust (via Python bindings) on test files."""
 
 import json
-import subprocess
 import sys
 import time
 from pathlib import Path
 
+from csv_detective.explore_csv import routine as python_routine
+from csv_detective_rs import routine as rust_routine
+
 TEST_DIR = Path("test_files")
-RUST_BIN = Path("rust/target/release/csv-detective-rs")
 
 SKIP_KEYS = {"columns_fields", "columns_labels"}
 
@@ -21,33 +22,16 @@ RESET = "\033[0m"
 
 def run_python(file_path: Path) -> tuple[dict, float]:
     start = time.perf_counter()
-    result = subprocess.run(
-        [
-            sys.executable,
-            "-c",
-            f"import json; from csv_detective.explore_csv import routine; "
-            f"print(json.dumps(routine('{file_path}', save_results=False), default=str))",
-        ],
-        capture_output=True,
-        text=True,
-    )
+    result = python_routine(str(file_path), save_results=False)
     elapsed = time.perf_counter() - start
-    if result.returncode != 0:
-        raise RuntimeError(f"Python failed: {result.stderr}")
-    return json.loads(result.stdout), elapsed
+    return json.loads(json.dumps(result, default=str)), elapsed
 
 
 def run_rust(file_path: Path) -> tuple[dict, float]:
     start = time.perf_counter()
-    result = subprocess.run(
-        [str(RUST_BIN), str(file_path)],
-        capture_output=True,
-        text=True,
-    )
+    result = rust_routine(str(file_path))
     elapsed = time.perf_counter() - start
-    if result.returncode != 0:
-        raise RuntimeError(f"Rust failed: {result.stderr}")
-    return json.loads(result.stdout), elapsed
+    return result, elapsed
 
 
 def normalize_value(v):
@@ -105,17 +89,6 @@ def diff_json(python_result, rust_result, path: str = "") -> list[str]:
 
 
 def main():
-    if not RUST_BIN.exists():
-        print(f"Building Rust binary (release)...")
-        result = subprocess.run(
-            ["cargo", "build", "--release", "--manifest-path", "rust/Cargo.toml"],
-            capture_output=True,
-            text=True,
-        )
-        if result.returncode != 0:
-            print(f"Cargo build failed:\n{result.stderr}")
-            sys.exit(1)
-
     test_files = sorted(TEST_DIR.glob("*"))
     test_files = [f for f in test_files if f.is_file()]
 
@@ -132,7 +105,7 @@ def main():
         name = file_path.name
         try:
             py_result, py_time = run_python(file_path)
-        except RuntimeError as e:
+        except Exception as e:
             print(f"{name:<40} {RED}Python error{RESET}")
             print(f"  {e}")
             failures += 1
@@ -140,7 +113,7 @@ def main():
 
         try:
             rs_result, rs_time = run_rust(file_path)
-        except RuntimeError as e:
+        except Exception as e:
             print(f"{name:<40} {'':>10} {RED}Rust error{RESET}")
             print(f"  {e}")
             failures += 1

@@ -3,6 +3,14 @@ name = "csv-detective-rs"
 version = "0.1.0"
 edition = "2024"
 
+[lib]
+name = "csv_detective_rs"
+crate-type = ["cdylib", "rlib"]
+
+[[bin]]
+name = "csv-detective-rs"
+path = "src/main.rs"
+
 [dependencies]
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
@@ -12,3 +20,7 @@ chardetng = "0.1"
 csv = "1"
 clap = { version = "4", features = ["derive"] }
 aho-corasick = "1"
+pyo3 = { version = "0.24", features = ["extension-module"], optional = true }
+
+[features]
+python = ["pyo3"]
