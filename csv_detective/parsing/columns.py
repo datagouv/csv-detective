@@ -168,7 +168,10 @@ def test_col_chunks(
         for col in table.columns
     }
     handle_empty_columns(return_table)
-    empty_cols = {col for col in table.columns if table[col].dropna().empty}
+    empty_cols = (
+        # if NA values should be considered valid, then we can skip empty columns
+        {col for col in table.columns if table[col].isna().all()} if skipna else {}
+    )
     remaining_tests_per_col = build_remaining_tests_per_col(return_table)
 
     # hashing rows to get nb_duplicates
@@ -219,7 +222,7 @@ def test_col_chunks(
                 fill_value=0,
             )
         for col in list(empty_cols):
-            if not batch[col].dropna().empty:
+            if not batch[col].isna().all():
                 empty_cols.discard(col)
                 remaining_tests_per_col[col] = [
                     fmt_label
