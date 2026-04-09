@@ -11,6 +11,7 @@ from csv_detective.utils import display_logs_depending_process_time
 
 # above this threshold, a column is not considered categorical
 MAX_NUMBER_CATEGORICAL_VALUES = 25
+RATIO_CATEGORIAL_VALUES = 0.05
 
 
 def handle_empty_columns(return_table: pd.DataFrame):
@@ -23,8 +24,10 @@ def handle_empty_columns(return_table: pd.DataFrame):
 def test_col_val(
     serie: pd.Series,
     format: Format,
+    *,
     skipna: bool = True,
     limited_output: bool = False,
+    zero_if_too_low: bool = True,
     verbose: bool = False,
 ) -> float:
     """Tests values of the serie using test_func.
@@ -50,7 +53,7 @@ def test_col_val(
             value_counts = serie.value_counts()
             unique_results = value_counts.index.to_series().apply(format.func)
             result: float = (unique_results * value_counts.values).sum() / ser_len
-            return result if result >= format.proportion else 0.0
+            return 0.0 if result < format.proportion and zero_if_too_low else result
         else:
             # the whole column has to be valid so we have early stops (1 then 5 rows)
             # to not waste time if directly unsuccessful
@@ -72,8 +75,10 @@ def test_col_val(
 def test_col(
     table: pd.DataFrame,
     formats: dict[str, Format],
+    *,
     limited_output: bool,
     skipna: bool = True,
+    zero_if_too_low: bool = True,
     verbose: bool = False,
 ):
     if verbose:
@@ -91,6 +96,7 @@ def test_col(
                 table[col],
                 format,
                 skipna=skipna,
+                zero_if_too_low=zero_if_too_low,
                 limited_output=limited_output,
                 verbose=verbose,
             )
@@ -156,7 +162,14 @@ def test_col_chunks(
         logging.info("Testing columns to get formats on chunks")
 
     # analysing the sample to get a first guess
-    return_table = test_col(table, formats, limited_output, skipna=skipna, verbose=verbose)
+    return_table = test_col(
+        table,
+        formats,
+        limited_output=limited_output,
+        zero_if_too_low=False,  # we don't know the valid/invalid repartition of the values in the whole table
+        skipna=skipna,
+        verbose=verbose,
+    )
     # mandatory_label formats are zeroed out at the end if the label doesn't match,
     # so there's no point running the expensive field tests on those columns
     mandatory_label_skip: dict[str, set[str]] = {
@@ -208,6 +221,8 @@ def test_col_chunks(
         if verbose:
             logging.info(f"> Testing batch number {batch_number}")
         batch = pd.concat(batch, ignore_index=True)
+        # we can't early stop because we need the infos of all chunks for some fields
+        # and some empty-for-now columns may actually not be
         analysis["total_lines"] += len(batch)
         row_hashes_count = row_hashes_count.add(
             pd.util.hash_pandas_object(batch, index=False).value_counts(),
@@ -226,9 +241,6 @@ def test_col_chunks(
                     for fmt_label in formats.keys()
                     if fmt_label not in mandatory_label_skip.get(col, set())
                 ]
-        if not any(remaining_tests for remaining_tests in remaining_tests_per_col.values()):
-            # no more potential tests to do on any column, early stop
-            break
         for col, fmt_labels in remaining_tests_per_col.items():
             # testing each column with the tests that are still competing
             # after previous batchs analyses
@@ -237,20 +249,21 @@ def test_col_chunks(
                     batch[col],
                     formats[label],
                     limited_output=limited_output,
+                    zero_if_too_low=False,
                     skipna=skipna,
                 )
                 return_table.loc[label, col] = (
-                    # if this batch's column tested 0 then test fails overall
-                    0
-                    if batch_col_test == 0
-                    # otherwise updating the score with weighted average
-                    else ((return_table.loc[label, col] * idx + batch_col_test) / (idx + 1))
+                    # updating the score with weighted average
+                    (return_table.loc[label, col] * idx + batch_col_test) / (idx + 1)
                 )
         remaining_tests_per_col = build_remaining_tests_per_col(return_table)
         batch, batch_number = [], batch_number + 1
     analysis["nb_duplicates"] = sum(row_hashes_count > 1)
     analysis["categorical"] = [
-        col for col, values in col_values.items() if len(values) <= MAX_NUMBER_CATEGORICAL_VALUES
+        col
+        for col, values in col_values.items()
+        if len(values) <= MAX_NUMBER_CATEGORICAL_VALUES
+        or (len(values) / sum(values)) <= RATIO_CATEGORIAL_VALUES
     ]
     handle_empty_columns(return_table)
     if verbose:

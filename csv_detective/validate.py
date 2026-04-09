@@ -4,7 +4,7 @@ from collections import defaultdict
 import pandas as pd
 
 from csv_detective.format import FormatsManager
-from csv_detective.parsing.columns import MAX_NUMBER_CATEGORICAL_VALUES
+from csv_detective.parsing.columns import MAX_NUMBER_CATEGORICAL_VALUES, RATIO_CATEGORIAL_VALUES
 
 # VALIDATION_CHUNK_SIZE is bigger than (analysis) CHUNK_SIZE because
 # it's faster to validate so we can afford to load more rows
@@ -162,7 +162,10 @@ def validate(
     analysis["nb_duplicates"] = sum(row_hashes_count > 1)
     del row_hashes_count
     analysis["categorical"] = [
-        col for col, values in col_values.items() if len(values) <= MAX_NUMBER_CATEGORICAL_VALUES
+        col
+        for col, values in col_values.items()
+        if len(values) <= MAX_NUMBER_CATEGORICAL_VALUES
+        or (len(values) / sum(values)) <= RATIO_CATEGORIAL_VALUES
     ]
     return (
         True,
