@@ -63,16 +63,6 @@ fn count_edge_columns(lines: &[&str], separator: char) -> (usize, usize) {
     )
 }
 
-fn detect_header_position(lines: &[&str]) -> usize {
-    let limit = lines.len().min(10);
-    for i in 0..limit.saturating_sub(1) {
-        if lines[i] != lines[i + 1] {
-            return i;
-        }
-    }
-    0
-}
-
 // --- Text normalization for label scoring ---
 
 fn camel_case_split(s: &str) -> String {
@@ -163,7 +153,7 @@ struct StreamedData {
     nb_duplicates: usize,
 }
 
-fn stream_csv(content: &str, sep_char: char, header_len: usize) -> StreamedData {
+fn stream_csv(reader: impl std::io::Read, sep_char: char, header_len: usize) -> StreamedData {
     use std::collections::hash_map::DefaultHasher;
     use std::hash::{Hash, Hasher};
 
@@ -177,7 +167,7 @@ fn stream_csv(content: &str, sep_char: char, header_len: usize) -> StreamedData 
         .delimiter(sep_char as u8)
         .has_headers(true)
         .flexible(true)
-        .from_reader(content.as_bytes());
+        .from_reader(reader);
 
     for result in rdr.records() {
         let record = match result {
@@ -520,52 +510,106 @@ fn detect_categorical(columns: &[ColumnStats], header: &[String], total_lines: u
 // --- Main analysis ---
 
 pub fn analyze(file_path: &Path, _num_rows: i64, stats: bool) -> Analysis {
+    use std::io::{BufRead, BufReader, Read, Seek, SeekFrom};
     use std::time::Instant;
 
     let t_start = Instant::now();
-    let raw = fs::read(file_path).unwrap_or_default();
-    let encoding = detect_encoding(&raw);
 
-    let content = if encoding == "utf-8" {
-        String::from_utf8(raw).unwrap_or_default()
+    let mut file = match fs::File::open(file_path) {
+        Ok(f) => f,
+        Err(_) => return empty_analysis(),
+    };
+
+    // Read a sample (first 64KB) for encoding detection
+    let mut sample_buf = vec![0u8; 64 * 1024];
+    let sample_len = {
+        use std::io::Read;
+        let mut total = 0;
+        while total < sample_buf.len() {
+            match file.read(&mut sample_buf[total..]) {
+                Ok(0) => break,
+                Ok(n) => total += n,
+                Err(_) => break,
+            }
+        }
+        total
+    };
+    sample_buf.truncate(sample_len);
+
+    let encoding = detect_encoding(&sample_buf);
+    let is_utf8 = encoding == "utf-8";
+
+    // For non-UTF-8, decode the full file upfront
+    let full_content;
+    let mut reader: Box<dyn BufRead> = if is_utf8 {
+        file.seek(SeekFrom::Start(0)).unwrap();
+        full_content = String::new();
+        Box::new(BufReader::new(file))
     } else {
-        let enc =
-            encoding_rs::Encoding::for_label(encoding.as_bytes()).unwrap_or(encoding_rs::UTF_8);
+        let raw = if sample_len < 64 * 1024 {
+            sample_buf.clone()
+        } else {
+            file.seek(SeekFrom::Start(0)).unwrap();
+            let mut all = Vec::new();
+            std::io::Read::read_to_end(&mut file, &mut all).unwrap_or(0);
+            all
+        };
+        let enc = encoding_rs::Encoding::for_label(encoding.as_bytes()).unwrap_or(encoding_rs::UTF_8);
         let (decoded, _, _) = enc.decode(&raw);
-        decoded.into_owned()
+        full_content = decoded.into_owned();
+        Box::new(std::io::Cursor::new(full_content.as_bytes()))
     };
     if stats { eprintln!("[stats] read + decode: {:.3}s", t_start.elapsed().as_secs_f64()); }
 
-    let lines: Vec<&str> = content.lines().collect();
-    if lines.is_empty() {
+    // Read lines until we find the header (first line that differs from previous)
+    let mut header_row_idx = 0;
+    let mut header_line = String::new();
+    if reader.read_line(&mut header_line).unwrap_or(0) == 0 {
         return empty_analysis();
     }
+    let header_line = header_line.trim_end_matches('\n').trim_end_matches('\r').to_string();
 
-    let header_row_idx = detect_header_position(&lines);
+    let mut sample_lines: Vec<String> = vec![header_line.clone()];
+    loop {
+        let mut next_line = String::new();
+        if reader.read_line(&mut next_line).unwrap_or(0) == 0 {
+            break;
+        }
+        let next_line = next_line.trim_end_matches('\n').trim_end_matches('\r').to_string();
+        sample_lines.push(next_line.clone());
+        if next_line != header_line {
+            break;
+        }
+        header_row_idx += 1;
+    }
+    let header_line = &sample_lines[header_row_idx];
 
-    let separator = detect_separator(lines[header_row_idx]);
+    let separator = detect_separator(header_line);
     let sep_char = match separator.as_str() {
         "\\t" => '\t',
         s => s.chars().next().unwrap_or(','),
     };
 
-    let sample_lines: Vec<&str> = lines.iter().take(10).copied().collect();
-    let (heading_columns, trailing_columns) = count_edge_columns(&sample_lines, sep_char);
+    let sample_refs: Vec<&str> = sample_lines.iter().map(|s| s.as_str()).collect();
+    let (heading_columns, trailing_columns) = count_edge_columns(&sample_refs, sep_char);
 
     let header: Vec<String> = {
         let mut rdr = csv::ReaderBuilder::new()
             .delimiter(sep_char as u8)
             .has_headers(false)
-            .from_reader(lines[header_row_idx].as_bytes());
+            .from_reader(header_line.as_bytes());
         match rdr.records().next() {
             Some(Ok(record)) => record.iter().map(|s| s.trim().to_string()).collect(),
-            _ => lines[header_row_idx].split(sep_char).map(|s| s.trim().to_string()).collect(),
+            _ => header_line.split(sep_char).map(|s| s.trim().to_string()).collect(),
         }
     };
 
+    // Build a chained reader: remaining sample lines + rest of file
+    let remaining_sample: String = sample_lines[header_row_idx..].join("\n") + "\n";
+    let chained = std::io::Cursor::new(remaining_sample.into_bytes()).chain(reader);
+
     let t_csv = Instant::now();
-    let content_from_header = lines[header_row_idx..].join("\n");
-    let streamed = stream_csv(&content_from_header, sep_char, header.len());
+    let streamed = stream_csv(chained, sep_char, header.len());
     if stats { eprintln!("[stats] csv streaming + value_counts + duplicates ({} lines, {} cols): {:.3}s", streamed.total_lines, header.len(), t_csv.elapsed().as_secs_f64()); }
 
     let total_lines = streamed.total_lines;
