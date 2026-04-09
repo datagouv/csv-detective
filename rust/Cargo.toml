@@ -21,6 +21,7 @@ csv = "1"
 clap = { version = "4", features = ["derive"] }
 aho-corasick = "1"
 pyo3 = { version = "0.24", features = ["extension-module"], optional = true }
+strum = { version = "0.28.0", features = ["derive"] }
 
 [features]
 python = ["pyo3"]

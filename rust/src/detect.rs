@@ -4,7 +4,7 @@ use std::path::Path;
 
 use chardetng::EncodingDetector;
 
-use crate::formats::{self, Detector};
+use crate::formats::{self, Format};
 use crate::value::Value;
 use crate::{Analysis, ColumnDetection};
 
@@ -201,7 +201,7 @@ fn stream_csv(reader: impl std::io::Read, sep_char: char, header_len: usize) -> 
 fn score_column_field(
     values: &[(Value, usize)],
     non_empty_total: usize,
-    detector: &dyn Detector,
+    detector: &Format,
 ) -> f64 {
     if non_empty_total == 0 {
         return 1.0;
@@ -238,7 +238,7 @@ struct ScoringResult {
 fn score_all(
     header: &[String],
     columns: &[ColumnStats],
-    detectors: &[Box<dyn Detector>],
+    detectors: &[Format],
     total_lines: usize,
     stats: bool,
 ) -> ScoringResult {
@@ -300,7 +300,7 @@ fn score_all(
             }
 
             let t_det = Instant::now();
-            let fs = score_column_field(&values, non_empty_total, det.as_ref());
+            let fs = score_column_field(&values, non_empty_total, det);
             if stats { format_times[det_idx].1 += t_det.elapsed().as_secs_f64(); }
             col_field_scores.insert(det.name(), fs);
         }
@@ -381,15 +381,15 @@ impl Priorities {
 fn build_combined_output(
     header: &[String],
     scoring: &ScoringResult,
-    detectors: &[Box<dyn Detector>],
+    detectors: &[Format],
     priorities: &Priorities,
 ) -> (
     BTreeMap<String, ColumnDetection>,
     BTreeMap<String, Vec<String>>,
 ) {
-    let det_map: HashMap<&str, &dyn Detector> = detectors
+    let det_map: HashMap<&str, &Format> = detectors
         .iter()
-        .map(|d| (d.name(), d.as_ref()))
+        .map(|d| (d.name(), d))
         .collect();
 
     let mandatory_labels: Vec<&str> = detectors
@@ -616,7 +616,7 @@ pub fn analyze(file_path: &Path, _num_rows: i64, stats: bool) -> Analysis {
     let nb_duplicates = streamed.nb_duplicates;
     let categorical = detect_categorical(&streamed.columns, &header, total_lines);
 
-    let detectors = formats::all_detectors();
+    let detectors = formats::all_formats();
     let t_score = Instant::now();
     let mut scoring = score_all(&header, &streamed.columns, &detectors, total_lines, stats);
     if stats { eprintln!("[stats] scoring total: {:.3}s", t_score.elapsed().as_secs_f64()); }

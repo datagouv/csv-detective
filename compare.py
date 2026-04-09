@@ -22,7 +22,7 @@ RESET = "\033[0m"
 
 def run_python(file_path: Path) -> tuple[dict, float]:
     start = time.perf_counter()
-    result = python_routine(str(file_path), save_results=False)
+    result = python_routine(str(file_path), num_rows=-1, save_results=False)
     elapsed = time.perf_counter() - start
     return json.loads(json.dumps(result, default=str)), elapsed
 
