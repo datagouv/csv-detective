@@ -11,6 +11,7 @@ from csv_detective.utils import display_logs_depending_process_time
 
 # above this threshold, a column is not considered categorical
 MAX_NUMBER_CATEGORICAL_VALUES = 25
+RATIO_CATEGORIAL_VALUES = 0.05
 
 
 def handle_empty_columns(return_table: pd.DataFrame):
@@ -259,7 +260,10 @@ def test_col_chunks(
         batch, batch_number = [], batch_number + 1
     analysis["nb_duplicates"] = sum(row_hashes_count > 1)
     analysis["categorical"] = [
-        col for col, values in col_values.items() if len(values) <= MAX_NUMBER_CATEGORICAL_VALUES
+        col
+        for col, values in col_values.items()
+        if len(values) <= MAX_NUMBER_CATEGORICAL_VALUES
+        or (len(values) / sum(values)) <= RATIO_CATEGORIAL_VALUES
     ]
     handle_empty_columns(return_table)
     if verbose:
