@@ -23,8 +23,10 @@ def handle_empty_columns(return_table: pd.DataFrame):
 def test_col_val(
     serie: pd.Series,
     format: Format,
+    *,
     skipna: bool = True,
     limited_output: bool = False,
+    zero_if_too_low: bool = False,
     verbose: bool = False,
 ) -> float:
     """Tests values of the serie using test_func.
@@ -50,7 +52,7 @@ def test_col_val(
             value_counts = serie.value_counts()
             unique_results = value_counts.index.to_series().apply(format.func)
             result: float = (unique_results * value_counts.values).sum() / ser_len
-            return result if result >= format.proportion else 0.0
+            return 0.0 if result < format.proportion and zero_if_too_low else result
         else:
             # the whole column has to be valid so we have early stops (1 then 5 rows)
             # to not waste time if directly unsuccessful
@@ -72,8 +74,10 @@ def test_col_val(
 def test_col(
     table: pd.DataFrame,
     formats: dict[str, Format],
+    *,
     limited_output: bool,
     skipna: bool = True,
+    zero_if_too_low: bool = False,
     verbose: bool = False,
 ):
     if verbose:
@@ -91,6 +95,7 @@ def test_col(
                 table[col],
                 format,
                 skipna=skipna,
+                zero_if_too_low=zero_if_too_low,
                 limited_output=limited_output,
                 verbose=verbose,
             )
@@ -156,7 +161,14 @@ def test_col_chunks(
         logging.info("Testing columns to get formats on chunks")
 
     # analysing the sample to get a first guess
-    return_table = test_col(table, formats, limited_output, skipna=skipna, verbose=verbose)
+    return_table = test_col(
+        table,
+        formats,
+        limited_output=limited_output,
+        zero_if_too_low=False,  # we don't know the valid/invalid repartition of the values in the whole table
+        skipna=skipna,
+        verbose=verbose,
+    )
     # mandatory_label formats are zeroed out at the end if the label doesn't match,
     # so there's no point running the expensive field tests on those columns
     mandatory_label_skip: dict[str, set[str]] = {
@@ -236,14 +248,12 @@ def test_col_chunks(
                     batch[col],
                     formats[label],
                     limited_output=limited_output,
+                    zero_if_too_low=False,
                     skipna=skipna,
                 )
                 return_table.loc[label, col] = (
-                    # if this batch's column tested 0 then test fails overall
-                    0
-                    if batch_col_test == 0
-                    # otherwise updating the score with weighted average
-                    else ((return_table.loc[label, col] * idx + batch_col_test) / (idx + 1))
+                    # updating the score with weighted average
+                    (return_table.loc[label, col] * idx + batch_col_test) / (idx + 1)
                 )
         remaining_tests_per_col = build_remaining_tests_per_col(return_table)
         batch, batch_number = [], batch_number + 1
