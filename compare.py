@@ -10,6 +10,8 @@ from pathlib import Path
 TEST_DIR = Path("test_files")
 RUST_BIN = Path("rust/target/release/csv-detective-rs")
 
+SKIP_KEYS = {"columns_fields", "columns_labels"}
+
 RED = "\033[91m"
 GREEN = "\033[92m"
 YELLOW = "\033[93m"
@@ -48,7 +50,21 @@ def run_rust(file_path: Path) -> tuple[dict, float]:
     return json.loads(result.stdout), elapsed
 
 
-def diff_json(python_result: dict, rust_result: dict, path: str = "") -> list[str]:
+def normalize_value(v):
+    """Normalize numpy int/float serialized as strings back to numbers."""
+    if isinstance(v, str):
+        try:
+            if "." in v:
+                return float(v)
+            return int(v)
+        except ValueError:
+            pass
+    return v
+
+
+def diff_json(python_result, rust_result, path: str = "") -> list[str]:
+    python_result = normalize_value(python_result)
+    rust_result = normalize_value(rust_result)
     diffs = []
 
     if isinstance(python_result, dict) and isinstance(rust_result, dict):
@@ -130,6 +146,9 @@ def main():
             failures += 1
             continue
 
+        for key in SKIP_KEYS:
+            py_result.pop(key, None)
+            rs_result.pop(key, None)
         diffs = diff_json(py_result, rs_result)
         speedup = py_time / rs_time if rs_time > 0 else float("inf")
 

@@ -5,6 +5,7 @@ use clap::Parser;
 use serde::Serialize;
 
 mod detect;
+mod formats;
 
 #[derive(Parser)]
 #[command(name = "csv-detective-rs")]
