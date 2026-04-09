@@ -241,8 +241,8 @@ fn score_column_field(
 }
 
 struct ScoringResult {
-    field_scores: BTreeMap<String, BTreeMap<String, f64>>,
-    label_scores: BTreeMap<String, BTreeMap<String, f64>>,
+    field_scores: BTreeMap<String, BTreeMap<&'static str, f64>>,
+    label_scores: BTreeMap<String, BTreeMap<&'static str, f64>>,
 }
 
 fn score_all(
@@ -270,8 +270,8 @@ fn score_all(
         Vec::new()
     };
 
-    let mut field_scores: BTreeMap<String, BTreeMap<String, f64>> = BTreeMap::new();
-    let mut label_scores: BTreeMap<String, BTreeMap<String, f64>> = BTreeMap::new();
+    let mut field_scores: BTreeMap<String, BTreeMap<&'static str, f64>> = BTreeMap::new();
+    let mut label_scores: BTreeMap<String, BTreeMap<&'static str, f64>> = BTreeMap::new();
 
     for (i, col_name) in header.iter().enumerate() {
         let col = &columns[i];
@@ -289,8 +289,8 @@ fn score_all(
             let mut col_field_scores = BTreeMap::new();
             let mut col_label_scores = BTreeMap::new();
             for det in detectors {
-                col_field_scores.insert(det.name().to_string(), 1.0);
-                col_label_scores.insert(det.name().to_string(), header_score(col_name, det.labels()));
+                col_field_scores.insert(det.name(), 1.0);
+                col_label_scores.insert(det.name(), header_score(col_name, det.labels()));
             }
             field_scores.insert(col_name.clone(), col_field_scores);
             label_scores.insert(col_name.clone(), col_label_scores);
@@ -302,17 +302,17 @@ fn score_all(
 
         for (det_idx, det) in detectors.iter().enumerate() {
             let ls = label_scores_per_det[det_idx][i];
-            col_label_scores.insert(det.name().to_string(), ls);
+            col_label_scores.insert(det.name(), ls);
 
             if det.mandatory_label() && ls == 0.0 {
-                col_field_scores.insert(det.name().to_string(), 0.0);
+                col_field_scores.insert(det.name(), 0.0);
                 continue;
             }
 
             let t_det = Instant::now();
             let fs = score_column_field(&values, non_empty_total, det.as_ref());
             if stats { format_times[det_idx].1 += t_det.elapsed().as_secs_f64(); }
-            col_field_scores.insert(det.name().to_string(), fs);
+            col_field_scores.insert(det.name(), fs);
         }
 
         field_scores.insert(col_name.clone(), col_field_scores);
@@ -336,7 +336,7 @@ fn score_all(
     }
 }
 
-fn handle_empty_columns(field_scores: &mut BTreeMap<String, BTreeMap<String, f64>>) {
+fn handle_empty_columns(field_scores: &mut BTreeMap<String, BTreeMap<&'static str, f64>>) {
     for (_col_name, scores) in field_scores.iter_mut() {
         let all_one = !scores.is_empty() && scores.values().all(|&s| s == 1.0);
         if all_one {
@@ -422,30 +422,26 @@ fn build_combined_output(
         };
 
         // combined = field * (1 + label / 2)
-        let mut combined: BTreeMap<String, f64> = BTreeMap::new();
-        for (fmt_name, &field_score) in fs {
+        let mut combined: BTreeMap<&'static str, f64> = BTreeMap::new();
+        for (&fmt_name, &field_score) in fs {
             let label_score = ls.get(fmt_name).copied().unwrap_or(0.0);
             let mut score = field_score * (1.0 + label_score / 2.0);
 
-            // mandatory label: zero out if label doesn't match
-            if mandatory_labels.contains(&fmt_name.as_str()) && label_score == 0.0 {
+            if mandatory_labels.contains(&fmt_name) && label_score == 0.0 {
                 score = 0.0;
             }
 
             if score > 0.0 {
-                combined.insert(fmt_name.clone(), score);
+                combined.insert(fmt_name, score);
             }
         }
 
         // deprioritize int/float if other formats detected
-        let non_numeric: Vec<&String> = combined
-            .keys()
-            .filter(|k| *k != "float" && *k != "int")
-            .collect();
-        let mut formats_to_remove: Vec<String> = Vec::new();
-        if !non_numeric.is_empty() {
-            formats_to_remove.push("float".to_string());
-            formats_to_remove.push("int".to_string());
+        let has_non_numeric = combined.keys().any(|k| *k != "float" && *k != "int");
+        let mut formats_to_remove: Vec<&str> = Vec::new();
+        if has_non_numeric {
+            formats_to_remove.push("float");
+            formats_to_remove.push("int");
         }
 
         // apply priority rules
@@ -454,7 +450,7 @@ fn build_combined_output(
                 for sec in secondaries {
                     if let Some(&sec_score) = combined.get(*sec) {
                         if prio_score >= sec_score || prio_score >= 1.0 {
-                            formats_to_remove.push(sec.to_string());
+                            formats_to_remove.push(sec);
                         }
                     }
                 }
@@ -475,14 +471,14 @@ fn build_combined_output(
             });
 
         let detection = match best {
-            Some((fmt_name, &score)) => {
+            Some((&fmt_name, &score)) => {
                 let python_type = det_map
-                    .get(fmt_name.as_str())
+                    .get(fmt_name)
                     .map(|d| d.python_type())
                     .unwrap_or("string");
                 ColumnDetection {
                     python_type: python_type.to_string(),
-                    format: fmt_name.clone(),
+                    format: fmt_name.to_string(),
                     score,
                 }
             }
