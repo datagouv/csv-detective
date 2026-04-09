@@ -25,22 +25,22 @@ static AC: LazyLock<AhoCorasick> =
     LazyLock::new(|| AhoCorasick::new(VOIE_KEYWORDS).expect("failed to build AhoCorasick"));
 
 fn normalize_adresse(val: &str) -> String {
-    let lower = val.to_lowercase();
-    lower
-        .replace('à', "a")
-        .replace('â', "a")
-        .replace('ç', "c")
-        .replace('é', "e")
-        .replace('è', "e")
-        .replace('ê', "e")
-        .replace('î', "i")
-        .replace('ï', "i")
-        .replace('ô', "o")
-        .replace('ö', "o")
-        .replace('ù', "u")
-        .replace('û', "u")
-        .replace('ü', "u")
-        .replace('\'', " ")
+    let mut result = String::with_capacity(val.len());
+    for c in val.chars() {
+        match c {
+            'A'..='Z' => result.push(c.to_ascii_lowercase()),
+            'a'..='z' | '0'..='9' | ' ' | '-' => result.push(c),
+            'à' | 'â' => result.push('a'),
+            'ç' => result.push('c'),
+            'é' | 'è' | 'ê' => result.push('e'),
+            'î' | 'ï' => result.push('i'),
+            'ô' | 'ö' => result.push('o'),
+            'ù' | 'û' | 'ü' => result.push('u'),
+            '\'' => result.push(' '),
+            _ => result.push(c),
+        }
+    }
+    result
 }
 
 impl Detector for AdresseFormat {
