@@ -1,4 +1,5 @@
 use super::Detector;
+use crate::value::Value;
 
 fn parse_float_not_int(val: &str) -> Option<f64> {
     if val.is_empty() {
@@ -37,7 +38,14 @@ impl Detector for LatitudeWgsFormat {
             ("gps", 0.5),
         ]
     }
-    fn test(&self, val: &str) -> bool { self.detect(val).is_some() }
+    fn test(&self, val: &Value) -> bool {
+        let raw = val.raw();
+        if !raw.contains('.') && !raw.contains(',') { return false; }
+        match val.as_float() {
+            Some(f) => (-90.0..=90.0).contains(&f),
+            None => false,
+        }
+    }
 }
 
 // --- Longitude WGS84 ---
@@ -65,7 +73,14 @@ impl Detector for LongitudeWgsFormat {
             ("longitude wgs84", 1.0), ("x wgs84", 1.0), ("wsg", 0.75), ("gps", 0.5),
         ]
     }
-    fn test(&self, val: &str) -> bool { self.detect(val).is_some() }
+    fn test(&self, val: &Value) -> bool {
+        let raw = val.raw();
+        if !raw.contains('.') && !raw.contains(',') { return false; }
+        match val.as_float() {
+            Some(f) => (-180.0..=180.0).contains(&f),
+            None => false,
+        }
+    }
 }
 
 // --- Latitude WGS84 France métropolitaine ---
@@ -88,7 +103,14 @@ impl Detector for LatitudeWgsFrFormat {
     fn labels(&self) -> &'static [(&'static str, f64)] {
         LatitudeWgsFormat.labels()
     }
-    fn test(&self, val: &str) -> bool { self.detect(val).is_some() }
+    fn test(&self, val: &Value) -> bool {
+        let raw = val.raw();
+        if !raw.contains('.') && !raw.contains(',') { return false; }
+        match val.as_float() {
+            Some(f) => (41.3..=51.3).contains(&f),
+            None => false,
+        }
+    }
 }
 
 // --- Longitude WGS84 France métropolitaine ---
@@ -111,7 +133,14 @@ impl Detector for LongitudeWgsFrFormat {
     fn labels(&self) -> &'static [(&'static str, f64)] {
         LongitudeWgsFormat.labels()
     }
-    fn test(&self, val: &str) -> bool { self.detect(val).is_some() }
+    fn test(&self, val: &Value) -> bool {
+        let raw = val.raw();
+        if !raw.contains('.') && !raw.contains(',') { return false; }
+        match val.as_float() {
+            Some(f) => (-5.5..=9.8).contains(&f),
+            None => false,
+        }
+    }
 }
 
 // --- Latitude Lambert 93 ---
@@ -141,7 +170,12 @@ impl Detector for LatitudeL93Format {
             ("gps", 0.5), ("y l93", 1.0), ("latitude lb93", 1.0), ("lamby", 1.0),
         ]
     }
-    fn test(&self, val: &str) -> bool { self.detect(val).is_some() }
+    fn test(&self, val: &Value) -> bool {
+        match val.as_float() {
+            Some(f) => (6_000_000.0..=7_200_000.0).contains(&f),
+            None => false,
+        }
+    }
 }
 
 // --- Longitude Lambert 93 ---
@@ -172,5 +206,10 @@ impl Detector for LongitudeL93Format {
             ("x l93", 1.0), ("longitude lb93", 1.0), ("lambx", 1.0),
         ]
     }
-    fn test(&self, val: &str) -> bool { self.detect(val).is_some() }
+    fn test(&self, val: &Value) -> bool {
+        match val.as_float() {
+            Some(f) => (100_000.0..=1_300_000.0).contains(&f),
+            None => false,
+        }
+    }
 }

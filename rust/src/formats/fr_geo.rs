@@ -2,39 +2,48 @@ use std::collections::HashSet;
 use std::sync::LazyLock;
 
 use super::Detector;
+use crate::value::Value;
 
 fn load_set(data: &str) -> HashSet<String> {
     data.lines().map(|l| l.to_string()).collect()
 }
 
 pub fn normalize(val: &str) -> String {
-    let lower = val.to_lowercase();
-    lower
-        .replace('à', "a")
-        .replace('â', "a")
-        .replace('ä', "a")
-        .replace('ç', "c")
-        .replace('é', "e")
-        .replace('è', "e")
-        .replace('ê', "e")
-        .replace('ë', "e")
-        .replace("ã©", "e")
-        .replace('î', "i")
-        .replace('ï', "i")
-        .replace('ô', "o")
-        .replace('ö', "o")
-        .replace('ù', "u")
-        .replace('û', "u")
-        .replace('ü', "u")
-        .replace('ÿ', "y")
-        .replace('œ', "oe")
-        .replace('æ', "ae")
-        .chars()
-        .map(|c| if c.is_alphanumeric() || c == ' ' { c } else { ' ' })
-        .collect::<String>()
-        .split_whitespace()
-        .collect::<Vec<&str>>()
-        .join(" ")
+    let mut result = String::with_capacity(val.len());
+    let mut last_was_space = true;
+
+    for c in val.chars() {
+        match c {
+            'A'..='Z' => {
+                result.push(c.to_ascii_lowercase());
+                last_was_space = false;
+            }
+            'a'..='z' | '0'..='9' => {
+                result.push(c);
+                last_was_space = false;
+            }
+            'à' | 'â' | 'ä' | 'À' | 'Â' | 'Ä' => { result.push('a'); last_was_space = false; }
+            'ç' | 'Ç' => { result.push('c'); last_was_space = false; }
+            'é' | 'è' | 'ê' | 'ë' | 'É' | 'È' | 'Ê' | 'Ë' => { result.push('e'); last_was_space = false; }
+            'î' | 'ï' | 'Î' | 'Ï' => { result.push('i'); last_was_space = false; }
+            'ô' | 'ö' | 'Ô' | 'Ö' => { result.push('o'); last_was_space = false; }
+            'ù' | 'û' | 'ü' | 'Ù' | 'Û' | 'Ü' => { result.push('u'); last_was_space = false; }
+            'ÿ' | 'Ÿ' => { result.push('y'); last_was_space = false; }
+            'œ' | 'Œ' => { result.push_str("oe"); last_was_space = false; }
+            'æ' | 'Æ' => { result.push_str("ae"); last_was_space = false; }
+            _ => {
+                if !last_was_space {
+                    result.push(' ');
+                    last_was_space = true;
+                }
+            }
+        }
+    }
+
+    if last_was_space && !result.is_empty() {
+        result.pop();
+    }
+    result
 }
 
 static COMMUNES: LazyLock<HashSet<String>> =
@@ -64,9 +73,7 @@ impl Detector for CommuneFormat {
     fn labels(&self) -> &'static [(&'static str, f64)] {
         &[("commune", 1.0), ("ville", 1.0), ("libelle commune", 1.0)]
     }
-    fn test(&self, val: &str) -> bool { COMMUNES.contains(&normalize(val)) }
-    fn uses_normalize(&self) -> bool { true }
-    fn test_normalized(&self, normalized: &str) -> bool { COMMUNES.contains(normalized) }
+    fn test(&self, val: &Value) -> bool { COMMUNES.contains(val.normalized()) }
 }
 
 // --- Departement ---
@@ -87,9 +94,7 @@ impl Detector for DepartementFormat {
             ("nom dep", 1.0),
         ]
     }
-    fn test(&self, val: &str) -> bool { DEPARTEMENTS.contains(&normalize(val)) }
-    fn uses_normalize(&self) -> bool { true }
-    fn test_normalized(&self, normalized: &str) -> bool { DEPARTEMENTS.contains(normalized) }
+    fn test(&self, val: &Value) -> bool { DEPARTEMENTS.contains(val.normalized()) }
 }
 
 // --- Region ---
@@ -109,9 +114,7 @@ impl Detector for RegionFormat {
             ("reg", 0.5), ("nom officiel region", 1.0),
         ]
     }
-    fn test(&self, val: &str) -> bool { REGIONS.contains(&normalize(val)) }
-    fn uses_normalize(&self) -> bool { true }
-    fn test_normalized(&self, normalized: &str) -> bool { REGIONS.contains(normalized) }
+    fn test(&self, val: &Value) -> bool { REGIONS.contains(val.normalized()) }
 }
 
 // --- Code postal ---
@@ -131,7 +134,7 @@ impl Detector for CodePostalFormat {
             ("location postcode", 1.0),
         ]
     }
-    fn test(&self, val: &str) -> bool { CODES_POSTAUX.contains(val) }
+    fn test(&self, val: &Value) -> bool { CODES_POSTAUX.contains(val.raw()) }
 }
 
 // --- Code commune ---
@@ -151,7 +154,7 @@ impl Detector for CodeCommuneFormat {
             ("code com", 1.0), ("com", 0.5), ("code", 0.5),
         ]
     }
-    fn test(&self, val: &str) -> bool { CODES_COMMUNES.contains(val) }
+    fn test(&self, val: &Value) -> bool { CODES_COMMUNES.contains(val.raw()) }
 }
 
 // --- Code département ---
@@ -170,8 +173,8 @@ impl Detector for CodeDepartementFormat {
             ("dep", 0.5), ("departement", 1.0), ("dept", 0.75),
         ]
     }
-    fn test(&self, val: &str) -> bool {
-        CODES_DEPARTEMENTS.contains(&val.to_lowercase())
+    fn test(&self, val: &Value) -> bool {
+        CODES_DEPARTEMENTS.contains(&val.raw().to_lowercase())
     }
 }
 
@@ -191,5 +194,5 @@ impl Detector for CodeRegionFormat {
             ("code insee region", 1.0), ("region", 1.0),
         ]
     }
-    fn test(&self, val: &str) -> bool { CODES_REGIONS.contains(val) }
+    fn test(&self, val: &Value) -> bool { CODES_REGIONS.contains(val.raw()) }
 }

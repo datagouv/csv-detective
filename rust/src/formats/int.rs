@@ -1,4 +1,5 @@
 use super::Detector;
+use crate::value::Value;
 
 pub struct IntFormat;
 
@@ -35,7 +36,7 @@ impl Detector for IntFormat {
     fn labels(&self) -> &'static [(&'static str, f64)] {
         &[("nb", 0.75), ("nombre", 1.0), ("nbre", 0.75)]
     }
-    fn test(&self, val: &str) -> bool {
-        self.detect(val).is_some()
+    fn test(&self, val: &Value) -> bool {
+        self.detect(val.raw()).is_some()
     }
 }

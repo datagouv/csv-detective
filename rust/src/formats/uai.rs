@@ -1,4 +1,5 @@
 use super::Detector;
+use crate::value::Value;
 
 pub struct UaiFormat;
 
@@ -53,5 +54,5 @@ impl Detector for UaiFormat {
             ("numerouai", 1.0), ("numero d etablissement", 1.0), ("numero etablissement", 1.0),
         ]
     }
-    fn test(&self, val: &str) -> bool { self.detect(val).is_some() }
+    fn test(&self, val: &Value) -> bool { self.detect(val.raw()).is_some() }
 }

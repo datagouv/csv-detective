@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::sync::LazyLock;
 
 use super::Detector;
-use super::fr_geo::normalize;
+use crate::value::Value;
 
 static CANTONS: LazyLock<HashSet<String>> = LazyLock::new(|| {
     include_str!("../../data/cantons.txt")
@@ -21,7 +21,5 @@ impl Detector for InseeCantonFormat {
     fn labels(&self) -> &'static [(&'static str, f64)] {
         &[("insee canton", 1.0), ("canton", 1.0), ("cant", 0.5), ("nom canton", 1.0)]
     }
-    fn test(&self, val: &str) -> bool { CANTONS.contains(&normalize(val)) }
-    fn uses_normalize(&self) -> bool { true }
-    fn test_normalized(&self, normalized: &str) -> bool { CANTONS.contains(normalized) }
+    fn test(&self, val: &Value) -> bool { CANTONS.contains(val.normalized()) }
 }

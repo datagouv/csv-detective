@@ -1,4 +1,5 @@
 use super::Detector;
+use crate::value::Value;
 
 pub struct CodeWaldecFormat;
 
@@ -27,5 +28,5 @@ impl Detector for CodeWaldecFormat {
     fn labels(&self) -> &'static [(&'static str, f64)] {
         &[("code waldec", 1.0), ("waldec", 1.0)]
     }
-    fn test(&self, val: &str) -> bool { self.detect(val).is_some() }
+    fn test(&self, val: &Value) -> bool { self.detect(val.raw()).is_some() }
 }

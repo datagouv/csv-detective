@@ -1,4 +1,5 @@
 use super::Detector;
+use crate::value::Value;
 
 pub struct CodeCspInseeFormat;
 
@@ -34,5 +35,5 @@ impl Detector for CodeCspInseeFormat {
     fn labels(&self) -> &'static [(&'static str, f64)] {
         &[("code csp insee", 1.0), ("code csp", 1.0)]
     }
-    fn test(&self, val: &str) -> bool { self.detect(val).is_some() }
+    fn test(&self, val: &Value) -> bool { self.detect(val.raw()).is_some() }
 }

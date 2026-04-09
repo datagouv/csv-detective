@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::sync::LazyLock;
 
 use super::Detector;
-use super::fr_geo::normalize;
+use crate::value::Value;
 
 static PAYS: LazyLock<HashSet<String>> = LazyLock::new(|| {
     include_str!("../../data/pays.txt")
@@ -25,7 +25,5 @@ impl Detector for PaysFormat {
             ("nom du pays", 1.0), ("libelle pays", 1.0),
         ]
     }
-    fn test(&self, val: &str) -> bool { PAYS.contains(&normalize(val)) }
-    fn uses_normalize(&self) -> bool { true }
-    fn test_normalized(&self, normalized: &str) -> bool { PAYS.contains(normalized) }
+    fn test(&self, val: &Value) -> bool { PAYS.contains(val.normalized()) }
 }

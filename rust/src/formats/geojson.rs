@@ -1,4 +1,5 @@
 use super::Detector;
+use crate::value::Value;
 
 pub struct GeoJsonFormat;
 
@@ -36,5 +37,5 @@ impl Detector for GeoJsonFormat {
             ("geo shape", 1.0), ("geom", 0.75), ("geometry", 1.0), ("geoshape", 1.0),
         ]
     }
-    fn test(&self, val: &str) -> bool { self.detect(val).is_some() }
+    fn test(&self, val: &Value) -> bool { self.detect(val.raw()).is_some() }
 }

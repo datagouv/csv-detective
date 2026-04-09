@@ -5,6 +5,7 @@ use std::path::Path;
 use chardetng::EncodingDetector;
 
 use crate::formats::{self, Detector};
+use crate::value::Value;
 use crate::{Analysis, ColumnDetection};
 
 const SEPARATORS: &[char] = &[';', ',', '|', '\t'];
@@ -157,9 +158,7 @@ fn stream_csv(content: &str, sep_char: char, header_len: usize) -> StreamedData 
     use std::hash::{Hash, Hasher};
 
     let mut columns: Vec<ColumnStats> = (0..header_len)
-        .map(|_| ColumnStats {
-            value_counts: HashMap::new(),
-        })
+        .map(|_| ColumnStats { value_counts: HashMap::new() })
         .collect();
     let mut row_hashes: HashMap<u64, usize> = HashMap::new();
     let mut total_lines = 0usize;
@@ -203,32 +202,27 @@ fn score_column_field(
     value_counts: &HashMap<String, usize>,
     non_empty_total: usize,
     detector: &dyn Detector,
-    normalized_cache: &HashMap<String, String>,
 ) -> f64 {
     if non_empty_total == 0 {
         return 1.0;
     }
 
-    let uses_norm = detector.uses_normalize();
-    let need_all = detector.proportion() == 1.0;
+    let max_failures = ((1.0 - detector.proportion()) * non_empty_total as f64) as usize;
 
     let mut matching = 0usize;
+    let mut failing = 0usize;
     for (val, &count) in value_counts {
         if val.is_empty() {
             continue;
         }
-        let matched = if uses_norm {
-            match normalized_cache.get(val) {
-                Some(n) => detector.test_normalized(n),
-                None => detector.test(val),
-            }
-        } else {
-            detector.test(val)
-        };
-        if matched {
+        let v = Value::new(val);
+        if detector.test(&v) {
             matching += count;
-        } else if need_all {
-            return 0.0;
+        } else {
+            failing += count;
+            if failing > max_failures {
+                return 0.0;
+            }
         }
     }
 
@@ -252,7 +246,6 @@ fn score_all(
     total_lines: usize,
     stats: bool,
 ) -> ScoringResult {
-    use crate::formats::fr_geo::normalize;
     use std::time::Instant;
 
     let label_scores_per_det: Vec<Vec<f64>> = detectors
@@ -265,14 +258,11 @@ fn score_all(
         })
         .collect();
 
-    let any_uses_normalize = detectors.iter().any(|d| d.uses_normalize());
-
     let mut format_times: Vec<(String, f64)> = if stats {
         detectors.iter().map(|d| (d.name().to_string(), 0.0)).collect()
     } else {
         Vec::new()
     };
-    let mut normalize_time = 0.0f64;
 
     let mut field_scores: BTreeMap<String, BTreeMap<String, f64>> = BTreeMap::new();
     let mut label_scores: BTreeMap<String, BTreeMap<String, f64>> = BTreeMap::new();
@@ -282,17 +272,18 @@ fn score_all(
         let empty_count = col.value_counts.get("").copied().unwrap_or(0);
         let non_empty_total = total_lines - empty_count;
 
-        let t_norm = Instant::now();
-        let normalized_cache: HashMap<String, String> = if any_uses_normalize {
-            col.value_counts
-                .keys()
-                .filter(|v| !v.is_empty())
-                .map(|v| (v.clone(), normalize(v)))
-                .collect()
-        } else {
-            HashMap::new()
-        };
-        if stats { normalize_time += t_norm.elapsed().as_secs_f64(); }
+        let non_empty_count = col.value_counts.keys().filter(|v| !v.is_empty()).count();
+        if non_empty_count == 0 {
+            let mut col_field_scores = BTreeMap::new();
+            let mut col_label_scores = BTreeMap::new();
+            for det in detectors {
+                col_field_scores.insert(det.name().to_string(), 1.0);
+                col_label_scores.insert(det.name().to_string(), header_score(col_name, det.labels()));
+            }
+            field_scores.insert(col_name.clone(), col_field_scores);
+            label_scores.insert(col_name.clone(), col_label_scores);
+            continue;
+        }
 
         let mut col_field_scores = BTreeMap::new();
         let mut col_label_scores = BTreeMap::new();
@@ -307,7 +298,7 @@ fn score_all(
             }
 
             let t_det = Instant::now();
-            let fs = score_column_field(&col.value_counts, non_empty_total, det.as_ref(), &normalized_cache);
+            let fs = score_column_field(&col.value_counts, non_empty_total, det.as_ref());
             if stats { format_times[det_idx].1 += t_det.elapsed().as_secs_f64(); }
             col_field_scores.insert(det.name().to_string(), fs);
         }
@@ -319,7 +310,6 @@ fn score_all(
     if stats {
         let total_uniques: usize = columns.iter().map(|c| c.value_counts.keys().filter(|v| !v.is_empty()).count()).sum();
         eprintln!("[stats] total unique values across cols: {total_uniques}");
-        eprintln!("[stats] normalize cache: {normalize_time:.3}s");
         format_times.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
         for (name, time) in &format_times {
             if *time > 0.001 {

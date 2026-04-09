@@ -3,6 +3,7 @@ use std::sync::LazyLock;
 use aho_corasick::AhoCorasick;
 
 use super::Detector;
+use crate::value::Value;
 
 const VOIE_KEYWORDS: &[&str] = &[
     "aire ", "allee ", "avenue ", "base ", "boulevard ", "cami ", "carrefour ",
@@ -54,11 +55,12 @@ impl Detector for AdresseFormat {
             ("adresse station", 1.0),
         ]
     }
-    fn test(&self, val: &str) -> bool {
-        if val.len() > 150 {
+    fn test(&self, val: &Value) -> bool {
+        let raw = val.raw();
+        if raw.len() > 150 {
             return false;
         }
-        let normalized = normalize_adresse(val);
+        let normalized = normalize_adresse(raw);
         AC.is_match(&normalized)
     }
 }

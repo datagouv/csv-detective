@@ -1,4 +1,5 @@
 use super::Detector;
+use crate::value::Value;
 
 pub struct DatetimeNaiveFormat;
 
@@ -125,7 +126,7 @@ impl Detector for DatetimeNaiveFormat {
     fn tags(&self) -> &'static [&'static str] {
         &["temp", "type"]
     }
-    fn test(&self, val: &str) -> bool {
-        self.detect(val).is_some()
+    fn test(&self, val: &Value) -> bool {
+        self.detect(val.raw()).is_some()
     }
 }

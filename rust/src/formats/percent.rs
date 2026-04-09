@@ -1,4 +1,5 @@
 use super::Detector;
+use crate::value::Value;
 use super::float::FloatFormat;
 
 pub struct PercentFormat;
@@ -27,7 +28,7 @@ impl Detector for PercentFormat {
     fn labels(&self) -> &'static [(&'static str, f64)] {
         &[("pourcent", 1.0), ("part", 0.75), ("pct", 0.75)]
     }
-    fn test(&self, val: &str) -> bool {
-        self.detect(val).is_some()
+    fn test(&self, val: &Value) -> bool {
+        self.detect(val.raw()).is_some()
     }
 }

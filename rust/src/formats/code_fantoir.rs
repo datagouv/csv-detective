@@ -2,6 +2,7 @@ use std::collections::HashSet;
 use std::sync::LazyLock;
 
 use super::Detector;
+use crate::value::Value;
 
 static PARTIAL_CODES: LazyLock<HashSet<String>> = LazyLock::new(|| {
     include_str!("../../data/codes_fantoir_partial.txt")
@@ -35,5 +36,5 @@ impl Detector for CodeFantoirFormat {
     fn labels(&self) -> &'static [(&'static str, f64)] {
         &[("cadastre1", 1.0), ("code fantoir", 1.0), ("fantoir", 1.0)]
     }
-    fn test(&self, val: &str) -> bool { self.detect(val).is_some() }
+    fn test(&self, val: &Value) -> bool { self.detect(val.raw()).is_some() }
 }

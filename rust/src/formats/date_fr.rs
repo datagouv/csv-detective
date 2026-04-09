@@ -1,5 +1,5 @@
 use super::Detector;
-use super::fr_geo::normalize;
+use crate::value::Value;
 
 pub struct DateFrFormat;
 
@@ -64,7 +64,5 @@ impl Detector for DateFrFormat {
     fn labels(&self) -> &'static [(&'static str, f64)] {
         &[("date", 1.0)]
     }
-    fn test(&self, val: &str) -> bool { test_date_fr(&normalize(val)) }
-    fn uses_normalize(&self) -> bool { true }
-    fn test_normalized(&self, normalized: &str) -> bool { test_date_fr(normalized) }
+    fn test(&self, val: &Value) -> bool { test_date_fr(val.normalized()) }
 }

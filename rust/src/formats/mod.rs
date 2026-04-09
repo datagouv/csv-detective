@@ -42,6 +42,8 @@ mod username;
 mod uuid;
 mod year;
 
+use crate::value::Value;
+
 pub trait Detector {
     fn name(&self) -> &'static str;
     fn python_type(&self) -> &'static str;
@@ -53,19 +55,7 @@ pub trait Detector {
     fn tags(&self) -> &'static [&'static str] {
         &[]
     }
-    fn test(&self, val: &str) -> bool;
-
-    /// If true, test_normalized() will be called with a pre-normalized value
-    /// (lowercase, accents removed, non-alphanum replaced by space, trimmed).
-    /// This avoids redundant normalization across multiple FR formats.
-    fn uses_normalize(&self) -> bool {
-        false
-    }
-
-    /// Test using a pre-normalized value. Only called if uses_normalize() returns true.
-    fn test_normalized(&self, _normalized: &str) -> bool {
-        false
-    }
+    fn test(&self, val: &Value) -> bool;
 }
 
 pub fn all_detectors() -> Vec<Box<dyn Detector>> {

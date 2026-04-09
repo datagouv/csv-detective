@@ -1,4 +1,5 @@
 use super::Detector;
+use crate::value::Value;
 
 pub struct BinaryFormat;
 
@@ -28,5 +29,5 @@ impl Detector for BinaryFormat {
     fn labels(&self) -> &'static [(&'static str, f64)] {
         &[("bytes", 1.0), ("binary", 1.0), ("image", 1.0), ("encode", 1.0), ("content", 1.0)]
     }
-    fn test(&self, val: &str) -> bool { self.detect(val).is_some() }
+    fn test(&self, val: &Value) -> bool { self.detect(val.raw()).is_some() }
 }

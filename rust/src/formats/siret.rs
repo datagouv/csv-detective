@@ -1,4 +1,5 @@
 use super::Detector;
+use crate::value::Value;
 use super::siren::luhn_check;
 
 pub struct SiretFormat;
@@ -30,5 +31,5 @@ impl Detector for SiretFormat {
             ("n° siret", 1.0), ("coll siret", 1.0), ("epci", 1.0),
         ]
     }
-    fn test(&self, val: &str) -> bool { self.detect(val).is_some() }
+    fn test(&self, val: &Value) -> bool { self.detect(val.raw()).is_some() }
 }

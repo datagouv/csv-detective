@@ -1,4 +1,5 @@
 use super::Detector;
+use crate::value::Value;
 
 pub struct UrlFormat;
 
@@ -77,7 +78,7 @@ impl Detector for UrlFormat {
             ("interneturl", 1.0),
         ]
     }
-    fn test(&self, val: &str) -> bool {
-        self.detect(val).is_some()
+    fn test(&self, val: &Value) -> bool {
+        self.detect(val.raw()).is_some()
     }
 }

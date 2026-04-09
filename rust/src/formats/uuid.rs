@@ -1,4 +1,5 @@
 use super::Detector;
+use crate::value::Value;
 
 pub struct UuidFormat;
 
@@ -74,7 +75,7 @@ impl Detector for UuidFormat {
     fn labels(&self) -> &'static [(&'static str, f64)] {
         &[("id", 1.0), ("identifiant", 1.0)]
     }
-    fn test(&self, val: &str) -> bool {
-        self.detect(val).is_some()
+    fn test(&self, val: &Value) -> bool {
+        self.detect(val.raw()).is_some()
     }
 }

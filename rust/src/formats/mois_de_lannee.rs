@@ -1,4 +1,5 @@
 use super::Detector;
+use crate::value::Value;
 
 pub struct MoisFormat;
 
@@ -50,7 +51,7 @@ impl Detector for MoisFormat {
     fn tags(&self) -> &'static [&'static str] {
         &["fr", "temp"]
     }
-    fn test(&self, val: &str) -> bool {
-        self.detect(val).is_some()
+    fn test(&self, val: &Value) -> bool {
+        self.detect(val.raw()).is_some()
     }
 }

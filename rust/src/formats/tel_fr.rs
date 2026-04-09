@@ -1,4 +1,5 @@
 use super::Detector;
+use crate::value::Value;
 
 pub struct TelFrFormat;
 
@@ -57,7 +58,7 @@ impl Detector for TelFrFormat {
     fn tags(&self) -> &'static [&'static str] {
         &["fr"]
     }
-    fn test(&self, val: &str) -> bool {
-        self.detect(val).is_some()
+    fn test(&self, val: &Value) -> bool {
+        self.detect(val.raw()).is_some()
     }
 }

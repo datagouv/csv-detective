@@ -2,6 +2,7 @@ use std::collections::HashSet;
 use std::sync::LazyLock;
 
 use super::Detector;
+use crate::value::Value;
 
 static ALPHA2: LazyLock<HashSet<String>> = LazyLock::new(|| {
     include_str!("../../data/iso_country_code_alpha2.txt")
@@ -53,7 +54,7 @@ impl Detector for IsoAlpha2Format {
     fn proportion(&self) -> f64 { 1.0 }
     fn tags(&self) -> &'static [&'static str] { &["geo"] }
     fn labels(&self) -> &'static [(&'static str, f64)] { COUNTRY_LABELS }
-    fn test(&self, val: &str) -> bool { self.detect(val).is_some() }
+    fn test(&self, val: &Value) -> bool { self.detect(val.raw()).is_some() }
 }
 
 // --- Alpha-3 ---
@@ -76,7 +77,7 @@ impl Detector for IsoAlpha3Format {
     fn proportion(&self) -> f64 { 1.0 }
     fn tags(&self) -> &'static [&'static str] { &["geo"] }
     fn labels(&self) -> &'static [(&'static str, f64)] { COUNTRY_LABELS }
-    fn test(&self, val: &str) -> bool { self.detect(val).is_some() }
+    fn test(&self, val: &Value) -> bool { self.detect(val.raw()).is_some() }
 }
 
 // --- Numeric ---
@@ -98,5 +99,5 @@ impl Detector for IsoNumericFormat {
     fn proportion(&self) -> f64 { 1.0 }
     fn tags(&self) -> &'static [&'static str] { &["geo"] }
     fn labels(&self) -> &'static [(&'static str, f64)] { COUNTRY_LABELS }
-    fn test(&self, val: &str) -> bool { self.detect(val).is_some() }
+    fn test(&self, val: &Value) -> bool { self.detect(val.raw()).is_some() }
 }

@@ -1,4 +1,5 @@
 use super::Detector;
+use crate::value::Value;
 use super::float::FloatFormat;
 
 pub struct MoneyFormat;
@@ -37,7 +38,7 @@ impl Detector for MoneyFormat {
             ("montant", 1.0),
         ]
     }
-    fn test(&self, val: &str) -> bool {
-        self.detect(val).is_some()
+    fn test(&self, val: &Value) -> bool {
+        self.detect(val.raw()).is_some()
     }
 }

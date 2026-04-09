@@ -6,6 +6,7 @@ use serde::Serialize;
 
 mod detect;
 mod formats;
+pub mod value;
 
 #[derive(Parser)]
 #[command(name = "csv-detective-rs")]
@@ -17,6 +18,7 @@ struct Cli {
 
     #[arg(long, default_value_t = false)]
     stats: bool,
+
 }
 
 #[derive(Serialize)]

@@ -3,6 +3,7 @@ use std::sync::LazyLock;
 
 use super::Detector;
 use crate::detect::process_text;
+use crate::value::Value;
 
 static CSP_VALUES: LazyLock<HashSet<String>> = LazyLock::new(|| {
     include_str!("../../data/csp_insee.txt")
@@ -32,5 +33,5 @@ impl Detector for CspInseeFormat {
             ("categorie socioprofessionnelle", 1.0), ("sociopro", 1.0),
         ]
     }
-    fn test(&self, val: &str) -> bool { self.detect(val).is_some() }
+    fn test(&self, val: &Value) -> bool { self.detect(val.raw()).is_some() }
 }

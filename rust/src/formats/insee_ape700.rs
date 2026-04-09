@@ -2,6 +2,7 @@ use std::collections::HashSet;
 use std::sync::LazyLock;
 
 use super::Detector;
+use crate::value::Value;
 
 static APE_CODES: LazyLock<HashSet<String>> = LazyLock::new(|| {
     include_str!("../../data/insee_ape700.txt")
@@ -33,5 +34,5 @@ impl Detector for InseeApe700Format {
             ("naf", 0.75), ("ape", 0.5),
         ]
     }
-    fn test(&self, val: &str) -> bool { self.detect(val).is_some() }
+    fn test(&self, val: &Value) -> bool { self.detect(val.raw()).is_some() }
 }

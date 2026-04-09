@@ -1,4 +1,5 @@
 use super::Detector;
+use crate::value::Value;
 
 pub struct UsernameFormat;
 
@@ -31,7 +32,7 @@ impl Detector for UsernameFormat {
     fn labels(&self) -> &'static [(&'static str, f64)] {
         &[("account", 1.0), ("username", 1.0), ("user", 0.75)]
     }
-    fn test(&self, val: &str) -> bool {
-        self.detect(val).is_some()
+    fn test(&self, val: &Value) -> bool {
+        self.detect(val.raw()).is_some()
     }
 }

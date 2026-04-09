@@ -1,4 +1,5 @@
 use super::Detector;
+use crate::value::Value;
 
 pub struct JsonFormat;
 
@@ -34,5 +35,5 @@ impl Detector for JsonFormat {
         &[("list", 1.0), ("dict", 1.0), ("complex", 1.0)]
     }
     fn tags(&self) -> &'static [&'static str] { &["type"] }
-    fn test(&self, val: &str) -> bool { self.detect(val).is_some() }
+    fn test(&self, val: &Value) -> bool { self.detect(val.raw()).is_some() }
 }
