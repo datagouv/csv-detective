@@ -1,4 +1,6 @@
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
+
+use ahash::AHashMap as HashMap;
 use std::fs;
 use std::path::Path;
 
