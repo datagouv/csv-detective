@@ -26,7 +26,7 @@ def test_col_val(
     *,
     skipna: bool = True,
     limited_output: bool = False,
-    zero_if_too_low: bool = False,
+    zero_if_too_low: bool = True,
     verbose: bool = False,
 ) -> float:
     """Tests values of the serie using test_func.
@@ -77,7 +77,7 @@ def test_col(
     *,
     limited_output: bool,
     skipna: bool = True,
-    zero_if_too_low: bool = False,
+    zero_if_too_low: bool = True,
     verbose: bool = False,
 ):
     if verbose:
