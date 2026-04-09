@@ -63,6 +63,16 @@ fn count_edge_columns(lines: &[&str], separator: char) -> (usize, usize) {
     )
 }
 
+fn detect_header_position(lines: &[&str]) -> usize {
+    let limit = lines.len().min(10);
+    for i in 0..limit.saturating_sub(1) {
+        if lines[i] != lines[i + 1] {
+            return i;
+        }
+    }
+    0
+}
+
 // --- Text normalization for label scoring ---
 
 fn camel_case_split(s: &str) -> String {
@@ -533,7 +543,9 @@ pub fn analyze(file_path: &Path, _num_rows: i64, stats: bool) -> Analysis {
         return empty_analysis();
     }
 
-    let separator = detect_separator(lines[0]);
+    let header_row_idx = detect_header_position(&lines);
+
+    let separator = detect_separator(lines[header_row_idx]);
     let sep_char = match separator.as_str() {
         "\\t" => '\t',
         s => s.chars().next().unwrap_or(','),
@@ -546,15 +558,16 @@ pub fn analyze(file_path: &Path, _num_rows: i64, stats: bool) -> Analysis {
         let mut rdr = csv::ReaderBuilder::new()
             .delimiter(sep_char as u8)
             .has_headers(false)
-            .from_reader(lines[0].as_bytes());
+            .from_reader(lines[header_row_idx].as_bytes());
         match rdr.records().next() {
             Some(Ok(record)) => record.iter().map(|s| s.trim().to_string()).collect(),
-            _ => lines[0].split(sep_char).map(|s| s.trim().to_string()).collect(),
+            _ => lines[header_row_idx].split(sep_char).map(|s| s.trim().to_string()).collect(),
         }
     };
 
     let t_csv = Instant::now();
-    let streamed = stream_csv(&content, sep_char, header.len());
+    let content_from_header = lines[header_row_idx..].join("\n");
+    let streamed = stream_csv(&content_from_header, sep_char, header.len());
     if stats { eprintln!("[stats] csv streaming + value_counts + duplicates ({} lines, {} cols): {:.3}s", streamed.total_lines, header.len(), t_csv.elapsed().as_secs_f64()); }
 
     let total_lines = streamed.total_lines;
@@ -578,7 +591,7 @@ pub fn analyze(file_path: &Path, _num_rows: i64, stats: bool) -> Analysis {
         separator,
         heading_columns,
         trailing_columns,
-        header_row_idx: 0,
+        header_row_idx,
         header,
         total_lines,
         nb_duplicates,
