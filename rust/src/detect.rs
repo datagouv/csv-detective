@@ -209,7 +209,7 @@ fn stream_csv(content: &str, sep_char: char, header_len: usize) -> StreamedData 
 }
 
 fn score_column_field(
-    value_counts: &HashMap<String, usize>,
+    values: &[(Value, usize)],
     non_empty_total: usize,
     detector: &dyn Detector,
 ) -> f64 {
@@ -221,12 +221,8 @@ fn score_column_field(
 
     let mut matching = 0usize;
     let mut failing = 0usize;
-    for (val, &count) in value_counts {
-        if val.is_empty() {
-            continue;
-        }
-        let v = Value::new(val);
-        if detector.test(&v) {
+    for (val, count) in values {
+        if detector.test(val) {
             matching += count;
         } else {
             failing += count;
@@ -282,8 +278,14 @@ fn score_all(
         let empty_count = col.value_counts.get("").copied().unwrap_or(0);
         let non_empty_total = total_lines - empty_count;
 
-        let non_empty_count = col.value_counts.keys().filter(|v| !v.is_empty()).count();
-        if non_empty_count == 0 {
+        let values: Vec<(Value, usize)> = col
+            .value_counts
+            .iter()
+            .filter(|(v, _)| !v.is_empty())
+            .map(|(v, &c)| (Value::new(v), c))
+            .collect();
+
+        if values.is_empty() {
             let mut col_field_scores = BTreeMap::new();
             let mut col_label_scores = BTreeMap::new();
             for det in detectors {
@@ -308,7 +310,7 @@ fn score_all(
             }
 
             let t_det = Instant::now();
-            let fs = score_column_field(&col.value_counts, non_empty_total, det.as_ref());
+            let fs = score_column_field(&values, non_empty_total, det.as_ref());
             if stats { format_times[det_idx].1 += t_det.elapsed().as_secs_f64(); }
             col_field_scores.insert(det.name().to_string(), fs);
         }
