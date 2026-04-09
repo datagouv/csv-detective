@@ -1,0 +1,11 @@
+date_francaise;donnees_binaires
+13 fevrier 1996;b'hello world'
+1 janvier 2020;b"some bytes"
+15 decembre 2024;b'\x00\x01\x02'
+03 mars 1985;b"binary data"
+28 juin 2010;b'test content'
+7 avril 2015;b"\xff\xfe"
+21 septembre 2000;b'raw bytes'
+30 novembre 1999;b"encoded"
+12 juillet 2023;b'\x41\x42'
+5 octobre 2018;b"payload"
