@@ -81,7 +81,7 @@ fn camel_case_split(s: &str) -> String {
     result
 }
 
-fn process_text(val: &str) -> String {
+pub fn process_text(val: &str) -> String {
     let val = camel_case_split(val);
     let mut val = val.to_lowercase();
 
@@ -151,13 +151,19 @@ fn read_csv_data(content: &str, sep_char: char, header_len: usize) -> Vec<Column
         .map(|_| ColumnData { values: Vec::new() })
         .collect();
 
-    for line in content.lines().skip(1) {
-        if line.is_empty() {
-            continue;
-        }
-        let fields: Vec<&str> = line.split(sep_char).collect();
+    let mut rdr = csv::ReaderBuilder::new()
+        .delimiter(sep_char as u8)
+        .has_headers(true)
+        .flexible(true)
+        .from_reader(content.as_bytes());
+
+    for result in rdr.records() {
+        let record = match result {
+            Ok(r) => r,
+            Err(_) => continue,
+        };
         for (i, col) in columns.iter_mut().enumerate() {
-            let val = fields.get(i).unwrap_or(&"").trim();
+            let val = record.get(i).unwrap_or("");
             col.values.push(val.to_string());
         }
     }
@@ -184,17 +190,22 @@ fn score_column_field(
         return 1.0;
     }
 
+    // skipna: exclude empty values from total (like pandas dropna)
+    let empty_count = value_counts.get("").copied().unwrap_or(0);
+    let non_empty_total = total - empty_count;
+    if non_empty_total == 0 {
+        // all values are empty/NaN → score 1.0 (skipna behavior)
+        return 1.0;
+    }
+
     let mut matching = 0usize;
     for (&val, &count) in value_counts {
-        if val.is_empty() {
-            // skipna=True: NaN/empty values count as matching
-            matching += count;
-        } else if detector.test(val) {
+        if !val.is_empty() && detector.test(val) {
             matching += count;
         }
     }
 
-    let proportion = matching as f64 / total as f64;
+    let proportion = matching as f64 / non_empty_total as f64;
     if proportion >= detector.proportion() {
         proportion
     } else {
@@ -373,7 +384,11 @@ fn build_combined_output(
         // pick the best or fallback to string
         let best = combined
             .iter()
-            .max_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(std::cmp::Ordering::Equal));
+            .max_by(|a, b| {
+                a.1.partial_cmp(b.1)
+                    .unwrap_or(std::cmp::Ordering::Equal)
+                    .then(b.0.cmp(a.0))
+            });
 
         let detection = match best {
             Some((fmt_name, &score)) => {
@@ -413,8 +428,12 @@ fn detect_categorical(columns: &[ColumnData], header: &[String]) -> Vec<String> 
         if total == 0 {
             continue;
         }
-        let unique: std::collections::HashSet<&str> =
-            col.values.iter().map(|s| s.as_str()).collect();
+        let unique: std::collections::HashSet<&str> = col
+            .values
+            .iter()
+            .map(|s| s.as_str())
+            .filter(|s| !s.is_empty())
+            .collect();
         let n_unique = unique.len();
         if n_unique <= MAX_CATEGORICAL_VALUES
             || (n_unique as f64 / total as f64) <= CATEGORICAL_PCT
@@ -427,15 +446,17 @@ fn detect_categorical(columns: &[ColumnData], header: &[String]) -> Vec<String> 
 
 // --- Duplicates ---
 
-fn count_duplicates(content: &str) -> usize {
-    let mut row_counts: HashMap<&str, usize> = HashMap::new();
-    for line in content.lines().skip(1) {
-        if line.is_empty() {
-            continue;
-        }
-        *row_counts.entry(line).or_insert(0) += 1;
+fn count_duplicates(columns: &[ColumnData]) -> usize {
+    if columns.is_empty() {
+        return 0;
     }
-    row_counts.values().filter(|&&c| c > 1).count()
+    let n_rows = columns[0].values.len();
+    let mut row_counts: HashMap<Vec<&str>, usize> = HashMap::new();
+    for row_idx in 0..n_rows {
+        let row: Vec<&str> = columns.iter().map(|c| c.values[row_idx].as_str()).collect();
+        *row_counts.entry(row).or_insert(0) += 1;
+    }
+    row_counts.values().filter(|&&c| c > 1).map(|&c| c - 1).sum()
 }
 
 // --- Main analysis ---
@@ -465,17 +486,22 @@ pub fn analyze(file_path: &Path, _num_rows: i64) -> Analysis {
     };
 
     let sample_lines: Vec<&str> = lines.iter().take(10).copied().collect();
-    let (heading_columns, trailing_columns) = count_edge_columns(&sample_lines[1..], sep_char);
+    let (heading_columns, trailing_columns) = count_edge_columns(&sample_lines, sep_char);
 
-    let header: Vec<String> = lines[0]
-        .split(sep_char)
-        .map(|s| s.trim().to_string())
-        .collect();
-
-    let total_lines = if lines.len() > 1 { lines.len() - 1 } else { 0 };
-    let nb_duplicates = count_duplicates(&content);
+    let header: Vec<String> = {
+        let mut rdr = csv::ReaderBuilder::new()
+            .delimiter(sep_char as u8)
+            .has_headers(false)
+            .from_reader(lines[0].as_bytes());
+        match rdr.records().next() {
+            Some(Ok(record)) => record.iter().map(|s| s.trim().to_string()).collect(),
+            _ => lines[0].split(sep_char).map(|s| s.trim().to_string()).collect(),
+        }
+    };
 
     let columns_data = read_csv_data(&content, sep_char, header.len());
+    let total_lines = columns_data.first().map(|c| c.values.len()).unwrap_or(0);
+    let nb_duplicates = count_duplicates(&columns_data);
     let categorical = detect_categorical(&columns_data, &header);
 
     let detectors = formats::all_detectors();
