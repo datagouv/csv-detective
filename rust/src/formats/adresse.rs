@@ -2,7 +2,6 @@ use std::sync::LazyLock;
 
 use aho_corasick::AhoCorasick;
 
-use super::Detector;
 use crate::value::Value;
 
 const VOIE_KEYWORDS: &[&str] = &[
@@ -43,26 +42,11 @@ fn normalize_adresse(val: &str) -> String {
     result
 }
 
-impl Detector for AdresseFormat {
-    fn name(&self) -> &'static str { "adresse" }
-    fn python_type(&self) -> &'static str { "string" }
-    fn proportion(&self) -> f64 { 0.55 }
-    fn tags(&self) -> &'static [&'static str] { &["fr", "geo"] }
-    fn labels(&self) -> &'static [(&'static str, f64)] {
-        &[
-            ("adresse", 1.0), ("localisation", 1.0), ("adresse postale", 1.0),
-            ("adresse geographique", 1.0), ("adr", 0.5), ("adresse complete", 1.0),
-            ("adresse station", 1.0),
-        ]
+pub fn test(val: &Value) -> bool {
+    let raw = val.raw();
+    if raw.len() > 150 {
+        return false;
     }
-    fn test(&self, val: &Value) -> bool {
-        let raw = val.raw();
-        if raw.len() > 150 {
-            return false;
-        }
-        let normalized = normalize_adresse(raw);
-        AC.is_match(&normalized)
-    }
+    let normalized = normalize_adresse(raw);
+    AC.is_match(&normalized)
 }
-
-pub struct AdresseFormat;

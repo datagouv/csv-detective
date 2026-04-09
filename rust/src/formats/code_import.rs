@@ -1,17 +1,12 @@
-use super::Detector;
 use crate::value::Value;
 
-pub struct CodeImportFormat;
-
-impl CodeImportFormat {
-    pub fn detect(&self, val: &str) -> Option<()> {
-        // ^(\d{3}[SP]\d{4,10}(.\w{1,3}\d{0,5})?|\d[A-Z0-9]\d[SP]\w(\w-?\w{0,2}\d{0,6})?)$
-        let bytes = val.as_bytes();
-        if bytes.is_empty() {
-            return None;
-        }
-        try_pattern1(bytes).or_else(|| try_pattern2(bytes))
+pub fn detect(val: &str) -> Option<()> {
+    // ^(\d{3}[SP]\d{4,10}(.\w{1,3}\d{0,5})?|\d[A-Z0-9]\d[SP]\w(\w-?\w{0,2}\d{0,6})?)$
+    let bytes = val.as_bytes();
+    if bytes.is_empty() {
+        return None;
     }
+    try_pattern1(bytes).or_else(|| try_pattern2(bytes))
 }
 
 // \d{3}[SP]\d{4,10}(.\w{1,3}\d{0,5})?
@@ -102,13 +97,6 @@ fn try_pattern2(bytes: &[u8]) -> Option<()> {
     if i == bytes.len() { Some(()) } else { None }
 }
 
-impl Detector for CodeImportFormat {
-    fn name(&self) -> &'static str { "code_import" }
-    fn python_type(&self) -> &'static str { "string" }
-    fn proportion(&self) -> f64 { 0.9 }
-    fn tags(&self) -> &'static [&'static str] { &["fr"] }
-    fn labels(&self) -> &'static [(&'static str, f64)] {
-        &[("code", 0.5)]
-    }
-    fn test(&self, val: &Value) -> bool { self.detect(val.raw()).is_some() }
+pub fn test(val: &Value) -> bool {
+    detect(val.raw()).is_some()
 }

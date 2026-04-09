@@ -1,7 +1,4 @@
-use super::Detector;
 use crate::value::Value;
-
-pub struct MoisFormat;
 
 const VALID: &[&str] = &[
     "janvier", "fevrier", "mars", "avril", "mai", "juin",
@@ -10,16 +7,14 @@ const VALID: &[&str] = &[
     "sep", "sept", "oct", "nov", "dec",
 ];
 
-impl MoisFormat {
-    pub fn detect(&self, val: &str) -> Option<()> {
-        // normalize unicode + lowercase
-        let lower = val.to_lowercase();
-        let normalized = normalize_accents(&lower);
-        if VALID.contains(&normalized.as_str()) {
-            Some(())
-        } else {
-            None
-        }
+pub fn detect(val: &str) -> Option<()> {
+    // normalize unicode + lowercase
+    let lower = val.to_lowercase();
+    let normalized = normalize_accents(&lower);
+    if VALID.contains(&normalized.as_str()) {
+        Some(())
+    } else {
+        None
     }
 }
 
@@ -35,23 +30,6 @@ fn normalize_accents(s: &str) -> String {
         .replace('ô', "o")
 }
 
-impl Detector for MoisFormat {
-    fn name(&self) -> &'static str {
-        "mois_de_lannee"
-    }
-    fn python_type(&self) -> &'static str {
-        "string"
-    }
-    fn proportion(&self) -> f64 {
-        1.0
-    }
-    fn labels(&self) -> &'static [(&'static str, f64)] {
-        &[("mois", 1.0), ("month", 1.0)]
-    }
-    fn tags(&self) -> &'static [&'static str] {
-        &["fr", "temp"]
-    }
-    fn test(&self, val: &Value) -> bool {
-        self.detect(val.raw()).is_some()
-    }
+pub fn test(val: &Value) -> bool {
+    detect(val.raw()).is_some()
 }

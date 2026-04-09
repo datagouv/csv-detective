@@ -1,7 +1,6 @@
 use std::collections::HashSet;
 use std::sync::LazyLock;
 
-use super::Detector;
 use crate::detect::process_text;
 use crate::value::Value;
 
@@ -13,25 +12,11 @@ static CSP_VALUES: LazyLock<HashSet<String>> = LazyLock::new(|| {
         .collect()
 });
 
-pub struct CspInseeFormat;
-
-impl CspInseeFormat {
-    pub fn detect(&self, val: &str) -> Option<()> {
-        let processed = process_text(val);
-        if CSP_VALUES.contains(&processed) { Some(()) } else { None }
-    }
+pub fn detect(val: &str) -> Option<()> {
+    let processed = process_text(val);
+    if CSP_VALUES.contains(&processed) { Some(()) } else { None }
 }
 
-impl Detector for CspInseeFormat {
-    fn name(&self) -> &'static str { "csp_insee" }
-    fn python_type(&self) -> &'static str { "string" }
-    fn proportion(&self) -> f64 { 1.0 }
-    fn tags(&self) -> &'static [&'static str] { &["fr"] }
-    fn labels(&self) -> &'static [(&'static str, f64)] {
-        &[
-            ("csp insee", 1.0), ("csp", 0.75),
-            ("categorie socioprofessionnelle", 1.0), ("sociopro", 1.0),
-        ]
-    }
-    fn test(&self, val: &Value) -> bool { self.detect(val.raw()).is_some() }
+pub fn test(val: &Value) -> bool {
+    detect(val.raw()).is_some()
 }

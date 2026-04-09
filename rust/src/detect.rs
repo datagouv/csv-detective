@@ -541,11 +541,10 @@ pub fn analyze(file_path: &Path, _num_rows: i64, stats: bool) -> Analysis {
     let encoding = detect_encoding(&sample_buf);
     let is_utf8 = encoding == "utf-8";
 
-    // For non-UTF-8, decode the full file upfront
-    let full_content;
+    #[allow(unused_assignments)]
+    let mut full_content = String::new();
     let mut reader: Box<dyn BufRead> = if is_utf8 {
         file.seek(SeekFrom::Start(0)).unwrap();
-        full_content = String::new();
         Box::new(BufReader::new(file))
     } else {
         let raw = if sample_len < 64 * 1024 {

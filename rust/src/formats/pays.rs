@@ -1,7 +1,6 @@
 use std::collections::HashSet;
 use std::sync::LazyLock;
 
-use super::Detector;
 use crate::value::Value;
 
 static PAYS: LazyLock<HashSet<String>> = LazyLock::new(|| {
@@ -11,19 +10,4 @@ static PAYS: LazyLock<HashSet<String>> = LazyLock::new(|| {
         .collect()
 });
 
-pub struct PaysFormat;
-
-impl Detector for PaysFormat {
-    fn name(&self) -> &'static str { "pays" }
-    fn python_type(&self) -> &'static str { "string" }
-    fn proportion(&self) -> f64 { 0.6 }
-    fn tags(&self) -> &'static [&'static str] { &["fr", "geo"] }
-    fn labels(&self) -> &'static [(&'static str, f64)] {
-        &[
-            ("pays", 1.0), ("payslieu", 1.0), ("paysorg", 1.0), ("country", 1.0),
-            ("pays lib", 1.0), ("lieupays", 1.0), ("pays beneficiaire", 1.0),
-            ("nom du pays", 1.0), ("libelle pays", 1.0),
-        ]
-    }
-    fn test(&self, val: &Value) -> bool { PAYS.contains(val.normalized()) }
-}
+pub fn test(val: &Value) -> bool { PAYS.contains(val.normalized()) }

@@ -1,7 +1,4 @@
-use super::Detector;
 use crate::value::Value;
-
-pub struct DateFrFormat;
 
 const MOIS: &[&str] = &[
     "janvier", "fevrier", "mars", "avril", "mai", "juin",
@@ -56,13 +53,4 @@ fn test_date_fr(normalized: &str) -> bool {
     i == bytes.len()
 }
 
-impl Detector for DateFrFormat {
-    fn name(&self) -> &'static str { "date_fr" }
-    fn python_type(&self) -> &'static str { "string" }
-    fn proportion(&self) -> f64 { 1.0 }
-    fn tags(&self) -> &'static [&'static str] { &["fr", "temp"] }
-    fn labels(&self) -> &'static [(&'static str, f64)] {
-        &[("date", 1.0)]
-    }
-    fn test(&self, val: &Value) -> bool { test_date_fr(val.normalized()) }
-}
+pub fn test(val: &Value) -> bool { test_date_fr(val.normalized()) }

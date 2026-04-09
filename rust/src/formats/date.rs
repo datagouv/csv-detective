@@ -1,7 +1,4 @@
-use super::Detector;
 use crate::value::Value;
-
-pub struct DateFormat;
 
 const DATE_SEPS: &[u8] = b" /-*_|;.,";
 
@@ -18,31 +15,29 @@ pub enum DatePattern {
     TextMonth,
 }
 
-impl DateFormat {
-    pub fn detect(&self, val: &str) -> Option<DatePattern> {
-        let len = val.len();
-        if len < 8 || len > 20 {
-            return None;
-        }
-        // exclude floats: ^-?\d+[.|,]\d+$
-        if is_float_like(val) {
-            return None;
-        }
-
-        let lower = val.to_ascii_lowercase();
-
-        if let Some(p) = try_ymd(&lower) {
-            return Some(p);
-        }
-        if let Some(p) = try_dmy(&lower) {
-            return Some(p);
-        }
-        if let Some(p) = try_text_month(&lower) {
-            return Some(p);
-        }
-
-        None
+pub fn detect(val: &str) -> Option<DatePattern> {
+    let len = val.len();
+    if len < 8 || len > 20 {
+        return None;
     }
+    // exclude floats: ^-?\d+[.|,]\d+$
+    if is_float_like(val) {
+        return None;
+    }
+
+    let lower = val.to_ascii_lowercase();
+
+    if let Some(p) = try_ymd(&lower) {
+        return Some(p);
+    }
+    if let Some(p) = try_dmy(&lower) {
+        return Some(p);
+    }
+    if let Some(p) = try_text_month(&lower) {
+        return Some(p);
+    }
+
+    None
 }
 
 fn is_float_like(val: &str) -> bool {
@@ -236,37 +231,6 @@ fn try_text_month(val: &str) -> Option<DatePattern> {
     Some(DatePattern::TextMonth)
 }
 
-impl Detector for DateFormat {
-    fn name(&self) -> &'static str {
-        "date"
-    }
-    fn python_type(&self) -> &'static str {
-        "date"
-    }
-    fn proportion(&self) -> f64 {
-        1.0
-    }
-    fn labels(&self) -> &'static [(&'static str, f64)] {
-        &[
-            ("date", 1.0),
-            ("mise a jour", 1.0),
-            ("modifie", 1.0),
-            ("maj", 0.75),
-            ("datemaj", 1.0),
-            ("update", 1.0),
-            ("created", 1.0),
-            ("modified", 1.0),
-            ("jour", 0.75),
-            ("periode", 0.75),
-            ("dpc", 0.5),
-            ("yyyymmdd", 1.0),
-            ("aaaammjj", 1.0),
-        ]
-    }
-    fn tags(&self) -> &'static [&'static str] {
-        &["temp", "type"]
-    }
-    fn test(&self, val: &Value) -> bool {
-        self.detect(val.raw()).is_some()
-    }
+pub fn test(val: &Value) -> bool {
+    detect(val.raw()).is_some()
 }
