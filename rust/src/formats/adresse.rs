@@ -1,6 +1,8 @@
-use super::Detector;
+use std::sync::LazyLock;
 
-pub struct AdresseFormat;
+use aho_corasick::AhoCorasick;
+
+use super::Detector;
 
 const VOIE_KEYWORDS: &[&str] = &[
     "aire ", "allee ", "avenue ", "base ", "boulevard ", "cami ", "carrefour ",
@@ -17,6 +19,9 @@ const VOIE_KEYWORDS: &[&str] = &[
     "av ", "pl ", "bd ", "chs ", "dom ", "ham ", "ld ", "vlge ", "za ",
     "zac ", "zad ", "zi ", "fg ", "imp ", "mte",
 ];
+
+static AC: LazyLock<AhoCorasick> =
+    LazyLock::new(|| AhoCorasick::new(VOIE_KEYWORDS).expect("failed to build AhoCorasick"));
 
 fn normalize_adresse(val: &str) -> String {
     let lower = val.to_lowercase();
@@ -37,21 +42,6 @@ fn normalize_adresse(val: &str) -> String {
         .replace('\'', " ")
 }
 
-impl AdresseFormat {
-    pub fn detect(&self, val: &str) -> Option<()> {
-        if val.len() > 150 {
-            return None;
-        }
-        let normalized = normalize_adresse(val);
-        for keyword in VOIE_KEYWORDS {
-            if normalized.contains(keyword) {
-                return Some(());
-            }
-        }
-        None
-    }
-}
-
 impl Detector for AdresseFormat {
     fn name(&self) -> &'static str { "adresse" }
     fn python_type(&self) -> &'static str { "string" }
@@ -64,5 +54,13 @@ impl Detector for AdresseFormat {
             ("adresse station", 1.0),
         ]
     }
-    fn test(&self, val: &str) -> bool { self.detect(val).is_some() }
+    fn test(&self, val: &str) -> bool {
+        if val.len() > 150 {
+            return false;
+        }
+        let normalized = normalize_adresse(val);
+        AC.is_match(&normalized)
+    }
 }
+
+pub struct AdresseFormat;

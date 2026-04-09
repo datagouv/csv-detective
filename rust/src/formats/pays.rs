@@ -13,13 +13,6 @@ static PAYS: LazyLock<HashSet<String>> = LazyLock::new(|| {
 
 pub struct PaysFormat;
 
-impl PaysFormat {
-    pub fn detect(&self, val: &str) -> Option<()> {
-        let n = normalize(val);
-        if PAYS.contains(&n) { Some(()) } else { None }
-    }
-}
-
 impl Detector for PaysFormat {
     fn name(&self) -> &'static str { "pays" }
     fn python_type(&self) -> &'static str { "string" }
@@ -32,5 +25,7 @@ impl Detector for PaysFormat {
             ("nom du pays", 1.0), ("libelle pays", 1.0),
         ]
     }
-    fn test(&self, val: &str) -> bool { self.detect(val).is_some() }
+    fn test(&self, val: &str) -> bool { PAYS.contains(&normalize(val)) }
+    fn uses_normalize(&self) -> bool { true }
+    fn test_normalized(&self, normalized: &str) -> bool { PAYS.contains(normalized) }
 }

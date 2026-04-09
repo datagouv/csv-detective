@@ -140,16 +140,29 @@ fn header_score(header: &str, labels: &[(&str, f64)]) -> f64 {
     exact_score.max(partial_score)
 }
 
-// --- Data reading ---
+// --- Data reading (streaming) ---
 
-struct ColumnData {
-    values: Vec<String>,
+struct ColumnStats {
+    value_counts: HashMap<String, usize>,
 }
 
-fn read_csv_data(content: &str, sep_char: char, header_len: usize) -> Vec<ColumnData> {
-    let mut columns: Vec<ColumnData> = (0..header_len)
-        .map(|_| ColumnData { values: Vec::new() })
+struct StreamedData {
+    columns: Vec<ColumnStats>,
+    total_lines: usize,
+    nb_duplicates: usize,
+}
+
+fn stream_csv(content: &str, sep_char: char, header_len: usize) -> StreamedData {
+    use std::collections::hash_map::DefaultHasher;
+    use std::hash::{Hash, Hasher};
+
+    let mut columns: Vec<ColumnStats> = (0..header_len)
+        .map(|_| ColumnStats {
+            value_counts: HashMap::new(),
+        })
         .collect();
+    let mut row_hashes: HashMap<u64, usize> = HashMap::new();
+    let mut total_lines = 0usize;
 
     let mut rdr = csv::ReaderBuilder::new()
         .delimiter(sep_char as u8)
@@ -162,46 +175,60 @@ fn read_csv_data(content: &str, sep_char: char, header_len: usize) -> Vec<Column
             Ok(r) => r,
             Err(_) => continue,
         };
+        total_lines += 1;
+
+        let mut hasher = DefaultHasher::new();
         for (i, col) in columns.iter_mut().enumerate() {
             let val = record.get(i).unwrap_or("");
-            col.values.push(val.to_string());
+            val.hash(&mut hasher);
+            if let Some(count) = col.value_counts.get_mut(val) {
+                *count += 1;
+            } else {
+                col.value_counts.insert(val.to_string(), 1);
+            }
         }
+        *row_hashes.entry(hasher.finish()).or_insert(0) += 1;
     }
 
-    columns
-}
+    let nb_duplicates = row_hashes.values().filter(|&&c| c > 1).map(|&c| c - 1).sum();
 
-// --- Scoring pipeline ---
-
-fn compute_value_counts(values: &[String]) -> HashMap<&str, usize> {
-    let mut counts: HashMap<&str, usize> = HashMap::new();
-    for val in values {
-        *counts.entry(val.as_str()).or_insert(0) += 1;
+    StreamedData {
+        columns,
+        total_lines,
+        nb_duplicates,
     }
-    counts
 }
 
 fn score_column_field(
-    value_counts: &HashMap<&str, usize>,
-    total: usize,
+    value_counts: &HashMap<String, usize>,
+    non_empty_total: usize,
     detector: &dyn Detector,
+    normalized_cache: &HashMap<String, String>,
 ) -> f64 {
-    if total == 0 {
+    if non_empty_total == 0 {
         return 1.0;
     }
 
-    // skipna: exclude empty values from total (like pandas dropna)
-    let empty_count = value_counts.get("").copied().unwrap_or(0);
-    let non_empty_total = total - empty_count;
-    if non_empty_total == 0 {
-        // all values are empty/NaN → score 1.0 (skipna behavior)
-        return 1.0;
-    }
+    let uses_norm = detector.uses_normalize();
+    let need_all = detector.proportion() == 1.0;
 
     let mut matching = 0usize;
-    for (&val, &count) in value_counts {
-        if !val.is_empty() && detector.test(val) {
+    for (val, &count) in value_counts {
+        if val.is_empty() {
+            continue;
+        }
+        let matched = if uses_norm {
+            match normalized_cache.get(val) {
+                Some(n) => detector.test_normalized(n),
+                None => detector.test(val),
+            }
+        } else {
+            detector.test(val)
+        };
+        if matched {
             matching += count;
+        } else if need_all {
+            return 0.0;
         }
     }
 
@@ -220,30 +247,85 @@ struct ScoringResult {
 
 fn score_all(
     header: &[String],
-    columns: &[ColumnData],
+    columns: &[ColumnStats],
     detectors: &[Box<dyn Detector>],
+    total_lines: usize,
+    stats: bool,
 ) -> ScoringResult {
+    use crate::formats::fr_geo::normalize;
+    use std::time::Instant;
+
+    let label_scores_per_det: Vec<Vec<f64>> = detectors
+        .iter()
+        .map(|det| {
+            header
+                .iter()
+                .map(|col_name| header_score(col_name, det.labels()))
+                .collect()
+        })
+        .collect();
+
+    let any_uses_normalize = detectors.iter().any(|d| d.uses_normalize());
+
+    let mut format_times: Vec<(String, f64)> = if stats {
+        detectors.iter().map(|d| (d.name().to_string(), 0.0)).collect()
+    } else {
+        Vec::new()
+    };
+    let mut normalize_time = 0.0f64;
+
     let mut field_scores: BTreeMap<String, BTreeMap<String, f64>> = BTreeMap::new();
     let mut label_scores: BTreeMap<String, BTreeMap<String, f64>> = BTreeMap::new();
 
     for (i, col_name) in header.iter().enumerate() {
-        let col_data = &columns[i];
-        let value_counts = compute_value_counts(&col_data.values);
-        let total = col_data.values.len();
+        let col = &columns[i];
+        let empty_count = col.value_counts.get("").copied().unwrap_or(0);
+        let non_empty_total = total_lines - empty_count;
+
+        let t_norm = Instant::now();
+        let normalized_cache: HashMap<String, String> = if any_uses_normalize {
+            col.value_counts
+                .keys()
+                .filter(|v| !v.is_empty())
+                .map(|v| (v.clone(), normalize(v)))
+                .collect()
+        } else {
+            HashMap::new()
+        };
+        if stats { normalize_time += t_norm.elapsed().as_secs_f64(); }
 
         let mut col_field_scores = BTreeMap::new();
         let mut col_label_scores = BTreeMap::new();
 
-        for det in detectors {
-            let fs = score_column_field(&value_counts, total, det.as_ref());
-            col_field_scores.insert(det.name().to_string(), fs);
-
-            let ls = header_score(col_name, det.labels());
+        for (det_idx, det) in detectors.iter().enumerate() {
+            let ls = label_scores_per_det[det_idx][i];
             col_label_scores.insert(det.name().to_string(), ls);
+
+            if det.mandatory_label() && ls == 0.0 {
+                col_field_scores.insert(det.name().to_string(), 0.0);
+                continue;
+            }
+
+            let t_det = Instant::now();
+            let fs = score_column_field(&col.value_counts, non_empty_total, det.as_ref(), &normalized_cache);
+            if stats { format_times[det_idx].1 += t_det.elapsed().as_secs_f64(); }
+            col_field_scores.insert(det.name().to_string(), fs);
         }
 
         field_scores.insert(col_name.clone(), col_field_scores);
         label_scores.insert(col_name.clone(), col_label_scores);
+    }
+
+    if stats {
+        let total_uniques: usize = columns.iter().map(|c| c.value_counts.keys().filter(|v| !v.is_empty()).count()).sum();
+        eprintln!("[stats] total unique values across cols: {total_uniques}");
+        eprintln!("[stats] normalize cache: {normalize_time:.3}s");
+        format_times.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+        for (name, time) in &format_times {
+            if *time > 0.001 {
+                eprintln!("[stats]   {name:<35} {time:.3}s");
+            }
+        }
     }
 
     ScoringResult {
@@ -421,22 +503,15 @@ fn build_combined_output(
 
 // --- Categorical detection ---
 
-fn detect_categorical(columns: &[ColumnData], header: &[String]) -> Vec<String> {
+fn detect_categorical(columns: &[ColumnStats], header: &[String], total_lines: usize) -> Vec<String> {
     let mut result = Vec::new();
     for (i, col) in columns.iter().enumerate() {
-        let total = col.values.len();
-        if total == 0 {
+        if total_lines == 0 {
             continue;
         }
-        let unique: std::collections::HashSet<&str> = col
-            .values
-            .iter()
-            .map(|s| s.as_str())
-            .filter(|s| !s.is_empty())
-            .collect();
-        let n_unique = unique.len();
+        let n_unique = col.value_counts.keys().filter(|v| !v.is_empty()).count();
         if n_unique <= MAX_CATEGORICAL_VALUES
-            || (n_unique as f64 / total as f64) <= CATEGORICAL_PCT
+            || (n_unique as f64 / total_lines as f64) <= CATEGORICAL_PCT
         {
             result.push(header[i].clone());
         }
@@ -444,24 +519,12 @@ fn detect_categorical(columns: &[ColumnData], header: &[String]) -> Vec<String> 
     result
 }
 
-// --- Duplicates ---
-
-fn count_duplicates(columns: &[ColumnData]) -> usize {
-    if columns.is_empty() {
-        return 0;
-    }
-    let n_rows = columns[0].values.len();
-    let mut row_counts: HashMap<Vec<&str>, usize> = HashMap::new();
-    for row_idx in 0..n_rows {
-        let row: Vec<&str> = columns.iter().map(|c| c.values[row_idx].as_str()).collect();
-        *row_counts.entry(row).or_insert(0) += 1;
-    }
-    row_counts.values().filter(|&&c| c > 1).map(|&c| c - 1).sum()
-}
-
 // --- Main analysis ---
 
-pub fn analyze(file_path: &Path, _num_rows: i64) -> Analysis {
+pub fn analyze(file_path: &Path, _num_rows: i64, stats: bool) -> Analysis {
+    use std::time::Instant;
+
+    let t_start = Instant::now();
     let raw = fs::read(file_path).unwrap_or_default();
     let encoding = detect_encoding(&raw);
 
@@ -473,6 +536,7 @@ pub fn analyze(file_path: &Path, _num_rows: i64) -> Analysis {
         let (decoded, _, _) = enc.decode(&raw);
         decoded.into_owned()
     };
+    if stats { eprintln!("[stats] read + decode: {:.3}s", t_start.elapsed().as_secs_f64()); }
 
     let lines: Vec<&str> = content.lines().collect();
     if lines.is_empty() {
@@ -499,18 +563,25 @@ pub fn analyze(file_path: &Path, _num_rows: i64) -> Analysis {
         }
     };
 
-    let columns_data = read_csv_data(&content, sep_char, header.len());
-    let total_lines = columns_data.first().map(|c| c.values.len()).unwrap_or(0);
-    let nb_duplicates = count_duplicates(&columns_data);
-    let categorical = detect_categorical(&columns_data, &header);
+    let t_csv = Instant::now();
+    let streamed = stream_csv(&content, sep_char, header.len());
+    if stats { eprintln!("[stats] csv streaming + value_counts + duplicates ({} lines, {} cols): {:.3}s", streamed.total_lines, header.len(), t_csv.elapsed().as_secs_f64()); }
+
+    let total_lines = streamed.total_lines;
+    let nb_duplicates = streamed.nb_duplicates;
+    let categorical = detect_categorical(&streamed.columns, &header, total_lines);
 
     let detectors = formats::all_detectors();
-    let mut scoring = score_all(&header, &columns_data, &detectors);
+    let t_score = Instant::now();
+    let mut scoring = score_all(&header, &streamed.columns, &detectors, total_lines, stats);
+    if stats { eprintln!("[stats] scoring total: {:.3}s", t_score.elapsed().as_secs_f64()); }
     handle_empty_columns(&mut scoring.field_scores);
 
     let priorities = Priorities::new();
     let (columns, formats) =
         build_combined_output(&header, &scoring, &detectors, &priorities);
+
+    if stats { eprintln!("[stats] total: {:.3}s", t_start.elapsed().as_secs_f64()); }
 
     Analysis {
         encoding,

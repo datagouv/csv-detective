@@ -56,13 +56,6 @@ static CODES_REGIONS: LazyLock<HashSet<String>> =
 
 pub struct CommuneFormat;
 
-impl CommuneFormat {
-    pub fn detect(&self, val: &str) -> Option<()> {
-        let n = normalize(val);
-        if COMMUNES.contains(&n) { Some(()) } else { None }
-    }
-}
-
 impl Detector for CommuneFormat {
     fn name(&self) -> &'static str { "commune" }
     fn python_type(&self) -> &'static str { "string" }
@@ -71,19 +64,14 @@ impl Detector for CommuneFormat {
     fn labels(&self) -> &'static [(&'static str, f64)] {
         &[("commune", 1.0), ("ville", 1.0), ("libelle commune", 1.0)]
     }
-    fn test(&self, val: &str) -> bool { self.detect(val).is_some() }
+    fn test(&self, val: &str) -> bool { COMMUNES.contains(&normalize(val)) }
+    fn uses_normalize(&self) -> bool { true }
+    fn test_normalized(&self, normalized: &str) -> bool { COMMUNES.contains(normalized) }
 }
 
 // --- Departement ---
 
 pub struct DepartementFormat;
-
-impl DepartementFormat {
-    pub fn detect(&self, val: &str) -> Option<()> {
-        let n = normalize(val);
-        if DEPARTEMENTS.contains(&n) { Some(()) } else { None }
-    }
-}
 
 impl Detector for DepartementFormat {
     fn name(&self) -> &'static str { "departement" }
@@ -99,19 +87,14 @@ impl Detector for DepartementFormat {
             ("nom dep", 1.0),
         ]
     }
-    fn test(&self, val: &str) -> bool { self.detect(val).is_some() }
+    fn test(&self, val: &str) -> bool { DEPARTEMENTS.contains(&normalize(val)) }
+    fn uses_normalize(&self) -> bool { true }
+    fn test_normalized(&self, normalized: &str) -> bool { DEPARTEMENTS.contains(normalized) }
 }
 
 // --- Region ---
 
 pub struct RegionFormat;
-
-impl RegionFormat {
-    pub fn detect(&self, val: &str) -> Option<()> {
-        let n = normalize(val);
-        if REGIONS.contains(&n) { Some(()) } else { None }
-    }
-}
 
 impl Detector for RegionFormat {
     fn name(&self) -> &'static str { "region" }
@@ -126,18 +109,14 @@ impl Detector for RegionFormat {
             ("reg", 0.5), ("nom officiel region", 1.0),
         ]
     }
-    fn test(&self, val: &str) -> bool { self.detect(val).is_some() }
+    fn test(&self, val: &str) -> bool { REGIONS.contains(&normalize(val)) }
+    fn uses_normalize(&self) -> bool { true }
+    fn test_normalized(&self, normalized: &str) -> bool { REGIONS.contains(normalized) }
 }
 
 // --- Code postal ---
 
 pub struct CodePostalFormat;
-
-impl CodePostalFormat {
-    pub fn detect(&self, val: &str) -> Option<()> {
-        if CODES_POSTAUX.contains(val) { Some(()) } else { None }
-    }
-}
 
 impl Detector for CodePostalFormat {
     fn name(&self) -> &'static str { "code_postal" }
@@ -152,18 +131,12 @@ impl Detector for CodePostalFormat {
             ("location postcode", 1.0),
         ]
     }
-    fn test(&self, val: &str) -> bool { self.detect(val).is_some() }
+    fn test(&self, val: &str) -> bool { CODES_POSTAUX.contains(val) }
 }
 
 // --- Code commune ---
 
 pub struct CodeCommuneFormat;
-
-impl CodeCommuneFormat {
-    pub fn detect(&self, val: &str) -> Option<()> {
-        if CODES_COMMUNES.contains(val) { Some(()) } else { None }
-    }
-}
 
 impl Detector for CodeCommuneFormat {
     fn name(&self) -> &'static str { "code_commune" }
@@ -178,19 +151,12 @@ impl Detector for CodeCommuneFormat {
             ("code com", 1.0), ("com", 0.5), ("code", 0.5),
         ]
     }
-    fn test(&self, val: &str) -> bool { self.detect(val).is_some() }
+    fn test(&self, val: &str) -> bool { CODES_COMMUNES.contains(val) }
 }
 
 // --- Code département ---
 
 pub struct CodeDepartementFormat;
-
-impl CodeDepartementFormat {
-    pub fn detect(&self, val: &str) -> Option<()> {
-        let lower = val.to_lowercase();
-        if CODES_DEPARTEMENTS.contains(&lower) { Some(()) } else { None }
-    }
-}
 
 impl Detector for CodeDepartementFormat {
     fn name(&self) -> &'static str { "code_departement" }
@@ -204,18 +170,14 @@ impl Detector for CodeDepartementFormat {
             ("dep", 0.5), ("departement", 1.0), ("dept", 0.75),
         ]
     }
-    fn test(&self, val: &str) -> bool { self.detect(val).is_some() }
+    fn test(&self, val: &str) -> bool {
+        CODES_DEPARTEMENTS.contains(&val.to_lowercase())
+    }
 }
 
 // --- Code région ---
 
 pub struct CodeRegionFormat;
-
-impl CodeRegionFormat {
-    pub fn detect(&self, val: &str) -> Option<()> {
-        if CODES_REGIONS.contains(val) { Some(()) } else { None }
-    }
-}
 
 impl Detector for CodeRegionFormat {
     fn name(&self) -> &'static str { "code_region" }
@@ -229,5 +191,5 @@ impl Detector for CodeRegionFormat {
             ("code insee region", 1.0), ("region", 1.0),
         ]
     }
-    fn test(&self, val: &str) -> bool { self.detect(val).is_some() }
+    fn test(&self, val: &str) -> bool { CODES_REGIONS.contains(val) }
 }

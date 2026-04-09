@@ -54,6 +54,18 @@ pub trait Detector {
         &[]
     }
     fn test(&self, val: &str) -> bool;
+
+    /// If true, test_normalized() will be called with a pre-normalized value
+    /// (lowercase, accents removed, non-alphanum replaced by space, trimmed).
+    /// This avoids redundant normalization across multiple FR formats.
+    fn uses_normalize(&self) -> bool {
+        false
+    }
+
+    /// Test using a pre-normalized value. Only called if uses_normalize() returns true.
+    fn test_normalized(&self, _normalized: &str) -> bool {
+        false
+    }
 }
 
 pub fn all_detectors() -> Vec<Box<dyn Detector>> {

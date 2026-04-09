@@ -11,3 +11,4 @@ encoding_rs_io = "0.1"
 chardetng = "0.1"
 csv = "1"
 clap = { version = "4", features = ["derive"] }
+aho-corasick = "1"

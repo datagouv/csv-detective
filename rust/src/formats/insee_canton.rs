@@ -13,13 +13,6 @@ static CANTONS: LazyLock<HashSet<String>> = LazyLock::new(|| {
 
 pub struct InseeCantonFormat;
 
-impl InseeCantonFormat {
-    pub fn detect(&self, val: &str) -> Option<()> {
-        let n = normalize(val);
-        if CANTONS.contains(&n) { Some(()) } else { None }
-    }
-}
-
 impl Detector for InseeCantonFormat {
     fn name(&self) -> &'static str { "insee_canton" }
     fn python_type(&self) -> &'static str { "string" }
@@ -28,5 +21,7 @@ impl Detector for InseeCantonFormat {
     fn labels(&self) -> &'static [(&'static str, f64)] {
         &[("insee canton", 1.0), ("canton", 1.0), ("cant", 0.5), ("nom canton", 1.0)]
     }
-    fn test(&self, val: &str) -> bool { self.detect(val).is_some() }
+    fn test(&self, val: &str) -> bool { CANTONS.contains(&normalize(val)) }
+    fn uses_normalize(&self) -> bool { true }
+    fn test_normalized(&self, normalized: &str) -> bool { CANTONS.contains(normalized) }
 }
