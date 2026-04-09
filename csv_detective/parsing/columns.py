@@ -208,6 +208,8 @@ def test_col_chunks(
         if verbose:
             logging.info(f"> Testing batch number {batch_number}")
         batch = pd.concat(batch, ignore_index=True)
+        # we can't early stop because we need the infos of all chunks for some fields
+        # and some empty-for-now columns may actually not be
         analysis["total_lines"] += len(batch)
         row_hashes_count = row_hashes_count.add(
             pd.util.hash_pandas_object(batch, index=False).value_counts(),
@@ -226,9 +228,6 @@ def test_col_chunks(
                     for fmt_label in formats.keys()
                     if fmt_label not in mandatory_label_skip.get(col, set())
                 ]
-        if not any(remaining_tests for remaining_tests in remaining_tests_per_col.values()):
-            # no more potential tests to do on any column, early stop
-            break
         for col, fmt_labels in remaining_tests_per_col.items():
             # testing each column with the tests that are still competing
             # after previous batchs analyses
