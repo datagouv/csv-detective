@@ -124,9 +124,13 @@ def validate(
                 if to_check.empty:
                     continue
                 value_counts = to_check.value_counts()
-                unique_results = value_counts.index.to_series().apply(formats[detected["format"]].func)
+                unique_results = value_counts.index.to_series().apply(
+                    formats[detected["format"]].func
+                )
                 chunk_valid_values = (unique_results * value_counts.values).sum()
-                if formats[detected["format"]].proportion == 1 and chunk_valid_values < len(to_check):
+                if formats[detected["format"]].proportion == 1 and chunk_valid_values < len(
+                    to_check
+                ):
                     # we can early stop in this case, not all values are valid while we want 100%
                     if verbose:
                         logging.warning(

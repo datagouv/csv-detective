@@ -76,7 +76,9 @@ def test_validation_crash_in_chunks():
         "separator": ",",
         "header_row_idx": 0,
         "header": cols,
-        "columns": {col: {"python_type": "string", "format": "string", "score": 1.5} for col in cols},
+        "columns": {
+            col: {"python_type": "string", "format": "string", "score": 1.5} for col in cols
+        },
     }
     with patch("urllib.request.urlopen") as mock_urlopen:
         mock_response = MagicMock()
