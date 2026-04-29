@@ -95,54 +95,59 @@ def validate(
     analysis["total_lines"] = 0
     checked_values: dict[str, int] = {col_name: 0 for col_name in previous_analysis["columns"]}
     valid_values: dict[str, int] = {col_name: 0 for col_name in previous_analysis["columns"]}
-    for idx, chunk in enumerate(chunks):
-        if verbose:
-            logging.info(f"- Testing chunk number {idx}")
-        if idx == 0:
+    try:
+        for idx, chunk in enumerate(chunks):
             if verbose:
-                logging.info("Checking if all columns match")
-            if len(chunk.columns) != len(previous_analysis["header"]) or any(
-                list(chunk.columns)[k] != previous_analysis["header"][k]
-                for k in range(len(previous_analysis["header"]))
-            ):
+                logging.info(f"- Testing chunk number {idx}")
+            if idx == 0:
                 if verbose:
-                    logging.warning("> Columns in the file do not match those of the analysis")
-                return False, None, None
-        analysis["total_lines"] += len(chunk)
-        row_hashes_count = row_hashes_count.add(
-            pd.util.hash_pandas_object(chunk, index=False).value_counts(),
-            fill_value=0,
-        )
-        for col_name, detected in previous_analysis["columns"].items():
-            if verbose:
-                logging.info(f"- Testing {col_name} for {detected['format']}")
-            if detected["format"] == "string":
-                # no test for columns that have not been recognized as a specific format
-                continue
-            to_check = chunk[col_name].dropna() if skipna else chunk[col_name]
-            if to_check.empty:
-                continue
-            value_counts = to_check.value_counts()
-            unique_results = value_counts.index.to_series().apply(formats[detected["format"]].func)
-            chunk_valid_values = (unique_results * value_counts.values).sum()
-            if formats[detected["format"]].proportion == 1 and chunk_valid_values < len(to_check):
-                # we can early stop in this case, not all values are valid while we want 100%
+                    logging.info("Checking if all columns match")
+                if len(chunk.columns) != len(previous_analysis["header"]) or any(
+                    list(chunk.columns)[k] != previous_analysis["header"][k]
+                    for k in range(len(previous_analysis["header"]))
+                ):
+                    if verbose:
+                        logging.warning("> Columns in the file do not match those of the analysis")
+                    return False, None, None
+            analysis["total_lines"] += len(chunk)
+            row_hashes_count = row_hashes_count.add(
+                pd.util.hash_pandas_object(chunk, index=False).value_counts(),
+                fill_value=0,
+            )
+            for col_name, detected in previous_analysis["columns"].items():
                 if verbose:
-                    logging.warning(
-                        f"> Test failed for column {col_name} with format {detected['format']}"
+                    logging.info(f"- Testing {col_name} for {detected['format']}")
+                if detected["format"] == "string":
+                    # no test for columns that have not been recognized as a specific format
+                    continue
+                to_check = chunk[col_name].dropna() if skipna else chunk[col_name]
+                if to_check.empty:
+                    continue
+                value_counts = to_check.value_counts()
+                unique_results = value_counts.index.to_series().apply(formats[detected["format"]].func)
+                chunk_valid_values = (unique_results * value_counts.values).sum()
+                if formats[detected["format"]].proportion == 1 and chunk_valid_values < len(to_check):
+                    # we can early stop in this case, not all values are valid while we want 100%
+                    if verbose:
+                        logging.warning(
+                            f"> Test failed for column {col_name} with format {detected['format']}"
+                        )
+                    return False, None, None
+                checked_values[col_name] += len(to_check)
+                valid_values[col_name] += chunk_valid_values
+                col_values[col_name] = (
+                    col_values[col_name]
+                    .add(
+                        chunk[col_name].value_counts(dropna=False),
+                        fill_value=0,
                     )
-                return False, None, None
-            checked_values[col_name] += len(to_check)
-            valid_values[col_name] += chunk_valid_values
-            col_values[col_name] = (
-                col_values[col_name]
-                .add(
-                    chunk[col_name].value_counts(dropna=False),
-                    fill_value=0,
-                )
-                .rename_axis(col_name)
-            )  # rename_axis because *sometimes* pandas doesn't pass on the column's name ¯\_(ツ)_/¯
-        del chunk
+                    .rename_axis(col_name)
+                )  # rename_axis because *sometimes* pandas doesn't pass on the column's name ¯\_(ツ)_/¯
+            del chunk
+    except Exception as e:
+        if verbose:
+            logging.warning(f"> Could not load the file with previous analysis values: {e}")
+        return False, None, None
     # finally we loop through the formats that accept less than 100% valid values to check the proportion
     for col_name, detected in previous_analysis["columns"].items():
         if detected["format"] == "string":
