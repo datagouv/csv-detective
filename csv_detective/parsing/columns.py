@@ -107,7 +107,7 @@ def test_col(
 
 
 def test_label(
-    columns: list[str], formats: dict[str, Format], limited_output: bool, verbose: bool = False
+    columns: list[str], formats: dict[str, Format], verbose: bool = False
 ):
     if verbose:
         start = time()
