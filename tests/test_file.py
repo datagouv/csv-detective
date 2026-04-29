@@ -572,23 +572,22 @@ def test_unique_values_output(nb_rows, mocked_responses):
         cat = (
             "a"
             if k < nb_rows // 4
-            else "b" if k < nb_rows // 2
-            else "c" if k < nb_rows // 4 * 3
+            else "b"
+            if k < nb_rows // 2
+            else "c"
+            if k < nb_rows // 4 * 3
             else "d"
         )
         json_cat = (
             [1]
             if k < nb_rows // 4
-            else [1, 2] if k < nb_rows // 2
-            else [3, 2, 1] if k < nb_rows // 4 * 3
+            else [1, 2]
+            if k < nb_rows // 2
+            else [3, 2, 1]
+            if k < nb_rows // 4 * 3
             else []
         )
-        json_not_cat = (
-            [k, k + 1]
-            if k % 2 == 0
-            else [k] if k % 3 == 0
-            else []
-        )
+        json_not_cat = [k, k + 1] if k % 2 == 0 else [k] if k % 3 == 0 else []
         expected_content += f"{cat};{k};{json_cat};{json_not_cat}\n"
     mocked_responses.get(
         "http://example.com/test.csv",

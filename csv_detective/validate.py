@@ -176,9 +176,8 @@ def validate(
     ]
     analysis["unique_values"] = {}
     for col in col_values.keys():
-        if (
-            previous_analysis["columns"][col]["format"] == "json" 
-            and all(value.startswith("[") for value in col_values[col].index)
+        if previous_analysis["columns"][col]["format"] == "json" and all(
+            value.startswith("[") for value in col_values[col].index
         ):
             unique = extract_unique_from_multicat(col_values[col].index)
             if unique is not None:

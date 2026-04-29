@@ -75,9 +75,8 @@ def detect_formats(
     analysis["unique_values"] = {}
     if not in_chunks:
         for col in table.columns:
-            if (
-                analysis["columns_fields"][col]["format"] == "json" 
-                and all(value.startswith("[") for value in table[col])
+            if analysis["columns_fields"][col]["format"] == "json" and all(
+                value.startswith("[") for value in table[col]
             ):
                 unique = extract_unique_from_multicat(table[col])
                 if unique is not None:
@@ -86,9 +85,8 @@ def detect_formats(
                 analysis["unique_values"][col] = list(table[col].dropna().unique())
     else:
         for col in col_values.keys():
-            if (
-                analysis["columns_fields"][col]["format"] == "json" 
-                and all(value.startswith("[") for value in col_values[col].index)
+            if analysis["columns_fields"][col]["format"] == "json" and all(
+                value.startswith("[") for value in col_values[col].index
             ):
                 unique = extract_unique_from_multicat(col_values[col].index.to_series())
                 if unique is not None:
