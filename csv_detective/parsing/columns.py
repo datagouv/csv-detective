@@ -106,9 +106,7 @@ def test_col(
     return return_table
 
 
-def test_label(
-    columns: list[str], formats: dict[str, Format], limited_output: bool, verbose: bool = False
-):
+def test_label(columns: list[str], formats: dict[str, Format], verbose: bool = False):
     if verbose:
         start = time()
         logging.info("Testing labels to get formats")

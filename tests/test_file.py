@@ -563,3 +563,54 @@ def test_diff_epci_siren(col_name, value, expected, mocked_responses):
 )
 def test_sanitize_for_json(to_export, expected):
     assert sanitize_for_json(to_export) == expected
+
+
+@pytest.mark.parametrize("nb_rows", (CHUNK_SIZE // 10, CHUNK_SIZE + 1))
+def test_unique_values_output(nb_rows, mocked_responses):
+    expected_content = "cat;not_cat;json_cat;json_not_cat\n"
+    for k in range(nb_rows):
+        cat = (
+            "a"
+            if k < nb_rows // 4
+            else "b"
+            if k < nb_rows // 2
+            else "c"
+            if k < nb_rows // 4 * 3
+            else "d"
+        )
+        json_cat = (
+            [1]
+            if k < nb_rows // 4
+            else [1, 2]
+            if k < nb_rows // 2
+            else [3, 2, 1]
+            if k < nb_rows // 4 * 3
+            else []
+        )
+        json_not_cat = [k, k + 1] if k % 2 == 0 else [k] if k % 3 == 0 else []
+        expected_content += f"{cat};{k};{json_cat};{json_not_cat}\n"
+    mocked_responses.get(
+        "http://example.com/test.csv",
+        body=expected_content,
+        status=200,
+    )
+    with patch("urllib.request.urlopen") as mock_urlopen:
+        mock_response = MagicMock()
+        mock_response.read.return_value = expected_content.encode("utf-8")
+        mock_response.__enter__.return_value = mock_response
+        mock_urlopen.return_value = mock_response
+        analysis = routine(
+            file_path="http://example.com/test.csv",
+            num_rows=-1,
+            output_profile=False,
+            save_results=False,
+        )
+    assert analysis["columns"]["json_cat"]["python_type"] == "json"
+    assert analysis["columns"]["json_not_cat"]["python_type"] == "json"
+    assert isinstance(analysis.get("unique_values"), dict)
+    # too many values => not in unique_values
+    assert "not_cat" not in analysis["unique_values"]
+    assert "json_not_cat" not in analysis["unique_values"]
+    # few enough values => testing output
+    assert analysis["unique_values"]["cat"] == ["a", "b", "c", "d"]
+    assert analysis["unique_values"]["json_cat"] == [1, 2, 3]
