@@ -8,7 +8,10 @@ from csv_detective.detection.variables import (
     # detect_continuous_variable,
 )
 from csv_detective.format import Format, FormatsManager
-from csv_detective.output.utils import prepare_output_dict
+from csv_detective.output.utils import (
+    extract_unique_from_multicat,
+    prepare_output_dict,
+)
 from csv_detective.parsing.columns import (
     MAX_NUMBER_CATEGORICAL_VALUES,
     handle_empty_columns,
@@ -69,6 +72,29 @@ def detect_formats(
             verbose=verbose,
         )
     analysis["columns_fields"] = prepare_output_dict(scores_table_fields, limited_output)
+    analysis["unique_values"] = {}
+    if not in_chunks:
+        for col in table.columns:
+            if (
+                analysis["columns_fields"][col]["format"] == "json" 
+                and all(value.startswith("[") for value in table[col])
+            ):
+                unique = extract_unique_from_multicat(table[col])
+                if unique is not None:
+                    analysis["unique_values"][col] = unique
+            elif table[col].nunique() <= MAX_NUMBER_CATEGORICAL_VALUES:
+                analysis["unique_values"][col] = list(table[col].dropna().unique())
+    else:
+        for col in col_values.keys():
+            if (
+                analysis["columns_fields"][col]["format"] == "json" 
+                and all(value.startswith("[") for value in col_values[col].index)
+            ):
+                unique = extract_unique_from_multicat(col_values[col].index.to_series())
+                if unique is not None:
+                    analysis["unique_values"][col] = unique
+            elif len(col_values[col]) <= MAX_NUMBER_CATEGORICAL_VALUES:
+                analysis["unique_values"][col] = list(col_values[col].index.dropna())
 
     # Perform testing on labels
     scores_table_labels = test_label(analysis["header"], formats, verbose=verbose)

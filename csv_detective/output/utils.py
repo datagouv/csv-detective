@@ -1,4 +1,7 @@
+import json
 import pandas as pd
+
+from csv_detective.parsing.columns import MAX_NUMBER_CATEGORICAL_VALUES
 
 
 def prepare_output_dict(return_table: pd.DataFrame, limited_output: bool):
@@ -73,3 +76,12 @@ def prepare_output_dict(return_table: pd.DataFrame, limited_output: bool):
             )
 
     return output_dict
+
+
+def extract_unique_from_multicat(values: pd.Series) -> list | None:
+    # we can safely cast as json here
+    loaded = values.apply(
+        lambda v: json.loads(v) if isinstance(v, str) else pd.NA
+    )
+    unique = loaded.explode().dropna().unique()
+    return unique.tolist() if len(unique) <= MAX_NUMBER_CATEGORICAL_VALUES else None
