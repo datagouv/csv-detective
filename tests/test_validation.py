@@ -65,6 +65,32 @@ def test_validation(_params):
         assert col_values is None
 
 
+def test_validation_crash_in_chunks():
+    # previous analysis had "," for sep, it's now ";" but there are "," in rows
+    cols = ["col1", "col2", "col3"]
+    expected_content = f"{';'.join(cols)}\n"
+    for _ in range(100):
+        expected_content = f"a;{_};{'a,b' if _ < 50 else 'a,b,c'}\n"
+    previous_analysis = {
+        "encoding": "utf-8",
+        "separator": ",",
+        "header_row_idx": 0,
+        "header": cols,
+        "columns": {col: {"python_type": "string", "format": "string", "score": 1.5} for col in cols},
+    }
+    with patch("urllib.request.urlopen") as mock_urlopen:
+        mock_response = MagicMock()
+        mock_response.read.return_value = expected_content.encode("utf-8")
+        mock_response.__enter__.return_value = mock_response
+        mock_urlopen.return_value = mock_response
+        mock_urlopen.return_value = mock_response
+        is_valid, *_ = validate(
+            file_path="http://example.com/test.csv",
+            previous_analysis=previous_analysis,
+        )
+    assert is_valid is False
+
+
 @pytest.mark.parametrize(
     "_params",
     (
@@ -89,7 +115,7 @@ def test_validation(_params):
 def test_validation_with_proportions(_params):
     # testing the behaviour for a file that has 15% invalid values, but all in a single chunk
     valid_value, invalid_value, detected, should_be_valid = _params
-    url = f"http://example.com/test.csv"
+    url = "http://example.com/test.csv"
     expected_content = "col\n"
     for _ in range(60):
         # 60 rows of valid values
