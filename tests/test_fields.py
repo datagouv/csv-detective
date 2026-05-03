@@ -160,6 +160,34 @@ def test_early_detection(args):
         mock_func.assert_not_called()
 
 
+def test_parent_score_propagation():
+    # latitude_wgs_fr_metropole values are valid floats,
+    # so float should get a propagated score without being tested directly
+    lat_values = fmtm.formats["latitude_wgs_fr_metropole"]._test_values[True]
+    table = pd.DataFrame({"lat": (lat_values * 100)[:100]})
+    parent_children = {
+        parent: [c for c in children]
+        for parent, children in fmtm._children.items()
+    }
+    returned_table = col_test(table, fmtm.formats, limited_output=True, parent_children=parent_children)
+    assert returned_table.loc["latitude_wgs_fr_metropole", "lat"] > 0
+    assert returned_table.loc["latitude_wgs", "lat"] > 0
+    assert returned_table.loc["float", "lat"] > 0
+
+
+def test_parent_tested_when_children_fail():
+    # float values that are NOT latitudes should still get float detected
+    table = pd.DataFrame({"val": ["999.99", "-500.5", "123456.789"] * 34})
+    parent_children = {
+        parent: [c for c in children]
+        for parent, children in fmtm._children.items()
+    }
+    returned_table = col_test(table, fmtm.formats, limited_output=True, parent_children=parent_children)
+    assert returned_table.loc["float", "val"] > 0
+    assert returned_table.loc["latitude_wgs", "val"] == 0
+    assert returned_table.loc["latitude_wgs_fr_metropole", "val"] == 0
+
+
 def test_all_proportion_1():
     # building a table that uses only correct values for these formats, except on one row
     table = pd.DataFrame(

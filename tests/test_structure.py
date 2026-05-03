@@ -52,6 +52,36 @@ def test_get_from_tags(tags):
             assert tag in fmt.tags
 
 
+def test_parent_references_valid():
+    for name, fmt in fmtm.formats.items():
+        if fmt.parent is not None:
+            assert fmt.parent in fmtm.formats, (
+                f"Format '{name}' declares parent '{fmt.parent}' which does not exist"
+            )
+
+
+def test_true_subset_invariant():
+    for name, fmt in fmtm.formats.items():
+        if fmt.parent is None:
+            continue
+        parent = fmtm.formats[fmt.parent]
+        for val in fmt._test_values[True]:
+            assert parent.func(val), (
+                f"'{val}' is valid for '{name}' but not for parent '{fmt.parent}'"
+            )
+
+
+def test_leaf_formats_excludes_parents():
+    leaves = fmtm.get_leaf_formats()
+    for parent_name in fmtm._children:
+        assert parent_name not in leaves
+
+
+def test_get_ancestors():
+    ancestors = fmtm.get_ancestors("latitude_wgs_fr_metropole")
+    assert ancestors == ["latitude_wgs", "float"]
+
+
 @pytest.mark.parametrize(
     "func, max_pos_args",
     (
