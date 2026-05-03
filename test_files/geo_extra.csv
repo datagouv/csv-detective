@@ -1,0 +1,11 @@
+code_pays_2;code_pays_3;code_pays_num;geojson;lonlat
+FR;FRA;250;{"type": "Point", "coordinates": [2.35, 48.86]};2.35,48.86
+DE;DEU;276;{"type": "Point", "coordinates": [13.4, 52.52]};13.4,52.52
+ES;ESP;724;{"type": "Point", "coordinates": [-3.7, 40.42]};-3.7,40.42
+IT;ITA;380;{"type": "Point", "coordinates": [12.49, 41.89]};12.49,41.89
+PT;PRT;620;{"type": "Point", "coordinates": [-9.14, 38.74]};-9.14,38.74
+BE;BEL;056;{"type": "Point", "coordinates": [4.35, 50.85]};4.35,50.85
+CH;CHE;756;{"type": "Point", "coordinates": [7.45, 46.95]};7.45,46.95
+GB;GBR;826;{"type": "Point", "coordinates": [-0.12, 51.51]};-0.12,51.51
+US;USA;840;{"type": "Point", "coordinates": [-77.04, 38.9]};-77.04,38.9
+JP;JPN;392;{"type": "Point", "coordinates": [139.69, 35.69]};139.69,35.69
