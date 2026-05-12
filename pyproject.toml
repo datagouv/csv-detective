@@ -54,6 +54,10 @@ csv_detective = ["CHANGELOG.md", "LICENSE", "README.md"]
 version_scheme = "guess-next-dev"
 local_scheme = "no-local-version"
 
+# Provisional: drop when dependencies require a patched urllib3 lower bound (GHSA-mf9v-mfxr-j63j).
+[tool.uv]
+constraint-dependencies = ["urllib3>=2.7.0"]
+
 [tool.ruff]
 lint = { extend-select = ["I"] } # ["I"] is to also sort imports with an isort rule
 line-length = 100
