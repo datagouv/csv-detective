@@ -2,6 +2,7 @@ from collections import defaultdict
 
 import numpy as np
 import pandas as pd
+import pyarrow.parquet as pq
 
 from csv_detective.detection.variables import (
     detect_categorical_variable,
@@ -18,11 +19,12 @@ from csv_detective.parsing.columns import (
     test_col,
     test_col_chunks,
     test_label,
+    test_parquet_cols,
 )
 
 
 def detect_formats(
-    table: pd.DataFrame,
+    table: pd.DataFrame | pq.ParquetFile,
     analysis: dict,
     file_path: str,
     tags: list[str] | None = None,
@@ -32,7 +34,6 @@ def detect_formats(
     verbose: bool = False,
 ) -> tuple[dict, dict[str, pd.Series] | None]:
     fmtm = FormatsManager(custom_proportions=custom_proportions)
-    in_chunks = analysis.get("total_lines") is None
 
     # list testing to be performed
     formats: dict[str, Format] = (
@@ -43,8 +44,18 @@ def detect_formats(
     if len(formats) == 0:
         return analysis, None
 
+    in_chunks = analysis.get("total_lines") is None
+
     # Perform testing on fields
-    if not in_chunks:
+    if analysis.get("engine") == "parquet":
+        scores_table_fields, analysis, col_values = test_parquet_cols(
+            table,
+            formats,
+            limited_output=limited_output,
+            skipna=skipna,
+            verbose=verbose,
+        )
+    elif not in_chunks:
         # table is small enough to be tested in one go
         scores_table_fields = test_col(
             table=table,

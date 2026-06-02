@@ -1,8 +1,10 @@
 import logging
 from time import time
 from typing import Callable
+import re
 
 import pandas as pd
+import pyarrow.parquet as pq
 from more_itertools import peekable
 
 from csv_detective.format import Format
@@ -192,6 +194,144 @@ def test_col_chunks(
         if idx == 0:
             # we have read and analysed the first chunk already
             continue
+        if len(batch) < 10:
+            # it's too slow to process chunks directly, but we want to keep the first analysis
+            # on a "small" chunk, so partial analyses are done on batches of chunks
+            batch.append(chunk)
+            # we don't know when the chunks end, and doing one additionnal step
+            # for the final batch is ugly
+            try:
+                iterator.peek()
+                continue
+            except StopIteration:
+                pass
+        if verbose:
+            logging.info(f"> Testing batch number {batch_number}")
+        batch = pd.concat(batch, ignore_index=True)
+        analysis["total_lines"] += len(batch)
+        row_hashes_count = row_hashes_count.add(
+            pd.util.hash_pandas_object(batch, index=False).value_counts(),
+            fill_value=0,
+        )
+        for col in batch.columns:
+            col_values[col] = col_values[col].add(
+                batch[col].value_counts(dropna=False),
+                fill_value=0,
+            )
+        for col in list(empty_cols):
+            if not batch[col].dropna().empty:
+                empty_cols.discard(col)
+                remaining_tests_per_col[col] = [
+                    fmt_label
+                    for fmt_label in formats.keys()
+                    if fmt_label not in mandatory_label_skip.get(col, set())
+                ]
+        if not any(remaining_tests for remaining_tests in remaining_tests_per_col.values()):
+            # no more potential tests to do on any column, early stop
+            break
+        for col, fmt_labels in remaining_tests_per_col.items():
+            # testing each column with the tests that are still competing
+            # after previous batchs analyses
+            for label in fmt_labels:
+                batch_col_test = test_col_val(
+                    batch[col],
+                    formats[label],
+                    limited_output=limited_output,
+                    skipna=skipna,
+                )
+                return_table.loc[label, col] = (
+                    # if this batch's column tested 0 then test fails overall
+                    0
+                    if batch_col_test == 0
+                    # otherwise updating the score with weighted average
+                    else ((return_table.loc[label, col] * idx + batch_col_test) / (idx + 1))
+                )
+        remaining_tests_per_col = build_remaining_tests_per_col(return_table)
+        batch, batch_number = [], batch_number + 1
+    analysis["nb_duplicates"] = sum(row_hashes_count > 1)
+    analysis["categorical"] = [
+        col for col, values in col_values.items() if len(values) <= MAX_NUMBER_CATEGORICAL_VALUES
+    ]
+    handle_empty_columns(return_table)
+    if verbose:
+        display_logs_depending_process_time(
+            f"Done testing chunks in {round(time() - start, 3)}s", time() - start
+        )
+    return return_table, analysis, col_values
+
+
+PYARROW_TYPE_TO_PYTHON = {
+    # using regex because of bits-differing types (e.g. int32 and int64)
+    # the "^" makes sure we don't consider the types of elements within structured objects (lists, dicts)
+    "string$": "string",  # large_string also exists
+    "^double": "float",
+    "^float": "float",
+    "^decimal": "float",
+    "^int": "int",
+    "^uint": "int",
+    "^bool": "bool",
+    "^date": "date",
+    "^struct": "json",  # dictionary
+    "^list": "json",
+    "^binary": "binary",
+    r"^timestamp\[\ws\]": "datetime_naive",
+    r"^timestamp\[\ws,": "datetime_aware",  # the rest of the field depends on the timezone
+}
+
+
+def test_parquet_cols(
+    table: pq.ParquetFile,
+    formats: dict[str, Format],
+    # analysis: dict,
+    limited_output: bool,
+    skipna: bool = True,
+    verbose: bool = False,
+):
+    if verbose:
+        start = time()
+        logging.info("Testing columns to get formats on chunks")
+
+    columns = {}
+    for col in table.schema_arrow:
+        col_type = str(col.type)
+        if col_type.startswith("dictionary"):
+            # dictionaries are for columns with repeated values
+            # we need to dig deeper to get the type
+            col_type = str(col.type.value_type)
+        try:
+            columns[col.name] = next(
+                pytype
+                for pyartype, pytype in PYARROW_TYPE_TO_PYTHON.items()
+                if re.search(pyartype, col_type)
+            )
+        except StopIteration:
+            raise ValueError(f"Unknown pyarrow type: {col.type}")
+    
+    mandatory_label_skip: dict[str, set[str]] = {
+        col: {
+            fmt_label
+            for fmt_label, fmt in formats.items()
+            if fmt.mandatory_label and fmt.is_valid_label(col) == 0
+        }
+        for col in columns.keys()
+    }
+
+    remaining_tests_per_col = {
+        col: {
+            fmt_label
+            for fmt_label, fmt in formats.items()
+            if fmt.python_type == pytype
+            and fmt_label not in mandatory_label_skip.get(col, set())
+            # we already know the pure types are valid, only formats remain
+            and fmt_label != pytype
+        }
+        for col, pytype in columns.items()
+    }
+    return_table = pd.DataFrame(columns=columns.keys())
+    chunks = table.iter_batches(CHUNK_SIZE)
+    batch, batch_number = [], 1
+    for chunk in chunks:
+        _chunk = chunk.to_pandas()
         if len(batch) < 10:
             # it's too slow to process chunks directly, but we want to keep the first analysis
             # on a "small" chunk, so partial analyses are done on batches of chunks
