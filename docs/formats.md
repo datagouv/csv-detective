@@ -4,7 +4,7 @@
 |------|-------------|-------------|------|--------------------|-----------------|---------|
 | adresse | French address | string | fr, geo | 0.55 | False | `rue du martyr` |
 | binary | Binary data (bytes string) | binary | type | 1 | False | `b''` |
-| booleen | Boolean or boolean-like value (yes/no, 1/0...) | bool | type | 1 | False | `oui` |
+| bool | Boolean or boolean-like value (yes/no, 1/0...) | bool | type | 1 | False | `oui` |
 | code_commune | French commune code, from the INSEE reference source | string | fr, geo | 0.75 | True | `91471` |
 | code_csp_insee | French socio-professional category code, from the INSEE reference source | string | fr | 1 | False | `121f` |
 | code_departement | French département code | string | fr, geo | 1 | True | `75` |

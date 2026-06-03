@@ -24,7 +24,7 @@ def prepare_output_dict(return_table: pd.DataFrame, limited_output: bool):
             ("int", ("float",)),
             # bool over everything
             (
-                "booleen",
+                "bool",
                 (
                     "latitude_l93",
                     "latitude_wgs",

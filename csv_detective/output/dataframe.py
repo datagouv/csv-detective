@@ -6,7 +6,7 @@ from typing import Iterator
 import pandas as pd
 
 from csv_detective.formats.binary import binary_casting
-from csv_detective.formats.booleen import bool_casting
+from csv_detective.formats.bool import bool_casting
 from csv_detective.formats.date import date_casting
 from csv_detective.formats.float import float_casting
 from csv_detective.parsing.csv import CHUNK_SIZE
