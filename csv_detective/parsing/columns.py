@@ -130,6 +130,26 @@ def test_label(columns: list[str], formats: dict[str, Format], verbose: bool = F
     return return_table
 
 
+
+def build_remaining_tests_per_col(
+    return_table: pd.DataFrame,
+    mandatory_label_skip: dict[str, set[str]],
+    known_columns: dict[str, str] = {},
+) -> dict[str, list[str]]:
+    # returns a dict with the table's columns as keys and the list of remaining format labels to apply
+    return {
+        col: [
+            fmt_label
+            for fmt_label in return_table.index
+            # for parquet we know for sure some column types
+            if known_columns.get(col) != fmt_label 
+            and return_table.loc[fmt_label, col] > 0
+            and fmt_label not in mandatory_label_skip.get(col, set())
+        ]
+        for col in return_table.columns
+    }
+
+
 def test_col_chunks(
     table: pd.DataFrame,
     file_path: str,
@@ -139,18 +159,6 @@ def test_col_chunks(
     skipna: bool = True,
     verbose: bool = False,
 ) -> tuple[pd.DataFrame, dict, dict[str, pd.Series]]:
-    def build_remaining_tests_per_col(return_table: pd.DataFrame) -> dict[str, list[str]]:
-        # returns a dict with the table's columns as keys and the list of remaining format labels to apply
-        return {
-            col: [
-                fmt_label
-                for fmt_label in return_table.index
-                if return_table.loc[fmt_label, col] > 0
-                and fmt_label not in mandatory_label_skip.get(col, set())
-            ]
-            for col in return_table.columns
-        }
-
     if verbose:
         start = time()
         logging.info("Testing columns to get formats on chunks")
@@ -169,7 +177,7 @@ def test_col_chunks(
     }
     handle_empty_columns(return_table)
     empty_cols = {col for col in table.columns if table[col].dropna().empty}
-    remaining_tests_per_col = build_remaining_tests_per_col(return_table)
+    remaining_tests_per_col = build_remaining_tests_per_col(return_table, mandatory_label_skip)
 
     # hashing rows to get nb_duplicates
     row_hashes_count = pd.util.hash_pandas_object(table, index=False).value_counts()
@@ -246,7 +254,7 @@ def test_col_chunks(
                     # otherwise updating the score with weighted average
                     else ((return_table.loc[label, col] * idx + batch_col_test) / (idx + 1))
                 )
-        remaining_tests_per_col = build_remaining_tests_per_col(return_table)
+        remaining_tests_per_col = build_remaining_tests_per_col(return_table, mandatory_label_skip)
         batch, batch_number = [], batch_number + 1
     analysis["nb_duplicates"] = sum(row_hashes_count > 1)
     analysis["categorical"] = [
@@ -282,7 +290,7 @@ PYARROW_TYPE_TO_PYTHON = {
 def test_parquet_cols(
     table: pq.ParquetFile,
     formats: dict[str, Format],
-    # analysis: dict,
+    analysis: dict,
     limited_output: bool,
     skipna: bool = True,
     verbose: bool = False,
@@ -320,22 +328,32 @@ def test_parquet_cols(
         col: {
             fmt_label
             for fmt_label, fmt in formats.items()
+            # keeping formats that have the valid python type
             if fmt.python_type == pytype
+            # except if the column label doesn't fit
             and fmt_label not in mandatory_label_skip.get(col, set())
-            # we already know the pure types are valid, only formats remain
+            # we already know pure types are valid, only formats remain
             and fmt_label != pytype
         }
         for col, pytype in columns.items()
     }
-    return_table = pd.DataFrame(columns=columns.keys())
+    return_table = pd.DataFrame(columns=columns.keys(), index=formats.keys())
+    for col, pytype in columns.items():
+        if pytype != "string":
+            # setting types that we know are 100% valid from metadata
+            return_table.loc[pytype, col] = 1
+
+    row_hashes_count = pd.Series()
+    col_values = {col: pd.Series() for col in columns.keys()}
     chunks = table.iter_batches(CHUNK_SIZE)
     batch, batch_number = [], 1
-    for chunk in chunks:
-        _chunk = chunk.to_pandas()
+    iterator = peekable(enumerate(chunks))
+    while iterator:
+        idx, chunk = next(iterator)
         if len(batch) < 10:
             # it's too slow to process chunks directly, but we want to keep the first analysis
             # on a "small" chunk, so partial analyses are done on batches of chunks
-            batch.append(chunk)
+            batch.append(chunk.to_pandas())
             # we don't know when the chunks end, and doing one additionnal step
             # for the final batch is ugly
             try:
@@ -346,7 +364,6 @@ def test_parquet_cols(
         if verbose:
             logging.info(f"> Testing batch number {batch_number}")
         batch = pd.concat(batch, ignore_index=True)
-        analysis["total_lines"] += len(batch)
         row_hashes_count = row_hashes_count.add(
             pd.util.hash_pandas_object(batch, index=False).value_counts(),
             fill_value=0,
@@ -356,14 +373,6 @@ def test_parquet_cols(
                 batch[col].value_counts(dropna=False),
                 fill_value=0,
             )
-        for col in list(empty_cols):
-            if not batch[col].dropna().empty:
-                empty_cols.discard(col)
-                remaining_tests_per_col[col] = [
-                    fmt_label
-                    for fmt_label in formats.keys()
-                    if fmt_label not in mandatory_label_skip.get(col, set())
-                ]
         if not any(remaining_tests for remaining_tests in remaining_tests_per_col.values()):
             # no more potential tests to do on any column, early stop
             break
@@ -381,10 +390,12 @@ def test_parquet_cols(
                     # if this batch's column tested 0 then test fails overall
                     0
                     if batch_col_test == 0
+                    # set the first score
+                    else batch_col_test if pd.isna(return_table.loc[label, col])
                     # otherwise updating the score with weighted average
                     else ((return_table.loc[label, col] * idx + batch_col_test) / (idx + 1))
                 )
-        remaining_tests_per_col = build_remaining_tests_per_col(return_table)
+        remaining_tests_per_col = build_remaining_tests_per_col(return_table, mandatory_label_skip, known_columns=columns)
         batch, batch_number = [], batch_number + 1
     analysis["nb_duplicates"] = sum(row_hashes_count > 1)
     analysis["categorical"] = [
@@ -395,4 +406,4 @@ def test_parquet_cols(
         display_logs_depending_process_time(
             f"Done testing chunks in {round(time() - start, 3)}s", time() - start
         )
-    return return_table, analysis, col_values
+    return return_table.fillna(0), analysis, col_values

@@ -49,8 +49,9 @@ def detect_formats(
     # Perform testing on fields
     if analysis.get("engine") == "parquet":
         scores_table_fields, analysis, col_values = test_parquet_cols(
-            table,
-            formats,
+            table=table,
+            formats=formats,
+            analysis=analysis,
             limited_output=limited_output,
             skipna=skipna,
             verbose=verbose,
