@@ -4,13 +4,14 @@ from time import time
 
 import numpy as np
 import pandas as pd
+import pyarrow.parquet as pq
 
 from csv_detective.formats.float import float_casting
 from csv_detective.utils import display_logs_depending_process_time
 
 
 def create_profile(
-    table: pd.DataFrame,
+    table: pd.DataFrame | pq.ParquetFile,
     columns: dict,
     num_rows: int,
     limited_output: bool = True,
@@ -31,10 +32,10 @@ def create_profile(
         }
     # value_counts().reset_index() tries to insert a "count" column, and fails if it's already here
     _count_col = "count"
-    while _count_col in table.columns:
+    while _count_col in columns:
         _count_col = "_" + _count_col
     profile = defaultdict(dict)
-    for c in table.columns:
+    for c in columns:
         # for numerical formats we want min, max, mean, std
         if columns[c]["python_type"] in ["float", "int"]:
             # if we have read the file in chunks we already have what we need
@@ -54,6 +55,8 @@ def create_profile(
                 }
             else:
                 cast_col = _col_values[c].reset_index()
+                if cast_col.columns[1] != "count":
+                    cast_col.columns = [c, "count"]
                 cast_col = cast_col.loc[cast_col[c].notna()]
                 cast_col[c] = (
                     cast_col[c].astype(pd.Int64Dtype())

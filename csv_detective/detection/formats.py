@@ -48,6 +48,7 @@ def detect_formats(
 
     # Perform testing on fields
     if analysis.get("engine") == "parquet":
+        # parquet has its own process as typed columns allow shortcuts
         scores_table_fields, analysis, col_values = test_parquet_cols(
             table=table,
             formats=formats,

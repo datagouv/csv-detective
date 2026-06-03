@@ -10,15 +10,18 @@ from csv_detective.utils import (
 )
 
 
-def parse_parquet(file_path: str, verbose: bool = False) -> tuple[pq.ParquetFile, dict]:
-    if verbose:
-        start = time()
+def load_as_parquetfile(file_path: str) -> pq.ParquetFile:
     if is_url(file_path):
         r = requests.get(file_path)
         r.raise_for_status()
-        table = pq.ParquetFile(BytesIO(r.content))
-    else:
-        table = pq.ParquetFile(file_path)
+        return pq.ParquetFile(BytesIO(r.content))
+    return pq.ParquetFile(file_path)
+
+
+def parse_parquet(file_path: str, verbose: bool = False) -> tuple[pq.ParquetFile, dict]:
+    if verbose:
+        start = time()
+    table = load_as_parquetfile(file_path)
     analysis = {
         "engine": "parquet",
         "header": [col.name for col in table.schema_arrow],

@@ -4,6 +4,7 @@ from time import time
 from typing import Iterator
 
 import pandas as pd
+import pyarrow.parquet as pq
 
 from csv_detective.formats.binary import binary_casting
 from csv_detective.formats.bool import bool_casting
@@ -67,7 +68,7 @@ def cast_df(
 
 
 def cast_df_chunks(
-    df: pd.DataFrame,
+    df: pd.DataFrame | pq.ParquetFile,
     analysis: dict,
     file_path: str,
     cast_json: bool = True,
@@ -75,12 +76,15 @@ def cast_df_chunks(
 ) -> Iterator[pd.DataFrame]:
     if analysis.get("engine") or analysis["total_lines"] <= CHUNK_SIZE:
         # the file is loaded in one chunk, so returning the cast df
-        yield cast_df(
-            df=df,
-            columns=analysis["columns"],
-            cast_json=cast_json,
-            verbose=verbose,
-        )
+        if analysis.get("engine") == "parquet":
+            yield pd.read_parquet(file_path)
+        else:
+            yield cast_df(
+                df=df,
+                columns=analysis["columns"],
+                cast_json=cast_json,
+                verbose=verbose,
+            )
     else:
         # loading the csv in chunks using the analysis
         chunks = pd.read_csv(
