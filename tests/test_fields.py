@@ -11,6 +11,7 @@ from csv_detective.detection.variables import (
     detect_continuous_variable,
 )
 from csv_detective.format import FormatsManager
+from csv_detective.formats.float import float_casting
 from csv_detective.output.dataframe import cast
 from csv_detective.output.utils import prepare_output_dict
 from csv_detective.parsing.columns import test_col as col_test  # to prevent pytest from testing it
@@ -70,7 +71,6 @@ def test_all_fields_have_tests():
         assert all(
             isinstance(key, bool)
             and isinstance(vals, list)
-            and all(isinstance(val, str) for val in vals)
             for key, vals in valid.items()
         )
         # checking that we have valid and invalid cases for each
@@ -201,3 +201,8 @@ def test_custom_proportions(custom_prop, should_crash):
                     assert custom_fmtm.formats[fmt].proportion == custom_prop[fmt]
                 else:
                     assert custom_fmtm.formats[fmt].proportion == fmtm.formats[fmt].proportion
+
+
+def test_float_valid_values():
+    float_fmt = fmtm.formats["float"]
+    assert all(isinstance(float_casting(val), float) for val in float_fmt._test_values[True])

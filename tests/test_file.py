@@ -614,3 +614,66 @@ def test_unique_values_output(nb_rows, mocked_responses):
     # few enough values => testing output
     assert analysis["unique_values"]["cat"] == ["a", "b", "c", "d"]
     assert analysis["unique_values"]["json_cat"] == [1, 2, 3]
+
+
+def test_parquet_file_analysis():
+    pq_path = "tests/data/file.parquet"
+    analysis, df = routine(
+        file_path=pq_path,
+        num_rows=-1,
+        output_profile=True,
+        save_results=False,
+        output_df=True,
+    )
+    expected = {
+        "total_lines": 1000,
+        "engine": "parquet",
+        "header": ["inseecommune", "nomcommune", "nomreseau", "debutalim", "annee", "lat","categories", "score", "is_true", "timestamp"],
+        "columns": {
+            "inseecommune": {
+                "format": "string",
+                "python_type": "code_commune",
+            },
+            "nomcommune": {
+                "format": "string",
+                "python_type": "commune",
+            },
+            "nomreseau": {
+                "format": "string",
+                "python_type": "string",
+            },
+            "debutalim": {
+                "format": "date",
+                "python_type": "date",
+            },
+            "annee": {
+                "format": "int",
+                "python_type": "year",
+            },
+            "lat": {
+                "format": "latitude_wgs",
+                "python_type": "float",
+            },
+            "categories": {
+                "format": "json",
+                "python_type": "json",
+            },
+            "score": {
+                "format": "float",
+                "python_type": "float",
+            },
+            "is_true": {
+                "format": "bool",
+                "python_type": "bool",
+            },
+            "timestamp": {
+                "format": "datetime_naive",
+                "python_type": "datetime_naive",
+            },
+        },
+    }
+    for field in expected:
+        if isinstance(expected, dict):
+            assert all(analysis[field][key] == value for key, value in expected[field].items())
+        else:
+            assert analysis[field] == expected[field]
