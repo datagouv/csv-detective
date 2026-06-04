@@ -1,7 +1,7 @@
 import logging
+import re
 from time import time
 from typing import Callable
-import re
 
 import numpy as np
 import pandas as pd
@@ -131,7 +131,6 @@ def test_label(columns: list[str], formats: dict[str, Format], verbose: bool = F
     return return_table
 
 
-
 def _build_remaining_tests_per_col(
     return_table: pd.DataFrame,
     mandatory_label_skip: dict[str, set[str]],
@@ -143,7 +142,7 @@ def _build_remaining_tests_per_col(
             fmt_label
             for fmt_label in return_table.index
             # for parquet we know for sure some column types
-            if known_columns.get(col) != fmt_label 
+            if known_columns.get(col) != fmt_label
             and return_table.loc[fmt_label, col] > 0
             and fmt_label not in mandatory_label_skip.get(col, set())
         ]
@@ -385,11 +384,14 @@ def test_parquet_cols(
                     0
                     if batch_col_test == 0
                     # set the first score
-                    else batch_col_test if pd.isna(return_table.loc[label, col])
+                    else batch_col_test
+                    if pd.isna(return_table.loc[label, col])
                     # otherwise updating the score with weighted average
                     else ((return_table.loc[label, col] * idx + batch_col_test) / (idx + 1))
                 )
-        remaining_tests_per_col = _build_remaining_tests_per_col(return_table, mandatory_label_skip, known_columns=columns)
+        remaining_tests_per_col = _build_remaining_tests_per_col(
+            return_table, mandatory_label_skip, known_columns=columns
+        )
     analysis["nb_duplicates"] = sum(row_hashes_count > 1)
     analysis["categorical"] = [
         col for col, values in col_values.items() if len(values) <= MAX_NUMBER_CATEGORICAL_VALUES

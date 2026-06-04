@@ -68,11 +68,7 @@ def test_all_fields_have_tests():
     for format in fmtm.formats.values():
         valid = format._test_values
         # checking structure
-        assert all(
-            isinstance(key, bool)
-            and isinstance(vals, list)
-            for key, vals in valid.items()
-        )
+        assert all(isinstance(key, bool) and isinstance(vals, list) for key, vals in valid.items())
         # checking that we have valid and invalid cases for each
         assert all(b in valid.keys() for b in [True, False])
 

@@ -628,7 +628,18 @@ def test_parquet_file_analysis():
     expected = {
         "total_lines": 1000,
         "engine": "parquet",
-        "header": ["inseecommune", "nomcommune", "nomreseau", "debutalim", "annee", "lat", "categories", "score", "is_true", "timestamp"],
+        "header": [
+            "inseecommune",
+            "nomcommune",
+            "nomreseau",
+            "debutalim",
+            "annee",
+            "lat",
+            "categories",
+            "score",
+            "is_true",
+            "timestamp",
+        ],
         "columns": {
             "inseecommune": {
                 "format": "code_commune",

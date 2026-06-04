@@ -59,14 +59,21 @@ def validate(
                 k: v
                 for k, v in previous_analysis.items()
                 if k
-                in ["header_row_idx", "header", "encoding", "separator", "compression", "heading_columns", "trailing_columns"]
+                in [
+                    "header_row_idx",
+                    "header",
+                    "encoding",
+                    "separator",
+                    "compression",
+                    "heading_columns",
+                    "trailing_columns",
+                ]
                 and v is not None
             }
         elif previous_analysis.get("engine") == "parquet":
             pf = load_as_parquetfile(file_path)
             chunks = iter(
-                batch.to_pandas()
-                for batch in pf.iter_batches(batch_size=VALIDATION_CHUNK_SIZE)
+                batch.to_pandas() for batch in pf.iter_batches(batch_size=VALIDATION_CHUNK_SIZE)
             )
             known_columns = build_known_columns(pf)
             for col_name in known_columns:
@@ -75,12 +82,15 @@ def validate(
                     if verbose:
                         logging.warning("> Columns in the file do not match those of the analysis")
                     return False, None, None
-                if known_columns[col_name] != previous_analysis["columns"][col_name][
-                    "format"
-                    # datetimes have two formats for one type but we can guess from the parquet column type
-                    if known_columns[col_name].startswith("datetime")
-                    else "python_type"
-                ]:
+                if (
+                    known_columns[col_name]
+                    != previous_analysis["columns"][col_name][
+                        "format"
+                        # datetimes have two formats for one type but we can guess from the parquet column type
+                        if known_columns[col_name].startswith("datetime")
+                        else "python_type"
+                    ]
+                ):
                     if verbose:
                         logging.warning(
                             f"> Test failed for column {col_name} with format {previous_analysis['columns'][col_name]['python_type']}"
@@ -99,7 +109,11 @@ def validate(
                     )
                 ]
             )
-            analysis = {k: v for k, v in previous_analysis.items() if k in ["header_row_idx", "header", "engine", "sheet_name"]}
+            analysis = {
+                k: v
+                for k, v in previous_analysis.items()
+                if k in ["header_row_idx", "header", "engine", "sheet_name"]
+            }
     except Exception as e:
         if verbose:
             logging.warning(f"> Could not load the file with previous analysis values: {e}")

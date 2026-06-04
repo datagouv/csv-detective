@@ -21,11 +21,7 @@ _latitudel93 = LatitudeL93()
 def _is(val) -> bool:
     try:
         if isinstance(val, float) or (isinstance(val, str) and is_float(val)):
-            return _latitudel93.is_valid(
-                val
-                if isinstance(val, float)
-                else float_casting(val)
-            )
+            return _latitudel93.is_valid(val if isinstance(val, float) else float_casting(val))
 
         return False
 
