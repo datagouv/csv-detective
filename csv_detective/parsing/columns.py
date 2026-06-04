@@ -3,6 +3,7 @@ from time import time
 from typing import Callable
 import re
 
+import numpy as np
 import pandas as pd
 import pyarrow.parquet as pq
 from more_itertools import peekable
@@ -353,7 +354,10 @@ def test_parquet_cols(
         if verbose:
             logging.info(f"> Testing batch number {idx + 1}")
         batch = batch.to_pandas()
-        str_batch = batch.astype("string")
+        str_batch = batch.map(
+            # not simply using astype(str) because lists are numpy arrays, cast as str they lose their commas
+            lambda x: str(x.tolist()) if isinstance(x, np.ndarray) else str(x)
+        )
         row_hashes_count = row_hashes_count.add(
             pd.util.hash_pandas_object(str_batch, index=False).value_counts(),
             fill_value=0,
