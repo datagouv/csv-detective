@@ -160,7 +160,7 @@ def test_all_proportion_1():
     # building a table that uses only correct values for these formats, except on one row
     table = pd.DataFrame(
         {
-            name: (format._test_values[True] * 100)[:100] + ["not_suitable"]
+            name: ([v for v in format._test_values[True] if isinstance(v, str)] * 100)[:100] + ["not_suitable"]
             for name, format in fmtm.formats.items()
             if format.proportion == 1
         }
