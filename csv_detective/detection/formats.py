@@ -34,6 +34,7 @@ def detect_formats(
     verbose: bool = False,
 ) -> tuple[dict, dict[str, pd.Series] | None]:
     fmtm = FormatsManager(custom_proportions=custom_proportions)
+    in_chunks = analysis.get("total_lines") is None
 
     # list testing to be performed
     formats: dict[str, Format] = (
@@ -43,8 +44,6 @@ def detect_formats(
     # if no testing then return
     if len(formats) == 0:
         return analysis, None
-
-    in_chunks = analysis.get("total_lines") is None
 
     # Perform testing on fields
     if analysis.get("engine") == "parquet":
