@@ -1,6 +1,7 @@
 import logging
 from collections import defaultdict
 
+import numpy as np
 import pandas as pd
 
 from csv_detective.format import FormatsManager
@@ -74,7 +75,12 @@ def validate(
                     if verbose:
                         logging.warning("> Columns in the file do not match those of the analysis")
                     return False, None, None
-                if known_columns[col_name] != previous_analysis["columns"][col_name]["python_type"]:
+                if known_columns[col_name] != previous_analysis["columns"][col_name][
+                    "format"
+                    # datetimes have two formats for one type but we can guess from the parquet column type
+                    if known_columns[col_name].startswith("datetime")
+                    else "python_type"
+                ]:
                     if verbose:
                         logging.warning(
                             f"> Test failed for column {col_name} with format {previous_analysis['columns'][col_name]['python_type']}"
@@ -118,7 +124,8 @@ def validate(
         for idx, chunk in enumerate(chunks):
             if verbose:
                 logging.info(f"- Testing chunk number {idx}")
-            if idx == 0:
+            if idx == 0 and previous_analysis.get("engine") != "parquet":
+                # we have already checked this upstream for parquet files
                 if verbose:
                     logging.info("Checking if all columns match")
                 if len(chunk.columns) != len(previous_analysis["header"]) or any(
@@ -129,8 +136,16 @@ def validate(
                         logging.warning("> Columns in the file do not match those of the analysis")
                     return False, None, None
             analysis["total_lines"] += len(chunk)
+            str_chunk = (
+                chunk.map(
+                    # not simply using astype(str) because lists are numpy arrays, cast as str they lose their commas
+                    lambda x: str(x.tolist()) if isinstance(x, np.ndarray) else str(x)
+                )
+                if previous_analysis.get("engine") == "parquet"
+                else chunk
+            )
             row_hashes_count = row_hashes_count.add(
-                pd.util.hash_pandas_object(chunk, index=False).value_counts(),
+                pd.util.hash_pandas_object(str_chunk, index=False).value_counts(),
                 fill_value=0,
             )
             for col_name, detected in previous_analysis["columns"].items():
@@ -169,12 +184,13 @@ def validate(
                 col_values[col_name] = (
                     col_values[col_name]
                     .add(
-                        chunk[col_name].value_counts(dropna=False),
+                        str_chunk[col_name].value_counts(dropna=False),
                         fill_value=0,
                     )
                     .rename_axis(col_name)
                 )  # rename_axis because *sometimes* pandas doesn't pass on the column's name ¯\_(ツ)_/¯
             del chunk
+            del str_chunk
     except Exception as e:
         if verbose:
             logging.warning(f"> Could not load the file with previous analysis values: {e}")
@@ -205,7 +221,7 @@ def validate(
         if previous_analysis["columns"][col]["format"] == "json" and all(
             value.startswith("[") for value in col_values[col].index
         ):
-            unique = extract_unique_from_multicat(col_values[col].index)
+            unique = extract_unique_from_multicat(col_values[col].index.to_series())
             if unique is not None:
                 analysis["unique_values"][col] = unique
         elif len(col_values[col]) <= MAX_NUMBER_CATEGORICAL_VALUES:
