@@ -86,7 +86,7 @@ def detect_formats(
         )
     analysis["columns_fields"] = prepare_output_dict(scores_table_fields, limited_output)
     analysis["unique_values"] = {}
-    if not in_chunks:
+    if col_values is None:
         for col in table.columns:
             if analysis["columns_fields"][col]["format"] == "json" and all(
                 value.startswith("[") for value in table[col]
