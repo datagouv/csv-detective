@@ -29,7 +29,7 @@ def _is(val) -> bool:
     try:
         j = json.loads(val)
         if isinstance(j, dict):
-            return _check_dict(val)
+            return _check_dict(j)
     except Exception:
         pass
     return False
