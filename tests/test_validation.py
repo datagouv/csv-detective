@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 import pandas as pd
 import pytest
 
-from csv_detective.explore_csv import validate_then_detect
+from csv_detective.explore_csv import routine, validate_then_detect
 from csv_detective.validate import validate
 
 
@@ -218,3 +218,18 @@ def test_validate_then_detect(modif_previous_analysis):
     # checking that if not valid, the analysis has managed to retrieve the right values
     for dotkey in modif_previous_analysis:
         assert get_nested_value(analysis, dotkey.split(".")) == valid_values[dotkey]
+
+
+def test_parquet_file_validation():
+    pq_path = "tests/data/file.parquet"
+    analysis = routine(
+        file_path=pq_path,
+        num_rows=-1,
+        output_profile=True,
+        save_results=False,
+    )
+    is_valid, _, _ = validate(
+        pq_path,
+        analysis,
+    )
+    assert is_valid

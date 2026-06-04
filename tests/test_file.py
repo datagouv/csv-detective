@@ -618,7 +618,7 @@ def test_unique_values_output(nb_rows, mocked_responses):
 
 def test_parquet_file_analysis():
     pq_path = "tests/data/file.parquet"
-    analysis, df = routine(
+    analysis, chunks = routine(
         file_path=pq_path,
         num_rows=-1,
         output_profile=True,
@@ -628,15 +628,15 @@ def test_parquet_file_analysis():
     expected = {
         "total_lines": 1000,
         "engine": "parquet",
-        "header": ["inseecommune", "nomcommune", "nomreseau", "debutalim", "annee", "lat","categories", "score", "is_true", "timestamp"],
+        "header": ["inseecommune", "nomcommune", "nomreseau", "debutalim", "annee", "lat", "categories", "score", "is_true", "timestamp"],
         "columns": {
             "inseecommune": {
-                "format": "string",
-                "python_type": "code_commune",
+                "format": "code_commune",
+                "python_type": "string",
             },
             "nomcommune": {
-                "format": "string",
-                "python_type": "commune",
+                "format": "commune",
+                "python_type": "string",
             },
             "nomreseau": {
                 "format": "string",
@@ -647,8 +647,8 @@ def test_parquet_file_analysis():
                 "python_type": "date",
             },
             "annee": {
-                "format": "int",
-                "python_type": "year",
+                "format": "year",
+                "python_type": "int",
             },
             "lat": {
                 "format": "latitude_wgs",
@@ -668,12 +668,19 @@ def test_parquet_file_analysis():
             },
             "timestamp": {
                 "format": "datetime_naive",
-                "python_type": "datetime_naive",
+                "python_type": "datetime",
             },
         },
     }
     for field in expected:
-        if isinstance(expected, dict):
-            assert all(analysis[field][key] == value for key, value in expected[field].items())
+        if field == "columns":
+            assert all(
+                analysis["columns"][col][key] == value
+                for col, d in expected["columns"].items()
+                for key, value in d.items()
+            )
         else:
             assert analysis[field] == expected[field]
+    df = next(chunks)
+    assert isinstance(df, pd.DataFrame)
+    assert len(df) == expected["total_lines"]
