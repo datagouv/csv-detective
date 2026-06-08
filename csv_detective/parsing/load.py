@@ -1,5 +1,6 @@
 import codecs
 from io import BytesIO, StringIO
+import logging
 
 import pandas as pd
 import pyarrow.parquet as pq
@@ -52,7 +53,9 @@ def load_file(
             "engine": engine,
             "sheet_name": sheet_name,
         }
-    elif engine == "parquet":
+    elif engine == "parquet" or file_path.endswith(".parquet"):
+        if verbose and num_rows != -1:
+            logging.warning("Ignoring `num_rows` argument, parquet files are read entirely")
         return parse_parquet(file_path, verbose=verbose)
     else:
         # fetching or reading file as binary

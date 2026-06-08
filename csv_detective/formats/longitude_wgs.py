@@ -37,7 +37,7 @@ def _is(val: str | float) -> bool:
     try:
         return (
             is_float(val)
-            and INF <= float(val) <= SUP
+            and INF <= float_casting(val) <= SUP
             # we ideally would like a certain level of decimal precision
             # but 1.200 is saved as 1.2 in csv so we just discriminate ints
             and not is_int(val)
@@ -47,6 +47,6 @@ def _is(val: str | float) -> bool:
 
 
 _test_values = {
-    True: ["120.8263", "-20.27", "31.0", 31.2],
+    True: ["120.8263", "-20.27", "-20,27", "31.0", 31.2],
     False: ["-200", "20", -182.3],
 }

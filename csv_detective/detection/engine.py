@@ -28,6 +28,7 @@ def detect_engine(file_path: str, verbose=False) -> str | None:
         # all these files could be recognized as zip, may need to check all cases then
         "application/zip": "openpyxl",
         "application/octet-stream": "parquet",
+        "application/vnd.apache.parquet": "parquet",
     }
     # if none of the above, we move forwards with the csv process
     if is_url(file_path):
