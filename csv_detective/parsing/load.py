@@ -1,6 +1,6 @@
 import codecs
-from io import BytesIO, StringIO
 import logging
+from io import BytesIO, StringIO
 
 import pandas as pd
 import pyarrow.parquet as pq
