@@ -1,8 +1,11 @@
 import logging
+import re
 from time import time
 from typing import Callable
 
+import numpy as np
 import pandas as pd
+import pyarrow.parquet as pq
 from more_itertools import peekable
 
 from csv_detective.format import Format
@@ -128,6 +131,25 @@ def test_label(columns: list[str], formats: dict[str, Format], verbose: bool = F
     return return_table
 
 
+def _build_remaining_tests_per_col(
+    return_table: pd.DataFrame,
+    mandatory_label_skip: dict[str, set[str]],
+    known_columns: dict[str, str] = {},
+) -> dict[str, list[str]]:
+    # returns a dict with the table's columns as keys and the list of remaining format labels to apply
+    return {
+        col: [
+            fmt_label
+            for fmt_label in return_table.index
+            # for parquet we know for sure some column types
+            if known_columns.get(col) != fmt_label
+            and return_table.loc[fmt_label, col] > 0
+            and fmt_label not in mandatory_label_skip.get(col, set())
+        ]
+        for col in return_table.columns
+    }
+
+
 def test_col_chunks(
     table: pd.DataFrame,
     file_path: str,
@@ -137,18 +159,6 @@ def test_col_chunks(
     skipna: bool = True,
     verbose: bool = False,
 ) -> tuple[pd.DataFrame, dict, dict[str, pd.Series]]:
-    def build_remaining_tests_per_col(return_table: pd.DataFrame) -> dict[str, list[str]]:
-        # returns a dict with the table's columns as keys and the list of remaining format labels to apply
-        return {
-            col: [
-                fmt_label
-                for fmt_label in return_table.index
-                if return_table.loc[fmt_label, col] > 0
-                and fmt_label not in mandatory_label_skip.get(col, set())
-            ]
-            for col in return_table.columns
-        }
-
     if verbose:
         start = time()
         logging.info("Testing columns to get formats on chunks")
@@ -167,7 +177,7 @@ def test_col_chunks(
     }
     handle_empty_columns(return_table)
     empty_cols = {col for col in table.columns if table[col].dropna().empty}
-    remaining_tests_per_col = build_remaining_tests_per_col(return_table)
+    remaining_tests_per_col = _build_remaining_tests_per_col(return_table, mandatory_label_skip)
 
     # hashing rows to get nb_duplicates
     row_hashes_count = pd.util.hash_pandas_object(table, index=False).value_counts()
@@ -244,7 +254,7 @@ def test_col_chunks(
                     # otherwise updating the score with weighted average
                     else ((return_table.loc[label, col] * idx + batch_col_test) / (idx + 1))
                 )
-        remaining_tests_per_col = build_remaining_tests_per_col(return_table)
+        remaining_tests_per_col = _build_remaining_tests_per_col(return_table, mandatory_label_skip)
         batch, batch_number = [], batch_number + 1
     analysis["nb_duplicates"] = sum(row_hashes_count > 1)
     analysis["categorical"] = [
@@ -256,3 +266,139 @@ def test_col_chunks(
             f"Done testing chunks in {round(time() - start, 3)}s", time() - start
         )
     return return_table, analysis, col_values
+
+
+PYARROW_TYPE_TO_PYTHON = {
+    # using regex because of bits-differing types (e.g. int32 and int64)
+    # the "^" makes sure we don't consider the types of elements within structured objects (lists, dicts)
+    "string$": "string",  # large_string also exists
+    "^double": "float",
+    "^float": "float",
+    "^decimal": "float",
+    "^int": "int",
+    "^uint": "int",
+    "^bool": "bool",
+    "^date": "date",
+    "^struct": "json",  # dictionary
+    "^list": "json",
+    "^binary": "binary",
+    r"^timestamp\[\ws\]": "datetime_naive",
+    r"^timestamp\[\ws,": "datetime_aware",  # the rest of the field depends on the timezone
+}
+
+
+def build_known_columns(table: pq.ParquetFile):
+    columns = {}
+    for col in table.schema_arrow:
+        col_type = str(col.type)
+        if col_type.startswith("dictionary"):
+            # dictionaries are for columns with repeated values
+            # we need to dig deeper to get the type
+            col_type = str(col.type.value_type)
+        try:
+            columns[col.name] = next(
+                pytype
+                for pyartype, pytype in PYARROW_TYPE_TO_PYTHON.items()
+                if re.search(pyartype, col_type)
+            )
+        except StopIteration:
+            raise ValueError(f"Unknown pyarrow type: {col.type}")
+    return columns
+
+
+def test_parquet_cols(
+    table: pq.ParquetFile,
+    formats: dict[str, Format],
+    analysis: dict,
+    limited_output: bool,
+    skipna: bool = True,
+    verbose: bool = False,
+):
+    if verbose:
+        start = time()
+        logging.info("Testing columns to get formats on chunks")
+
+    columns = build_known_columns(table)
+    mandatory_label_skip: dict[str, set[str]] = {
+        col: {
+            fmt_label
+            for fmt_label, fmt in formats.items()
+            if fmt.mandatory_label and fmt.is_valid_label(col) == 0
+        }
+        for col in columns.keys()
+    }
+    remaining_tests_per_col = {
+        col: {
+            fmt_label
+            for fmt_label, fmt in formats.items()
+            # keeping formats that have the valid python type
+            if fmt.python_type == pytype
+            # except if the column label doesn't fit
+            and fmt_label not in mandatory_label_skip.get(col, set())
+            # we already know pure types are valid, only formats remain
+            and fmt_label != pytype
+        }
+        for col, pytype in columns.items()
+    }
+    return_table = pd.DataFrame(columns=columns.keys(), index=formats.keys())
+    for col, pytype in columns.items():
+        if pytype != "string":
+            # setting types that we know are 100% valid from metadata
+            return_table.loc[pytype, col] = 1
+
+    row_hashes_count = pd.Series()
+    col_values = {col: pd.Series() for col in columns.keys()}
+    # we keep the same chunk size as for csv
+    for idx, batch in enumerate(table.iter_batches(CHUNK_SIZE * 10)):
+        if verbose:
+            logging.info(f"> Testing batch number {idx + 1}")
+        batch = batch.to_pandas()
+        str_batch = batch.map(
+            # not simply using astype(str) because lists are numpy arrays, cast as str they lose their commas
+            lambda x: str(x.tolist()) if isinstance(x, np.ndarray) else str(x)
+        )
+        row_hashes_count = row_hashes_count.add(
+            pd.util.hash_pandas_object(str_batch, index=False).value_counts(),
+            fill_value=0,
+        )
+        for col in batch.columns:
+            col_values[col] = col_values[col].add(
+                str_batch[col].value_counts(dropna=False),
+                fill_value=0,
+            )
+        if not any(remaining_tests for remaining_tests in remaining_tests_per_col.values()):
+            # no more potential tests to do on any column, early stop
+            break
+        for col, fmt_labels in remaining_tests_per_col.items():
+            # testing each column with the tests that are still competing
+            # after previous batchs analyses
+            for label in fmt_labels:
+                batch_col_test = test_col_val(
+                    batch[col],
+                    formats[label],
+                    limited_output=limited_output,
+                    skipna=skipna,
+                )
+                return_table.loc[label, col] = (
+                    # if this batch's column tested 0 then test fails overall
+                    0
+                    if batch_col_test == 0
+                    # set the first score
+                    else batch_col_test
+                    if pd.isna(return_table.loc[label, col])
+                    # otherwise updating the score with weighted average
+                    else ((return_table.loc[label, col] * idx + batch_col_test) / (idx + 1))
+                )
+        remaining_tests_per_col = _build_remaining_tests_per_col(
+            return_table, mandatory_label_skip, known_columns=columns
+        )
+    analysis["nb_duplicates"] = sum(row_hashes_count > 1)
+    analysis["categorical"] = [
+        col for col, values in col_values.items() if len(values) <= MAX_NUMBER_CATEGORICAL_VALUES
+    ]
+    handle_empty_columns(return_table)
+    if verbose:
+        display_logs_depending_process_time(
+            f"Done testing chunks in {round(time() - start, 3)}s", time() - start
+        )
+    return return_table.fillna(0), analysis, col_values

@@ -2,6 +2,7 @@ from collections import defaultdict
 
 import numpy as np
 import pandas as pd
+import pyarrow.parquet as pq
 
 from csv_detective.detection.variables import (
     detect_categorical_variable,
@@ -18,11 +19,12 @@ from csv_detective.parsing.columns import (
     test_col,
     test_col_chunks,
     test_label,
+    test_parquet_cols,
 )
 
 
 def detect_formats(
-    table: pd.DataFrame,
+    table: pd.DataFrame | pq.ParquetFile,
     analysis: dict,
     file_path: str,
     tags: list[str] | None = None,
@@ -44,7 +46,17 @@ def detect_formats(
         return analysis, None
 
     # Perform testing on fields
-    if not in_chunks:
+    if analysis.get("engine") == "parquet":
+        # parquet has its own process as typed columns allow shortcuts
+        scores_table_fields, analysis, col_values = test_parquet_cols(
+            table=table,
+            formats=formats,
+            analysis=analysis,
+            limited_output=limited_output,
+            skipna=skipna,
+            verbose=verbose,
+        )
+    elif not in_chunks:
         # table is small enough to be tested in one go
         scores_table_fields = test_col(
             table=table,
@@ -73,7 +85,7 @@ def detect_formats(
         )
     analysis["columns_fields"] = prepare_output_dict(scores_table_fields, limited_output)
     analysis["unique_values"] = {}
-    if not in_chunks:
+    if col_values is None:
         for col in table.columns:
             if analysis["columns_fields"][col]["format"] == "json" and all(
                 value.startswith("[") for value in table[col]

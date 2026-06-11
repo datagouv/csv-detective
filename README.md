@@ -2,7 +2,7 @@
 
 This is a package to **automatically detect column content in tabular files**. The script reads either the whole file or the first few rows and performs various checks (regex, casting, comparison with official lists...) to see for each column if it matches with various content types.
 
-Currently supported file types: csv(.gz), xls, xlsx, ods.
+Currently supported file types: csv(.gz), xls, xlsx, ods, parquet.
 
 You can also directly feed the URL of a remote file (from data.gouv.fr for instance).
 
@@ -131,6 +131,7 @@ The program creates a `python` dictionary with the following information :
 The output slightly differs depending on the file format:
 - csv files have `encoding` and `separator` (and `compression` if relevant)
 - xls, xlsx, ods files have `engine` and `sheet_name`
+- parquet only has `engine`
 
 You may also set `output_df` to `True`, in which case the output is a tuple of two elements:
 - the analysis (as described above)
@@ -199,7 +200,7 @@ Related ideas:
 
 ## Why Could This Be of Any Use?
 
-Organisations such as [data.gouv.fr](http://data.gouv.fr) aggregate huge amounts of un-normalised data. Performing cross-examination across datasets can be difficult. This tool could help enrich the datasets metadata and facilitate linking them together.
+Organisations such as [data.gouv.fr](http://data.gouv.fr) aggregate huge amounts of un-normalised data. Performing cross-examination across datasets can be difficult. This tool helps enrich the datasets metadata and facilitate linking them together.
 
 [`udata-hydra`](https://github.com/etalab/udata-hydra) is a crawler that checks, analyzes (using `csv-detective`) and APIfies all tabular files from [data.gouv.fr](http://data.gouv.fr).
 

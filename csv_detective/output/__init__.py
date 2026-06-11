@@ -3,6 +3,7 @@ import os
 from typing import Iterator
 
 import pandas as pd
+import pyarrow.parquet as pq
 
 from csv_detective.output.dataframe import cast_df_chunks
 from csv_detective.output.profile import create_profile
@@ -11,7 +12,7 @@ from csv_detective.utils import is_url, sanitize_for_json
 
 
 def generate_output(
-    table: pd.DataFrame,
+    table: pd.DataFrame | pq.ParquetFile,
     analysis: dict,
     file_path: str,
     num_rows: int = 500,

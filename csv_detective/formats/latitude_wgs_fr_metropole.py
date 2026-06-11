@@ -7,7 +7,7 @@ mandatory_label = True
 python_type = "float"
 
 
-def _is(val) -> bool:
+def _is(val: str | float) -> bool:
     try:
         return is_latitude(val) and 41.3 <= float(val) <= 51.3
     except Exception:

@@ -12,6 +12,7 @@ engine_to_file = {
     "xlrd": "old Excel",
     "odf": "OpenOffice",
     "gzip": "csv.gz",
+    "parquet": "parquet",
 }
 
 
@@ -26,6 +27,8 @@ def detect_engine(file_path: str, verbose=False) -> str | None:
         "application/vnd.oasis.opendocument.spreadsheet": "odf",
         # all these files could be recognized as zip, may need to check all cases then
         "application/zip": "openpyxl",
+        "application/octet-stream": "parquet",
+        "application/vnd.apache.parquet": "parquet",
     }
     # if none of the above, we move forwards with the csv process
     if is_url(file_path):
