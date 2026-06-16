@@ -33,7 +33,7 @@ def validate(
     """
     formats = FormatsManager(custom_proportions=custom_proportions).formats
     if verbose:
-        logging.info(f"Checking given formats exist")
+        logging.info("Checking given formats exist")
     for col_name, detected in previous_analysis["columns"].items():
         if detected["format"] == "string":
             continue

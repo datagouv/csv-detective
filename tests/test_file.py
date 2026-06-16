@@ -225,7 +225,7 @@ def test_exception_malformed_columns(mocked_responses):
     """
     A ValueError should be raised if any column is Unnamed
     """
-    url = f"http://example.com/bad_cols.csv"
+    url = "http://example.com/bad_cols.csv"
     expected_content = b"col1,col2,\n1,2,\n3,4,"
     mocked_responses.get(
         url,
@@ -530,7 +530,7 @@ def test_multiple_geo_columns(mocked_responses):
     ),
 )
 def test_diff_epci_siren(col_name, value, expected, mocked_responses):
-    url = f"http://example.com/file.csv"
+    url = "http://example.com/file.csv"
     expected_content = f"{col_name},ratio\n" + f"{value},10.0\n" * 50
     mocked_responses.get(
         url,
