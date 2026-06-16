@@ -50,7 +50,7 @@ jobs:
           # ruff format --check . : check code formatting without fixing (to fix, remove --check)
           command: |
             uv run ruff --version
-            uv run ruff check --select I .
+            uv run ruff check --extend-select I .
             uv run ruff format --check .
 
   tests:
