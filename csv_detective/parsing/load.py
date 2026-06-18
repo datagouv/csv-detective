@@ -33,6 +33,7 @@ def load_file(
     verbose: bool = False,
     engine: str | None = None,
     sheet_name: str | int | None = None,
+    additional_na_values: list[str] | None = None,
 ) -> tuple[pd.DataFrame | pq.ParquetFile, dict]:
     file_name = file_path.split("/")[-1]
     if ("." not in file_name or not file_name.endswith("csv")) and engine is None and sep is None:
@@ -45,6 +46,7 @@ def load_file(
             num_rows=num_rows,
             engine=engine,
             sheet_name=sheet_name,
+            additional_na_values=additional_na_values,
             verbose=verbose,
         )
         if table.empty:
@@ -91,7 +93,8 @@ def load_file(
         heading_columns = detect_heading_columns(str_file, sep, verbose=verbose)
         trailing_columns = detect_trailing_columns(str_file, sep, heading_columns, verbose=verbose)
         table, total_lines, nb_duplicates = parse_csv(
-            str_file, encoding, sep, num_rows, header_row_idx, verbose=verbose
+            str_file, encoding, sep, num_rows, header_row_idx, 
+            additional_na_values=additional_na_values, verbose=verbose
         )
         del str_file
         if table.empty:
