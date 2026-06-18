@@ -93,8 +93,13 @@ def load_file(
         heading_columns = detect_heading_columns(str_file, sep, verbose=verbose)
         trailing_columns = detect_trailing_columns(str_file, sep, heading_columns, verbose=verbose)
         table, total_lines, nb_duplicates = parse_csv(
-            str_file, encoding, sep, num_rows, header_row_idx, 
-            additional_na_values=additional_na_values, verbose=verbose
+            str_file,
+            encoding,
+            sep,
+            num_rows,
+            header_row_idx,
+            additional_na_values=additional_na_values,
+            verbose=verbose,
         )
         del str_file
         if table.empty:

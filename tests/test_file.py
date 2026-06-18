@@ -706,7 +706,7 @@ def test_parquet_file_analysis():
 )
 def test_custom_na_values(custom_na, mocked_responses):
     url = "http://example.com/file.csv"
-    expected_content = f"a,b\n" + f"99,10.0\n" * 50 + "Non spécifié,Non spécifié\n"
+    expected_content = "a,b\n" + "99,10.0\n" * 50 + "Non spécifié,Non spécifié\n"
     mocked_responses.get(
         url,
         body=expected_content,
