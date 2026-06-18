@@ -695,3 +695,42 @@ def test_parquet_file_analysis():
     df = next(chunks)
     assert isinstance(df, pd.DataFrame)
     assert len(df) == expected["total_lines"]
+
+
+@pytest.mark.parametrize(
+    "custom_na",
+    (
+        None,
+        ["Non spécifié"],
+    ),
+)
+def test_custom_na_values(custom_na, mocked_responses):
+    url = "http://example.com/file.csv"
+    expected_content = f"a,b\n" + f"99,10.0\n" * 50 + "Non spécifié,Non spécifié\n"
+    mocked_responses.get(
+        url,
+        body=expected_content,
+        status=200,
+    )
+    with patch("urllib.request.urlopen") as mock_urlopen:
+        mock_response = MagicMock()
+        mock_response.read.return_value = expected_content
+        mock_response.__enter__.return_value = mock_response
+        mock_urlopen.return_value = mock_response
+        analysis = routine(
+            file_path=url,
+            num_rows=-1,
+            output_profile=True,
+            save_results=False,
+            additional_na_values=custom_na,
+        )
+    if custom_na:
+        assert analysis["columns"]["a"]["format"] == "int"
+        assert analysis["columns"]["b"]["format"] == "float"
+        assert analysis["profile"]["a"]["nb_missing_values"] == 1
+        assert analysis["profile"]["b"]["nb_missing_values"] == 1
+    else:
+        assert analysis["columns"]["a"]["format"] == "string"
+        assert analysis["columns"]["b"]["format"] == "string"
+        assert analysis["profile"]["a"]["nb_missing_values"] == 0
+        assert analysis["profile"]["b"]["nb_missing_values"] == 0
