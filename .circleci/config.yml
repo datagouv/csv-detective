@@ -125,7 +125,7 @@ jobs:
       - run:
           name: Publish on PyPI
           command: |
-            uv publish --username "${PYPI_USERNAME}" --password "${PYPI_PASSWORD}" dist/*
+            uv publish dist/*  # use UV_PUBLISH_TOKEN
 
 workflows:
   build-deploy-publish:
