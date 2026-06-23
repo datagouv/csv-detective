@@ -159,6 +159,7 @@ def validate_then_detect(
         verbose=verbose,
         custom_proportions=custom_proportions,
         skipna=skipna,
+        additional_na_values=additional_na_values,
     )
     if not is_valid:
         # if loading failed in validate, we load it from scratch and initiate an analysis
