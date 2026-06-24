@@ -84,6 +84,7 @@ def routine(
         limited_output=limited_output,
         skipna=skipna,
         custom_proportions=custom_proportions,
+        additional_na_values=additional_na_values,
         verbose=verbose,
     )
 
@@ -99,6 +100,7 @@ def routine(
             output_schema=output_schema,
             output_df=output_df,
             cast_json=cast_json,
+            additional_na_values=additional_na_values,
             verbose=verbose,
             _col_values=_col_values,
         )
@@ -177,6 +179,7 @@ def validate_then_detect(
             limited_output=limited_output,
             skipna=skipna,
             custom_proportions=custom_proportions,
+            additional_na_values=additional_na_values,
             verbose=verbose,
         )
     else:
@@ -204,6 +207,7 @@ def validate_then_detect(
             output_schema=output_schema,
             output_df=output_df,
             cast_json=cast_json,
+            additional_na_values=additional_na_values,
             verbose=verbose,
             _col_values=col_values,
         )
