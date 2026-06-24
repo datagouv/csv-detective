@@ -1,10 +1,12 @@
 import json
+from tempfile import NamedTemporaryFile
 from unittest.mock import MagicMock, patch
 
 import pandas as pd
 import pytest
 
 from csv_detective.explore_csv import routine, validate_then_detect
+from csv_detective.parsing.csv import CHUNK_SIZE
 from csv_detective.validate import validate
 
 
@@ -232,4 +234,25 @@ def test_parquet_file_validation():
         pq_path,
         analysis,
     )
+    assert is_valid
+
+
+@pytest.mark.parametrize("nb_rows", (CHUNK_SIZE // 10, CHUNK_SIZE + 1))
+def test_validation_with_custom_na(nb_rows):
+    new_na = "Non spécifié"
+    expected_content = "a,b\n" + "99,10.0\n" * nb_rows + f"{new_na},{new_na}\n"
+    with NamedTemporaryFile() as tmp:
+        tmp.write(expected_content.encode("utf-8"))
+        analysis = routine(
+            file_path=tmp.name,
+            num_rows=-1,
+            output_profile=True,
+            save_results=False,
+            na_values=[new_na],
+        )
+        is_valid, _, _ = validate(
+            tmp.name,
+            analysis,
+            na_values=[new_na],
+        )
     assert is_valid
