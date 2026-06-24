@@ -1,3 +1,4 @@
+import json
 from tempfile import NamedTemporaryFile
 from unittest.mock import MagicMock, patch
 
@@ -568,7 +569,7 @@ def test_sanitize_for_json(to_export, expected):
 
 @pytest.mark.parametrize("nb_rows", (CHUNK_SIZE // 10, CHUNK_SIZE + 1))
 def test_unique_values_output(nb_rows, mocked_responses):
-    expected_content = "cat;not_cat;json_cat;json_not_cat\n"
+    expected_content = "cat;not_cat;json_cat;json_not_cat;too_complex\n"
     for k in range(nb_rows):
         cat = (
             "a"
@@ -589,7 +590,8 @@ def test_unique_values_output(nb_rows, mocked_responses):
             else []
         )
         json_not_cat = [k, k + 1] if k % 2 == 0 else [k] if k % 3 == 0 else []
-        expected_content += f"{cat};{k};{json_cat};{json_not_cat}\n"
+        too_complex = json.dumps([{"a": 1}])
+        expected_content += f"{cat};{k};{json_cat};{json_not_cat};{too_complex}\n"
     mocked_responses.get(
         "http://example.com/test.csv",
         body=expected_content,
@@ -612,6 +614,8 @@ def test_unique_values_output(nb_rows, mocked_responses):
     # too many values => not in unique_values
     assert "not_cat" not in analysis["unique_values"]
     assert "json_not_cat" not in analysis["unique_values"]
+    # too complex data in column => not in unique_values
+    assert "too_complex" not in analysis["unique_values"]
     # few enough values => testing output
     assert analysis["unique_values"]["cat"] == ["a", "b", "c", "d"]
     assert analysis["unique_values"]["json_cat"] == [1, 2, 3]
