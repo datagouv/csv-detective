@@ -22,6 +22,7 @@ def generate_output(
     output_schema: bool = False,
     output_df: bool = False,
     cast_json: bool = True,
+    na_values: list[str] | None = None,
     verbose: bool = False,
     _col_values: dict[str, pd.Series] | None = None,
 ) -> dict | tuple[dict, Iterator[pd.DataFrame]]:
@@ -65,6 +66,7 @@ def generate_output(
             analysis=analysis,
             file_path=file_path,
             cast_json=cast_json,
+            na_values=na_values,
             verbose=verbose,
         )
     return analysis

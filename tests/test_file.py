@@ -1,3 +1,4 @@
+from tempfile import NamedTemporaryFile
 from unittest.mock import MagicMock, patch
 
 import pandas as pd
@@ -695,3 +696,39 @@ def test_parquet_file_analysis():
     df = next(chunks)
     assert isinstance(df, pd.DataFrame)
     assert len(df) == expected["total_lines"]
+
+
+@pytest.mark.parametrize(
+    "custom_na, nb_rows",
+    (
+        (None, CHUNK_SIZE // 10),
+        (["Non spécifié"], CHUNK_SIZE // 10),
+        (None, CHUNK_SIZE + 1),
+        (["Non spécifié"], CHUNK_SIZE + 1),
+    ),
+)
+def test_custom_na_values(custom_na, nb_rows):
+    expected_content = "a,b\n" + "99,10.0\n" * nb_rows + "Non spécifié,Non spécifié\n"
+    with NamedTemporaryFile() as tmp:
+        tmp.write(expected_content.encode("utf-8"))
+        analysis, df_chunks = routine(
+            file_path=tmp.name,
+            num_rows=-1,
+            output_profile=True,
+            save_results=False,
+            output_df=True,
+            na_values=custom_na,
+        )
+        df = pd.concat(df_chunks, ignore_index=True)
+    if custom_na:
+        assert analysis["columns"]["a"]["format"] == "int"
+        assert analysis["columns"]["b"]["format"] == "float"
+        assert analysis["profile"]["a"]["nb_missing_values"] == 1
+        assert analysis["profile"]["b"]["nb_missing_values"] == 1
+        assert len(df.loc[df["a"].isna()]) == 1
+    else:
+        assert analysis["columns"]["a"]["format"] == "string"
+        assert analysis["columns"]["b"]["format"] == "string"
+        assert analysis["profile"]["a"]["nb_missing_values"] == 0
+        assert analysis["profile"]["b"]["nb_missing_values"] == 0
+        assert len(df.loc[df["a"].isna()]) == 0

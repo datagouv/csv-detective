@@ -72,6 +72,7 @@ def cast_df_chunks(
     analysis: dict,
     file_path: str,
     cast_json: bool = True,
+    na_values: list[str] | None = None,
     verbose: bool = False,
 ) -> Iterator[pd.DataFrame]:
     if analysis.get("engine") or analysis["total_lines"] <= CHUNK_SIZE:
@@ -95,6 +96,7 @@ def cast_df_chunks(
             skiprows=analysis["header_row_idx"],
             compression=analysis.get("compression"),
             chunksize=CHUNK_SIZE,
+            na_values=na_values,
         )
         for chunk in chunks:
             yield cast_df(

@@ -157,6 +157,7 @@ def test_col_chunks(
     formats: dict[str, Format],
     limited_output: bool,
     skipna: bool = True,
+    na_values: list[str] | None = None,
     verbose: bool = False,
 ) -> tuple[pd.DataFrame, dict, dict[str, pd.Series]]:
     if verbose:
@@ -193,6 +194,7 @@ def test_col_chunks(
         skiprows=analysis["header_row_idx"],
         compression=analysis.get("compression"),
         chunksize=CHUNK_SIZE,
+        na_values=na_values,
     )
     analysis["total_lines"] = CHUNK_SIZE
     batch, batch_number = [], 1
