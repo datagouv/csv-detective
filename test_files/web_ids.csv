@@ -1,0 +1,11 @@
+annee,email,site_web,identifiant,compte
+2020,alice@example.com,https://www.data.gouv.fr,550e8400-e29b-41d4-a716-446655440000,@alice42
+2019,bob.martin@gouv.fr,http://example.org/path,6ba7b810-9dad-11d1-80b4-00c04fd430c8,@bob_dev
+2021,contact@entreprise.co,www.example.com,123e4567-e89b-12d3-a456-426614174000,@charlie
+2018,info@data-gouv.fr,https://api.example.com/v2,f47ac10b-58cc-4372-a567-0e02b2c3d479,@diana_99
+2023,test.user@mail.org,ftp://files.example.net,7c9e6679-7425-40de-944b-e07fc1f90ae7,@eve
+2022,nom.prenom@societe.com,https://www.wikipedia.org,c9bf9e57-1685-4c89-bafb-ff5af830be8a,@frank
+2020,support@aide.gouv.fr,http://docs.example.io/api,a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11,@grace_h
+2024,jean.dupont@email.fr,https://data.education.fr,1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed,@hector
+2019,marie@test.com,www.open-data.fr,3fa85f64-5717-4562-b3fc-2c963f66afa6,@irene_42
+2021,admin@plateforme.io,https://example.com/search?q=test,9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d,@jules

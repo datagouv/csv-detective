@@ -1,0 +1,11 @@
+nom,nombre,ratio,est_actif
+Alice,-42,3000.14,oui
+Bob,-7,500.5,non
+Charlie,-100,1200.0,vrai
+Diana,-3,999.99,faux
+Eve,-55,700.2,true
+Frank,-12,2100.0,false
+Grace,-88,1800.01,yes
+Hector,-999,4500.6,no
+Irene,-1,3300.33,oui
+Jules,-200,10000.5,non

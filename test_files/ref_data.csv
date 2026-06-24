@@ -1,0 +1,11 @@
+code_ape;csp;code_csp;pays;canton;rnb
+0111Z;agriculteurs exploitants;111a;france;abbeville;ABCDEFGHJKMN
+0112Z;artisans;222b;allemagne;agde;123456789ABC
+0113Z;employes;333c;espagne;agen;QRSTVWXYZ123
+0114Z;ouvriers;444d;italie;ajaccio;ABCD12345678
+0115Z;retraites;555e;portugal;albertville;EFGH98765432
+0116Z;cadres et professions intellectuelles superieures;666f;belgique;ales;JKMN11223344
+0119Z;professions intermediaires;7100;suisse;amiens;PQRS55667788
+0121Z;artisans commercants et chefs d entreprise;7200;canada;angers;TVWX99887766
+0130Z;autres personnes sans activite professionnelle;7400;japon;angouleme;1234ABCDEFGH
+0141Z;agriculteurs exploitants;7500;chine;annecy;MNPQ12349876

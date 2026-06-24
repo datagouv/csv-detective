@@ -1,0 +1,228 @@
+afghanistan
+afrique du sud
+aland
+albanie
+algerie
+allemagne
+andorre
+angola
+antarctique
+antarctique argentin
+antigua et barbuda
+arabie saoudite
+argentine
+armenie
+aruba
+australie
+autriche
+azerbaidjan
+bahamas
+bahrein
+bangladesh
+barbade
+belgique
+belize
+benin
+bhoutan
+bielorussie
+birmanie
+bolivie
+bonaire saint eustache saba
+bosnie herzegovine
+botswana
+bresil
+brunei
+bulgarie
+burkina
+burundi
+cambodge
+cameroun
+canada
+cap vert
+centrafrique
+chagos
+chili
+chine
+chypre
+colombie
+comores
+congo
+cook
+coree du nord
+coree du sud
+costa rica
+cote d ivoire
+croatie
+cuba
+cura ao
+danemark
+dependances de la couronne britannique
+djibouti
+dominique
+egypte
+emirats arabes unis
+equateur
+erythree
+espagne
+estonie
+etats unis
+ethiopie
+feroe
+fidji
+finlande
+france
+gabon
+gambie
+georgie
+ghana
+grece
+grenade
+groenland
+guatemala
+guinee
+guinee bissao
+guinee equatoriale
+guyana
+haiti
+honduras
+hong kong
+hongrie
+inde
+indonesie
+irak
+iran
+irlande
+islande
+israel
+italie
+jamaique
+japon
+jordanie
+kazakhstan
+kenya
+kirghizstan
+kiribati
+kosovo
+koweit
+laos
+lesotho
+lettonie
+liban
+liberia
+libye
+liechtenstein
+lituanie
+luxembourg
+macao
+macedoine du nord
+madagascar
+malaisie
+malawi
+maldives
+mali
+malte
+maroc
+marshall
+maurice
+mauritanie
+mexique
+micronesie
+moldavie
+monaco
+mongolie
+montenegro
+mozambique
+namibie
+nauru
+nepal
+nicaragua
+niger
+nigeria
+niue
+norvege
+nouvelle zelande
+oman
+ouganda
+ouzbekistan
+pakistan
+palaos
+palestine
+panama
+papouasie nouvelle guinee
+paraguay
+pays bas
+perou
+philippines
+pitcairn
+pologne
+portugal
+qatar
+republique democratique du congo
+republique dominicaine
+roumanie
+royaume uni
+russie
+rwanda
+sahara occidental
+saint christophe et nieves
+saint marin
+saint martin partie neerlandaise
+saint vincent et les grenadines
+sainte lucie
+salomon
+salvador
+samoa
+sao tome et principe
+senegal
+serbie
+seychelles
+sierra leone
+singapour
+slovaquie
+slovenie
+somalie
+soudan
+soudan du sud
+sri lanka
+suede
+suisse
+suriname
+swaziland
+syrie
+tadjikistan
+taiwan
+tanzanie
+tchad
+tchequie
+terres australes norvegiennes
+territoire chilien de l antarctique
+territoires australiens de l ocean indien
+territoires britanniques dans l ocean atlantique sud
+territoires britanniques dans les antilles et bermudes
+territoires britanniques de l ocean atlantique
+territoires britanniques en mediterranee
+territoires de l australie en oceanie
+territoires de la nouvelle zelande
+territoires des etats unis en amerique
+territoires des etats unis en oceanie
+territoires espagnols en afrique du nord
+territoires norvegiens en atlantique nord
+territoires portugais de l ocean atlantique
+thailande
+timor oriental
+togo
+tonga
+trinite et tobago
+tunisie
+turkmenistan
+turquie
+tuvalu
+ukraine
+uruguay
+vanuatu
+vatican
+venezuela
+vietnam
+yemen
+zambie
+zimbabwe

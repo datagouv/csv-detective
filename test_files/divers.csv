@@ -1,0 +1,11 @@
+sexe;telephone;jour_semaine;mois;prix;reduction
+homme;01 23 45 67 89;lundi;janvier;120€;15%
+femme;06.12.34.56.78;mardi;fevrier;45.5$;-3.2%
+h;+33612345678;mercredi;mars;200£;100%
+f;0033145678901;jeudi;avril;10¥;0.5%
+masculin;01-23-45-67-89;vendredi;mai;350€;22%
+feminin;0678901234;samedi;juin;99.99$;-10%
+homme;01 98 76 54 32;dimanche;juillet;5€;75%
+femme;+33712345678;lun;aout;1200€;50%
+m;0612345678;mar;septembre;30£;8.5%
+f;0498765432;dim;octobre;250¥;-1%
