@@ -22,7 +22,7 @@ def validate(
     verbose: bool = False,
     skipna: bool = True,
     custom_proportions: float | int | dict[str, float | int] | None = None,
-    additional_na_values: list[str] | None = None,
+    na_values: list[str] | None = None,
 ) -> tuple[bool, dict | None, dict[str, pd.Series] | None]:
     """
     Verify is the given file has the same fields and formats as in the given analysis.
@@ -33,7 +33,7 @@ def validate(
         verbose: whether the code displays the steps it's going through
         custom_proportions: allows to set a custom level of tolerance for all or specific formats
         skipna: whether to ignore NaN values in the checks
-        additional_na_values: list of strings to consider NaN when loading the file, on top of pandas STR_NA_VALUES
+        na_values: list of strings to consider NaN when loading the file, on top of pandas STR_NA_VALUES
     """
     formats = FormatsManager(custom_proportions=custom_proportions).formats
     if verbose:
@@ -56,7 +56,7 @@ def validate(
                 skiprows=previous_analysis["header_row_idx"],
                 compression=previous_analysis.get("compression"),
                 chunksize=VALIDATION_CHUNK_SIZE,
-                na_values=additional_na_values,
+                na_values=na_values,
             )
             analysis = {
                 k: v
@@ -109,7 +109,7 @@ def validate(
                         dtype=str,
                         engine=previous_analysis["engine"],
                         sheet_name=previous_analysis["sheet_name"],
-                        na_values=additional_na_values,
+                        na_values=na_values,
                     )
                 ]
             )

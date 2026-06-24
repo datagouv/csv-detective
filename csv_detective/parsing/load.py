@@ -33,7 +33,7 @@ def load_file(
     verbose: bool = False,
     engine: str | None = None,
     sheet_name: str | int | None = None,
-    additional_na_values: list[str] | None = None,
+    na_values: list[str] | None = None,
 ) -> tuple[pd.DataFrame | pq.ParquetFile, dict]:
     file_name = file_path.split("/")[-1]
     if ("." not in file_name or not file_name.endswith("csv")) and engine is None and sep is None:
@@ -46,7 +46,7 @@ def load_file(
             num_rows=num_rows,
             engine=engine,
             sheet_name=sheet_name,
-            additional_na_values=additional_na_values,
+            na_values=na_values,
             verbose=verbose,
         )
         if table.empty:
@@ -59,8 +59,8 @@ def load_file(
         if verbose:
             if num_rows != -1:
                 logging.warning("Ignoring `num_rows` argument, parquet files are read entirely")
-            if additional_na_values:
-                logging.warning("Ignoring `additional_na_values` argument for parquet files")
+            if na_values:
+                logging.warning("Ignoring `na_values` argument for parquet files")
         return parse_parquet(file_path, verbose=verbose)
     else:
         # fetching or reading file as binary
@@ -101,7 +101,7 @@ def load_file(
             sep,
             num_rows,
             header_row_idx,
-            additional_na_values=additional_na_values,
+            na_values=na_values,
             verbose=verbose,
         )
         del str_file

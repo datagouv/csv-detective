@@ -1,9 +1,9 @@
+from tempfile import NamedTemporaryFile
 from unittest.mock import MagicMock, patch
 
 import pandas as pd
 import pytest
 import responses
-from tempfile import NamedTemporaryFile
 
 from csv_detective import routine
 from csv_detective.output.profile import create_profile
@@ -717,7 +717,7 @@ def test_custom_na_values(custom_na, nb_rows):
             output_profile=True,
             save_results=False,
             output_df=True,
-            additional_na_values=custom_na,
+            na_values=custom_na,
         )
         df = pd.concat(df_chunks, ignore_index=True)
     if custom_na:

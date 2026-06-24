@@ -17,7 +17,7 @@ def parse_csv(
     num_rows: int,
     skiprows: int,
     random_state: int = 42,
-    additional_na_values: list[str] | None = None,
+    na_values: list[str] | None = None,
     verbose: bool = False,
 ) -> tuple[pd.DataFrame, int | None, int | None]:
     if verbose:
@@ -35,7 +35,7 @@ def parse_csv(
             encoding=encoding,
             skiprows=skiprows,
             nrows=CHUNK_SIZE,
-            na_values=additional_na_values,
+            na_values=na_values,
         )
         total_lines = len(table)
         # branch between small and big files starts here

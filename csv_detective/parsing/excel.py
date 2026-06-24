@@ -25,7 +25,7 @@ def parse_excel(
     engine: str | None = None,
     sheet_name: str | int | None = None,
     random_state: int = 42,
-    additional_na_values: list[str] | None = None,
+    na_values: list[str] | None = None,
     verbose: bool = False,
 ) -> tuple[pd.DataFrame, int, int, str, str, int]:
     """ "Excel-like parsing is really slow, could be a good improvement for future development"""
@@ -102,7 +102,7 @@ def parse_excel(
                 engine="odf",
                 sheet_name=None,
                 dtype=str,
-                na_values=additional_na_values,
+                na_values=na_values,
             )
             sizes = {sheet_name: table.size for sheet_name, table in tables.items()}
             sheet_name = max(sizes, key=sizes.get)
@@ -123,7 +123,7 @@ def parse_excel(
                 engine="odf",
                 sheet_name=sheet_name,
                 dtype=str,
-                na_values=additional_na_values,
+                na_values=na_values,
             )
         table, header_row_idx = remove_empty_first_rows(table)
         total_lines = len(table)
@@ -155,7 +155,7 @@ def parse_excel(
         engine=engine,
         sheet_name=sheet_name,
         dtype=str,
-        na_values=additional_na_values,
+        na_values=na_values,
     )
     table, header_row_idx = remove_empty_first_rows(table)
     total_lines = len(table)
