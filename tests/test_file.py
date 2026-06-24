@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, patch
 import pandas as pd
 import pytest
 import responses
+from tempfile import NamedTemporaryFile
 
 from csv_detective import routine
 from csv_detective.output.profile import create_profile
@@ -698,39 +699,36 @@ def test_parquet_file_analysis():
 
 
 @pytest.mark.parametrize(
-    "custom_na",
+    "custom_na, nb_rows",
     (
-        None,
-        ["Non spécifié"],
+        (None, CHUNK_SIZE // 10),
+        (["Non spécifié"], CHUNK_SIZE // 10),
+        (None, CHUNK_SIZE + 1),
+        (["Non spécifié"], CHUNK_SIZE + 1),
     ),
 )
-def test_custom_na_values(custom_na, mocked_responses):
-    url = "http://example.com/file.csv"
-    expected_content = "a,b\n" + "99,10.0\n" * 50 + "Non spécifié,Non spécifié\n"
-    mocked_responses.get(
-        url,
-        body=expected_content,
-        status=200,
-    )
-    with patch("urllib.request.urlopen") as mock_urlopen:
-        mock_response = MagicMock()
-        mock_response.read.return_value = expected_content
-        mock_response.__enter__.return_value = mock_response
-        mock_urlopen.return_value = mock_response
-        analysis = routine(
-            file_path=url,
+def test_custom_na_values(custom_na, nb_rows):
+    expected_content = "a,b\n" + "99,10.0\n" * nb_rows + "Non spécifié,Non spécifié\n"
+    with NamedTemporaryFile() as tmp:
+        tmp.write(expected_content.encode("utf-8"))
+        analysis, df_chunks = routine(
+            file_path=tmp.name,
             num_rows=-1,
             output_profile=True,
             save_results=False,
+            output_df=True,
             additional_na_values=custom_na,
         )
+        df = pd.concat(df_chunks, ignore_index=True)
     if custom_na:
         assert analysis["columns"]["a"]["format"] == "int"
         assert analysis["columns"]["b"]["format"] == "float"
         assert analysis["profile"]["a"]["nb_missing_values"] == 1
         assert analysis["profile"]["b"]["nb_missing_values"] == 1
+        assert len(df.loc[df["a"].isna()]) == 1
     else:
         assert analysis["columns"]["a"]["format"] == "string"
         assert analysis["columns"]["b"]["format"] == "string"
         assert analysis["profile"]["a"]["nb_missing_values"] == 0
         assert analysis["profile"]["b"]["nb_missing_values"] == 0
+        assert len(df.loc[df["a"].isna()]) == 0
