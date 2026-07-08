@@ -18,7 +18,7 @@ def _is(val) -> bool:
     if not isinstance(val, str):
         return False
     val = val.replace(" ", "")
-    if not re.fullmatch(r"^\d{9}$", val):
+    if not re.fullmatch(r"^[0-9]{9}$", val):
         return False
     # Vérification par clé propre aux codes siren
     cle = 0
