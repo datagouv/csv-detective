@@ -18,7 +18,7 @@ def _is(val):
     if not isinstance(val, str):
         return False
     val = val.replace(" ", "")
-    if not re.fullmatch(r"^\d{14}$", val):
+    if not re.fullmatch(r"^[0-9]{14}$", val):
         return False
 
     # Vérification par clé de luhn du SIREN
