@@ -18,7 +18,7 @@ def _is(val) -> bool:
     if not isinstance(val, str):
         return False
     val = val.replace(" ", "")
-    if not bool(re.match(r"^[0-9]{9}$", val)):
+    if not re.fullmatch(r"^\d{9}$", val):
         return False
     # Vérification par clé propre aux codes siren
     cle = 0
@@ -32,5 +32,5 @@ def _is(val) -> bool:
 
 _test_values = {
     True: ["552100554", "552 100 554"],
-    False: ["42"],
+    False: ["42", "552100554\n"],
 }
