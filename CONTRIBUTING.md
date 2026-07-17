@@ -8,9 +8,29 @@ Every modification should be submited as a PR (without touching the CHANGELOG, w
 
 Remember to format, lint, and sort imports with [Ruff](https://docs.astral.sh/ruff/) before committing (checks will remind you anyway):
 ```bash
-pip install .[dev]
-ruff check --fix .
-ruff format .
+uv sync
+uv run ruff check --fix .
+uv run ruff format .
+```
+
+## Tests
+
+Default CI excludes slow tests. Locally, prefer the same filter so you do not run the performance canary by accident:
+
+```bash
+uv run pytest tests/ -m "not slow"
+```
+
+### Performance benchmark
+
+`tests/test_benchmark.py` is marked `@pytest.mark.slow`. It generates a large synthetic CSV and times full `routine()` runs.
+
+```bash
+# Local run
+uv run pytest tests/test_benchmark.py -m slow -v -s
+
+# CircleCI: Trigger Pipeline with run-benchmarks=true, then download
+# the CSV from the benchmark job Artifacts tab
 ```
 
 ### Doc generation
