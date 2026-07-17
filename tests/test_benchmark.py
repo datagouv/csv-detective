@@ -83,7 +83,7 @@ def _generate_benchmark_csv(path: Path, nb_rows: int = NB_ROWS, seed: int = 42) 
                     rng.randint(0, 1_000_000),
                     round(rng.uniform(0, 100), 2),
                     (start + timedelta(days=rng.randint(0, 1500))).isoformat(),
-                    communes[rng.randint(0, len(communes) - 1)],
+                    rng.choice(communes),
                     f"{rng.randint(100_000_000, 999_999_999)}",
                     f"row-{i}-note-{rng.randint(0, 9999)}",
                     round(rng.uniform(41.0, 51.0), 6),
