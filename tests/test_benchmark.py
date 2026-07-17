@@ -18,7 +18,7 @@ import pytest
 
 from csv_detective import routine
 
-NB_ROWS = 100_000
+NB_ROWS = 500_000
 NB_RUNS = 3
 BENCHMARK_DIR = Path(".benchmarks")
 BENCHMARK_JSON = BENCHMARK_DIR / "benchmark.json"
