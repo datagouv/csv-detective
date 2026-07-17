@@ -18,6 +18,7 @@ from time import perf_counter
 import pytest
 
 from csv_detective import routine
+from csv_detective.parsing.csv import CHUNK_SIZE
 
 NB_ROWS = 500_000
 NB_RUNS = 3
@@ -254,6 +255,8 @@ def _assert_benchmark_detections(analysis: dict, *, output_profile: bool) -> Non
 def benchmark_csv(tmp_path_factory: pytest.TempPathFactory) -> Path:
     path = tmp_path_factory.mktemp("benchmark") / "benchmark_input.csv"
     _generate_benchmark_csv(path)
+    with path.open(encoding="utf-8") as f:
+        assert sum(1 for _ in f) - 1 == NB_ROWS
     return path
 
 
@@ -271,7 +274,9 @@ def test_routine_big_file(benchmark_csv: Path, output_profile: bool, test_name: 
         output_profile=output_profile,
     )
 
-    assert analysis["total_lines"] == NB_ROWS
+    # Format detection may stop reading before EOF once every column is resolved
+    # (see test_col_chunks early stop); total_lines is rows processed, not file size.
+    assert CHUNK_SIZE <= analysis["total_lines"] <= NB_ROWS
     assert analysis["columns"]
     assert analysis["header"]
     _assert_benchmark_detections(analysis, output_profile=output_profile)
