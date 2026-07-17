@@ -24,6 +24,26 @@ BENCHMARK_DIR = Path(".benchmarks")
 BENCHMARK_JSON = BENCHMARK_DIR / "benchmark.json"
 
 
+def _siren_luhn_check_digit(prefix: str) -> str:
+    """Return the 9th digit that satisfies the SIREN Luhn key for an 8-digit prefix."""
+    for check in range(10):
+        candidate = f"{prefix}{check}"
+        cle = 0
+        pair = False
+        for digit in candidate:
+            y = int(digit) * (1 + pair)
+            cle += y // 10 + y % 10
+            pair = not pair
+        if cle % 10 == 0:
+            return str(check)
+    raise ValueError(f"Could not compute SIREN check digit for prefix {prefix}")
+
+
+def _random_valid_siren(rng: Random) -> str:
+    prefix = f"{rng.randint(0, 99_999_999):08d}"
+    return prefix + _siren_luhn_check_digit(prefix)
+
+
 def _runner_cpu() -> str:
     if cpu := os.environ.get("BENCHMARK_RUNNER_CPU"):
         return cpu
@@ -84,7 +104,7 @@ def _generate_benchmark_csv(path: Path, nb_rows: int = NB_ROWS, seed: int = 42) 
                     round(rng.uniform(0, 100), 2),
                     (start + timedelta(days=rng.randint(0, 1500))).isoformat(),
                     rng.choice(communes),
-                    f"{rng.randint(100_000_000, 999_999_999)}",
+                    _random_valid_siren(rng),
                     f"row-{i}-note-{rng.randint(0, 9999)}",
                     round(rng.uniform(41.0, 51.0), 6),
                     round(rng.uniform(-5.0, 10.0), 6),
