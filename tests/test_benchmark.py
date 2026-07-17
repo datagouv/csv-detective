@@ -5,6 +5,7 @@ CircleCI ``benchmark-workflow`` (pipeline parameter ``run-benchmarks=true``).
 """
 
 import csv
+import json
 import os
 import statistics
 import sys
@@ -20,21 +21,7 @@ from csv_detective import routine
 NB_ROWS = 100_000
 NB_RUNS = 3
 BENCHMARK_DIR = Path(".benchmarks")
-BENCHMARK_CSV = BENCHMARK_DIR / "benchmarks.csv"
-CSV_HEADERS = [
-    "datetime",
-    "test_name",
-    "input_file",
-    "ci",
-    "execution_time_seconds",
-    "runs",
-    "commit_id",
-    "runner_class",
-    "runner_cpu",
-    "runner_memory_mb",
-    "python_version",
-    "nb_rows",
-]
+BENCHMARK_JSON = BENCHMARK_DIR / "benchmark.json"
 
 
 def _runner_cpu() -> str:
@@ -110,38 +97,44 @@ def _median_seconds(durations: list[float]) -> float:
     return round(statistics.median(durations), 3)
 
 
-def _append_benchmark_row(
+def _write_scenario_result(
     *,
     test_name: str,
     input_file: str,
-    execution_time_seconds: float,
+    durations: list[float],
     nb_rows: int,
-) -> None:
+) -> dict:
+    """Merge this scenario into the run report JSON and return the scenario payload."""
     BENCHMARK_DIR.mkdir(parents=True, exist_ok=True)
-    write_header = not BENCHMARK_CSV.exists()
-    with BENCHMARK_CSV.open("a", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=CSV_HEADERS)
-        if write_header:
-            writer.writeheader()
-        writer.writerow(
-            {
-                "datetime": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "test_name": test_name,
-                "input_file": input_file,
-                "ci": os.environ.get("BENCHMARK_CI", "local"),
-                "execution_time_seconds": execution_time_seconds,
-                "runs": NB_RUNS,
-                "commit_id": os.environ.get("CIRCLE_SHA1", "")[:7],
-                "runner_class": os.environ.get("BENCHMARK_RUNNER_CLASS", ""),
-                "runner_cpu": _runner_cpu(),
-                "runner_memory_mb": _runner_memory_mb(),
-                "python_version": os.environ.get(
-                    "BENCHMARK_PYTHON_VERSION",
-                    f"{sys.version_info.major}.{sys.version_info.minor}",
-                ),
-                "nb_rows": nb_rows,
-            }
-        )
+    if BENCHMARK_JSON.exists():
+        report = json.loads(BENCHMARK_JSON.read_text(encoding="utf-8"))
+    else:
+        report = {
+            "datetime": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "ci": os.environ.get("BENCHMARK_CI", "local"),
+            "commit_id": os.environ.get("CIRCLE_SHA1", "")[:7],
+            "runner_class": os.environ.get("BENCHMARK_RUNNER_CLASS", ""),
+            "runner_cpu": _runner_cpu(),
+            "runner_memory_mb": _runner_memory_mb(),
+            "python_version": os.environ.get(
+                "BENCHMARK_PYTHON_VERSION",
+                f"{sys.version_info.major}.{sys.version_info.minor}",
+            ),
+            "nb_rows": nb_rows,
+            "input_file": input_file,
+            "scenarios": [],
+        }
+
+    scenario = {
+        "test_name": test_name,
+        "runs_seconds": [round(d, 3) for d in durations],
+        "execution_time_seconds": _median_seconds(durations),
+        "nb_runs": NB_RUNS,
+    }
+    report["scenarios"] = [s for s in report["scenarios"] if s["test_name"] != test_name]
+    report["scenarios"].append(scenario)
+    BENCHMARK_JSON.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    return scenario
 
 
 def _run_timed_routine(file_path: str, *, output_profile: bool) -> tuple[dict, list[float]]:
@@ -187,14 +180,14 @@ def test_routine_big_file(benchmark_csv: Path, output_profile: bool, test_name: 
     if output_profile:
         assert "profile" in analysis
 
-    median = _median_seconds(durations)
-    _append_benchmark_row(
+    scenario = _write_scenario_result(
         test_name=test_name,
         input_file=benchmark_csv.name,
-        execution_time_seconds=median,
+        durations=durations,
         nb_rows=NB_ROWS,
     )
     print(
-        f"{test_name}: runs={durations!r} median={median}s "
+        f"{test_name}: runs={scenario['runs_seconds']!r} "
+        f"median={scenario['execution_time_seconds']}s "
         f"(nb_rows={NB_ROWS}, output_profile={output_profile})"
     )

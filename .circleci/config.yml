@@ -152,7 +152,7 @@ jobs:
           name: Display benchmark results
           command: |
             echo "=== Benchmark Results ==="
-            cat .benchmarks/benchmarks.csv
+            cat .benchmarks/benchmark.json
             echo "========================="
           when: always
       - store_artifacts:
