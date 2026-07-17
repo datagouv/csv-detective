@@ -243,6 +243,7 @@ def test_validation_with_custom_na(nb_rows):
     expected_content = "a,b\n" + "99,10.0\n" * nb_rows + f"{new_na},{new_na}\n"
     with NamedTemporaryFile() as tmp:
         tmp.write(expected_content.encode("utf-8"))
+        tmp.flush()
         analysis = routine(
             file_path=tmp.name,
             num_rows=-1,

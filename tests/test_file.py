@@ -715,6 +715,7 @@ def test_custom_na_values(custom_na, nb_rows):
     expected_content = "a,b\n" + "99,10.0\n" * nb_rows + "Non spécifié,Non spécifié\n"
     with NamedTemporaryFile() as tmp:
         tmp.write(expected_content.encode("utf-8"))
+        tmp.flush()
         analysis, df_chunks = routine(
             file_path=tmp.name,
             num_rows=-1,
