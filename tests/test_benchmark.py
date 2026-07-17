@@ -148,8 +148,8 @@ def _run_timed_routine(file_path: str, *, output_profile: bool) -> tuple[dict, l
             output_profile=output_profile,
             save_results=False,
         )
+        assert analysis is not None
         durations.append(perf_counter() - start)
-    assert analysis is not None
     return analysis, durations
 
 
