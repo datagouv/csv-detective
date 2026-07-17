@@ -9,6 +9,7 @@ import json
 import os
 import statistics
 import sys
+from collections.abc import Callable
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from random import Random
@@ -22,6 +23,34 @@ NB_ROWS = 500_000
 NB_RUNS = 3
 BENCHMARK_DIR = Path(".benchmarks")
 BENCHMARK_JSON = BENCHMARK_DIR / "benchmark.json"
+
+VALID_COMMUNES = [
+    "Paris",
+    "Lyon",
+    "Marseille",
+    "Toulouse",
+    "Nice",
+    "Nantes",
+    "Montpellier",
+    "Strasbourg",
+    "Bordeaux",
+    "Lille",
+]
+VALID_POSTCODES = [
+    "75020",
+    "01000",
+    "13001",
+    "69001",
+    "33000",
+    "59000",
+    "44000",
+    "67000",
+    "34000",
+    "06000",
+]
+INVALID_POSTCODES = ["77777", "00000", "99999"]
+VALID_DEPARTMENTS = ["75", "69", "13", "33", "59", "67", "44", "06", "2A", "974"]
+INVALID_COMMUNE = "Unknown"
 
 
 def _siren_luhn_check_digit(prefix: str) -> str:
@@ -42,6 +71,18 @@ def _siren_luhn_check_digit(prefix: str) -> str:
 def _random_valid_siren(rng: Random) -> str:
     prefix = f"{rng.randint(0, 99_999_999):08d}"
     return prefix + _siren_luhn_check_digit(prefix)
+
+
+def _pick_mostly_valid(
+    rng: Random,
+    *,
+    valid: Callable[[], str],
+    invalid: Callable[[], str],
+    invalid_rate: float,
+) -> str:
+    if rng.random() < invalid_rate:
+        return invalid()
+    return valid()
 
 
 def _runner_cpu() -> str:
@@ -66,18 +107,6 @@ def _runner_memory_mb() -> str:
 def _generate_benchmark_csv(path: Path, nb_rows: int = NB_ROWS, seed: int = 42) -> None:
     """Generate a reproducible mixed-type CSV large enough to exercise chunking."""
     rng = Random(seed)
-    communes = [
-        "Paris",
-        "Lyon",
-        "Marseille",
-        "Toulouse",
-        "Nice",
-        "Nantes",
-        "Montpellier",
-        "Strasbourg",
-        "Bordeaux",
-        "Lille",
-    ]
     start = date(2020, 1, 1)
 
     with path.open("w", newline="", encoding="utf-8") as f:
@@ -86,29 +115,62 @@ def _generate_benchmark_csv(path: Path, nb_rows: int = NB_ROWS, seed: int = 42) 
             [
                 "id",
                 "amount",
+                "quantity",
                 "ratio",
                 "event_date",
+                "event_datetime",
                 "commune",
+                "ville",
                 "siren",
+                "org_id",
+                "departement",
+                "code_postal",
+                "optional_note",
                 "description",
                 "latitude",
                 "longitude",
-                "code_postal",
             ]
         )
         for i in range(nb_rows):
+            event_day = start + timedelta(days=rng.randint(0, 1500))
+            event_dt = datetime.combine(event_day, datetime.min.time()) + timedelta(
+                hours=rng.randint(0, 23),
+                minutes=rng.randint(0, 59),
+                seconds=rng.randint(0, 59),
+            )
             writer.writerow(
                 [
                     i,
                     rng.randint(0, 1_000_000),
+                    _pick_mostly_valid(
+                        rng,
+                        valid=lambda: str(rng.randint(1, 9999)),
+                        invalid=lambda: "bad",
+                        invalid_rate=0.02,
+                    ),
                     round(rng.uniform(0, 100), 2),
-                    (start + timedelta(days=rng.randint(0, 1500))).isoformat(),
-                    rng.choice(communes),
+                    event_day.isoformat(),
+                    event_dt.strftime("%Y-%m-%d %H:%M:%S"),
+                    rng.choice(VALID_COMMUNES),
+                    _pick_mostly_valid(
+                        rng,
+                        valid=lambda: rng.choice(VALID_COMMUNES),
+                        invalid=lambda: INVALID_COMMUNE,
+                        invalid_rate=0.15,
+                    ),
                     _random_valid_siren(rng),
+                    _random_valid_siren(rng),
+                    rng.choice(VALID_DEPARTMENTS),
+                    _pick_mostly_valid(
+                        rng,
+                        valid=lambda: rng.choice(VALID_POSTCODES),
+                        invalid=lambda: rng.choice(INVALID_POSTCODES),
+                        invalid_rate=0.08,
+                    ),
+                    "" if rng.random() < 0.30 else f"note-{rng.randint(0, 9999)}",
                     f"row-{i}-note-{rng.randint(0, 9999)}",
                     round(rng.uniform(41.0, 51.0), 6),
                     round(rng.uniform(-5.0, 10.0), 6),
-                    f"{rng.randint(1000, 95999):05d}",
                 ]
             )
 
@@ -173,6 +235,21 @@ def _run_timed_routine(file_path: str, *, output_profile: bool) -> tuple[dict, l
     return analysis, durations
 
 
+def _assert_benchmark_detections(analysis: dict, *, output_profile: bool) -> None:
+    columns = analysis["columns"]
+    assert columns["event_date"]["format"] == "date"
+    assert columns["event_datetime"]["format"] == "datetime_naive"
+    assert columns["commune"]["format"] == "commune"
+    assert columns["ville"]["format"] == "commune"
+    assert columns["siren"]["format"] == "siren"
+    assert columns["org_id"]["format"] != "siren"
+    assert columns["departement"]["format"] == "code_departement"
+    assert columns["code_postal"]["format"] == "code_postal"
+    assert columns["quantity"]["format"] == "string"
+    if output_profile:
+        assert analysis["profile"]["optional_note"]["nb_missing_values"] > 0
+
+
 @pytest.fixture(scope="module")
 def benchmark_csv(tmp_path_factory: pytest.TempPathFactory) -> Path:
     path = tmp_path_factory.mktemp("benchmark") / "benchmark_input.csv"
@@ -197,6 +274,7 @@ def test_routine_big_file(benchmark_csv: Path, output_profile: bool, test_name: 
     assert analysis["total_lines"] == NB_ROWS
     assert analysis["columns"]
     assert analysis["header"]
+    _assert_benchmark_detections(analysis, output_profile=output_profile)
     if output_profile:
         assert "profile" in analysis
 
