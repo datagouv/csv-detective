@@ -1,6 +1,6 @@
 proportion = 1
 description = "Integer"
-tag = ["type"]
+tags = ["type"]
 python_type = "int"
 labels = {"nb": 0.75, "nombre": 1, "nbre": 0.75}
 
