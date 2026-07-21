@@ -45,32 +45,34 @@ inspection_results = routine(
 
 The program creates a `python` dictionary with the following information :
 
-```
+```python
 {
-    "encoding": "windows-1252", 			        # Encoding detected
-    "separator": ";",						# Detected CSV separator
-    "header_row_idx": 0					# Index of the header (aka how many lines to skip to get it)
-    "headers": ['code commune INSEE', 'nom de la commune', 'code postal', "libellé d'acheminement"], # Header row
-    "total_lines": 42,					# Number of rows (excluding header)
-    "nb_duplicates": 0,					# Number of exact duplicates in rows
-    "heading_columns": 0,					# Number of heading columns
-    "trailing_columns": 0,					# Number of trailing columns
-    "categorical": ['Code commune']         # Columns that contain less than 25 different values (arbitrary threshold)
-    "columns": { # Property that conciliate detection from labels and content of a column
+    "encoding": "windows-1252",             # Encoding detected
+    "separator": ";",                       # Detected CSV separator
+    "header_row_idx": 0,                    # Index of the header (aka how many lines to skip to get it)
+    "headers": [                            # Header row
+        'code commune INSEE', 'nom de la commune', 'code postal', "libellé d'acheminement"
+    ],
+    "total_lines": 42,                      # Number of rows (excluding header)
+    "nb_duplicates": 0,                     # Number of exact duplicates in rows
+    "heading_columns": 0,                   # Number of heading columns
+    "trailing_columns": 0,                  # Number of trailing columns
+    "categorical": ['Code commune'],        # Columns that contain less than 25 different values (arbitrary threshold)
+    "columns": {                            # Property that conciliate detection from labels and content of a column
         "Code commune": {
             "python_type": "string",
             "format": "code_commune",
             "score": 1.0
         },
     },
-    "columns_labels": { # Property that return detection from header columns
+    "columns_labels": {                     # Property that return detection from header columns
         "Code commune": {
             "python_type": "string",
             "format": "code_commune",
             "score": 0.5
         },
     },
-    "columns_fields": { # Property that return detection from content columns
+    "columns_fields": {                     # Property that return detection from content columns
         "Code commune": {
             "python_type": "string",
             "format": "code_commune",
@@ -78,21 +80,21 @@ The program creates a `python` dictionary with the following information :
         },
     },
     "profile": {
-      "column_name" : {
-        "min": 1, # only int and float
-        "max": 12, # only int and float
-        "mean": 5, # only int and float
-        "std": 5, # only int and float
-        "tops": [  # 10 most frequent values in the column
-          "xxx",
-          "yyy",
-          "..."
-        ],
-        "nb_distinct": 67, # number of distinct values
-        "nb_missing_values": 102 # number of empty cells in the column
-      }
+        "column_name": {
+            "min": 1,                       # only int and float
+            "max": 12,                      # only int and float
+            "mean": 5,                      # only int and float
+            "std": 5,                       # only int and float
+            "tops": [                       # 10 most frequent values in the column
+                "xxx",
+                "yyy",
+                "..."
+            ],
+            "nb_distinct": 67,              # number of distinct values
+            "nb_missing_values": 102        # number of empty cells in the column
+        }
     },
-    "schema": { # TableSchema of the file if `output_schema` was set to `True`
+    "schema": {                             # TableSchema of the file if `output_schema` was set to `True`
       "$schema": "https://frictionlessdata.io/schemas/table-schema.json",
       "name": "",
       "title": "",
