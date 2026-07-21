@@ -4,7 +4,7 @@ from time import time
 
 import pandas as pd
 
-from csv_detective.parsing.columns import MAX_NUMBER_CATEGORICAL_VALUES, RATIO_CATEGORIAL_VALUES
+from csv_detective.parsing.columns import MAX_NUMBER_CATEGORICAL_VALUES, RATIO_CATEGORICAL_VALUES
 from csv_detective.utils import display_logs_depending_process_time
 
 
@@ -54,7 +54,7 @@ def detect_continuous_variable(
 
 def detect_categorical_variable(
     table: pd.DataFrame,
-    threshold_pct_categorical: float = RATIO_CATEGORIAL_VALUES,
+    threshold_pct_categorical: float = RATIO_CATEGORICAL_VALUES,
     max_number_categorical_values: int = MAX_NUMBER_CATEGORICAL_VALUES,
     verbose: bool = False,
 ) -> tuple[list[str], pd.DataFrame]:

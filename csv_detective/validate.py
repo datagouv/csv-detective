@@ -8,7 +8,7 @@ from csv_detective.format import FormatsManager
 from csv_detective.output.utils import extract_unique_from_multicat
 from csv_detective.parsing.columns import (
     MAX_NUMBER_CATEGORICAL_VALUES,
-    RATIO_CATEGORIAL_VALUES,
+    RATIO_CATEGORICAL_VALUES,
     build_known_columns,
 )
 from csv_detective.parsing.parquet import load_as_parquetfile
@@ -239,7 +239,7 @@ def validate(
         col
         for col, values in col_values.items()
         if len(values) <= MAX_NUMBER_CATEGORICAL_VALUES
-        or (len(values) / sum(values)) <= RATIO_CATEGORIAL_VALUES
+        or (len(values) / sum(values)) <= RATIO_CATEGORICAL_VALUES
     ]
     analysis["unique_values"] = {}
     for col in col_values.keys():
