@@ -156,6 +156,22 @@ def _build_remaining_tests_per_col(
     }
 
 
+def _apply_proportion_thresholds(
+    return_table: pd.DataFrame,
+    formats: dict[str, Format],
+) -> None:
+    """Zero scores still below format.proportion after full-file aggregation.
+
+    Chunk scoring may keep fractional scores (zero_if_too_low=False) so formats
+    are not eliminated mid-file; the global proportion requirement is enforced here.
+    """
+    for label, fmt in formats.items():
+        if label not in return_table.index:
+            continue
+        below = return_table.loc[label] < fmt.proportion
+        return_table.loc[label, below] = 0.0
+
+
 def test_col_chunks(
     table: pd.DataFrame,
     file_path: str,
@@ -275,6 +291,7 @@ def test_col_chunks(
         if len(values) <= MAX_NUMBER_CATEGORICAL_VALUES
         or (len(values) / sum(values)) <= RATIO_CATEGORICAL_VALUES
     ]
+    _apply_proportion_thresholds(return_table, formats)
     handle_empty_columns(return_table)
     if verbose:
         display_logs_depending_process_time(
