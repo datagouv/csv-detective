@@ -1,7 +1,9 @@
 import codecs
+import logging
 from io import BytesIO, StringIO
 
 import pandas as pd
+import pyarrow.parquet as pq
 import requests
 
 from csv_detective.detection.columns import detect_heading_columns, detect_trailing_columns
@@ -19,6 +21,7 @@ from csv_detective.parsing.excel import (
     XLS_LIKE_EXT,
     parse_excel,
 )
+from csv_detective.parsing.parquet import parse_parquet
 from csv_detective.utils import is_url
 
 
@@ -30,7 +33,8 @@ def load_file(
     verbose: bool = False,
     engine: str | None = None,
     sheet_name: str | int | None = None,
-) -> tuple[pd.DataFrame, dict]:
+    na_values: list[str] | None = None,
+) -> tuple[pd.DataFrame | pq.ParquetFile, dict]:
     file_name = file_path.split("/")[-1]
     if ("." not in file_name or not file_name.endswith("csv")) and engine is None and sep is None:
         # file has no extension and we don't have insights from arguments, we'll investigate how to read it
@@ -42,6 +46,7 @@ def load_file(
             num_rows=num_rows,
             engine=engine,
             sheet_name=sheet_name,
+            na_values=na_values,
             verbose=verbose,
         )
         if table.empty:
@@ -50,6 +55,13 @@ def load_file(
             "engine": engine,
             "sheet_name": sheet_name,
         }
+    elif engine == "parquet" or file_path.endswith(".parquet"):
+        if verbose:
+            if num_rows != -1:
+                logging.warning("Ignoring `num_rows` argument, parquet files are read entirely")
+            if na_values:
+                logging.warning("Ignoring `na_values` argument for parquet files")
+        return parse_parquet(file_path, verbose=verbose)
     else:
         # fetching or reading file as binary
         if is_url(file_path):
@@ -84,7 +96,13 @@ def load_file(
         heading_columns = detect_heading_columns(str_file, sep, verbose=verbose)
         trailing_columns = detect_trailing_columns(str_file, sep, heading_columns, verbose=verbose)
         table, total_lines, nb_duplicates = parse_csv(
-            str_file, encoding, sep, num_rows, header_row_idx, verbose=verbose
+            str_file,
+            encoding,
+            sep,
+            num_rows,
+            header_row_idx,
+            na_values=na_values,
+            verbose=verbose,
         )
         del str_file
         if table.empty:

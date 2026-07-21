@@ -18,10 +18,10 @@ labels = SHARED_LONGITUDE_LABELS | {
 _longitudel93 = LongitudeL93()
 
 
-def _is(val) -> bool:
+def _is(val: str | float) -> bool:
     try:
-        if isinstance(val, str) and is_float(val):
-            return _longitudel93.is_valid(float_casting(val))
+        if isinstance(val, float) or (isinstance(val, str) and is_float(val)):
+            return _longitudel93.is_valid(val if isinstance(val, float) else float_casting(val))
 
         return False
 
@@ -30,6 +30,6 @@ def _is(val) -> bool:
 
 
 _test_values = {
-    True: ["0", "-154", "1265783,45", "34723.4"],
-    False: ["1456669.8", "-776225", "346_3214"],
+    True: ["0", "-154", "1265783,45", "34723.4", 34723.4],
+    False: ["1456669.8", "-776225", "346_3214", 1456669.8],
 }

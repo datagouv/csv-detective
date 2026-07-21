@@ -44,7 +44,7 @@ def get_description(format: str) -> str:
         "longitude_wgs": "La longitude au format WGS",
         "latlon_wgs": "Les coordonnées XY (latitude et longitude)",
         "lonlat_wgs": "Les coordonnées XY (longitude et latitude)",
-        "booleen": "Booléen",
+        "bool": "Booléen",
         "email": "L'adresse couriel (email)",
         "float": "Nombre flottant (à virgule)",
         "int": "Nombre entier",
@@ -95,7 +95,7 @@ def get_pattern(format: str) -> str:
 def get_validata_type(format: str) -> str:
     """Returns the validata type for a given format"""
     metier_to_validata_type = {
-        "booleen": "boolean",
+        "bool": "boolean",
         "int": "integer",
         "float": "number",
         "string": "string",
@@ -122,7 +122,7 @@ def get_validata_type(format: str) -> str:
 def get_example(format: str) -> str:
     """Returns the example for a given format"""
     format_to_example = {
-        "booleen": "true",
+        "bool": "true",
         "int": 42,
         "float": 42.42,
         "string": "Lorem ipsum dolor sit amet",

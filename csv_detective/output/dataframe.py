@@ -4,9 +4,10 @@ from time import time
 from typing import Iterator
 
 import pandas as pd
+import pyarrow.parquet as pq
 
 from csv_detective.formats.binary import binary_casting
-from csv_detective.formats.booleen import bool_casting
+from csv_detective.formats.bool import bool_casting
 from csv_detective.formats.date import date_casting
 from csv_detective.formats.float import float_casting
 from csv_detective.parsing.csv import CHUNK_SIZE
@@ -67,20 +68,24 @@ def cast_df(
 
 
 def cast_df_chunks(
-    df: pd.DataFrame,
+    df: pd.DataFrame | pq.ParquetFile,
     analysis: dict,
     file_path: str,
     cast_json: bool = True,
+    na_values: list[str] | None = None,
     verbose: bool = False,
 ) -> Iterator[pd.DataFrame]:
     if analysis.get("engine") or analysis["total_lines"] <= CHUNK_SIZE:
         # the file is loaded in one chunk, so returning the cast df
-        yield cast_df(
-            df=df,
-            columns=analysis["columns"],
-            cast_json=cast_json,
-            verbose=verbose,
-        )
+        if analysis.get("engine") == "parquet":
+            yield pd.read_parquet(file_path)
+        else:
+            yield cast_df(
+                df=df,
+                columns=analysis["columns"],
+                cast_json=cast_json,
+                verbose=verbose,
+            )
     else:
         # loading the csv in chunks using the analysis
         chunks = pd.read_csv(
@@ -91,6 +96,7 @@ def cast_df_chunks(
             skiprows=analysis["header_row_idx"],
             compression=analysis.get("compression"),
             chunksize=CHUNK_SIZE,
+            na_values=na_values,
         )
         for chunk in chunks:
             yield cast_df(

@@ -2,29 +2,36 @@ from collections import defaultdict
 
 import numpy as np
 import pandas as pd
+import pyarrow.parquet as pq
 
 from csv_detective.detection.variables import (
     detect_categorical_variable,
     # detect_continuous_variable,
 )
 from csv_detective.format import Format, FormatsManager
-from csv_detective.output.utils import prepare_output_dict
+from csv_detective.output.utils import (
+    extract_unique_from_multicat,
+    prepare_output_dict,
+)
 from csv_detective.parsing.columns import (
+    MAX_NUMBER_CATEGORICAL_VALUES,
     handle_empty_columns,
     test_col,
     test_col_chunks,
     test_label,
+    test_parquet_cols,
 )
 
 
 def detect_formats(
-    table: pd.DataFrame,
+    table: pd.DataFrame | pq.ParquetFile,
     analysis: dict,
     file_path: str,
     tags: list[str] | None = None,
     limited_output: bool = True,
     skipna: bool = True,
     custom_proportions: float | int | dict[str, float | int] | None = None,
+    na_values: list[str] | None = None,
     verbose: bool = False,
 ) -> tuple[dict, dict[str, pd.Series] | None]:
     fmtm = FormatsManager(custom_proportions=custom_proportions)
@@ -40,7 +47,17 @@ def detect_formats(
         return analysis, None
 
     # Perform testing on fields
-    if not in_chunks:
+    if analysis.get("engine") == "parquet":
+        # parquet has its own process as typed columns allow shortcuts
+        scores_table_fields, analysis, col_values = test_parquet_cols(
+            table=table,
+            formats=formats,
+            analysis=analysis,
+            limited_output=limited_output,
+            skipna=skipna,
+            verbose=verbose,
+        )
+    elif not in_chunks:
         # table is small enough to be tested in one go
         scores_table_fields = test_col(
             table=table,
@@ -64,12 +81,34 @@ def detect_formats(
             formats=formats,
             limited_output=limited_output,
             skipna=skipna,
+            na_values=na_values,
             verbose=verbose,
         )
     analysis["columns_fields"] = prepare_output_dict(scores_table_fields, limited_output)
+    analysis["unique_values"] = {}
+    if col_values is None:
+        for col in table.columns:
+            if analysis["columns_fields"][col]["format"] == "json" and all(
+                value.startswith("[") for value in table[col]
+            ):
+                unique = extract_unique_from_multicat(table[col])
+                if unique is not None:
+                    analysis["unique_values"][col] = unique
+            elif table[col].nunique() <= MAX_NUMBER_CATEGORICAL_VALUES:
+                analysis["unique_values"][col] = list(table[col].dropna().unique())
+    else:
+        for col in col_values.keys():
+            if analysis["columns_fields"][col]["format"] == "json" and all(
+                value.startswith("[") for value in col_values[col].index
+            ):
+                unique = extract_unique_from_multicat(col_values[col].index.to_series())
+                if unique is not None:
+                    analysis["unique_values"][col] = unique
+            elif len(col_values[col]) <= MAX_NUMBER_CATEGORICAL_VALUES:
+                analysis["unique_values"][col] = list(col_values[col].index.dropna())
 
     # Perform testing on labels
-    scores_table_labels = test_label(analysis["header"], formats, limited_output, verbose=verbose)
+    scores_table_labels = test_label(analysis["header"], formats, verbose=verbose)
     analysis["columns_labels"] = prepare_output_dict(scores_table_labels, limited_output)
 
     # Multiply the results of the fields by 1 + 0.5 * the results of the labels.

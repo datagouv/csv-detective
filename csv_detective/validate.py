@@ -1,10 +1,17 @@
 import logging
 from collections import defaultdict
 
+import numpy as np
 import pandas as pd
 
 from csv_detective.format import FormatsManager
-from csv_detective.parsing.columns import MAX_NUMBER_CATEGORICAL_VALUES, RATIO_CATEGORIAL_VALUES
+from csv_detective.output.utils import extract_unique_from_multicat
+from csv_detective.parsing.columns import (
+    MAX_NUMBER_CATEGORICAL_VALUES,
+    RATIO_CATEGORIAL_VALUES,
+    build_known_columns,
+)
+from csv_detective.parsing.parquet import load_as_parquetfile
 
 # VALIDATION_CHUNK_SIZE is bigger than (analysis) CHUNK_SIZE because
 # it's faster to validate so we can afford to load more rows
@@ -19,6 +26,7 @@ def validate(
     verbose: bool = False,
     skipna: bool = True,
     custom_proportions: float | int | dict[str, float | int] | None = None,
+    na_values: list[str] | None = None,
 ) -> tuple[bool, dict | None, dict[str, pd.Series] | None]:
     """
     Verify is the given file has the same fields and formats as in the given analysis.
@@ -29,10 +37,11 @@ def validate(
         verbose: whether the code displays the steps it's going through
         custom_proportions: allows to set a custom level of tolerance for all or specific formats
         skipna: whether to ignore NaN values in the checks
+        na_values: list of strings to consider NaN when loading the file, on top of pandas STR_NA_VALUES
     """
     formats = FormatsManager(custom_proportions=custom_proportions).formats
     if verbose:
-        logging.info(f"Checking given formats exist")
+        logging.info("Checking given formats exist")
     for col_name, detected in previous_analysis["columns"].items():
         if detected["format"] == "string":
             continue
@@ -51,14 +60,50 @@ def validate(
                 skiprows=previous_analysis["header_row_idx"],
                 compression=previous_analysis.get("compression"),
                 chunksize=VALIDATION_CHUNK_SIZE,
+                na_values=na_values,
             )
             analysis = {
                 k: v
                 for k, v in previous_analysis.items()
                 if k
-                in ["encoding", "separator", "compression", "heading_columns", "trailing_columns"]
+                in [
+                    "header_row_idx",
+                    "header",
+                    "encoding",
+                    "separator",
+                    "compression",
+                    "heading_columns",
+                    "trailing_columns",
+                ]
                 and v is not None
             }
+        elif previous_analysis.get("engine") == "parquet":
+            pf = load_as_parquetfile(file_path)
+            chunks = iter(
+                batch.to_pandas() for batch in pf.iter_batches(batch_size=VALIDATION_CHUNK_SIZE)
+            )
+            known_columns = build_known_columns(pf)
+            for col_name in known_columns:
+                # checking columns and types from metadata for potential early stop
+                if col_name not in previous_analysis["columns"]:
+                    if verbose:
+                        logging.warning("> Columns in the file do not match those of the analysis")
+                    return False, None, None
+                if (
+                    known_columns[col_name]
+                    != previous_analysis["columns"][col_name][
+                        "format"
+                        # datetimes have two formats for one type but we can guess from the parquet column type
+                        if known_columns[col_name].startswith("datetime")
+                        else "python_type"
+                    ]
+                ):
+                    if verbose:
+                        logging.warning(
+                            f"> Test failed for column {col_name} with format {previous_analysis['columns'][col_name]['python_type']}"
+                        )
+                    return False, None, None
+            analysis = {k: v for k, v in previous_analysis.items() if k in ["header", "engine"]}
         else:
             # or chunks-like if not chunkable
             chunks = iter(
@@ -68,13 +113,15 @@ def validate(
                         dtype=str,
                         engine=previous_analysis["engine"],
                         sheet_name=previous_analysis["sheet_name"],
+                        na_values=na_values,
                     )
                 ]
             )
-            analysis = {k: v for k, v in previous_analysis.items() if k in ["engine", "sheet_name"]}
-        analysis.update(
-            {k: v for k, v in previous_analysis.items() if k in ["header_row_idx", "header"]}
-        )
+            analysis = {
+                k: v
+                for k, v in previous_analysis.items()
+                if k in ["header_row_idx", "header", "engine", "sheet_name"]
+            }
     except Exception as e:
         if verbose:
             logging.warning(f"> Could not load the file with previous analysis values: {e}")
@@ -95,54 +142,81 @@ def validate(
     analysis["total_lines"] = 0
     checked_values: dict[str, int] = {col_name: 0 for col_name in previous_analysis["columns"]}
     valid_values: dict[str, int] = {col_name: 0 for col_name in previous_analysis["columns"]}
-    for idx, chunk in enumerate(chunks):
-        if verbose:
-            logging.info(f"- Testing chunk number {idx}")
-        if idx == 0:
+    try:
+        for idx, chunk in enumerate(chunks):
             if verbose:
-                logging.info("Checking if all columns match")
-            if len(chunk.columns) != len(previous_analysis["header"]) or any(
-                list(chunk.columns)[k] != previous_analysis["header"][k]
-                for k in range(len(previous_analysis["header"]))
-            ):
+                logging.info(f"- Testing chunk number {idx}")
+            if idx == 0 and previous_analysis.get("engine") != "parquet":
+                # we have already checked this upstream for parquet files
                 if verbose:
-                    logging.warning("> Columns in the file do not match those of the analysis")
-                return False, None, None
-        analysis["total_lines"] += len(chunk)
-        row_hashes_count = row_hashes_count.add(
-            pd.util.hash_pandas_object(chunk, index=False).value_counts(),
-            fill_value=0,
-        )
-        for col_name, detected in previous_analysis["columns"].items():
-            if verbose:
-                logging.info(f"- Testing {col_name} for {detected['format']}")
-            if detected["format"] == "string":
-                # no test for columns that have not been recognized as a specific format
-                continue
-            to_check = chunk[col_name].dropna() if skipna else chunk[col_name]
-            if to_check.empty:
-                continue
-            value_counts = to_check.value_counts()
-            unique_results = value_counts.index.to_series().apply(formats[detected["format"]].func)
-            chunk_valid_values = (unique_results * value_counts.values).sum()
-            if formats[detected["format"]].proportion == 1 and chunk_valid_values < len(to_check):
-                # we can early stop in this case, not all values are valid while we want 100%
-                if verbose:
-                    logging.warning(
-                        f"> Test failed for column {col_name} with format {detected['format']}"
-                    )
-                return False, None, None
-            checked_values[col_name] += len(to_check)
-            valid_values[col_name] += chunk_valid_values
-            col_values[col_name] = (
-                col_values[col_name]
-                .add(
-                    chunk[col_name].value_counts(dropna=False),
-                    fill_value=0,
+                    logging.info("Checking if all columns match")
+                if len(chunk.columns) != len(previous_analysis["header"]) or any(
+                    list(chunk.columns)[k] != previous_analysis["header"][k]
+                    for k in range(len(previous_analysis["header"]))
+                ):
+                    if verbose:
+                        logging.warning("> Columns in the file do not match those of the analysis")
+                    return False, None, None
+            analysis["total_lines"] += len(chunk)
+            str_chunk = (
+                chunk.map(
+                    # not simply using astype(str) because lists are numpy arrays, cast as str they lose their commas
+                    lambda x: str(x.tolist()) if isinstance(x, np.ndarray) else str(x)
                 )
-                .rename_axis(col_name)
-            )  # rename_axis because *sometimes* pandas doesn't pass on the column's name ¯\_(ツ)_/¯
-        del chunk
+                if previous_analysis.get("engine") == "parquet"
+                else chunk
+            )
+            row_hashes_count = row_hashes_count.add(
+                pd.util.hash_pandas_object(str_chunk, index=False).value_counts(),
+                fill_value=0,
+            )
+            for col_name, detected in previous_analysis["columns"].items():
+                if verbose:
+                    logging.info(f"  - Testing {col_name} for {detected['format']}")
+                if detected["format"] == "string":
+                    # no test for columns that have not been recognized as a specific format
+                    continue
+                to_check = chunk[col_name].dropna() if skipna else chunk[col_name]
+                if to_check.empty:
+                    continue
+                value_counts = to_check.value_counts()
+                if (
+                    # skipping test for parquet columns that have a pure type as format
+                    # but we still need col_values so can't just continue
+                    previous_analysis.get("engine") == "parquet"
+                    and known_columns[col_name] in formats
+                ):
+                    chunk_valid_values = len(to_check)
+                else:
+                    unique_results = value_counts.index.to_series().apply(
+                        formats[detected["format"]].func
+                    )
+                    chunk_valid_values = (unique_results * value_counts.values).sum()
+                if formats[detected["format"]].proportion == 1 and chunk_valid_values < len(
+                    to_check
+                ):
+                    # we can early stop in this case, not all values are valid while we want 100%
+                    if verbose:
+                        logging.warning(
+                            f"> Test failed for column {col_name} with format {detected['format']}"
+                        )
+                    return False, None, None
+                checked_values[col_name] += len(to_check)
+                valid_values[col_name] += chunk_valid_values
+                col_values[col_name] = (
+                    col_values[col_name]
+                    .add(
+                        str_chunk[col_name].value_counts(dropna=False),
+                        fill_value=0,
+                    )
+                    .rename_axis(col_name)
+                )  # rename_axis because *sometimes* pandas doesn't pass on the column's name ¯\_(ツ)_/¯
+            del chunk
+            del str_chunk
+    except Exception as e:
+        if verbose:
+            logging.warning(f"> Could not load the file with previous analysis values: {e}")
+        return False, None, None
     # finally we loop through the formats that accept less than 100% valid values to check the proportion
     for col_name, detected in previous_analysis["columns"].items():
         if detected["format"] == "string":
@@ -167,6 +241,16 @@ def validate(
         if len(values) <= MAX_NUMBER_CATEGORICAL_VALUES
         or (len(values) / sum(values)) <= RATIO_CATEGORIAL_VALUES
     ]
+    analysis["unique_values"] = {}
+    for col in col_values.keys():
+        if previous_analysis["columns"][col]["format"] == "json" and all(
+            value.startswith("[") for value in col_values[col].index
+        ):
+            unique = extract_unique_from_multicat(col_values[col].index.to_series())
+            if unique is not None:
+                analysis["unique_values"][col] = unique
+        elif len(col_values[col]) <= MAX_NUMBER_CATEGORICAL_VALUES:
+            analysis["unique_values"][col] = list(col_values[col].index.dropna())
     return (
         True,
         analysis
