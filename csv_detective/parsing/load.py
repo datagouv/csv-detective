@@ -1,6 +1,7 @@
 import codecs
 import logging
 from io import BytesIO, StringIO
+from typing import Any
 
 import pandas as pd
 import pyarrow.parquet as pq
@@ -51,7 +52,7 @@ def load_file(
         )
         if table.empty:
             raise ValueError("Table seems to be empty")
-        analysis = {
+        analysis: dict[str, Any] = {
             "engine": engine,
             "sheet_name": sheet_name,
         }
@@ -72,10 +73,10 @@ def load_file(
             binary_file = open(file_path, "rb")
         # handling compression
         if engine in COMPRESSION_ENGINES:
-            binary_file: BytesIO = unzip(binary_file=binary_file, engine=engine)
+            binary_file = unzip(binary_file=binary_file, engine=engine)
         # detecting encoding if not specified
         if encoding is None:
-            encoding: str = detect_encoding(binary_file, verbose=verbose)
+            encoding = detect_encoding(binary_file, verbose=verbose)
             binary_file.seek(0)
         # decoding and reading file
         if is_url(file_path) or engine in COMPRESSION_ENGINES:
@@ -117,10 +118,12 @@ def load_file(
             analysis["compression"] = engine
     if any(not isinstance(col, str) or col.startswith("Unnamed:") for col in table.columns):
         raise ValueError("Could not accurately detect the file's columns")
-    analysis |= {
-        "header_row_idx": header_row_idx,
-        "header": list(table.columns),
-    }
+    analysis.update(
+        {
+            "header_row_idx": header_row_idx,
+            "header": list(table.columns),
+        }
+    )
     if total_lines is not None:
         analysis["total_lines"] = total_lines
     if nb_duplicates is not None:

@@ -62,7 +62,7 @@ def get_description(format: str) -> str:
     return format_to_desc.get(format, "")
 
 
-def get_pattern(format: str) -> str:
+def get_pattern(format: str) -> dict:
     """Returns the pattern for a particular format"""
     format_to_pattern = {
         "siren": r"^\d{9}$",
@@ -119,7 +119,7 @@ def get_validata_type(format: str) -> str:
     return metier_to_validata_type.get(format, "string")
 
 
-def get_example(format: str) -> str:
+def get_example(format: str) -> str | int | float:
     """Returns the example for a given format"""
     format_to_example = {
         "bool": "true",

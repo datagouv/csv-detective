@@ -83,7 +83,7 @@ def extract_unique_from_multicat(values: pd.Series) -> list | None:
     # we can safely cast as json here
     loaded = values.apply(lambda v: json.loads(v) if isinstance(v, str) else pd.NA)
     try:
-        unique = loaded.explode().dropna().unique()
+        unique = pd.Series(loaded).explode().dropna().unique()
         return unique.tolist() if len(unique) <= MAX_NUMBER_CATEGORICAL_VALUES else None
     except Exception:
         return None

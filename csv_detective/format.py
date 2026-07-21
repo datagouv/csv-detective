@@ -78,25 +78,23 @@ class FormatsManager:
         self.formats = {
             label: Format(
                 name=label,
-                func=(module := getattr(formats, label))._is,
+                description=getattr(module := getattr(formats, label), "description", ""),
+                func=module._is,
                 _test_values=module._test_values,
-                **{
-                    attr: val
-                    for attr in ["labels", "description", "tags", "mandatory_label", "python_type"]
-                    if (val := getattr(module, attr, None))
-                }
-                | {
-                    "proportion": (
-                        custom_proportions
-                        if isinstance(custom_proportions, (float, int))
-                        else (
-                            # default to the internal value if not custom
-                            custom_proportions.get(label, getattr(module, "proportion", 1))
-                        )
-                        if isinstance(custom_proportions, dict)
-                        else getattr(module, "proportion", 1)
+                labels=getattr(module, "labels", {}),
+                tags=getattr(module, "tags", []),
+                mandatory_label=bool(getattr(module, "mandatory_label", False)),
+                python_type=getattr(module, "python_type", "string"),
+                proportion=(
+                    custom_proportions
+                    if isinstance(custom_proportions, (float, int))
+                    else (
+                        # default to the internal value if not custom
+                        custom_proportions.get(label, getattr(module, "proportion", 1))
                     )
-                },
+                    if isinstance(custom_proportions, dict)
+                    else getattr(module, "proportion", 1)
+                ),
             )
             for label in format_labels
         }

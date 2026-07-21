@@ -35,17 +35,22 @@ def create_profile(
     while _count_col in columns:
         _count_col = "_" + _count_col
     profile = defaultdict(dict)
+    # Parquet profiling always provides pre-aggregated `_col_values`
+    df = table if isinstance(table, pd.DataFrame) else None
+    if _col_values is None and df is None:
+        raise TypeError("Profiling without `_col_values` requires a DataFrame")
     for c in columns:
         # for numerical formats we want min, max, mean, std
         if columns[c]["python_type"] in ["float", "int"]:
             # if we have read the file in chunks we already have what we need
             if _col_values is None:
+                assert df is not None
                 # we locally cast the column to perform the operations,
                 # using the same method as in cast_df
                 cast_col = (
-                    table[c].astype(pd.Int64Dtype())
+                    df[c].astype(pd.Int64Dtype())
                     if columns[c]["python_type"] == "int"
-                    else table[c].apply(lambda x: float_casting(x) if isinstance(x, str) else pd.NA)
+                    else df[c].apply(lambda x: float_casting(x) if isinstance(x, str) else pd.NA)
                 )
                 stats = {
                     "min": cast_col.min(),
@@ -77,15 +82,24 @@ def create_profile(
             profile[c].update(**stats)
             del cast_col
         # for all formats we want most frequent values, nb unique values and nb missing values
-        tops_bruts = (
-            (
-                table[c].value_counts()
-                if _col_values is None
-                else (s := _col_values[c]).loc[s.index.notna()].sort_values(ascending=False)
+        if _col_values is None:
+            assert df is not None
+            tops_source = df[c].value_counts()
+            nb_distinct = (
+                df[c].nunique()
+                if columns[c]["python_type"] != "json" or not cast_json
+                # a column containing cast json is not serializable
+                else df[c].astype(str).nunique()
             )
-            .reset_index(name=_count_col)
-            .iloc[:10]
-            .to_dict(orient="records")
+            nb_missing_values = len(df[c].loc[df[c].isna()])
+        else:
+            tops_source = (
+                (s := _col_values[c]).loc[s.index.notna()].sort_values(ascending=False)
+            )
+            nb_distinct = len(_col_values[c])
+            nb_missing_values = _col_values[c].loc[_col_values[c].index.isna()].sum()
+        tops_bruts = (
+            tops_source.reset_index(name=_count_col).iloc[:10].to_dict(orient="records")
         )
         profile[c].update(
             tops=[
@@ -95,21 +109,8 @@ def create_profile(
                 }
                 for tb in tops_bruts
             ],
-            nb_distinct=(
-                (
-                    table[c].nunique()
-                    if columns[c]["python_type"] != "json" or not cast_json
-                    # a column containing cast json is not serializable
-                    else table[c].astype(str).nunique()
-                )
-                if _col_values is None
-                else len(_col_values[c])
-            ),
-            nb_missing_values=(
-                len(table[c].loc[table[c].isna()])
-                if _col_values is None
-                else _col_values[c].loc[_col_values[c].index.isna()].sum()
-            ),
+            nb_distinct=nb_distinct,
+            nb_missing_values=nb_missing_values,
         )
     if verbose:
         display_logs_depending_process_time(

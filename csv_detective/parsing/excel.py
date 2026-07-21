@@ -1,5 +1,6 @@
 from io import BytesIO
 from time import time
+from typing import Literal, cast
 
 import openpyxl
 import pandas as pd
@@ -13,6 +14,7 @@ from csv_detective.utils import (
     is_url,
 )
 
+ExcelEngine = Literal["xlrd", "openpyxl", "odf", "pyxlsb", "calamine"]
 NEW_EXCEL_EXT = [".xlsx", ".xlsm", ".xltx", ".xltm"]
 OLD_EXCEL_EXT = [".xls"]
 OPEN_OFFICE_EXT = [".odf", ".ods", ".odt"]
@@ -76,7 +78,7 @@ def parse_excel(
                     else:
                         wb = xlrd.open_workbook(file_path)
                     sizes = {s.name: s.nrows * s.ncols for s in wb.sheets()}
-                sheet_name = max(sizes, key=sizes.get)
+                sheet_name = max(sizes, key=lambda k: sizes[k])
             except xlrd.biffh.XLRDError:
                 # sometimes a xls file is recognized as ods
                 if verbose:
@@ -105,7 +107,7 @@ def parse_excel(
                 na_values=na_values,
             )
             sizes = {sheet_name: table.size for sheet_name, table in tables.items()}
-            sheet_name = max(sizes, key=sizes.get)
+            sheet_name = max(sizes, key=lambda k: sizes[k])
             if verbose:
                 display_logs_depending_process_time(
                     f'Going forwards with sheet "{sheet_name}"',
@@ -136,9 +138,11 @@ def parse_excel(
                 f"Table parsed successfully in {round(time() - start, 3)}s",
                 time() - start,
             )
-        return table, total_lines, nb_duplicates, sheet_name, engine, header_row_idx
+        return table, total_lines, int(nb_duplicates), str(sheet_name), engine, header_row_idx
 
     # so here we end up with (old and new) excel files only
+    assert engine is not None
+    assert sheet_name is not None
     if verbose:
         if no_sheet_specified:
             display_logs_depending_process_time(
@@ -152,7 +156,7 @@ def parse_excel(
             )
     table = pd.read_excel(
         file_path,
-        engine=engine,
+        engine=cast(ExcelEngine, engine),
         sheet_name=sheet_name,
         dtype=str,
         na_values=na_values,
@@ -168,4 +172,4 @@ def parse_excel(
             f"Table parsed successfully in {round(time() - start, 3)}s",
             time() - start,
         )
-    return table, total_lines, nb_duplicates, sheet_name, engine, header_row_idx
+    return table, total_lines, int(nb_duplicates), str(sheet_name), engine, header_row_idx
