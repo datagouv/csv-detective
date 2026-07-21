@@ -1,6 +1,6 @@
 import gzip
-from typing import BinaryIO
 from io import BytesIO
+from typing import BinaryIO
 
 
 def unzip(binary_file: BinaryIO, engine: str) -> BytesIO:

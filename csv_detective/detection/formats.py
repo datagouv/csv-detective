@@ -49,7 +49,6 @@ def detect_formats(
     # Perform testing on fields
     if analysis.get("engine") == "parquet":
         # parquet has its own process as typed columns allow shortcuts
-        assert isinstance(table, pq.ParquetFile)
         scores_table_fields, analysis, col_values = test_parquet_cols(
             table=table,
             formats=formats,
@@ -60,7 +59,6 @@ def detect_formats(
         )
     elif not in_chunks:
         # table is small enough to be tested in one go
-        assert isinstance(table, pd.DataFrame)
         scores_table_fields = test_col(
             table=table,
             formats=formats,
@@ -77,7 +75,6 @@ def detect_formats(
         analysis["categorical"] = res_categorical
         col_values = None
     else:
-        assert isinstance(table, pd.DataFrame)
         scores_table_fields, analysis, col_values = test_col_chunks(
             table=table,
             file_path=file_path,
@@ -91,7 +88,6 @@ def detect_formats(
     analysis["columns_fields"] = prepare_output_dict(scores_table_fields, limited_output)
     analysis["unique_values"] = {}
     if col_values is None:
-        assert isinstance(table, pd.DataFrame)
         for col in table.columns:
             if analysis["columns_fields"][col]["format"] == "json" and all(
                 value.startswith("[") for value in table[col]

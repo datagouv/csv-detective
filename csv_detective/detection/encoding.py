@@ -1,6 +1,6 @@
 import logging
 from time import time
-from typing import Any, BinaryIO
+from typing import BinaryIO
 
 from charset_normalizer import detect
 
@@ -18,21 +18,18 @@ def detect_encoding(binary_file: BinaryIO, verbose: bool = False) -> str:
     try:
         # utf-8 is the most common encoding, we should start there
         read.decode("utf-8")
-        encoding: Any = "utf-8"
-        confidence: Any = 1
+        encoding_dict = {"encoding": "utf-8", "confidence": 1}
     except Exception:
-        encoding_dict = detect(read) or {}
-        encoding = encoding_dict.get("encoding")
-        confidence = encoding_dict.get("confidence") or 0
-    if not encoding:
+        encoding_dict = detect(read)
+    if not encoding_dict["encoding"]:
         raise ValueError(
             "Could not detect the file's encoding. Consider specifying it in the routine call."
         )
     if verbose:
-        message = f'Detected encoding: "{encoding}"'
-        message += f" in {round(time() - start, 3)}s (confidence: {round(float(confidence) * 100)}%)"
+        message = f'Detected encoding: "{encoding_dict["encoding"]}"'
+        message += f" in {round(time() - start, 3)}s (confidence: {round(encoding_dict['confidence'] * 100)}%)"
         display_logs_depending_process_time(
             message,
             time() - start,
         )
-    return str(encoding)
+    return encoding_dict["encoding"]

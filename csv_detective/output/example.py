@@ -3,7 +3,7 @@ import random
 import string
 import uuid
 from datetime import datetime
-from typing import Any, Type
+from typing import Any, Type, cast
 
 import pandas as pd
 import requests
@@ -41,13 +41,12 @@ def create_example_csv_file(
     if not (fields or schema_path):
         raise ValueError("At least fields or schema_path must be specified.")
 
-    def potential_skip(required: bool) -> bool:
+    def potential_skip(required: bool) -> bool | None:
         if ignore_required:
             return False
         if not required:
             # for now 30% chance to have an optional value, this could go as an argument
             return random.randint(1, 100) <= 30
-        return False
 
     def _string(
         length: int = 10,
@@ -139,7 +138,7 @@ def create_example_csv_file(
         if num_range is None:
             num_range = [0, 1000]
         if num_type is int:
-            return random.randint(int(num_range[0]), int(num_range[1]))
+            return random.randint(cast(int, num_range[0]), cast(int, num_range[1]))
         else:
             return round(random.uniform(num_range[0], num_range[1]), 1)
 
@@ -211,7 +210,7 @@ def create_example_csv_file(
                 for f in schema["fields"]
             ]
 
-    assert fields is not None
+    fields = cast(list[dict], fields)
     for k in range(len(fields)):
         if "args" not in fields[k]:
             fields[k]["args"] = {}
@@ -240,7 +239,7 @@ def create_example_csv_file(
     # would it be better to create by column or by row (as for now)?
     output = pd.DataFrame(
         [
-            [types_to_func.get(f["type"], _string)(**f["args"]) for f in fields]
+            [cast(Any, types_to_func.get(f["type"], "str"))(**f["args"]) for f in fields]
             for _ in range(file_length)
         ],
         columns=[f["name"] for f in fields],

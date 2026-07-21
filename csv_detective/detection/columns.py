@@ -40,7 +40,7 @@ def detect_heading_columns(file: TextIO, sep: str, verbose: bool = False) -> int
         start = time()
         logging.info("Detecting heading columns")
     file.seek(0)
-    return_int = float("inf")
+    return_int = float("Inf")
     for i in range(10):
         line = file.readline()
         return_int = min(return_int, len(line) - len(line.strip(sep)))
@@ -56,7 +56,7 @@ def detect_heading_columns(file: TextIO, sep: str, verbose: bool = False) -> int
             f"{return_int} heading columns detected in {round(time() - start, 3)}s",
             time() - start,
         )
-    return int(return_int)
+    return return_int
 
 
 def detect_trailing_columns(
@@ -67,7 +67,7 @@ def detect_trailing_columns(
         start = time()
         logging.info("Detecting trailing columns")
     file.seek(0)
-    return_int = float("inf")
+    return_int = float("Inf")
     for i in range(10):
         line = file.readline()
         return_int = min(
@@ -86,4 +86,4 @@ def detect_trailing_columns(
             f"{return_int} trailing columns detected in {round(time() - start, 3)}s",
             time() - start,
         )
-    return int(return_int)
+    return return_int

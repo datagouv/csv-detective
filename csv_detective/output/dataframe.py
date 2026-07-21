@@ -80,7 +80,6 @@ def cast_df_chunks(
         if analysis.get("engine") == "parquet":
             yield pd.read_parquet(file_path)
         else:
-            assert isinstance(df, pd.DataFrame)
             yield cast_df(
                 df=df,
                 columns=analysis["columns"],

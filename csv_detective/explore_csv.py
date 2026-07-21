@@ -1,6 +1,6 @@
 import logging
 from time import time
-from typing import Iterator, Literal, overload
+from typing import Iterator
 
 import pandas as pd
 
@@ -11,72 +11,6 @@ from csv_detective.utils import display_logs_depending_process_time, is_url
 from csv_detective.validate import validate
 
 logging.basicConfig(level=logging.INFO)
-
-
-@overload
-def routine(
-    file_path: str,
-    *,
-    num_rows: int = 500,
-    tags: list[str] | None = None,
-    limited_output: bool = True,
-    save_results: bool | str = True,
-    encoding: str | None = None,
-    sep: str | None = None,
-    skipna: bool = True,
-    output_profile: bool = False,
-    output_schema: bool = False,
-    output_df: Literal[False] = False,
-    cast_json: bool = True,
-    verbose: bool = False,
-    sheet_name: str | int | None = None,
-    custom_proportions: float | int | dict[str, float | int] | None = None,
-    na_values: list[str] | None = None,
-) -> dict: ...
-
-
-@overload
-def routine(
-    file_path: str,
-    *,
-    num_rows: int = 500,
-    tags: list[str] | None = None,
-    limited_output: bool = True,
-    save_results: bool | str = True,
-    encoding: str | None = None,
-    sep: str | None = None,
-    skipna: bool = True,
-    output_profile: bool = False,
-    output_schema: bool = False,
-    output_df: Literal[True],
-    cast_json: bool = True,
-    verbose: bool = False,
-    sheet_name: str | int | None = None,
-    custom_proportions: float | int | dict[str, float | int] | None = None,
-    na_values: list[str] | None = None,
-) -> tuple[dict, Iterator[pd.DataFrame]]: ...
-
-
-@overload
-def routine(
-    file_path: str,
-    *,
-    num_rows: int = 500,
-    tags: list[str] | None = None,
-    limited_output: bool = True,
-    save_results: bool | str = True,
-    encoding: str | None = None,
-    sep: str | None = None,
-    skipna: bool = True,
-    output_profile: bool = False,
-    output_schema: bool = False,
-    output_df: bool = False,
-    cast_json: bool = True,
-    verbose: bool = False,
-    sheet_name: str | int | None = None,
-    custom_proportions: float | int | dict[str, float | int] | None = None,
-    na_values: list[str] | None = None,
-) -> dict | tuple[dict, Iterator[pd.DataFrame]]: ...
 
 
 def routine(
@@ -177,66 +111,6 @@ def routine(
             )
 
 
-@overload
-def validate_then_detect(
-    file_path: str,
-    previous_analysis: dict,
-    *,
-    num_rows: int = 500,
-    tags: list[str] | None = None,
-    limited_output: bool = True,
-    save_results: bool | str = True,
-    skipna: bool = True,
-    output_profile: bool = False,
-    output_schema: bool = False,
-    output_df: Literal[False] = False,
-    cast_json: bool = True,
-    custom_proportions: float | int | dict[str, float | int] | None = None,
-    na_values: list[str] | None = None,
-    verbose: bool = False,
-) -> dict: ...
-
-
-@overload
-def validate_then_detect(
-    file_path: str,
-    previous_analysis: dict,
-    *,
-    num_rows: int = 500,
-    tags: list[str] | None = None,
-    limited_output: bool = True,
-    save_results: bool | str = True,
-    skipna: bool = True,
-    output_profile: bool = False,
-    output_schema: bool = False,
-    output_df: Literal[True],
-    cast_json: bool = True,
-    custom_proportions: float | int | dict[str, float | int] | None = None,
-    na_values: list[str] | None = None,
-    verbose: bool = False,
-) -> tuple[dict, Iterator[pd.DataFrame]]: ...
-
-
-@overload
-def validate_then_detect(
-    file_path: str,
-    previous_analysis: dict,
-    *,
-    num_rows: int = 500,
-    tags: list[str] | None = None,
-    limited_output: bool = True,
-    save_results: bool | str = True,
-    skipna: bool = True,
-    output_profile: bool = False,
-    output_schema: bool = False,
-    output_df: bool = False,
-    cast_json: bool = True,
-    custom_proportions: float | int | dict[str, float | int] | None = None,
-    na_values: list[str] | None = None,
-    verbose: bool = False,
-) -> dict | tuple[dict, Iterator[pd.DataFrame]]: ...
-
-
 def validate_then_detect(
     file_path: str,
     previous_analysis: dict,
@@ -310,7 +184,6 @@ def validate_then_detect(
         )
     else:
         # successful validation means we have a correct analysis and col_values
-        assert analysis is not None
         # only need to reload the table, and we already know how
         table, _ = load_file(
             file_path=file_path,

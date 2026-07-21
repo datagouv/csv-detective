@@ -9,8 +9,8 @@ labels = {"part": 1, "ratio": 1, "taux": 1}
 scientific_notation_pattern = r"^-?\d+\.\d+[eE][+-]?\d+$"
 
 
-def float_casting(val: str | int | float) -> float:
-    return float(str(val).replace(",", "."))
+def float_casting(val: str) -> float:
+    return float(val.replace(",", "."))
 
 
 def _is(val) -> bool:
