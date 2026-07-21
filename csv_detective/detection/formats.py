@@ -69,7 +69,6 @@ def detect_formats(
         handle_empty_columns(scores_table_fields)
         res_categorical, _ = detect_categorical_variable(
             table,
-            max_number_categorical_values=MAX_NUMBER_CATEGORICAL_VALUES,
             verbose=verbose,
         )
         analysis["categorical"] = res_categorical

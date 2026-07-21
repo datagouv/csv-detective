@@ -6,7 +6,11 @@ import pandas as pd
 
 from csv_detective.format import FormatsManager
 from csv_detective.output.utils import extract_unique_from_multicat
-from csv_detective.parsing.columns import MAX_NUMBER_CATEGORICAL_VALUES, build_known_columns
+from csv_detective.parsing.columns import (
+    MAX_NUMBER_CATEGORICAL_VALUES,
+    RATIO_CATEGORICAL_VALUES,
+    build_known_columns,
+)
 from csv_detective.parsing.parquet import load_as_parquetfile
 
 # VALIDATION_CHUNK_SIZE is bigger than (analysis) CHUNK_SIZE because
@@ -232,7 +236,10 @@ def validate(
     analysis["nb_duplicates"] = sum(row_hashes_count > 1)
     del row_hashes_count
     analysis["categorical"] = [
-        col for col, values in col_values.items() if len(values) <= MAX_NUMBER_CATEGORICAL_VALUES
+        col
+        for col, values in col_values.items()
+        if len(values) <= MAX_NUMBER_CATEGORICAL_VALUES
+        or (len(values) / sum(values)) <= RATIO_CATEGORICAL_VALUES
     ]
     analysis["unique_values"] = {}
     for col in col_values.keys():
