@@ -10,6 +10,7 @@ from more_itertools import peekable
 
 from csv_detective.format import Format
 from csv_detective.parsing.csv import CHUNK_SIZE
+from csv_detective.parsing.csv_reader import read_csv
 from csv_detective.utils import display_logs_depending_process_time
 
 # above this threshold, a column is not considered categorical
@@ -215,7 +216,7 @@ def test_col_chunks(
     col_values = {col: table[col].value_counts(dropna=False) for col in table.columns}
 
     # only csv files can end up here, can't chunk excel
-    chunks = pd.read_csv(
+    chunks = read_csv(
         file_path,
         dtype=str,
         encoding=analysis["encoding"],

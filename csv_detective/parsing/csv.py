@@ -4,6 +4,7 @@ from typing import TextIO
 
 import pandas as pd
 
+from csv_detective.parsing.csv_reader import read_csv
 from csv_detective.utils import display_logs_depending_process_time
 
 # the number of rows for the first analysis, and the number of rows per chunk of the df iterator
@@ -28,7 +29,7 @@ def parse_csv(
         the_file.seek(0)
 
     try:
-        table = pd.read_csv(
+        table = read_csv(
             the_file,
             sep=sep,
             dtype=str,

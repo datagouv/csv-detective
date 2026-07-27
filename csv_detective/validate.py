@@ -11,6 +11,7 @@ from csv_detective.parsing.columns import (
     RATIO_CATEGORICAL_VALUES,
     build_known_columns,
 )
+from csv_detective.parsing.csv_reader import read_csv
 from csv_detective.parsing.parquet import load_as_parquetfile
 
 # VALIDATION_CHUNK_SIZE is bigger than (analysis) CHUNK_SIZE because
@@ -52,7 +53,7 @@ def validate(
     try:
         if previous_analysis.get("separator"):
             # loading the table in chunks
-            chunks = pd.read_csv(
+            chunks = read_csv(
                 file_path,
                 dtype=str,
                 sep=previous_analysis["separator"],
