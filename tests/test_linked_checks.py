@@ -58,7 +58,9 @@ def test_parent_score_propagated_when_child_matches():
 
     with patch(
         "csv_detective.parsing.columns.test_col_val",
-        side_effect=lambda serie, fmt, **kwargs: 1.0 if fmt.name == "latitude_wgs_fr_metropole" else 0.0,
+        side_effect=lambda serie, fmt, **kwargs: 1.0
+        if fmt.name == "latitude_wgs_fr_metropole"
+        else 0.0,
     ) as mock_test_col_val:
         result = col_test(table, formats, limited_output=True)
 
@@ -107,7 +109,7 @@ def test_output_dataframe_includes_all_formats():
 
     assert set(result.index) == set(fmtm.formats)
     assert list(result.columns) == ["a", "b"]
-    assert (result.dtypes == float).all()
+    assert all(pd.api.types.is_float_dtype(dtype) for dtype in result.dtypes)
 
 
 def test_formats_manager_loads_parent_from_module():
