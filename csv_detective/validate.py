@@ -5,13 +5,14 @@ import numpy as np
 import pandas as pd
 
 from csv_detective.format import FormatsManager
+from csv_detective.io.csv import read_csv
+from csv_detective.io.parquet import load_parquet
 from csv_detective.output.utils import extract_unique_from_multicat
 from csv_detective.parsing.columns import (
     MAX_NUMBER_CATEGORICAL_VALUES,
     RATIO_CATEGORICAL_VALUES,
     build_known_columns,
 )
-from csv_detective.parsing.parquet import load_as_parquetfile
 
 # VALIDATION_CHUNK_SIZE is bigger than (analysis) CHUNK_SIZE because
 # it's faster to validate so we can afford to load more rows
@@ -52,7 +53,7 @@ def validate(
     try:
         if previous_analysis.get("separator"):
             # loading the table in chunks
-            chunks = pd.read_csv(
+            chunks = read_csv(
                 file_path,
                 dtype=str,
                 sep=previous_analysis["separator"],
@@ -78,10 +79,8 @@ def validate(
                 and v is not None
             }
         elif previous_analysis.get("engine") == "parquet":
-            pf = load_as_parquetfile(file_path)
-            chunks = iter(
-                batch.to_pandas() for batch in pf.iter_batches(batch_size=VALIDATION_CHUNK_SIZE)
-            )
+            pf = load_parquet(file_path)
+            chunks = iter(pf.iter_batches(VALIDATION_CHUNK_SIZE))
             known_columns = build_known_columns(pf)
             for col_name in known_columns:
                 # checking columns and types from metadata for potential early stop

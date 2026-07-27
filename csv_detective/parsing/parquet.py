@@ -1,31 +1,17 @@
-from io import BytesIO
 from time import time
 
-import pyarrow.parquet as pq
-import requests
-
-from csv_detective.utils import (
-    display_logs_depending_process_time,
-    is_url,
-)
+from csv_detective.io.parquet import ParquetTable, load_parquet
+from csv_detective.utils import display_logs_depending_process_time
 
 
-def load_as_parquetfile(file_path: str) -> pq.ParquetFile:
-    if is_url(file_path):
-        r = requests.get(file_path)
-        r.raise_for_status()
-        return pq.ParquetFile(BytesIO(r.content))
-    return pq.ParquetFile(file_path)
-
-
-def parse_parquet(file_path: str, verbose: bool = False) -> tuple[pq.ParquetFile, dict]:
+def parse_parquet(file_path: str, verbose: bool = False) -> tuple[ParquetTable, dict]:
     if verbose:
         start = time()
-    table = load_as_parquetfile(file_path)
+    table = load_parquet(file_path)
     analysis = {
         "engine": "parquet",
-        "header": [col.name for col in table.schema_arrow],
-        "total_lines": table.metadata.num_rows,
+        "header": table.column_names,
+        "total_lines": table.num_rows,
     }
     if verbose:
         display_logs_depending_process_time(

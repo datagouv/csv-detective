@@ -4,7 +4,6 @@ from io import BytesIO, StringIO
 from typing import Any
 
 import pandas as pd
-import pyarrow.parquet as pq
 import requests
 
 from csv_detective.detection.columns import detect_heading_columns, detect_trailing_columns
@@ -16,6 +15,7 @@ from csv_detective.detection.engine import (
 )
 from csv_detective.detection.headers import detect_header_position
 from csv_detective.detection.separator import detect_separator
+from csv_detective.io.parquet import ParquetTable
 from csv_detective.parsing.compression import unzip
 from csv_detective.parsing.csv import parse_csv
 from csv_detective.parsing.excel import (
@@ -35,7 +35,7 @@ def load_file(
     engine: str | None = None,
     sheet_name: str | int | None = None,
     na_values: list[str] | None = None,
-) -> tuple[pd.DataFrame | pq.ParquetFile, dict]:
+) -> tuple[pd.DataFrame | ParquetTable, dict]:
     file_name = file_path.split("/")[-1]
     if ("." not in file_name or not file_name.endswith("csv")) and engine is None and sep is None:
         # file has no extension and we don't have insights from arguments, we'll investigate how to read it

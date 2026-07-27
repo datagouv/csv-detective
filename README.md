@@ -4,6 +4,8 @@ This is a package to **automatically detect column content in tabular files**. T
 
 Currently supported file types: csv(.gz), xls, xlsx, ods, parquet.
 
+Tabular I/O uses [Rugo](https://rugo.dev/) for Parquet files and a stdlib CSV reader for CSV (preserving raw string values). Excel files are still read via pandas. Format detection runs on pandas DataFrames.
+
 You can also directly feed the URL of a remote file (from data.gouv.fr for instance).
 
 ## How To?
@@ -192,7 +194,6 @@ Only the format with highest score is present in the output.
 
 - Smarter refactors
 - Performances improvements
-- Test other ways to load and process data (`pandas` alternatives)
 - Add more and more detection modules...
 
 Related ideas:

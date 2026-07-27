@@ -1,14 +1,14 @@
 import logging
-import re
 from time import time
 from typing import Callable
 
 import numpy as np
 import pandas as pd
-import pyarrow.parquet as pq
 from more_itertools import peekable
 
 from csv_detective.format import Format
+from csv_detective.io.parquet import ParquetTable, rugo_logical_type_to_python
+from csv_detective.io.csv import read_csv
 from csv_detective.parsing.csv import CHUNK_SIZE
 from csv_detective.utils import display_logs_depending_process_time
 
@@ -215,7 +215,7 @@ def test_col_chunks(
     col_values = {col: table[col].value_counts(dropna=False) for col in table.columns}
 
     # only csv files can end up here, can't chunk excel
-    chunks = pd.read_csv(
+    chunks = read_csv(
         file_path,
         dtype=str,
         encoding=analysis["encoding"],
@@ -300,46 +300,18 @@ def test_col_chunks(
     return return_table, analysis, col_values
 
 
-PYARROW_TYPE_TO_PYTHON = {
-    # using regex because of bits-differing types (e.g. int32 and int64)
-    # the "^" makes sure we don't consider the types of elements within structured objects (lists, dicts)
-    "string$": "string",  # large_string also exists
-    "^double": "float",
-    "^float": "float",
-    "^decimal": "float",
-    "^int": "int",
-    "^uint": "int",
-    "^bool": "bool",
-    "^date": "date",
-    "^struct": "json",  # dictionary
-    "^list": "json",
-    "^binary": "binary",
-    r"^timestamp\[\ws\]": "datetime_naive",
-    r"^timestamp\[\ws,": "datetime_aware",  # the rest of the field depends on the timezone
-}
-
-
-def build_known_columns(table: pq.ParquetFile):
+def build_known_columns(table: ParquetTable):
     columns = {}
-    for col in table.schema_arrow:
-        col_type = str(col.type)
-        if col_type.startswith("dictionary"):
-            # dictionaries are for columns with repeated values
-            # we need to dig deeper to get the type
-            col_type = str(col.type.value_type)
+    for col in table.schema_columns:
         try:
-            columns[col.name] = next(
-                pytype
-                for pyartype, pytype in PYARROW_TYPE_TO_PYTHON.items()
-                if re.search(pyartype, col_type)
-            )
-        except StopIteration:
-            raise ValueError(f"Unknown pyarrow type: {col.type}")
+            columns[col.name] = rugo_logical_type_to_python(col.logical_type)
+        except ValueError as exc:
+            raise ValueError(f"Unknown Rugo type: {col.logical_type}") from exc
     return columns
 
 
 def test_parquet_cols(
-    table: pq.ParquetFile,
+    table: ParquetTable,
     formats: dict[str, Format],
     analysis: dict,
     limited_output: bool,
@@ -384,7 +356,6 @@ def test_parquet_cols(
     for idx, batch in enumerate(table.iter_batches(CHUNK_SIZE * 10)):
         if verbose:
             logging.info(f"> Testing batch number {idx + 1}")
-        batch = batch.to_pandas()
         str_batch = batch.map(
             # not simply using astype(str) because lists are numpy arrays, cast as str they lose their commas
             lambda x: str(x.tolist()) if isinstance(x, np.ndarray) else str(x)

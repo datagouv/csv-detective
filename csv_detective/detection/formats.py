@@ -2,7 +2,6 @@ from collections import defaultdict
 
 import numpy as np
 import pandas as pd
-import pyarrow.parquet as pq
 
 from csv_detective.detection.variables import (
     detect_categorical_variable,
@@ -13,6 +12,7 @@ from csv_detective.output.utils import (
     extract_unique_from_multicat,
     prepare_output_dict,
 )
+from csv_detective.io.parquet import ParquetTable
 from csv_detective.parsing.columns import (
     MAX_NUMBER_CATEGORICAL_VALUES,
     handle_empty_columns,
@@ -24,7 +24,7 @@ from csv_detective.parsing.columns import (
 
 
 def detect_formats(
-    table: pd.DataFrame | pq.ParquetFile,
+    table: pd.DataFrame | ParquetTable,
     analysis: dict,
     file_path: str,
     tags: list[str] | None = None,

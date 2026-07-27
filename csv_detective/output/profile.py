@@ -4,14 +4,14 @@ from time import time
 
 import numpy as np
 import pandas as pd
-import pyarrow.parquet as pq
 
 from csv_detective.formats.float import float_casting
+from csv_detective.io.parquet import ParquetTable
 from csv_detective.utils import display_logs_depending_process_time
 
 
 def create_profile(
-    table: pd.DataFrame | pq.ParquetFile,
+    table: pd.DataFrame | ParquetTable,
     columns: dict,
     num_rows: int,
     limited_output: bool = True,
