@@ -3,6 +3,7 @@ import re
 from csv_detective.parsing.text import _process_text
 
 proportion = 1
+parent = "date"
 description = "Full text date in French"
 tags = ["fr", "temp"]
 labels = {"date": 1}

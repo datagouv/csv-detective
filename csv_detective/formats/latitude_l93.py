@@ -5,6 +5,7 @@ from csv_detective.formats.float import float_casting
 from csv_detective.formats.latitude_wgs import SHARED_LATITUDE_LABELS
 
 proportion = 1
+parent = "float"
 description = "Latitude in the Lambert 93 format"
 tags = ["fr", "geo"]
 mandatory_label = True
