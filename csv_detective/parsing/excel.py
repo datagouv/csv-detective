@@ -76,7 +76,7 @@ def parse_excel(
                     else:
                         wb = xlrd.open_workbook(file_path)
                     sizes = {s.name: s.nrows * s.ncols for s in wb.sheets()}
-                sheet_name = max(sizes, key=sizes.get)
+                sheet_name = max(sizes, key=lambda k: sizes[k])
             except xlrd.biffh.XLRDError:
                 # sometimes a xls file is recognized as ods
                 if verbose:
@@ -105,7 +105,7 @@ def parse_excel(
                 na_values=na_values,
             )
             sizes = {sheet_name: table.size for sheet_name, table in tables.items()}
-            sheet_name = max(sizes, key=sizes.get)
+            sheet_name = max(sizes, key=lambda k: sizes[k])
             if verbose:
                 display_logs_depending_process_time(
                     f'Going forwards with sheet "{sheet_name}"',

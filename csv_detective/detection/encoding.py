@@ -1,13 +1,13 @@
 import logging
-from io import BytesIO
 from time import time
+from typing import BinaryIO
 
 from charset_normalizer import detect
 
 from csv_detective.utils import display_logs_depending_process_time
 
 
-def detect_encoding(binary_file: BytesIO, verbose: bool = False) -> str:
+def detect_encoding(binary_file: BinaryIO, verbose: bool = False) -> str:
     """
     Detects file encoding using charset_normalizer
     """

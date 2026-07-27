@@ -372,7 +372,7 @@ def test_parquet_cols(
         }
         for col, pytype in columns.items()
     }
-    return_table = pd.DataFrame(columns=columns.keys(), index=formats.keys())
+    return_table = pd.DataFrame(columns=list(columns.keys()), index=list(formats.keys()))
     for col, pytype in columns.items():
         if pytype != "string":
             # setting types that we know are 100% valid from metadata
