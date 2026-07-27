@@ -12,6 +12,10 @@ parameters:
   cache-prefix:
     type: string
     default: "py-cache"
+  run-benchmarks:
+    type: boolean
+    default: false
+    description: "Set to true via Trigger Pipeline to run the performance benchmark workflow"
 
 jobs:
   install:
@@ -62,7 +66,7 @@ jobs:
       - run:
           name: Run tests
           command: |
-            uv run pytest -s tests/ --junitxml=reports/python/tests.xml -p no:sugar --color=yes
+            uv run pytest -s tests/ -m "not slow" --junitxml=reports/python/tests.xml -p no:sugar --color=yes
       - store_test_results:
           path: reports/python
 
@@ -127,8 +131,38 @@ jobs:
           command: |
             uv publish dist/*  # use UV_PUBLISH_TOKEN
 
+  benchmark:
+    docker:
+      - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-bookworm
+    resource_class: large
+    environment:
+      BENCHMARK_CI: circleci
+      BENCHMARK_RUNNER_CLASS: large
+      BENCHMARK_PYTHON_VERSION: << pipeline.parameters.python-version >>
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Run performance benchmarks
+          no_output_timeout: 30m
+          command: |
+            mkdir -p .benchmarks
+            uv run pytest tests/test_benchmark.py -v -s -m slow
+      - run:
+          name: Display benchmark results
+          command: |
+            echo "=== Benchmark Results ==="
+            cat .benchmarks/benchmark.json
+            echo "========================="
+          when: always
+      - store_artifacts:
+          path: .benchmarks
+          when: always
+
 workflows:
   build-deploy-publish:
+    when:
+      not: << pipeline.parameters.run-benchmarks >>
     jobs:
       - install
       - lint:
@@ -152,3 +186,11 @@ workflows:
             branches:
               only: << pipeline.parameters.publish-branch >>
           context: org-global
+
+  benchmark-workflow:
+    when: << pipeline.parameters.run-benchmarks >>
+    jobs:
+      - install
+      - benchmark:
+          requires:
+            - install
