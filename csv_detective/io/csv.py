@@ -152,6 +152,7 @@ def _read_csv_stdlib(
             return _rows_to_dataframe(rows, column_names, null_values)
 
         if chunksize is not None:
+
             def _chunk_iterator() -> Iterator[pd.DataFrame]:
                 try:
                     while True:

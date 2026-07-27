@@ -7,8 +7,8 @@ import pandas as pd
 from more_itertools import peekable
 
 from csv_detective.format import Format
-from csv_detective.io.parquet import ParquetTable, rugo_logical_type_to_python
 from csv_detective.io.csv import read_csv
+from csv_detective.io.parquet import ParquetTable, rugo_logical_type_to_python
 from csv_detective.parsing.csv import CHUNK_SIZE
 from csv_detective.utils import display_logs_depending_process_time
 

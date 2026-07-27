@@ -8,11 +8,11 @@ from csv_detective.detection.variables import (
     # detect_continuous_variable,
 )
 from csv_detective.format import Format, FormatsManager
+from csv_detective.io.parquet import ParquetTable
 from csv_detective.output.utils import (
     extract_unique_from_multicat,
     prepare_output_dict,
 )
-from csv_detective.io.parquet import ParquetTable
 from csv_detective.parsing.columns import (
     MAX_NUMBER_CATEGORICAL_VALUES,
     handle_empty_columns,
