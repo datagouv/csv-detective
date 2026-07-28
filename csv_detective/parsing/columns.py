@@ -85,8 +85,29 @@ def _test_column_with_linked_checks(
     zero_if_too_low: bool,
     verbose: bool,
 ) -> dict[str, float]:
+    """Score every format for one column while avoiding redundant checks.
+
+    Some formats are more specific versions of others (e.g.
+    ``float`` → ``latitude_wgs`` → ``latitude_wgs_fr_metropole``), linked
+    through each format's ``parent`` attribute. Instead of running every
+    format's value test independently, we:
+
+    1. Test only *leaf* formats first (most specific end of each chain, e.g.
+       ``latitude_wgs_fr_metropole`` — not ``float``, which is above it).
+    2. Walk up each leaf's parent chain. For each parent not yet scored:
+       - if the child scored > 0, copy that score to the parent (skip the
+         parent test; label/header checks may still override the result later);
+       - if the child scored 0, run the parent test (the column might still
+         match the broader format).
+
+    This saves work when a column matches a specialized format: one float
+    check instead of three, for example. Copying the child score to the parent
+    is an approximation (many floats are not valid latitudes) but is much
+    faster than testing every format on every column.
+    """
     results: dict[str, float] = {}
 
+    # Step 1: run the expensive column test on every leaf format.
     for format_name, format in leaf_formats.items():
         results[format_name] = test_col_val(
             serie,
@@ -97,16 +118,18 @@ def _test_column_with_linked_checks(
             verbose=verbose,
         )
 
+    # Step 2: walk up parent chains, best-matching leaves first (highest
+    # match rate). Shared parents (e.g. float) get scored once, not retested.
     for format_name, _score in reversed(sorted(results.items(), key=lambda item: item[1])):
         current = format_name
         parent_name = formats[current].parent
         while parent_name is not None and parent_name in formats:
             if parent_name in results:
-                break
+                break  # already scored via another leaf's chain
             if results[current] > 0:
-                results[parent_name] = results[current]
+                results[parent_name] = results[current]  # reuse; skip retest
             else:
-                results[parent_name] = test_col_val(
+                results[parent_name] = test_col_val(  # child failed; try broader format
                     serie,
                     formats[parent_name],
                     skipna=skipna,
@@ -117,7 +140,7 @@ def _test_column_with_linked_checks(
             current = parent_name
             parent_name = formats[current].parent
 
-    return {name: results.get(name, 0.0) for name in formats}
+    return {name: results.get(name, 0.0) for name in formats}  # unscored → 0
 
 
 def test_col(
