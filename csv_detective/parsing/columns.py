@@ -131,7 +131,8 @@ def _test_column_with_linked_checks(
             if results[current] >= formats[parent_name].proportion:
                 results[parent_name] = results[current]
             else:
-                # e.g. child scored 85% with proportion 0.8, parent needs 100%
+                # Child failed, or score too low for parent's stricter threshold
+                # (e.g. child 85% with proportion 0.8, parent needs 100%).
                 results[parent_name] = test_col_val(
                     serie,
                     formats[parent_name],
