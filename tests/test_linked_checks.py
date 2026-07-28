@@ -112,6 +112,40 @@ def test_output_dataframe_includes_all_formats():
     assert all(pd.api.types.is_float_dtype(dtype) for dtype in result.dtypes)
 
 
+def test_parent_retested_when_child_score_below_parent_proportion():
+    formats = {
+        "float": Format(
+            name="float",
+            description="float",
+            func=MagicMock(return_value=True),
+            _test_values={True: ["1.0"], False: ["x"]},
+            proportion=1,
+        ),
+        "latitude_wgs": Format(
+            name="latitude_wgs",
+            description="latitude_wgs",
+            func=MagicMock(return_value=True),
+            _test_values={True: ["45.0"], False: ["x"]},
+            parent="float",
+            proportion=0.8,
+        ),
+    }
+    table = pd.DataFrame({"col": ["45.0"] * 10})
+
+    with patch(
+        "csv_detective.parsing.columns.test_col_val",
+        side_effect=lambda serie, fmt, **kwargs: 0.85
+        if fmt.name == "latitude_wgs"
+        else 1.0,
+    ) as mock_test_col_val:
+        result = col_test(table, formats, limited_output=True)
+
+    assert result.loc["latitude_wgs", "col"] == 0.85
+    assert result.loc["float", "col"] == 1.0
+    tested_formats = {call.args[1].name for call in mock_test_col_val.call_args_list}
+    assert tested_formats == {"latitude_wgs", "float"}
+
+
 def test_formats_manager_loads_parent_from_module():
     fmtm = FormatsManager()
     assert fmtm.formats["latitude_wgs_fr_metropole"].parent == "latitude_wgs"

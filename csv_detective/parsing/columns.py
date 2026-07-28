@@ -95,10 +95,10 @@ def _test_column_with_linked_checks(
     1. Test only *leaf* formats first (most specific end of each chain, e.g.
        ``latitude_wgs_fr_metropole`` — not ``float``, which is above it).
     2. Walk up each leaf's parent chain. For each parent not yet scored:
-       - if the child scored > 0, copy that score to the parent (skip the
-         parent test; label/header checks may still override the result later);
-       - if the child scored 0, run the parent test (the column might still
-         match the broader format).
+       - reuse the child's score for the parent if it is >= the parent's
+         ``proportion`` (skip the parent test);
+       - otherwise retest the parent (child failed, or score too low for the
+         parent's ``proportion``).
 
     This saves work when a column matches a specialized format: one float
     check instead of three, for example. Copying the child score to the parent
@@ -125,11 +125,14 @@ def _test_column_with_linked_checks(
         parent_name = formats[current].parent
         while parent_name is not None and parent_name in formats:
             if parent_name in results:
-                break  # already scored via another leaf's chain
-            if results[current] > 0:
-                results[parent_name] = results[current]  # reuse; skip retest
+                break  # another leaf already scored this parent
+            # Reuse the child's score for the parent if it is >= the parent's
+            # proportion; otherwise retest the parent.
+            if results[current] >= formats[parent_name].proportion:
+                results[parent_name] = results[current]
             else:
-                results[parent_name] = test_col_val(  # child failed; try broader format
+                # e.g. child scored 85% with proportion 0.8, parent needs 100%
+                results[parent_name] = test_col_val(
                     serie,
                     formats[parent_name],
                     skipna=skipna,
