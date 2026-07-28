@@ -134,9 +134,7 @@ def test_parent_retested_when_child_score_below_parent_proportion():
 
     with patch(
         "csv_detective.parsing.columns.test_col_val",
-        side_effect=lambda serie, fmt, **kwargs: 0.85
-        if fmt.name == "latitude_wgs"
-        else 1.0,
+        side_effect=lambda serie, fmt, **kwargs: 0.85 if fmt.name == "latitude_wgs" else 1.0,
     ) as mock_test_col_val:
         result = col_test(table, formats, limited_output=True)
 
