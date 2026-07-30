@@ -148,4 +148,6 @@ def test_formats_manager_loads_parent_from_module():
     fmtm = FormatsManager()
     assert fmtm.formats["latitude_wgs_fr_metropole"].parent == "latitude_wgs"
     assert fmtm.formats["geojson"].parent == "json"
+    assert fmtm.formats["percent"].parent == "float"
+    assert fmtm.formats["money"].parent == "float"
     assert fmtm.formats["float"].parent is None
