@@ -144,7 +144,9 @@ def _test_column_with_linked_checks(
             current = parent_name
             parent_name = formats[current].parent
 
-    return {name: results.get(name, 0.0) for name in formats}  # unscored → 0
+    missing = set(formats) - set(results)
+    assert not missing, f"Formats not scored: {missing}"
+    return {name: results[name] for name in formats}
 
 
 def test_col(
