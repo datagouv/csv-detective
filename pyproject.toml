@@ -66,8 +66,11 @@ markers = [
 ]
 
 [tool.ruff]
-lint = { extend-select = ["I"] } # ["I"] is to also sort imports with an isort rule
 line-length = 100
+exclude = ["pyproject.toml"]
+
+[tool.ruff.lint]
+extend-select = ["I"] # also sort imports with an isort rule
 
 [tool.uv.build-backend]
 module-name = "csv_detective"
