@@ -113,6 +113,26 @@ def test_cast(args):
         assert isinstance(cast(value, detected_type), cast_type)
 
 
+# casting has to follow jjmmaaaa_pattern, which is day-first
+@pytest.mark.parametrize(
+    "args",
+    (
+        # both components are valid months => day first
+        ("07/03/2024", _date(2024, 3, 7)),
+        ("01/02/2024", _date(2024, 2, 1)),
+        # unambiguous values are unaffected
+        ("29/11/2017", _date(2017, 11, 29)),
+        # day first is only a preference, US-style dates still parse
+        ("12/25/2024", _date(2024, 12, 25)),
+        # ISO is unaffected
+        ("2024-03-07", _date(2024, 3, 7)),
+    ),
+)
+def test_cast_date_is_day_first(args):
+    value, expected = args
+    assert cast(value, "date") == expected
+
+
 @pytest.mark.parametrize(
     "args",
     (

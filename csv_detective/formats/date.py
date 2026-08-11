@@ -28,16 +28,6 @@ labels = SHARED_DATE_LABELS | {
 }
 
 
-def date_casting(val: str) -> datetime | None:
-    """For performance reasons, we try first with dateutil and fallback on dateparser"""
-    try:
-        return dateutil_parser(val)
-    except ParserError:
-        return date_parser(val)
-    except Exception:
-        return None
-
-
 threshold = 0.3
 seps = r"[\s/\-\*_\|;.,]"
 # matches JJ-MM-AAAA with any of the listed separators
@@ -55,6 +45,22 @@ string_month_pattern = (
     r"mai|juin|juillet|aout|septembre|octobre|novembre|decembre)SEP"
     r"([0-9]{2}$|(19|20)[0-9]{2}$)"
 ).replace("SEP", seps + "?")
+
+
+def date_casting(val: str) -> datetime | None:
+    """For performance reasons, we try first with dateutil and fallback on dateparser"""
+    # Note: Both parsers default to month-first, which silently swaps day and month for the
+    # values matching jjmmaaaa_pattern where both are valid months ("07/03/2024").
+    # Day-first remains the most common pattern in French date system:
+    # if this pattern is valid, then we apply it first.
+    # Other values (ISO dates especially) must keep the default behaviour.
+    dayfirst = bool(re.match(jjmmaaaa_pattern, val))
+    try:
+        return dateutil_parser(val, dayfirst=dayfirst)
+    except ParserError:
+        return date_parser(val, settings={"DATE_ORDER": "DMY"} if dayfirst else {})
+    except Exception:
+        return None
 
 
 def _is(val) -> bool:
@@ -88,6 +94,7 @@ _test_values = {
     True: [
         "1960-08-07",
         "12/02/2007",
+        "07/03/2024",
         "15 jan 1985",
         "15 décembre 1985",
         "02 05 2003",
