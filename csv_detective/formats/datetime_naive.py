@@ -1,7 +1,12 @@
 import re
 from typing import Any
 
-from csv_detective.formats.date import aaaammjj_pattern, date_casting
+from csv_detective.formats.date import (
+    date_casting,
+    date_part_pattern,
+    datetime_format_candidates,
+    narrow_column_formats,
+)
 from csv_detective.formats.datetime_aware import labels, prefix  # noqa
 
 proportion = 1
@@ -10,11 +15,9 @@ tags = ["temp", "type"]
 python_type = "datetime"
 threshold = 0.7
 
-# matches AAAA-MM-JJTHH:MM:SS(.dddddd)Z with any of the listed separators for the date OR NO SEPARATOR
-pat = (
-    aaaammjj_pattern.replace("$", "")
-    + r"(T|\s)(0\d|1[0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])(.\d{1,6})?$"
-)
+# matches AAAA-MM-JJTHH:MM:SS(.dddddd)Z (or any other date order) with any of the listed
+# separators for the date OR NO SEPARATOR
+pat = "^" + date_part_pattern + r"(T|\s)(0\d|1[0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])(.\d{1,6})?$"
 
 
 def _is(val: Any | None, meta=None) -> bool:
@@ -25,12 +28,7 @@ def _is(val: Any | None, meta=None) -> bool:
         return False
     # if usual format, no need to parse
     if bool(re.match(pat, val)):
-        if meta is not None:
-            from csv_detective.formats.date import detect_strptime_format_datetime
-
-            fmt = detect_strptime_format_datetime(val)
-            if fmt:
-                meta.setdefault("date_format", set()).add(fmt)
+        narrow_column_formats(meta, datetime_format_candidates(val, has_tz=False))
         return True
     if sum(char.isdigit() or char in {"-", "/", ":", " "} for char in val) / len(val) < threshold:
         return False

@@ -1,6 +1,12 @@
 import re
 
-from csv_detective.formats.date import SHARED_DATE_LABELS, aaaammjj_pattern, date_casting
+from csv_detective.formats.date import (
+    SHARED_DATE_LABELS,
+    date_casting,
+    date_part_pattern,
+    datetime_format_candidates,
+    narrow_column_formats,
+)
 
 proportion = 1
 description = "Datetime with timezone information (flexible formats)"
@@ -10,7 +16,8 @@ labels = SHARED_DATE_LABELS | {"datetime": 1, "timestamp": 1}
 
 threshold = 0.7
 pat = (
-    aaaammjj_pattern.replace("$", "")
+    "^"
+    + date_part_pattern
     + r"(T|\s)(0\d|1[0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])(\.\d{1,6})?"
     + r"(([+-](0\d|1[0-9]|2[0-3]):([0-5][0-9]))|Z)$"
 )
@@ -27,12 +34,7 @@ def _is(val, meta=None) -> bool:
         return False
     # if usual format, no need to parse
     if bool(re.match(pat, val)):
-        if meta is not None:
-            from csv_detective.formats.date import detect_strptime_format_datetime
-
-            fmt = detect_strptime_format_datetime(val)
-            if fmt:
-                meta.setdefault("date_format", set()).add(fmt)
+        narrow_column_formats(meta, datetime_format_candidates(val, has_tz=True))
         return True
     if sum(char.isdigit() or char in {"-", "/", ":", " "} for char in val) / len(val) < threshold:
         return False

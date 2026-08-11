@@ -40,14 +40,20 @@ def date_casting(val: str) -> datetime | None:
 
 threshold = 0.3
 seps = r"[\s/\-\*_\|;.,]"
-# matches JJ-MM-AAAA with any of the listed separators
-jjmmaaaa_pattern = r"^(0[1-9]|[12][0-9]|3[01])SEP(0[1-9]|1[0-2])SEP((19|20)\d{2})$".replace(
-    "SEP", seps
-)
-# matches AAAA-MM-JJ with any of the listed separators OR NO SEPARATOR
-aaaammjj_pattern = r"^((19|20)\d{2})SEP(0[1-9]|1[0-2])SEP(0[1-9]|[12][0-9]|3[01])$".replace(
+# the unanchored bodies are reused to build the datetime patterns
+_jjmmaaaa = r"(0[1-9]|[12][0-9]|3[01])SEP(0[1-9]|1[0-2])SEP((19|20)\d{2})".replace("SEP", seps)
+_mmjjaaaa = r"(0[1-9]|1[0-2])SEP(0[1-9]|[12][0-9]|3[01])SEP((19|20)\d{2})".replace("SEP", seps)
+_aaaammjj = r"((19|20)\d{2})SEP(0[1-9]|1[0-2])SEP(0[1-9]|[12][0-9]|3[01])".replace(
     "SEP", seps + "?"
 )
+# matches JJ-MM-AAAA with any of the listed separators
+jjmmaaaa_pattern = f"^{_jjmmaaaa}$"
+# matches MM-JJ-AAAA (US order) with any of the listed separators
+mmjjaaaa_pattern = f"^{_mmjjaaaa}$"
+# matches AAAA-MM-JJ with any of the listed separators OR NO SEPARATOR
+aaaammjj_pattern = f"^{_aaaammjj}$"
+# the date part of a datetime, in any of the three orders
+date_part_pattern = f"(?:{_aaaammjj}|{_jjmmaaaa}|{_mmjjaaaa})"
 # matches JJ-mmm-AAAA and JJ-mmm...mm-AAAA with any of the listed separators OR NO SEPARATOR
 string_month_pattern = (
     r"^(0[1-9]|[12][0-9]|3[01])SEP(jan|fev|feb|mar|avr|apr"
@@ -64,19 +70,17 @@ def _is(val, meta=None) -> bool:
     if not isinstance(val, str) or len(val) > 20 or len(val) < 8:
         return False
     # if it's a usual date pattern
-    if re.match(jjmmaaaa_pattern, val):
-        if meta is not None:
-            fmt = detect_strptime_format(val)
-            if fmt:
-                meta.setdefault("date_format", set()).add(fmt)
+    candidates = date_format_candidates(val)
+    if candidates:
+        narrow_column_formats(meta, candidates)
         return True
-    if re.match(aaaammjj_pattern, val):
-        if meta is not None:
-            fmt = detect_strptime_format(val)
-            if fmt:
-                meta.setdefault("date_format", set()).add(fmt)
-        return True
-    if re.match(string_month_pattern, val, re.IGNORECASE):
+    # a date whose format can't be pinned down (mixed separators) is still a date
+    if (
+        re.match(aaaammjj_pattern, val)
+        or re.match(jjmmaaaa_pattern, val)
+        or re.match(mmjjaaaa_pattern, val)
+        or re.match(string_month_pattern, val, re.IGNORECASE)
+    ):
         return True
     if re.match(r"^-?\d+[\.|,]\d+$", val):
         # regular floats are excluded
@@ -91,59 +95,79 @@ def _is(val, meta=None) -> bool:
     return True
 
 
-def detect_strptime_format(val: str) -> str | None:
-    """Returns the strptime format string for a date value, or None if format can't be determined."""
-    if not isinstance(val, str) or len(val) > 20 or len(val) < 8:
-        return None
+def date_format_candidates(val: str) -> set[str]:
+    """Returns every strptime format the value could be read with.
 
-    if re.match(jjmmaaaa_pattern, val):
-        sep = val[2]
-        if val[5] != sep:
-            return None
-        return f"%d{sep}%m{sep}%Y"
+    A value whose two first components are both <= 12 ("07/03/2024") reads equally well as
+    day-first or month-first: it yields both formats, and only the column settles which one
+    applies (see narrow_column_formats and resolve_date_format).
+    """
+    if not isinstance(val, str) or len(val) > 20 or len(val) < 8:
+        return set()
 
     if re.match(aaaammjj_pattern, val):
         if len(val) == 8:
-            return "%Y%m%d"
+            return {"%Y%m%d"}
         sep = val[4]
-        if val[7] != sep:
-            return None
-        return f"%Y{sep}%m{sep}%d"
+        return {f"%Y{sep}%m{sep}%d"} if val[7] == sep else set()
 
-    return None
+    day_first = bool(re.match(jjmmaaaa_pattern, val))
+    month_first = bool(re.match(mmjjaaaa_pattern, val))
+    if not (day_first or month_first):
+        return set()
+    sep = val[2]
+    if val[5] != sep:
+        return set()
+    candidates = set()
+    if day_first:
+        candidates.add(f"%d{sep}%m{sep}%Y")
+    if month_first:
+        candidates.add(f"%m{sep}%d{sep}%Y")
+    return candidates
 
 
-def detect_strptime_format_datetime(val: str) -> str | None:
-    """Returns the strptime format string for a datetime value, or None if format can't be determined."""
-    from csv_detective.formats.datetime_aware import pat as aware_pat
-    from csv_detective.formats.datetime_naive import pat as naive_pat
+def datetime_format_candidates(val: str, has_tz: bool) -> set[str]:
+    """Returns every strptime format the datetime value could be read with.
 
-    if not isinstance(val, str) or len(val) < 15:
-        return None
+    Only meaningful for values that already matched a datetime pattern.
+    """
+    # the date part is 10 characters long with separators, 8 without (AAAAMMJJ)
+    for date_len in (10, 8):
+        date_candidates = date_format_candidates(val[:date_len])
+        if date_candidates:
+            break
+    else:
+        return set()
+    time_part = val[date_len:]
+    # time_part starts with the date/time separator, "T" or a blank
+    suffix = f"{time_part[0]}%H:%M:%S"
+    if "." in time_part:
+        suffix += ".%f"
+    if has_tz:
+        suffix += "%z"
+    return {fmt + suffix for fmt in date_candidates}
 
-    for pat, has_tz in [(naive_pat, False), (aware_pat, True)]:
-        if not re.match(pat, val):
-            continue
-        sep = val[4]
-        if sep.isdigit():
-            sep = ""
-        elif val[7] != sep:
-            return None
 
-        date_end = 8 if not sep else 10
-        tsep = val[date_end]
+def narrow_column_formats(meta: dict | None, candidates: set[str]) -> None:
+    """Keeps in meta only the formats that fit every value seen so far in the column.
 
-        time_part = val[date_end + 1 :]
-        has_microseconds = "." in time_part
+    Taken one by one, values are often ambiguous; a column rarely is. A single "25/03/2024"
+    rules out the month-first reading for all the other values of its column.
+    """
+    if meta is None or not candidates:
+        return
+    known = meta.get("date_format")
+    meta["date_format"] = candidates if known is None else known & candidates
 
-        fmt = f"%Y{sep}%m{sep}%d{tsep}%H:%M:%S"
-        if has_microseconds:
-            fmt += ".%f"
-        if has_tz:
-            fmt += "%z"
-        return fmt
 
-    return None
+def resolve_date_format(candidates: set[str]) -> list[str] | None:
+    """Picks a column's format among the ones that fit all of its values."""
+    if len(candidates) == 1:
+        return list(candidates)
+    # Several formats fit every value: nothing in the column tells day-first from month-first.
+    # Day-first is the overwhelming majority of what csv-detective is fed, so it wins the tie.
+    day_first = sorted(fmt for fmt in candidates if fmt.startswith("%d"))
+    return day_first[:1] or None
 
 
 _test_values = {

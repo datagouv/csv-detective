@@ -37,7 +37,9 @@ def test_col_val(
         start = time()
 
     if meta is not None and format.name in ("date", "datetime_naive", "datetime_aware"):
-        test_func = lambda v: format.func(v, meta)
+
+        def test_func(val):
+            return format.func(val, meta)
     else:
         test_func = format.func
 
@@ -243,12 +245,18 @@ def test_col_chunks(
             # testing each column with the tests that are still competing
             # after previous batchs analyses
             for label in fmt_labels:
+                # the format inference narrows down on every value of the column,
+                # so it has to keep seeing the batches after the first one
+                meta = all_meta.get(col, {}).get(label, {})
                 batch_col_test = test_col_val(
                     batch[col],
                     formats[label],
                     limited_output=limited_output,
                     skipna=skipna,
+                    meta=meta,
                 )
+                if meta:
+                    all_meta.setdefault(col, {})[label] = meta
                 return_table.loc[label, col] = (
                     # if this batch's column tested 0 then test fails overall
                     0

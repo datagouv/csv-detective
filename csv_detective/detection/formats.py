@@ -8,6 +8,7 @@ from csv_detective.detection.variables import (
     # detect_continuous_variable,
 )
 from csv_detective.format import Format, FormatsManager
+from csv_detective.formats.date import resolve_date_format
 from csv_detective.output.utils import prepare_output_dict
 from csv_detective.parsing.columns import (
     MAX_NUMBER_CATEGORICAL_VALUES,
@@ -140,10 +141,6 @@ def detect_formats(
         if detection.get("python_type") not in ("date", "datetime"):
             continue
         col_meta = all_meta.get(col_name, {}).get(detection["format"], {})
-        date_formats = col_meta.get("date_format", set())
-        if len(date_formats) == 1:
-            detection["date_format"] = list(date_formats)
-        else:
-            detection["date_format"] = None
+        detection["date_format"] = resolve_date_format(col_meta.get("date_format", set()))
 
     return analysis, col_values
