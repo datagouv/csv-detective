@@ -22,6 +22,7 @@ dependencies = [
     "Faker>=33.0.0",
     "rstr>=3.2.2",
     "more-itertools>=10.8.0",
+    "pyarrow>=23.0.0",
 ]
 requires-python = ">=3.11,<3.15"
 license = { text = "MIT" }
@@ -33,6 +34,7 @@ dev = [
     "pytest>=8.3.0",
     "responses>=0.25.0",
     "ruff>=0.9.3",
+    "ty>=0.0.61",
 ]
 
 [project.urls]
@@ -54,9 +56,21 @@ csv_detective = ["CHANGELOG.md", "LICENSE", "README.md"]
 version_scheme = "guess-next-dev"
 local_scheme = "no-local-version"
 
+# Provisional: drop when dependencies require a patched urllib3 lower bound (GHSA-mf9v-mfxr-j63j).
+[tool.uv]
+constraint-dependencies = ["urllib3>=2.7.0"]
+
+[tool.pytest.ini_options]
+markers = [
+    "slow: end-to-end performance canary on large files (excluded from default CI)",
+]
+
 [tool.ruff]
-lint = { extend-select = ["I"] } # ["I"] is to also sort imports with an isort rule
 line-length = 100
+exclude = ["pyproject.toml"]
+
+[tool.ruff.lint]
+extend-select = ["I"] # also sort imports with an isort rule
 
 [tool.uv.build-backend]
 module-name = "csv_detective"

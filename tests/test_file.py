@@ -1,3 +1,5 @@
+import json
+from tempfile import NamedTemporaryFile
 from unittest.mock import MagicMock, patch
 
 import pandas as pd
@@ -225,7 +227,7 @@ def test_exception_malformed_columns(mocked_responses):
     """
     A ValueError should be raised if any column is Unnamed
     """
-    url = f"http://example.com/bad_cols.csv"
+    url = "http://example.com/bad_cols.csv"
     expected_content = b"col1,col2,\n1,2,\n3,4,"
     mocked_responses.get(
         url,
@@ -530,7 +532,7 @@ def test_multiple_geo_columns(mocked_responses):
     ),
 )
 def test_diff_epci_siren(col_name, value, expected, mocked_responses):
-    url = f"http://example.com/file.csv"
+    url = "http://example.com/file.csv"
     expected_content = f"{col_name},ratio\n" + f"{value},10.0\n" * 50
     mocked_responses.get(
         url,
@@ -563,3 +565,175 @@ def test_diff_epci_siren(col_name, value, expected, mocked_responses):
 )
 def test_sanitize_for_json(to_export, expected):
     assert sanitize_for_json(to_export) == expected
+
+
+@pytest.mark.parametrize("nb_rows", (CHUNK_SIZE // 10, CHUNK_SIZE + 1))
+def test_unique_values_output(nb_rows, mocked_responses):
+    expected_content = "cat;not_cat;json_cat;json_not_cat;too_complex\n"
+    for k in range(nb_rows):
+        cat = (
+            "a"
+            if k < nb_rows // 4
+            else "b"
+            if k < nb_rows // 2
+            else "c"
+            if k < nb_rows // 4 * 3
+            else "d"
+        )
+        json_cat = (
+            [1]
+            if k < nb_rows // 4
+            else [1, 2]
+            if k < nb_rows // 2
+            else [3, 2, 1]
+            if k < nb_rows // 4 * 3
+            else []
+        )
+        json_not_cat = [k, k + 1] if k % 2 == 0 else [k] if k % 3 == 0 else []
+        too_complex = json.dumps([{"a": 1}])
+        expected_content += f"{cat};{k};{json_cat};{json_not_cat};{too_complex}\n"
+    mocked_responses.get(
+        "http://example.com/test.csv",
+        body=expected_content,
+        status=200,
+    )
+    with patch("urllib.request.urlopen") as mock_urlopen:
+        mock_response = MagicMock()
+        mock_response.read.return_value = expected_content.encode("utf-8")
+        mock_response.__enter__.return_value = mock_response
+        mock_urlopen.return_value = mock_response
+        analysis = routine(
+            file_path="http://example.com/test.csv",
+            num_rows=-1,
+            output_profile=False,
+            save_results=False,
+        )
+    assert analysis["columns"]["json_cat"]["python_type"] == "json"
+    assert analysis["columns"]["json_not_cat"]["python_type"] == "json"
+    assert isinstance(analysis.get("unique_values"), dict)
+    # too many values => not in unique_values
+    assert "not_cat" not in analysis["unique_values"]
+    assert "json_not_cat" not in analysis["unique_values"]
+    # too complex data in column => not in unique_values
+    assert "too_complex" not in analysis["unique_values"]
+    # few enough values => testing output
+    assert analysis["unique_values"]["cat"] == ["a", "b", "c", "d"]
+    assert analysis["unique_values"]["json_cat"] == [1, 2, 3]
+
+
+def test_parquet_file_analysis():
+    pq_path = "tests/data/file.parquet"
+    analysis, chunks = routine(
+        file_path=pq_path,
+        num_rows=-1,
+        output_profile=True,
+        save_results=False,
+        output_df=True,
+    )
+    expected = {
+        "total_lines": 1000,
+        "engine": "parquet",
+        "header": [
+            "inseecommune",
+            "nomcommune",
+            "nomreseau",
+            "debutalim",
+            "annee",
+            "lat",
+            "categories",
+            "score",
+            "is_true",
+            "timestamp",
+        ],
+        "columns": {
+            "inseecommune": {
+                "format": "code_commune",
+                "python_type": "string",
+            },
+            "nomcommune": {
+                "format": "commune",
+                "python_type": "string",
+            },
+            "nomreseau": {
+                "format": "string",
+                "python_type": "string",
+            },
+            "debutalim": {
+                "format": "date",
+                "python_type": "date",
+            },
+            "annee": {
+                "format": "year",
+                "python_type": "int",
+            },
+            "lat": {
+                "format": "latitude_wgs",
+                "python_type": "float",
+            },
+            "categories": {
+                "format": "json",
+                "python_type": "json",
+            },
+            "score": {
+                "format": "float",
+                "python_type": "float",
+            },
+            "is_true": {
+                "format": "bool",
+                "python_type": "bool",
+            },
+            "timestamp": {
+                "format": "datetime_naive",
+                "python_type": "datetime",
+            },
+        },
+    }
+    for field in expected:
+        if field == "columns":
+            assert all(
+                analysis["columns"][col][key] == value
+                for col, d in expected["columns"].items()
+                for key, value in d.items()
+            )
+        else:
+            assert analysis[field] == expected[field]
+    df = next(chunks)
+    assert isinstance(df, pd.DataFrame)
+    assert len(df) == expected["total_lines"]
+
+
+@pytest.mark.parametrize(
+    "custom_na, nb_rows",
+    (
+        (None, CHUNK_SIZE // 10),
+        (["Non spécifié"], CHUNK_SIZE // 10),
+        (None, CHUNK_SIZE + 1),
+        (["Non spécifié"], CHUNK_SIZE + 1),
+    ),
+)
+def test_custom_na_values(custom_na, nb_rows):
+    expected_content = "a,b\n" + "99,10.0\n" * nb_rows + "Non spécifié,Non spécifié\n"
+    with NamedTemporaryFile() as tmp:
+        tmp.write(expected_content.encode("utf-8"))
+        tmp.flush()
+        analysis, df_chunks = routine(
+            file_path=tmp.name,
+            num_rows=-1,
+            output_profile=True,
+            save_results=False,
+            output_df=True,
+            na_values=custom_na,
+        )
+        df = pd.concat(df_chunks, ignore_index=True)
+    if custom_na:
+        assert analysis["columns"]["a"]["format"] == "int"
+        assert analysis["columns"]["b"]["format"] == "float"
+        assert analysis["profile"]["a"]["nb_missing_values"] == 1
+        assert analysis["profile"]["b"]["nb_missing_values"] == 1
+        assert len(df.loc[df["a"].isna()]) == 1
+    else:
+        assert analysis["columns"]["a"]["format"] == "string"
+        assert analysis["columns"]["b"]["format"] == "string"
+        assert analysis["profile"]["a"]["nb_missing_values"] == 0
+        assert analysis["profile"]["b"]["nb_missing_values"] == 0
+        assert len(df.loc[df["a"].isna()]) == 0

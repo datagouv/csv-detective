@@ -20,7 +20,7 @@ def detect_separator(file: TextIO, verbose: bool = False) -> str:
     sep_count = dict()
     for sep in possible_separators:
         sep_count[sep] = header.count(sep)
-    sep = max(sep_count, key=sep_count.get)
+    sep = max(sep_count, key=lambda k: sep_count[k])
     # testing that the first 10 (arbitrary) rows all have the same number of fields
     # as the header. Prevents downstream unwanted behaviour where pandas can load
     # the file (in a weird way) but the process is irrelevant.

@@ -4,7 +4,7 @@
 |------|-------------|-------------|------|--------------------|-----------------|---------|
 | adresse | French address | string | fr, geo | 0.55 | False | `rue du martyr` |
 | binary | Binary data (bytes string) | binary | type | 1 | False | `b''` |
-| booleen | Boolean or boolean-like value (yes/no, 1/0...) | bool | type | 1 | False | `oui` |
+| bool | Boolean or boolean-like value (yes/no, 1/0...) | bool | type | 1 | False | `oui` |
 | code_commune | French commune code, from the INSEE reference source | string | fr, geo | 0.75 | True | `91471` |
 | code_csp_insee | French socio-professional category code, from the INSEE reference source | string | fr | 1 | False | `121f` |
 | code_departement | French département code | string | fr, geo | 1 | True | `75` |
@@ -29,7 +29,7 @@
 | id_rnb | Building identifier from the French national building reference source ([RNB](https://rnb.beta.gouv.fr/definition)) | string | fr, geo | 1 | True | `FT4RKBXBVH9S` |
 | insee_ape700 | French acitvity code from the INSEE reference source (APE) | string | fr | 0.8 | False | `0116Z` |
 | insee_canton | French canton name | string | fr, geo | 0.9 | False | `nantua` |
-| int | Integer | int |  | 1 | False | `1` |
+| int | Integer | int | type | 1 | False | `1` |
 | iso_country_code_alpha2 | [ISO alpha 2](https://fr.wikipedia.org/wiki/ISO_3166-1_alpha-2) country code | string | geo | 1 | False | `FR` |
 | iso_country_code_alpha3 | [ISO alpha 3](https://fr.wikipedia.org/wiki/ISO_3166-1) country code | string | geo | 1 | False | `FRA` |
 | iso_country_code_numeric | [ISO numeric](https://fr.wikipedia.org/wiki/ISO_3166-1) country code | string | geo | 1 | False | `250` |

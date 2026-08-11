@@ -2,7 +2,7 @@
 
 This is a package to **automatically detect column content in tabular files**. The script reads either the whole file or the first few rows and performs various checks (regex, casting, comparison with official lists...) to see for each column if it matches with various content types.
 
-Currently supported file types: csv(.gz), xls, xlsx, ods.
+Currently supported file types: csv(.gz), xls, xlsx, ods, parquet.
 
 You can also directly feed the URL of a remote file (from data.gouv.fr for instance).
 
@@ -45,32 +45,34 @@ inspection_results = routine(
 
 The program creates a `python` dictionary with the following information :
 
-```
+```python
 {
-    "encoding": "windows-1252", 			        # Encoding detected
-    "separator": ";",						# Detected CSV separator
-    "header_row_idx": 0					# Index of the header (aka how many lines to skip to get it)
-    "headers": ['code commune INSEE', 'nom de la commune', 'code postal', "libellé d'acheminement"], # Header row
-    "total_lines": 42,					# Number of rows (excluding header)
-    "nb_duplicates": 0,					# Number of exact duplicates in rows
-    "heading_columns": 0,					# Number of heading columns
-    "trailing_columns": 0,					# Number of trailing columns
-    "categorical": ['Code commune']         # Columns that contain less than 25 different values (arbitrary threshold)
-    "columns": { # Property that conciliate detection from labels and content of a column
+    "encoding": "windows-1252",             # Encoding detected
+    "separator": ";",                       # Detected CSV separator
+    "header_row_idx": 0,                    # Index of the header (aka how many lines to skip to get it)
+    "headers": [                            # Header row
+        'code commune INSEE', 'nom de la commune', 'code postal', "libellé d'acheminement"
+    ],
+    "total_lines": 42,                      # Number of rows (excluding header)
+    "nb_duplicates": 0,                     # Number of exact duplicates in rows
+    "heading_columns": 0,                   # Number of heading columns
+    "trailing_columns": 0,                  # Number of trailing columns
+    "categorical": ['Code commune'],        # Columns that contain less than 25 different values (arbitrary threshold)
+    "columns": {                            # Property that conciliate detection from labels and content of a column
         "Code commune": {
             "python_type": "string",
             "format": "code_commune",
             "score": 1.0
         },
     },
-    "columns_labels": { # Property that return detection from header columns
+    "columns_labels": {                     # Property that return detection from header columns
         "Code commune": {
             "python_type": "string",
             "format": "code_commune",
             "score": 0.5
         },
     },
-    "columns_fields": { # Property that return detection from content columns
+    "columns_fields": {                     # Property that return detection from content columns
         "Code commune": {
             "python_type": "string",
             "format": "code_commune",
@@ -78,21 +80,21 @@ The program creates a `python` dictionary with the following information :
         },
     },
     "profile": {
-      "column_name" : {
-        "min": 1, # only int and float
-        "max": 12, # only int and float
-        "mean": 5, # only int and float
-        "std": 5, # only int and float
-        "tops": [  # 10 most frequent values in the column
-          "xxx",
-          "yyy",
-          "..."
-        ],
-        "nb_distinct": 67, # number of distinct values
-        "nb_missing_values": 102 # number of empty cells in the column
-      }
+        "column_name": {
+            "min": 1,                       # only int and float
+            "max": 12,                      # only int and float
+            "mean": 5,                      # only int and float
+            "std": 5,                       # only int and float
+            "tops": [                       # 10 most frequent values in the column
+                "xxx",
+                "yyy",
+                "..."
+            ],
+            "nb_distinct": 67,              # number of distinct values
+            "nb_missing_values": 102        # number of empty cells in the column
+        }
     },
-    "schema": { # TableSchema of the file if `output_schema` was set to `True`
+    "schema": {                             # TableSchema of the file if `output_schema` was set to `True`
       "$schema": "https://frictionlessdata.io/schemas/table-schema.json",
       "name": "",
       "title": "",
@@ -131,6 +133,7 @@ The program creates a `python` dictionary with the following information :
 The output slightly differs depending on the file format:
 - csv files have `encoding` and `separator` (and `compression` if relevant)
 - xls, xlsx, ods files have `engine` and `sheet_name`
+- parquet only has `engine`
 
 You may also set `output_df` to `True`, in which case the output is a tuple of two elements:
 - the analysis (as described above)
@@ -199,7 +202,7 @@ Related ideas:
 
 ## Why Could This Be of Any Use?
 
-Organisations such as [data.gouv.fr](http://data.gouv.fr) aggregate huge amounts of un-normalised data. Performing cross-examination across datasets can be difficult. This tool could help enrich the datasets metadata and facilitate linking them together.
+Organisations such as [data.gouv.fr](http://data.gouv.fr) aggregate huge amounts of un-normalised data. Performing cross-examination across datasets can be difficult. This tool helps enrich the datasets metadata and facilitate linking them together.
 
 [`udata-hydra`](https://github.com/etalab/udata-hydra) is a crawler that checks, analyzes (using `csv-detective`) and APIfies all tabular files from [data.gouv.fr](http://data.gouv.fr).
 
