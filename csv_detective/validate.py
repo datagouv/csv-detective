@@ -1,11 +1,11 @@
 import logging
 from collections import defaultdict
-from datetime import datetime
 
 import numpy as np
 import pandas as pd
 
 from csv_detective.format import FormatsManager
+from csv_detective.formats.date import parse
 from csv_detective.output.utils import extract_unique_from_multicat
 from csv_detective.parsing.columns import (
     MAX_NUMBER_CATEGORICAL_VALUES,
@@ -189,24 +189,17 @@ def validate(
                 ):
                     chunk_valid_values = len(to_check)
                 else:
-                    date_formats = detected.get("date_format")
-                    if date_formats:
-                        # the format has already been narrowed down during detection,
-                        # so validating against it is much cheaper than the generic test
-                        def _fast_is(val, _fmts=date_formats):
-                            for fmt in _fmts:
-                                try:
-                                    datetime.strptime(val, fmt)
-                                    return True
-                                except (ValueError, TypeError):
-                                    continue
-                            return False
+                    date_format = detected.get("date_format")
+                    if date_format:
+                        # the analysis pinned down how to read this column, so a single parse
+                        # settles a value, where the generic test tries every shape it knows
+                        def reads(val, _fmt=date_format):
+                            return parse(val, _fmt) is not None
 
-                        unique_results = value_counts.index.to_series().apply(_fast_is)
+                        check = reads
                     else:
-                        unique_results = value_counts.index.to_series().apply(
-                            formats[detected["format"]].func
-                        )
+                        check = formats[detected["format"]].func
+                    unique_results = value_counts.index.to_series().apply(check)
                     chunk_valid_values = (unique_results * value_counts.values).sum()
                 if formats[detected["format"]].proportion == 1 and chunk_valid_values < len(
                     to_check

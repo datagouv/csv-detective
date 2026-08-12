@@ -32,22 +32,15 @@ def test_col_val(
     limited_output: bool = False,
     zero_if_too_low: bool = True,
     verbose: bool = False,
-    meta: dict | None = None,
 ) -> float:
     """Tests values of the serie using test_func.
-         - skipna : if True indicates that NaNs are considered True
+    - skipna : if True indicates that NaNs are considered True
     for the serie to be detected as a certain format
-         - meta : if provided, passed to test_func to collect extra info (e.g. date_format)
     """
     if verbose:
         start = time()
 
-    if meta is not None and format.name in ("date", "datetime_naive", "datetime_aware"):
-
-        def test_func(val):
-            return format.func(val, meta)
-    else:
-        test_func = format.func
+    test_func = format.func
 
     # TODO : change for a cleaner method and only test columns in modules labels
     def apply_test_func(serie: pd.Series, _test_func: Callable, _range: int):
@@ -92,18 +85,16 @@ def test_col(
     skipna: bool = True,
     zero_if_too_low: bool = True,
     verbose: bool = False,
-) -> tuple[pd.DataFrame, dict[str, dict[str, dict]]]:
+) -> pd.DataFrame:
     if verbose:
         start = time()
         logging.info("Testing columns to get formats")
     return_table = pd.DataFrame(columns=table.columns)
-    all_meta: dict[str, dict[str, dict]] = {}
     for idx, (label, format) in enumerate(formats.items()):
         if verbose:
             start_type = time()
             logging.info(f"\t- Starting with format '{label}'")
         for col in table.columns:
-            meta: dict = {}
             return_table.loc[label, col] = test_col_val(
                 table[col],
                 format,
@@ -111,10 +102,7 @@ def test_col(
                 zero_if_too_low=zero_if_too_low,
                 limited_output=limited_output,
                 verbose=verbose,
-                meta=meta,
             )
-            if meta:
-                all_meta.setdefault(col, {})[label] = meta
         if verbose:
             display_logs_depending_process_time(
                 f'\t> Done with format "{label}" in {round(time() - start_type, 3)}s ({idx + 1}/{len(formats)})',
@@ -124,7 +112,7 @@ def test_col(
         display_logs_depending_process_time(
             f"Done testing columns in {round(time() - start, 3)}s", time() - start
         )
-    return return_table, all_meta
+    return return_table
 
 
 def test_label(columns: list[str], formats: dict[str, Format], verbose: bool = False):
@@ -193,13 +181,13 @@ def test_col_chunks(
     skipna: bool = True,
     na_values: list[str] | None = None,
     verbose: bool = False,
-) -> tuple[pd.DataFrame, dict, dict[str, pd.Series], dict[str, dict[str, dict]]]:
+) -> tuple[pd.DataFrame, dict, dict[str, pd.Series]]:
     if verbose:
         start = time()
         logging.info("Testing columns to get formats on chunks")
 
     # analysing the sample to get a first guess
-    return_table, all_meta = test_col(
+    return_table = test_col(
         table,
         formats,
         limited_output=limited_output,
@@ -283,19 +271,13 @@ def test_col_chunks(
             # testing each column with the tests that are still competing
             # after previous batchs analyses
             for label in fmt_labels:
-                # the format inference narrows down on every value of the column,
-                # so it has to keep seeing the batches after the first one
-                meta = all_meta.get(col, {}).get(label, {})
                 batch_col_test = test_col_val(
                     batch[col],
                     formats[label],
                     limited_output=limited_output,
                     zero_if_too_low=False,
                     skipna=skipna,
-                    meta=meta,
                 )
-                if meta:
-                    all_meta.setdefault(col, {})[label] = meta
                 return_table.loc[label, col] = (
                     # updating the score with weighted average
                     (return_table.loc[label, col] * idx + batch_col_test) / (idx + 1)
@@ -315,7 +297,7 @@ def test_col_chunks(
         display_logs_depending_process_time(
             f"Done testing chunks in {round(time() - start, 3)}s", time() - start
         )
-    return return_table, analysis, col_values, all_meta
+    return return_table, analysis, col_values
 
 
 PYARROW_TYPE_TO_PYTHON = {
@@ -398,7 +380,6 @@ def test_parquet_cols(
 
     row_hashes_count = pd.Series()
     col_values = {col: pd.Series() for col in columns.keys()}
-    all_meta: dict[str, dict[str, dict]] = {}
     # we keep the same chunk size as for csv
     for idx, batch in enumerate(table.iter_batches(CHUNK_SIZE * 10)):
         if verbose:
@@ -424,18 +405,12 @@ def test_parquet_cols(
             # testing each column with the tests that are still competing
             # after previous batchs analyses
             for label in fmt_labels:
-                # the format inference narrows down on every value of the column,
-                # so it has to keep seeing the batches after the first one
-                meta = all_meta.get(col, {}).get(label, {})
                 batch_col_test = test_col_val(
                     batch[col],
                     formats[label],
                     limited_output=limited_output,
                     skipna=skipna,
-                    meta=meta,
                 )
-                if meta:
-                    all_meta.setdefault(col, {})[label] = meta
                 return_table.loc[label, col] = (
                     # if this batch's column tested 0 then test fails overall
                     0
@@ -458,4 +433,4 @@ def test_parquet_cols(
         display_logs_depending_process_time(
             f"Done testing chunks in {round(time() - start, 3)}s", time() - start
         )
-    return return_table.fillna(0), analysis, col_values, all_meta
+    return return_table.fillna(0), analysis, col_values

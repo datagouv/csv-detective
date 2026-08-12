@@ -12,11 +12,10 @@ from csv_detective.detection.variables import (
     detect_continuous_variable,
 )
 from csv_detective.format import FormatsManager
-from csv_detective.formats.date import (
-    date_format_candidates,
-    datetime_format_candidates,
-    resolve_date_format,
-)
+from csv_detective.formats.date import MONTH_NAMES, MONTHS, parse
+from csv_detective.formats.date import _infer as date_infer
+from csv_detective.formats.datetime_aware import _infer as datetime_aware_infer
+from csv_detective.formats.datetime_naive import _infer as datetime_naive_infer
 from csv_detective.formats.float import float_casting
 from csv_detective.output.dataframe import cast
 from csv_detective.output.utils import prepare_output_dict
@@ -154,12 +153,9 @@ def test_priority(args):
         ("1925 12 20 14:30:00Z", fmtm.formats["datetime_aware"]),
     ),
 )
-def test_early_detection(args):
+def test_usual_formats_are_detected(args):
     value, format = args
-    with patch("csv_detective.formats.date.date_casting") as mock_func:
-        res = format.func(value)
-        assert res
-        mock_func.assert_not_called()
+    assert format.func(value)
 
 
 def test_all_proportion_1():
@@ -173,99 +169,123 @@ def test_all_proportion_1():
         }
     )
     # testing columns for all formats
-    returned_table, _ = col_test(table, fmtm.formats, limited_output=True)
+    returned_table = col_test(table, fmtm.formats, limited_output=True)
     # the analysis should have found no match on any format
     assert all(returned_table[col].sum() == 0 for col in table.columns)
 
 
 @pytest.mark.parametrize(
-    "value, expected_formats",
+    "values, expected_format",
     [
-        ("1960-08-07", {"%Y-%m-%d"}),
-        ("20030502", {"%Y%m%d"}),
-        ("2003.05.02", {"%Y.%m.%d"}),
-        # day and month both <= 12: the value alone can't tell the two orders apart
-        ("12/02/2007", {"%d/%m/%Y", "%m/%d/%Y"}),
-        ("02 05 2003", {"%d %m %Y", "%m %d %Y"}),
-        # the first component is above 12, it can only be a day
-        ("25/03/2024", {"%d/%m/%Y"}),
-        # the second component is above 12, it can only be a day
-        ("03/25/2024", {"%m/%d/%Y"}),
+        (["1960-08-07"], "%Y-%m-%d"),
+        (["20030502"], "%Y%m%d"),
+        (["2003.05.02"], "%Y.%m.%d"),
+        # day and month are both <= 12 and nothing tells the two orders apart: day-first wins
+        (["12/02/2007"], "%d/%m/%Y"),
+        (["02 05 2003"], "%d %m %Y"),
+        # one value whose day is above 12 settles the order for the whole column
+        (["07/03/2024", "25/12/2024"], "%d/%m/%Y"),
+        # and one value whose month is above 12 settles it the other way around
+        (["07/03/2024", "12/25/2024"], "%m/%d/%Y"),
+        # the values contradict each other, no single format reads them all
+        (["25/12/2024", "12/25/2024"], None),
+        # zero-padding is optional and does not make a second format
+        (["1/2/2024", "25/03/2024"], "%d/%m/%Y"),
+        # text months, in any of the supported languages and spellings
+        (["15 jan 1985", "13 février 1996"], "csvd:%d %b %Y"),
+        (["15 janv. 1985"], "csvd:%d %b %Y"),
+        (["15-dec-85"], "csvd:%d-%b-%y"),
+        # "jui" is the prefix of both juin and juillet, it cannot be read
+        (["15 jui 1985"], None),
+        (["15 tambour 1985"], None),
         # neither component can be a month
-        ("19/15/1993", set()),
-        ("15 jan 1985", set()),
-        ("1993-12/02", set()),  # mixed separators
+        (["19/15/1993"], None),
+        # mixed separators, within a value or across the column
+        (["1993-12/02"], None),
+        (["199302-05"], None),
+        (["2003.05.02", "1960-08-07"], None),
     ],
 )
-def test_date_format_candidates(value, expected_formats):
-    assert date_format_candidates(value) == expected_formats
+def test_date_format_inferred_from_column(values, expected_format):
+    assert date_infer(values) == expected_format
 
 
 @pytest.mark.parametrize(
-    "value, has_tz, expected_formats",
+    "values, aware, expected_format",
     [
-        ("2021-06-22 10:20:10", False, {"%Y-%m-%d %H:%M:%S"}),
-        ("2030/06/22 00:00:00.0028", False, {"%Y/%m/%d %H:%M:%S.%f"}),
-        ("2021-06-22 10:20:10-04:00", True, {"%Y-%m-%d %H:%M:%S%z"}),
-        ("2030-06-22 00:00:00.0028+02:00", True, {"%Y-%m-%d %H:%M:%S.%f%z"}),
-        ("2000-12-21 10:20:10.1Z", True, {"%Y-%m-%d %H:%M:%S.%f%z"}),
-        ("2024-12-19T10:53:36.428000+00:00", True, {"%Y-%m-%dT%H:%M:%S.%f%z"}),
-        ("1925_12_20T14:30:00.2763", False, {"%Y_%m_%dT%H:%M:%S.%f"}),
-        ("1925 12 20 14:30:00Z", True, {"%Y %m %d %H:%M:%S%z"}),
-        # the date part carries the same ambiguity as a plain date
-        ("07/03/2024 10:20:10", False, {"%d/%m/%Y %H:%M:%S", "%m/%d/%Y %H:%M:%S"}),
-        ("12/31/2022 12:00:00", False, {"%m/%d/%Y %H:%M:%S"}),
-        ("31/12/2022 12:00:00", False, {"%d/%m/%Y %H:%M:%S"}),
-        ("Sun, 06 Nov 1994 08:49:37 GMT", False, set()),  # rfc822
+        (["2021-06-22 10:20:10"], False, "%Y-%m-%d %H:%M:%S"),
+        (["2030/06/22 00:00:00.0028"], False, "%Y/%m/%d %H:%M:%S.%f"),
+        (["1925_12_20T14:30:00.2763"], False, "%Y_%m_%dT%H:%M:%S.%f"),
+        (["2021-06-22 10:20:10-04:00"], True, "%Y-%m-%d %H:%M:%S%z"),
+        (["2000-12-21 10:20:10.1Z"], True, "%Y-%m-%d %H:%M:%S.%f%z"),
+        (["2024-12-19T10:53:36.428000+00:00"], True, "%Y-%m-%dT%H:%M:%S.%f%z"),
+        (["1925 12 20 14:30:00Z"], True, "%Y %m %d %H:%M:%S%z"),
+        # the date part carries the same ambiguity as a plain date, settled the same way
+        (["07/03/2024 10:20:10"], False, "%d/%m/%Y %H:%M:%S"),
+        (["07/03/2024 10:20:10", "12/25/2024 10:20:10"], False, "%m/%d/%Y %H:%M:%S"),
+        # a timezone is required by one format and refused by the other
+        (["2021-06-22 10:20:10-04:00"], False, None),
+        (["2021-06-22 10:20:10"], True, None),
+        (["Sun, 06 Nov 1994 08:49:37 GMT"], False, None),  # rfc822 has its own format
     ],
 )
-def test_datetime_format_candidates(value, has_tz, expected_formats):
-    assert datetime_format_candidates(value, has_tz=has_tz) == expected_formats
+def test_datetime_format_inferred_from_column(values, aware, expected_format):
+    infer = datetime_aware_infer if aware else datetime_naive_infer
+    assert infer(values) == expected_format
 
 
 @pytest.mark.parametrize(
-    "candidates, expected",
+    "value, fmt, expected",
     [
-        ({"%d/%m/%Y"}, ["%d/%m/%Y"]),
-        ({"%m/%d/%Y"}, ["%m/%d/%Y"]),
-        ({"%Y-%m-%d"}, ["%Y-%m-%d"]),
-        # no value in the column tells the two orders apart: day-first wins
-        ({"%d/%m/%Y", "%m/%d/%Y"}, ["%d/%m/%Y"]),
-        # values contradict each other, no format fits the whole column
-        (set(), None),
+        ("15 décembre 1985", "csvd:%d %b %Y", _datetime(1985, 12, 15)),
+        ("15 Janv. 1985", "csvd:%d %b %Y", _datetime(1985, 1, 15)),
+        ("15-dec-85", "csvd:%d-%b-%y", _datetime(1985, 12, 15)),
+        ("15-dec-05", "csvd:%d-%b-%y", _datetime(2005, 12, 15)),
+        ("31 février 1996", "csvd:%d %b %Y", None),  # not a real day of that month
+        ("15 tambour 1985", "csvd:%d %b %Y", None),
+        # years outside of what we accept as a date, whatever the format
+        ("15 dec 1850", "csvd:%d %b %Y", None),
+        ("1850-12-15", "%Y-%m-%d", None),
     ],
 )
-def test_resolve_date_format(candidates, expected):
-    assert resolve_date_format(candidates) == expected
+def test_parse(value, fmt, expected):
+    assert parse(value, fmt) == expected
+
+
+def test_month_names_are_unambiguous():
+    # a spelling that would mean two different months depending on the language is unreadable,
+    # so it must not be part of the index (this is what a new language could silently introduce)
+    assert "jui" not in MONTHS
+    for language, months in MONTH_NAMES.items():
+        for number, names in enumerate(months, start=1):
+            for name in names:
+                assert MONTHS.get(name) in (number, None), (
+                    f"{name} ({language}) does not read as month {number}"
+                )
 
 
 @pytest.mark.parametrize(
     "values, expected_format, expected_dates",
     [
-        # one value where the day is above 12 settles the order for the whole column,
-        # including for the values that could have been read either way
         (
             ["07/03/2024", "25/12/2024"],
-            ["%d/%m/%Y"],
+            "%d/%m/%Y",
             [_date(2024, 3, 7), _date(2024, 12, 25)],
         ),
-        # and one value where the month is above 12 settles it the other way around
         (
             ["07/03/2024", "12/25/2024"],
-            ["%m/%d/%Y"],
+            "%m/%d/%Y",
             [_date(2024, 7, 3), _date(2024, 12, 25)],
         ),
-        # no value settles the order, the French day-first reading is the default
         (
             ["07/03/2024", "01/02/2024"],
-            ["%d/%m/%Y"],
+            "%d/%m/%Y",
             [_date(2024, 3, 7), _date(2024, 2, 1)],
         ),
-        # the values contradict each other, no single format reads the whole column
         (
-            ["25/12/2024", "12/25/2024"],
-            None,
-            [_date(2024, 12, 25), _date(2024, 12, 25)],
+            ["15 jan 1985", "13 février 1996"],
+            "csvd:%d %b %Y",
+            [_date(1985, 1, 15), _date(1996, 2, 13)],
         ),
     ],
 )
@@ -283,6 +303,28 @@ def test_date_order_is_settled_by_the_column(tmp_path, values, expected_format, 
     assert list(pd.concat(list(dfs))["date"]) == expected_dates * 5
 
 
+def test_column_without_a_single_format_is_not_a_date(tmp_path):
+    # the values contradict each other: no format reads them all, so this is not a date column
+    values = ["25/12/2024", "12/25/2024"]
+    file_path = tmp_path / "dates.csv"
+    file_path.write_text("date;label\n" + "".join(f"{value};a\n" for value in values * 5))
+    analysis = routine(file_path=str(file_path), num_rows=-1, save_results=False)
+    assert analysis["columns"]["date"]["python_type"] == "string"
+    assert "date_format" not in analysis["columns"]["date"]
+
+
+def test_every_detected_date_column_comes_with_a_format(tmp_path):
+    values = ["07/03/2024", "25/12/2024"]
+    file_path = tmp_path / "dates.csv"
+    file_path.write_text(
+        "date;datetime;label\n" + "".join(f"{value};{value} 10:20:10;a\n" for value in values * 5)
+    )
+    analysis = routine(file_path=str(file_path), num_rows=-1, save_results=False)
+    for col_name, detection in analysis["columns"].items():
+        if detection["python_type"] in ("date", "datetime"):
+            assert detection.get("date_format"), f"{col_name} has no format to be read with"
+
+
 def test_date_order_is_settled_beyond_the_first_chunk(tmp_path):
     # the only value that settles the order sits in the last chunk
     values = ["07/03/2024"] * 50 + ["12/25/2024"]
@@ -293,7 +335,7 @@ def test_date_order_is_settled_beyond_the_first_chunk(tmp_path):
         patch("csv_detective.parsing.columns.CHUNK_SIZE", 10),
     ):
         analysis = routine(file_path=str(file_path), num_rows=-1, save_results=False)
-    assert analysis["columns"]["date"]["date_format"] == ["%m/%d/%Y"]
+    assert analysis["columns"]["date"]["date_format"] == "%m/%d/%Y"
 
 
 @pytest.mark.parametrize(
@@ -301,17 +343,17 @@ def test_date_order_is_settled_beyond_the_first_chunk(tmp_path):
     [
         (
             ["07/03/2024 10:20:10", "25/12/2024 10:20:10"],
-            ["%d/%m/%Y %H:%M:%S"],
+            "%d/%m/%Y %H:%M:%S",
             [_datetime(2024, 3, 7, 10, 20, 10), _datetime(2024, 12, 25, 10, 20, 10)],
         ),
         (
             ["07/03/2024 10:20:10", "12/25/2024 10:20:10"],
-            ["%m/%d/%Y %H:%M:%S"],
+            "%m/%d/%Y %H:%M:%S",
             [_datetime(2024, 7, 3, 10, 20, 10), _datetime(2024, 12, 25, 10, 20, 10)],
         ),
         (
             ["07/03/2024 10:20:10", "01/02/2024 10:20:10"],
-            ["%d/%m/%Y %H:%M:%S"],
+            "%d/%m/%Y %H:%M:%S",
             [_datetime(2024, 3, 7, 10, 20, 10), _datetime(2024, 2, 1, 10, 20, 10)],
         ),
     ],
@@ -335,16 +377,18 @@ def test_datetime_order_is_settled_by_the_column(
 @pytest.mark.parametrize(
     "value, _type, date_format, expected",
     [
-        ("2022-08-01", "date", ["%Y-%m-%d"], _date(2022, 8, 1)),
-        # dateutil interprets 12/02 as MM/DD (US), but csv-detective detects DD/MM
-        # strptime with the detected format gives the correct DD/MM interpretation
-        ("12/02/2007", "date", ["%d/%m/%Y"], _date(2007, 2, 12)),
+        ("2022-08-01", "date", "%Y-%m-%d", _date(2022, 8, 1)),
+        # dateutil reads 12/02 as MM/DD (US) where the column said DD/MM
+        ("12/02/2007", "date", "%d/%m/%Y", _date(2007, 2, 12)),
+        ("15 décembre 1985", "date", "csvd:%d %b %Y", _date(1985, 12, 15)),
         (
             "2024-09-23 17:32:07",
             "datetime",
-            ["%Y-%m-%d %H:%M:%S"],
+            "%Y-%m-%d %H:%M:%S",
             _datetime(2024, 9, 23, 17, 32, 7),
         ),
+        # no format: an analysis generated before the inference existed
+        ("2022-08-01", "date", None, _date(2022, 8, 1)),
     ],
 )
 def test_cast_with_date_format(value, _type, date_format, expected):

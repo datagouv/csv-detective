@@ -1,5 +1,6 @@
 import json
 from datetime import date, datetime
+from functools import partial
 from time import time
 from typing import Iterator
 
@@ -8,26 +9,23 @@ import pyarrow.parquet as pq
 
 from csv_detective.formats.binary import binary_casting
 from csv_detective.formats.bool import bool_casting
-from csv_detective.formats.date import date_casting
+from csv_detective.formats.date import date_casting, parse
 from csv_detective.formats.float import float_casting
 from csv_detective.parsing.csv import CHUNK_SIZE
 from csv_detective.utils import display_logs_depending_process_time
 
 
-def fast_date_casting(val: str, date_formats: list[str] | None) -> datetime | None:
-    if date_formats:
-        for fmt in date_formats:
-            try:
-                return datetime.strptime(val, fmt)
-            except (ValueError, TypeError):
-                continue
-    return date_casting(val)
+def date_from(value: str, date_format: str | None) -> datetime | None:
+    if date_format is None:
+        # analysis generated before the format inference: no format to read the value with
+        return date_casting(value)
+    return parse(value, date_format)
 
 
 def cast(
     value: str,
     _type: str,
-    date_format: list[str] | None = None,
+    date_format: str | None = None,
 ) -> str | int | float | bool | date | datetime | bytes | None:
     if not isinstance(value, str) or value in pd._libs.parsers.STR_NA_VALUES:
         # STR_NA_VALUES are directly ingested as NaN by pandas, we avoid trying to cast them (into int for instance)
@@ -46,10 +44,10 @@ def cast(
             # in hydra json are given to postgres as strings, conversion is done by postgres
             return json.loads(value)
         case "date":
-            _date = fast_date_casting(value, date_format)
+            _date = date_from(value, date_format)
             return _date.date() if _date else None
         case "datetime":
-            return fast_date_casting(value, date_format)
+            return date_from(value, date_format)
         case "binary":
             return binary_casting(value)
         case _:
@@ -72,10 +70,11 @@ def cast_df(
             # to allow having ints and NaN in the same column
             df[col_name] = df[col_name].astype(pd.Int64Dtype())
         else:
-            date_format = detection.get("date_format")
             df[col_name] = df[col_name].apply(
-                lambda col, _type=detection["python_type"], _df=date_format: cast(
-                    col, _type=_type, date_format=_df
+                partial(
+                    cast,
+                    _type=detection["python_type"],
+                    date_format=detection.get("date_format"),
                 )
             )
     if verbose:

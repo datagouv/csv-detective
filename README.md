@@ -64,6 +64,17 @@ The program creates a `python` dictionary with the following information :
             "format": "code_commune",
             "score": 1.0
         },
+        "Date de création": {
+            "python_type": "date",
+            "format": "date",
+            "score": 1.0,
+            # How to read every value of that column. Columns detected as date or datetime
+            # always carry one: a column no single format reads is not a date.
+            # Formats prefixed with "csvd:" are read by csv-detective itself, the others
+            # by datetime.strptime (only text months need the former, as strptime only
+            # knows the ones of the process locale).
+            "date_format": "%d/%m/%Y"
+        },
     },
     "columns_labels": {                     # Property that return detection from header columns
         "Code commune": {

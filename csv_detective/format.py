@@ -1,4 +1,4 @@
-from typing import Any, Callable
+from typing import Any, Callable, Iterable
 
 from csv_detective.parsing.text import header_score
 
@@ -10,6 +10,7 @@ class Format:
         description: str,
         func: Callable[[Any], bool],
         _test_values: dict[bool, list[str]],
+        infer: Callable[[Iterable[Any]], str | None] | None = None,
         labels: dict[str, float] = {},
         proportion: float | int = 1,
         tags: list[str] = [],
@@ -24,6 +25,9 @@ class Format:
             descrption: a short description of the format.
             func: the value test for the format (returns whether a string is valid).
             _test_values: lists of valid and invalid values, used in the tests
+            infer: for formats whose detection needs the whole column, returns the single way to
+                read every value of it, or None if there is none (the column is then not of this
+                format). Values are still pre-filtered with func, which is the cheap check.
             labels: the dict of hint headers and their credibilty for the header score (NB: credibility is relative witin a single format, should be used to rank the valid labels)
             proportion: the tolerance (between 0 and 1) to say a column is valid for a format. (1 => 100% of the column has to pass the func check for the column to be considered valid)
             tags: to allow users to submit a file to only a subset of formats
@@ -34,6 +38,7 @@ class Format:
         self.description: str = description
         self.func: Callable[[Any], bool] = func
         self._test_values: dict[bool, list[str]] = _test_values
+        self.infer: Callable[[Iterable[Any]], str | None] | None = infer
         self.labels: dict[str, float] = labels
         self.proportion: float = self.check_proportion(proportion)
         self.tags: list[str] = tags
@@ -80,6 +85,7 @@ class FormatsManager:
                 name=label,
                 func=(module := getattr(formats, label))._is,
                 _test_values=module._test_values,
+                infer=getattr(module, "_infer", None),
                 **{
                     attr: val
                     for attr in ["labels", "description", "tags", "mandatory_label", "python_type"]

@@ -1,5 +1,8 @@
 import re
+import unicodedata
 from datetime import datetime
+from functools import lru_cache
+from typing import Any, Callable, Iterable
 
 from dateparser import parse as date_parser
 from dateutil.parser import ParserError
@@ -38,136 +41,218 @@ def date_casting(val: str) -> datetime | None:
         return None
 
 
-threshold = 0.3
-seps = r"[\s/\-\*_\|;.,]"
-# the unanchored bodies are reused to build the datetime patterns
-_jjmmaaaa = r"(0[1-9]|[12][0-9]|3[01])SEP(0[1-9]|1[0-2])SEP((19|20)\d{2})".replace("SEP", seps)
-_mmjjaaaa = r"(0[1-9]|1[0-2])SEP(0[1-9]|[12][0-9]|3[01])SEP((19|20)\d{2})".replace("SEP", seps)
-_aaaammjj = r"((19|20)\d{2})SEP(0[1-9]|1[0-2])SEP(0[1-9]|[12][0-9]|3[01])".replace(
-    "SEP", seps + "?"
-)
-# matches JJ-MM-AAAA with any of the listed separators
-jjmmaaaa_pattern = f"^{_jjmmaaaa}$"
-# matches MM-JJ-AAAA (US order) with any of the listed separators
-mmjjaaaa_pattern = f"^{_mmjjaaaa}$"
-# matches AAAA-MM-JJ with any of the listed separators OR NO SEPARATOR
-aaaammjj_pattern = f"^{_aaaammjj}$"
-# the date part of a datetime, in any of the three orders
-date_part_pattern = f"(?:{_aaaammjj}|{_jjmmaaaa}|{_mmjjaaaa})"
-# matches JJ-mmm-AAAA and JJ-mmm...mm-AAAA with any of the listed separators OR NO SEPARATOR
-string_month_pattern = (
-    r"^(0[1-9]|[12][0-9]|3[01])SEP(jan|fev|feb|mar|avr|apr"
-    r"|mai|may|jun|jui|jul|aou|aug|sep|oct|nov|dec|janvier|fevrier|mars|avril|"
-    r"mai|juin|juillet|aout|septembre|octobre|novembre|decembre)SEP"
-    r"([0-9]{2}$|(19|20)[0-9]{2}$)"
-).replace("SEP", seps + "?")
+# Formats that strptime cannot express are prefixed with this marker and read by parse() itself.
+# So far only text months: strptime only knows the ones of the process locale.
+CUSTOM_PREFIX = "csvd:"
+
+SEPARATORS = " /-*_|;.,"
+MIN_LENGTH = 8  # "1/2/2024"
+MAX_LENGTH = 20
+MIN_YEAR = 1900
+MAX_YEAR = 2099
+
+# Standard forms come from the system locale tables (the CLDR data that PHP and Java also use),
+# tolerated variants are what published files actually contain. Adding a language is one entry.
+MONTH_NAMES: dict[str, list[list[str]]] = {
+    "fr": [
+        ["janvier", "janv", "jan"],
+        ["fevrier", "fevr", "fev"],
+        ["mars", "mar"],
+        ["avril", "avr"],
+        ["mai"],
+        ["juin"],
+        ["juillet", "juil"],
+        ["aout", "aou"],
+        ["septembre", "sept", "sep"],
+        ["octobre", "oct"],
+        ["novembre", "nov"],
+        ["decembre", "dec"],
+    ],
+    "en": [
+        ["january", "jan"],
+        ["february", "feb"],
+        ["march", "mar"],
+        ["april", "apr"],
+        ["may"],
+        ["june", "jun"],
+        ["july", "jul"],
+        ["august", "aug"],
+        ["september", "sept", "sep"],
+        ["october", "oct"],
+        ["november", "nov"],
+        ["december", "dec"],
+    ],
+}
 
 
-def _is(val, meta=None) -> bool:
-    # many early stops, to cut processing time
-    # and avoid the costly use of date_casting as much as possible
-    # /!\ timestamps are considered ints, not dates
-    if not isinstance(val, str) or len(val) > 20 or len(val) < 8:
-        return False
-    # if it's a usual date pattern
-    candidates = date_format_candidates(val)
-    if candidates:
-        narrow_column_formats(meta, candidates)
-        return True
-    # a date whose format can't be pinned down (mixed separators) is still a date
-    if (
-        re.match(aaaammjj_pattern, val)
-        or re.match(jjmmaaaa_pattern, val)
-        or re.match(mmjjaaaa_pattern, val)
-        or re.match(string_month_pattern, val, re.IGNORECASE)
-    ):
-        return True
-    if re.match(r"^-?\d+[\.|,]\d+$", val):
-        # regular floats are excluded
-        return False
-    # not enough digits => not a date (slightly arbitrary)
-    if sum(char.isdigit() for char in val) / len(val) < threshold:
-        return False
-    # last resort
-    res = date_casting(val)
-    if not res or res.hour or res.minute or res.second:
-        return False
-    return True
+def _build_month_index() -> dict[str, int]:
+    index: dict[str, int] = {}
+    ambiguous: set[str] = set()
+    for months in MONTH_NAMES.values():
+        for number, names in enumerate(months, start=1):
+            for name in names:
+                if index.setdefault(name, number) != number:
+                    # the same spelling means two different months depending on the language,
+                    # reading it would be a guess (this is what rules out "jui" for fr)
+                    ambiguous.add(name)
+    for name in ambiguous:
+        del index[name]
+    return index
 
 
-def date_format_candidates(val: str) -> set[str]:
-    """Returns every strptime format the value could be read with.
+MONTHS = _build_month_index()
 
-    A value whose two first components are both <= 12 ("07/03/2024") reads equally well as
-    day-first or month-first: it yields both formats, and only the column settles which one
-    applies (see narrow_column_formats and resolve_date_format).
-    """
-    if not isinstance(val, str) or len(val) > 20 or len(val) < 8:
-        return set()
-
-    if re.match(aaaammjj_pattern, val):
-        if len(val) == 8:
-            return {"%Y%m%d"}
-        sep = val[4]
-        return {f"%Y{sep}%m{sep}%d"} if val[7] == sep else set()
-
-    day_first = bool(re.match(jjmmaaaa_pattern, val))
-    month_first = bool(re.match(mmjjaaaa_pattern, val))
-    if not (day_first or month_first):
-        return set()
-    sep = val[2]
-    if val[5] != sep:
-        return set()
-    candidates = set()
-    if day_first:
-        candidates.add(f"%d{sep}%m{sep}%Y")
-    if month_first:
-        candidates.add(f"%m{sep}%d{sep}%Y")
-    return candidates
+_DIRECTIVES = {
+    "%d": r"(?P<day>\d{1,2})",
+    "%b": r"(?P<month>[^\W\d_]+)\.?",
+    "%Y": r"(?P<year>\d{4})",
+    "%y": r"(?P<short_year>\d{2})",
+}
+_TOKENS = re.compile(r"%.|.", re.DOTALL)
 
 
-def datetime_format_candidates(val: str, has_tz: bool) -> set[str]:
-    """Returns every strptime format the datetime value could be read with.
+@lru_cache(maxsize=None)
+def _compiled(fmt: str) -> re.Pattern:
+    return re.compile(
+        "".join(_DIRECTIVES.get(token, re.escape(token)) for token in _TOKENS.findall(fmt))
+    )
 
-    Only meaningful for values that already matched a datetime pattern.
-    """
-    # the date part is 10 characters long with separators, 8 without (AAAAMMJJ)
-    for date_len in (10, 8):
-        date_candidates = date_format_candidates(val[:date_len])
-        if date_candidates:
-            break
+
+def _deaccent(val: str) -> str:
+    return "".join(
+        char
+        for char in unicodedata.normalize("NFKD", val.lower())
+        if not unicodedata.combining(char)
+    )
+
+
+def _parse_custom(val: str, fmt: str) -> datetime | None:
+    match = _compiled(fmt).fullmatch(val)
+    if match is None:
+        return None
+    month = MONTHS.get(_deaccent(match["month"]))
+    if month is None:
+        return None
+    groups = match.groupdict()
+    if groups.get("year"):
+        year = int(groups["year"])
     else:
-        return set()
-    time_part = val[date_len:]
-    # time_part starts with the date/time separator, "T" or a blank
-    suffix = f"{time_part[0]}%H:%M:%S"
-    if "." in time_part:
-        suffix += ".%f"
-    if has_tz:
-        suffix += "%z"
-    return {fmt + suffix for fmt in date_candidates}
+        # same two-digit window as strptime's %y
+        short_year = int(groups["short_year"])
+        year = 2000 + short_year if short_year < 69 else 1900 + short_year
+    try:
+        return datetime(year, month, int(groups["day"]))
+    except ValueError:
+        return None
 
 
-def narrow_column_formats(meta: dict | None, candidates: set[str]) -> None:
-    """Keeps in meta only the formats that fit every value seen so far in the column.
+def parse(val: str, fmt: str) -> datetime | None:
+    """Reads a value with one of our formats, the custom ones included."""
+    if fmt.startswith(CUSTOM_PREFIX):
+        parsed = _parse_custom(val, fmt[len(CUSTOM_PREFIX) :])
+    else:
+        try:
+            parsed = datetime.strptime(val, fmt)
+        except (ValueError, TypeError):
+            return None
+    if parsed is None or not (MIN_YEAR <= parsed.year <= MAX_YEAR):
+        return None
+    return parsed
 
-    Taken one by one, values are often ambiguous; a column rarely is. A single "25/03/2024"
-    rules out the month-first reading for all the other values of its column.
+
+# the order is the preference: an ambiguous value is read day-first, as French files are the
+# overwhelming majority of what csv-detective is fed
+_TEMPLATES = (
+    "%d{sep}%m{sep}%Y",
+    "%m{sep}%d{sep}%Y",
+    "%Y{sep}%m{sep}%d",
+)
+_TEXT_MONTH_TEMPLATES = (
+    CUSTOM_PREFIX + "%d{sep}%b{sep}%Y",
+    CUSTOM_PREFIX + "%d{sep}%b{sep}%y",
+)
+
+
+def separator_of(val: str) -> str | None:
+    """The single separator the value uses, "" if it uses none, None if it mixes several."""
+    found = {
+        char
+        for index, char in enumerate(val)
+        if char in SEPARATORS
+        # the full stop of an abbreviated month is not a separator ("15 janv. 1985")
+        and not (char == "." and index and val[index - 1].isalpha())
+    }
+    if len(found) > 1:
+        return None
+    return found.pop() if found else ""
+
+
+def date_templates(val: str, *, text_month: bool = True) -> list[str]:
+    """Every format the value could plausibly be read with, most preferred first."""
+    sep = separator_of(val)
+    if sep is None:
+        return []
+    if not sep:
+        # without a separator, only the year-first order is unambiguous enough to be trusted
+        return ["%Y%m%d"]
+    templates = _TEMPLATES + (_TEXT_MONTH_TEMPLATES if text_month else ())
+    return [template.format(sep=sep) for template in templates]
+
+
+_DATETIME_SPLIT = re.compile(r"(?P<date>.+?)(?P<t>[T ])(?P<time>\d{1,2}:\d{2}.*)")
+_TIME_SUFFIXES = ("%H:%M:%S", "%H:%M:%S.%f", "%H:%M")
+
+
+def datetime_templates(val: str, *, aware: bool) -> list[str]:
+    """Every format the datetime value could plausibly be read with, most preferred first."""
+    match = _DATETIME_SPLIT.fullmatch(val)
+    if match is None:
+        return []
+    date_part = match["date"]
+    if not (MIN_LENGTH <= len(date_part) <= MAX_LENGTH):
+        return []
+    timezone = "%z" if aware else ""
+    return [
+        f"{date}{match['t']}{time}{timezone}"
+        for date in date_templates(date_part, text_month=False)
+        for time in _TIME_SUFFIXES
+    ]
+
+
+def infer_column_format(
+    values: Iterable[Any],
+    templates_for: Callable[[str], list[str]],
+) -> str | None:
+    """The single format that reads every value of the column, None if no format reads them all.
+
+    Taken one by one, values are often ambiguous ("07/03/2024" reads both ways); a column rarely
+    is, as one "25/03/2024" rules out the month-first reading for all the others. A column no
+    format fits is not a date at all, which is why this both detects and describes.
     """
-    if meta is None or not candidates:
-        return
-    known = meta.get("date_format")
-    meta["date_format"] = candidates if known is None else known & candidates
+    candidates: list[str] | None = None
+    for val in values:
+        if not isinstance(val, str):
+            return None
+        if candidates is None:
+            candidates = templates_for(val)
+        candidates = [fmt for fmt in candidates if parse(val, fmt) is not None]
+        if not candidates:
+            return None
+    return candidates[0] if candidates else None
 
 
-def resolve_date_format(candidates: set[str]) -> list[str] | None:
-    """Picks a column's format among the ones that fit all of its values."""
-    if len(candidates) == 1:
-        return list(candidates)
-    # Several formats fit every value: nothing in the column tells day-first from month-first.
-    # Day-first is the overwhelming majority of what csv-detective is fed, so it wins the tie.
-    day_first = sorted(fmt for fmt in candidates if fmt.startswith("%d"))
-    return day_first[:1] or None
+def _templates_for(val: str) -> list[str]:
+    if not (MIN_LENGTH <= len(val) <= MAX_LENGTH):
+        return []
+    return date_templates(val)
+
+
+def _infer(values: Iterable[Any]) -> str | None:
+    return infer_column_format(values, _templates_for)
+
+
+def _is(val: Any) -> bool:
+    return _infer([val]) is not None
 
 
 _test_values = {
@@ -179,7 +264,7 @@ _test_values = {
         "02 05 2003",
         "20030502",
         "2003.05.02",
-        "1993-12/02",
+        "1/2/2024",
     ],
     False: [
         "1993-1993-1993",
@@ -190,5 +275,7 @@ _test_values = {
         "20031512",
         "02052003",
         "6.27367393749392839",
+        "1993-12/02",
+        "15 jui 1985",
     ],
 }

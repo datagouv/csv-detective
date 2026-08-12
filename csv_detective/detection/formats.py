@@ -1,4 +1,5 @@
 from collections import defaultdict
+from typing import Any, Callable, Iterable
 
 import numpy as np
 import pandas as pd
@@ -9,7 +10,6 @@ from csv_detective.detection.variables import (
     # detect_continuous_variable,
 )
 from csv_detective.format import Format, FormatsManager
-from csv_detective.formats.date import resolve_date_format
 from csv_detective.output.utils import (
     extract_unique_from_multicat,
     prepare_output_dict,
@@ -22,6 +22,31 @@ from csv_detective.parsing.columns import (
     test_label,
     test_parquet_cols,
 )
+
+
+def _infer_column_formats(
+    formats: dict[str, Format],
+    scores_table_fields: pd.DataFrame,
+    values_of: Callable[[str], Iterable[Any]],
+) -> dict[str, dict[str, str]]:
+    """Runs the column-wide inference of the formats that have one, and zeroes those that fail.
+
+    A format that cannot say how to read the whole column has not detected it: the value-by-value
+    test only says that each value looks valid on its own, not that a single format reads them all.
+    """
+    inferred: dict[str, dict[str, str]] = {}
+    for label, fmt in formats.items():
+        if fmt.infer is None or label not in scores_table_fields.index:
+            continue
+        for col in scores_table_fields.columns:
+            if not scores_table_fields.loc[label, col]:
+                continue
+            column_format = fmt.infer(values_of(col))
+            if column_format is None:
+                scores_table_fields.loc[label, col] = 0.0
+            else:
+                inferred.setdefault(col, {})[label] = column_format
+    return inferred
 
 
 def detect_formats(
@@ -50,7 +75,7 @@ def detect_formats(
     # Perform testing on fields
     if analysis.get("engine") == "parquet":
         # parquet has its own process as typed columns allow shortcuts
-        scores_table_fields, analysis, col_values, all_meta = test_parquet_cols(
+        scores_table_fields, analysis, col_values = test_parquet_cols(
             table=table,
             formats=formats,
             analysis=analysis,
@@ -60,7 +85,7 @@ def detect_formats(
         )
     elif not in_chunks:
         # table is small enough to be tested in one go
-        scores_table_fields, all_meta = test_col(
+        scores_table_fields = test_col(
             table=table,
             formats=formats,
             limited_output=limited_output,
@@ -75,7 +100,7 @@ def detect_formats(
         analysis["categorical"] = res_categorical
         col_values = None
     else:
-        scores_table_fields, analysis, col_values, all_meta = test_col_chunks(
+        scores_table_fields, analysis, col_values = test_col_chunks(
             table=table,
             file_path=file_path,
             analysis=analysis,
@@ -85,6 +110,13 @@ def detect_formats(
             na_values=na_values,
             verbose=verbose,
         )
+    inferred_formats = _infer_column_formats(
+        formats,
+        scores_table_fields,
+        (lambda col: table[col].dropna().unique())
+        if col_values is None
+        else (lambda col: col_values[col].index.dropna()),
+    )
     analysis["columns_fields"] = prepare_output_dict(scores_table_fields, limited_output)
     analysis["unique_values"] = {}
     if col_values is None:
@@ -166,18 +198,10 @@ def detect_formats(
         for header, col_metadata in analysis["columns"].items():
             analysis["formats"][col_metadata["format"]].append(header)
 
-    # enrich date/datetime columns with date_format from meta collected during detection
-    for col_name, detection in analysis["columns"].items():
-        if isinstance(detection, list):
-            detection = next(
-                (d for d in detection if d.get("python_type") in ("date", "datetime")),
-                None,
-            )
-            if detection is None:
-                continue
-        if detection.get("python_type") not in ("date", "datetime"):
-            continue
-        col_meta = all_meta.get(col_name, {}).get(detection["format"], {})
-        detection["date_format"] = resolve_date_format(col_meta.get("date_format", set()))
+    for col_name, detections in analysis["columns"].items():
+        for detection in detections if isinstance(detections, list) else [detections]:
+            column_format = inferred_formats.get(col_name, {}).get(detection["format"])
+            if column_format is not None:
+                detection["date_format"] = column_format
 
     return analysis, col_values
