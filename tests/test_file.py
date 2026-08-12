@@ -107,10 +107,12 @@ def test_a_tolerant_format_spends_its_whole_budget_before_giving_up(tmp_path):
     # with half the values allowed to fail, one invalid value is not enough to rule the format
     # out, so the valid ones behind it still have to be read
     values = ["not a date"] * 100 + ["01/01/2024"] * 110
-    _, tested = _run_counting_date_tests(
+    analysis, tested = _run_counting_date_tests(
         _chunked_file(tmp_path, values),
         custom_proportions={"date": 0.5},
     )
+    # the first chunk holds nothing but invalid values, yet the format is still the file's
+    assert analysis["columns"]["date"]["format"] == "date"
     assert sorted(tested) == ["01/01/2024", "not a date"]
 
 
@@ -129,6 +131,21 @@ def test_total_lines_counts_the_file_not_the_analysed_sample(tmp_path):
             save_results=False,
         )
     assert analysis["total_lines"] == len(values)
+
+
+def test_parquet_nulls_are_not_values_to_test(tmp_path):
+    # a null is not a value the format has to read: stringified it would become "nan", which no
+    # format reads, and a single one of them would rule every format out of the column
+    file_path = tmp_path / "with_nulls.parquet"
+    pd.DataFrame(
+        {
+            "latitude": [43.2872, None, -22.61],
+            "annee": pd.array([2015, None, 2016], dtype="Int64"),
+        }
+    ).to_parquet(file_path)
+    analysis = routine(file_path=str(file_path), num_rows=-1, save_results=False)
+    assert analysis["columns"]["latitude"]["format"] == "latitude_wgs"
+    assert analysis["columns"]["annee"]["format"] == "year"
 
 
 def test_profile_output_on_file():

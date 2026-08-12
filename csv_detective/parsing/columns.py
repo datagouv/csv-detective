@@ -40,29 +40,21 @@ def _testable_values(values: pd.Series, skipna: bool) -> pd.Series:
     return values.sort_values(ascending=False)
 
 
-def score_column(values: pd.Series, format: Format) -> float:
+def score_column(values: pd.Series, total: float, format: Format) -> float:
     """The share of the column the format reads, 0.0 if it cannot reach its own proportion.
 
     `values` counts every distinct value of the *whole* column, so the total is known up front:
     that is what lets us give up as soon as the failures put the threshold out of reach, instead
     of reading every value of every column for every format.
     """
-    total = values.sum()
-    if not total:
-        # the whole column is empty, so every format fits it; handle_empty_columns settles the
-        # case afterwards, once we know they all did
-        return 1.0
     max_failures = (1 - format.proportion) * total
-    matching = 0
     failing = 0
     for value, count in values.items():
-        if format.func(value):
-            matching += count
-        else:
+        if not format.func(value):
             failing += count
             if failing > max_failures:
                 return 0.0
-    return matching / total
+    return 1 - failing / total
 
 
 def score_columns(
@@ -70,11 +62,15 @@ def score_columns(
     formats: dict[str, Format],
     *,
     skipna: bool = True,
-    mandatory_label_skip: dict[str, set[str]] | None = None,
+    skipped_labels: dict[str, set[str]] | None = None,
     known_columns: dict[str, str] | None = None,
     verbose: bool = False,
 ) -> pd.DataFrame:
-    """Scores every column against every format, from the value counts of the whole file."""
+    """Scores every column against every format, from the value counts of the whole file.
+
+    `skipped_labels` lists, per column, the formats that are out of the running whatever the
+    values hold, so that the expensive field tests are not run on them.
+    """
     if verbose:
         start = time()
         logging.info("Scoring columns against every format")
@@ -82,22 +78,22 @@ def score_columns(
     for col, raw_values in col_values.items():
         start_col = time()
         values = _testable_values(raw_values, skipna)
-        if not values.sum():
+        total = values.sum()
+        if not total:
             # an empty column fits every format, including the ones we would otherwise skip:
             # handle_empty_columns needs to see them all agree to settle the case
             return_table[col] = 1.0
             continue
-        skipped = (mandatory_label_skip or {}).get(col, set())
+        skipped = (skipped_labels or {}).get(col, set())
+        known_label = (known_columns or {}).get(col)
         for label, format in formats.items():
-            if (known_columns or {}).get(col) == label:
+            if label == known_label:
                 # the file's own metadata already tells us this column is of that type
                 return_table.loc[label, col] = 1.0
             elif label in skipped:
-                # mandatory_label formats are zeroed out at the end if the label doesn't match,
-                # so there's no point running the expensive field tests on those columns
                 return_table.loc[label, col] = 0.0
             else:
-                return_table.loc[label, col] = score_column(values, format)
+                return_table.loc[label, col] = score_column(values, total, format)
         if verbose and time() - start_col > 3:
             display_logs_depending_process_time(
                 f"\t/!\\ Column '{col}' took too long ({round(time() - start_col, 3)}s)",
@@ -108,22 +104,6 @@ def score_columns(
             f"Done scoring columns in {round(time() - start, 3)}s", time() - start
         )
     return return_table
-
-
-def test_col(
-    table: pd.DataFrame,
-    formats: dict[str, Format],
-    *,
-    limited_output: bool = True,
-    skipna: bool = True,
-    verbose: bool = False,
-) -> pd.DataFrame:
-    return score_columns(
-        {col: count_values(table[col]) for col in table.columns},
-        formats,
-        skipna=skipna,
-        verbose=verbose,
-    )
 
 
 def test_label(columns: list[str], formats: dict[str, Format], verbose: bool = False):
@@ -153,7 +133,6 @@ def test_col_chunks(
     file_path: str,
     analysis: dict,
     formats: dict[str, Format],
-    limited_output: bool,
     skipna: bool = True,
     na_values: list[str] | None = None,
     verbose: bool = False,
@@ -199,7 +178,9 @@ def test_col_chunks(
         col_values,
         formats,
         skipna=skipna,
-        mandatory_label_skip={
+        skipped_labels={
+            # mandatory_label formats are zeroed out at the end if the label doesn't match,
+            # so there's no point running the expensive field tests on those columns
             col: {
                 fmt_label
                 for fmt_label, fmt in formats.items()
@@ -266,7 +247,6 @@ def test_parquet_cols(
     table: pq.ParquetFile,
     formats: dict[str, Format],
     analysis: dict,
-    limited_output: bool,
     skipna: bool = True,
     verbose: bool = False,
 ):
@@ -281,10 +261,16 @@ def test_parquet_cols(
     for idx, batch in enumerate(table.iter_batches(CHUNK_SIZE * 10)):
         if verbose:
             logging.info(f"> Reading batch number {idx + 1}")
-        batch = batch.to_pandas()
+        # a null in an integer column is enough to have it read as floats, and counted as
+        # "2015.0" instead of "2015", which no format expecting an integer reads: asking for
+        # objects keeps the integers, and casting settles the columns pandas typed on its own
+        batch = batch.to_pandas(integer_object_nulls=True).astype(object)
         str_batch = batch.map(
             # not simply using astype(str) because lists are numpy arrays, cast as str they lose their commas
-            lambda x: str(x.tolist()) if isinstance(x, np.ndarray) else str(x)
+            lambda x: str(x.tolist()) if isinstance(x, np.ndarray) else str(x),
+            # nulls have to stay null: cast as str they would become the value "nan", which every
+            # format is asked about and fails on, sinking the whole column
+            na_action="ignore",
         )
         row_hashes_count = row_hashes_count.add(
             pd.util.hash_pandas_object(str_batch, index=False).value_counts(),
@@ -297,11 +283,12 @@ def test_parquet_cols(
         col_values,
         formats,
         skipna=skipna,
-        mandatory_label_skip={
+        skipped_labels={
+            # the metadata gives the type away, so only the formats of that type can apply, and
+            # mandatory_label formats are zeroed out at the end if the label doesn't match anyway
             col: {
                 fmt_label
                 for fmt_label, fmt in formats.items()
-                # the metadata gives the type away, so only the formats of that type can apply
                 if fmt.python_type != pytype
                 or (fmt.mandatory_label and fmt.is_valid_label(col) == 0)
             }
