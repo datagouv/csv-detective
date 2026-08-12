@@ -114,6 +114,23 @@ def test_a_tolerant_format_spends_its_whole_budget_before_giving_up(tmp_path):
     assert sorted(tested) == ["01/01/2024", "not a date"]
 
 
+def test_total_lines_counts_the_file_not_the_analysed_sample(tmp_path):
+    # with num_rows > 0 the analysed table is a sample of the first chunk, so counting from it
+    # would report the sample size in place of the rows it stands for
+    values = [f"{day:02d}/01/2024" for day in range(1, 26)]
+    with (
+        patch("csv_detective.parsing.csv.CHUNK_SIZE", 10),
+        patch("csv_detective.parsing.columns.CHUNK_SIZE", 10),
+    ):
+        analysis = routine(
+            file_path=str(_chunked_file(tmp_path, values)),
+            num_rows=5,
+            output_profile=False,
+            save_results=False,
+        )
+    assert analysis["total_lines"] == len(values)
+
+
 def test_profile_output_on_file():
     output = routine(
         file_path="tests/data/a_test_file.csv",

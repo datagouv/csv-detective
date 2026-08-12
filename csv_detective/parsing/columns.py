@@ -13,7 +13,8 @@ from csv_detective.utils import display_logs_depending_process_time
 # above this threshold, a column is not considered categorical
 MAX_NUMBER_CATEGORICAL_VALUES = 25
 RATIO_CATEGORICAL_VALUES = 0.05
-# how many chunks are concatenated before their values are counted
+# the file is re-read by batches of that many chunks: each add() realigns the running index, which
+# holds every distinct value seen so far, so counting once per chunk would dominate the reading
 CHUNKS_PER_BATCH = 10
 
 
@@ -162,10 +163,10 @@ def test_col_chunks(
         logging.info("Reading the file to count the values of each column")
 
     # hashing rows to get nb_duplicates
-    row_hashes_count = pd.util.hash_pandas_object(table, index=False).value_counts()
+    row_hashes_count = pd.Series()
     # getting values for profile to read the file only once
-    col_values = {col: count_values(table[col]) for col in table.columns}
-    analysis["total_lines"] = len(table)
+    col_values = {col: pd.Series() for col in table.columns}
+    analysis["total_lines"] = 0
 
     # only csv files can end up here, can't chunk excel
     chunks = pd.read_csv(
@@ -175,36 +176,19 @@ def test_col_chunks(
         sep=analysis["separator"],
         skiprows=analysis["header_row_idx"],
         compression=analysis.get("compression"),
-        chunksize=CHUNK_SIZE,
+        chunksize=CHUNK_SIZE * CHUNKS_PER_BATCH,
         na_values=na_values,
     )
-
-    def add_to_counts(rows: pd.DataFrame) -> None:
-        nonlocal row_hashes_count
-        analysis["total_lines"] += len(rows)
+    for idx, batch in enumerate(chunks):
+        if verbose:
+            logging.info(f"> Reading batch number {idx + 1}")
+        analysis["total_lines"] += len(batch)
         row_hashes_count = row_hashes_count.add(
-            pd.util.hash_pandas_object(rows, index=False).value_counts(),
+            pd.util.hash_pandas_object(batch, index=False).value_counts(),
             fill_value=0,
         )
-        for col in rows.columns:
-            col_values[col] = col_values[col].add(count_values(rows[col]), fill_value=0)
-
-    # chunks are grouped before being counted: each add() realigns the running index, which holds
-    # every distinct value seen so far, so doing it once per chunk would dominate the reading
-    batch: list[pd.DataFrame] = []
-    for idx, chunk in enumerate(chunks):
-        if idx == 0:
-            # we have read this one already, it is the sample we were given
-            continue
-        batch.append(chunk)
-        if len(batch) < CHUNKS_PER_BATCH:
-            continue
-        if verbose:
-            logging.info(f"> Reading up to chunk number {idx}")
-        add_to_counts(pd.concat(batch, ignore_index=True))
-        batch = []
-    if batch:
-        add_to_counts(pd.concat(batch, ignore_index=True))
+        for col in batch.columns:
+            col_values[col] = col_values[col].add(count_values(batch[col]), fill_value=0)
 
     # Formats are scored once, here, on the counts of the whole file rather than chunk by chunk.
     # Averaging chunk scores gave a short chunk the same weight as a long one, and no format could
