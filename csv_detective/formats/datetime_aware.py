@@ -4,6 +4,7 @@ from csv_detective.formats.date import (
     SHARED_DATE_LABELS,
     datetime_templates,
     infer_column_format,
+    matches_a_template,
 )
 
 proportion = 1
@@ -29,7 +30,7 @@ def _infer(values: Iterable[Any]) -> str | None:
 
 
 def _is(val: Any) -> bool:
-    return _infer([val]) is not None
+    return matches_a_template(val, _templates_for)
 
 
 _test_values = {

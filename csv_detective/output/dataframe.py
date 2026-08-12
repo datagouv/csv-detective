@@ -17,7 +17,13 @@ from csv_detective.utils import display_logs_depending_process_time
 
 def date_from(value: str, date_format: str | None) -> datetime | None:
     if date_format is None:
-        # analysis generated before the format inference: no format to read the value with
+        # No format to read the value with. Unreachable from an analysis this version produced
+        # for a date column, but reachable from one it did not: validate_then_detect casts with
+        # the caller's previous_analysis when it is still valid, and those were generated before
+        # the inference existed. It is also the path of datetime_rfc822, which has no inference,
+        # and of columns detected with a tolerant custom proportion.
+        # This is what keeps dateutil/dateparser as dependencies; dropping it means requiring
+        # every stored analysis to be regenerated.
         return date_casting(value)
     return parse(value, date_format)
 

@@ -24,6 +24,13 @@ from csv_detective.parsing.columns import (
 )
 
 
+def _winning_format(detections: dict | list[dict], limited_output: bool) -> str:
+    """The format that won for a column, whatever shape prepare_output_dict produced."""
+    if limited_output:
+        return detections["format"]
+    return max(detections, key=lambda d: d["score"], default={"format": "string"})["format"]
+
+
 def _infer_column_formats(
     formats: dict[str, Format],
     scores_table_fields: pd.DataFrame,
@@ -34,14 +41,25 @@ def _infer_column_formats(
     A format that cannot say how to read the whole column has not detected it: the value-by-value
     test only says that each value looks valid on its own, not that a single format reads them all.
     """
+    inferable = [
+        (label, fmt)
+        for label, fmt in formats.items()
+        if fmt.infer is not None
+        # a format the user made tolerant cannot be pinned down: asking for a single format that
+        # reads every value contradicts the proportion of failures they just allowed
+        and fmt.proportion == 1
+        and label in scores_table_fields.index
+    ]
     inferred: dict[str, dict[str, str]] = {}
-    for label, fmt in formats.items():
-        if fmt.infer is None or label not in scores_table_fields.index:
+    for col in scores_table_fields.columns:
+        candidates = [
+            (label, fmt) for label, fmt in inferable if scores_table_fields.loc[label, col]
+        ]
+        if not candidates:
             continue
-        for col in scores_table_fields.columns:
-            if not scores_table_fields.loc[label, col]:
-                continue
-            column_format = fmt.infer(values_of(col))
+        values = list(values_of(col))
+        for label, fmt in candidates:
+            column_format = fmt.infer(values)
             if column_format is None:
                 scores_table_fields.loc[label, col] = 0.0
             else:
@@ -110,18 +128,23 @@ def detect_formats(
             na_values=na_values,
             verbose=verbose,
         )
-    inferred_formats = _infer_column_formats(
-        formats,
-        scores_table_fields,
-        (lambda col: table[col].dropna().unique())
-        if col_values is None
-        else (lambda col: col_values[col].index.dropna()),
-    )
+    if analysis.get("engine") == "parquet":
+        # parquet types columns itself, so there is nothing to infer and nothing to read the
+        # format with: cast_df_chunks hands the file over to pandas untouched
+        inferred_formats: dict[str, dict[str, str]] = {}
+    else:
+        inferred_formats = _infer_column_formats(
+            formats,
+            scores_table_fields,
+            (lambda col: table[col].dropna().unique())
+            if col_values is None
+            else (lambda col: col_values[col].index.dropna()),
+        )
     analysis["columns_fields"] = prepare_output_dict(scores_table_fields, limited_output)
     analysis["unique_values"] = {}
     if col_values is None:
         for col in table.columns:
-            if analysis["columns_fields"][col]["format"] == "json" and all(
+            if _winning_format(analysis["columns_fields"][col], limited_output) == "json" and all(
                 value.startswith("[") for value in table[col]
             ):
                 unique = extract_unique_from_multicat(table[col])
@@ -131,7 +154,7 @@ def detect_formats(
                 analysis["unique_values"][col] = list(table[col].dropna().unique())
     else:
         for col in col_values.keys():
-            if analysis["columns_fields"][col]["format"] == "json" and all(
+            if _winning_format(analysis["columns_fields"][col], limited_output) == "json" and all(
                 value.startswith("[") for value in col_values[col].index
             ):
                 unique = extract_unique_from_multicat(col_values[col].index.to_series())
@@ -199,7 +222,7 @@ def detect_formats(
             analysis["formats"][col_metadata["format"]].append(header)
 
     for col_name, detections in analysis["columns"].items():
-        for detection in detections if isinstance(detections, list) else [detections]:
+        for detection in [detections] if limited_output else detections:
             column_format = inferred_formats.get(col_name, {}).get(detection["format"])
             if column_format is not None:
                 detection["date_format"] = column_format

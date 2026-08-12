@@ -33,18 +33,16 @@ def test_col_val(
     zero_if_too_low: bool = True,
     verbose: bool = False,
 ) -> float:
-    """Tests values of the serie using test_func.
-    - skipna : if True indicates that NaNs are considered True
+    """Tests values of the serie using format.func.
+         - skipna : if True indicates that NaNs are considered True
     for the serie to be detected as a certain format
     """
     if verbose:
         start = time()
 
-    test_func = format.func
-
     # TODO : change for a cleaner method and only test columns in modules labels
-    def apply_test_func(serie: pd.Series, _test_func: Callable, _range: int):
-        return serie.sample(n=_range).apply(_test_func)
+    def apply_test_func(serie: pd.Series, test_func: Callable, _range: int):
+        return serie.sample(n=_range).apply(test_func)
 
     try:
         if skipna:
@@ -56,7 +54,7 @@ def test_col_val(
         if not limited_output or format.proportion < 1:
             # we want or have to go through the whole column to have the proportion
             value_counts = serie.value_counts()
-            unique_results = value_counts.index.to_series().apply(test_func)
+            unique_results = value_counts.index.to_series().apply(format.func)
             result: float = (unique_results * value_counts.values).sum() / ser_len
             return 0.0 if result < format.proportion and zero_if_too_low else result
         else:
@@ -66,9 +64,9 @@ def test_col_val(
                 min(1, ser_len),
                 min(5, ser_len),
             ]:
-                if not all(apply_test_func(serie, test_func, _range)):
+                if not all(apply_test_func(serie, format.func, _range)):
                     return 0.0
-            return float(all(test_func(v) for v in serie.unique()))
+            return float(all(format.func(v) for v in serie.unique()))
     finally:
         if verbose and time() - start > 3:
             display_logs_depending_process_time(
@@ -94,6 +92,9 @@ def test_col(
         if verbose:
             start_type = time()
             logging.info(f"\t- Starting with format '{label}'")
+        # improvement lead : put the longest tests behind and make them only if previous tests
+        # not satisfactory, and mutualise per column what does not depend on the format
+        # (dropna, unique) instead of recomputing it for each of them
         for col in table.columns:
             return_table.loc[label, col] = test_col_val(
                 table[col],

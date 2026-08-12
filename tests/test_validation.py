@@ -186,6 +186,57 @@ def test_validate_with_all_nan_column():
     assert is_valid
 
 
+def _date_analysis(date_format: str | None, fmt: str = "date") -> dict:
+    columns: dict = {"date": {"format": fmt, "python_type": "date", "score": 1.0}}
+    if date_format is not None:
+        columns["date"]["date_format"] = date_format
+    return {
+        "header": ["date"],
+        "columns": columns,
+        "encoding": "utf-8",
+        "separator": ";",
+        "header_row_idx": 0,
+        "heading_columns": 0,
+        "trailing_columns": 0,
+        "categorical": [],
+        "columns_fields": {},
+        "columns_labels": {},
+        "formats": {},
+    }
+
+
+@pytest.mark.parametrize(
+    "date_format, values, should_be_valid",
+    (
+        # the file is read the way the analysis says it is
+        ("%d/%m/%Y", "07/03/2024\n25/12/2024\n", True),
+        # 12/25/2024 cannot be read day-first, so the file no longer matches its analysis
+        ("%d/%m/%Y", "07/03/2024\n12/25/2024\n", False),
+        # the custom formats go through the same path
+        ("csvd:%d %b %Y", "15 jan 1985\n13 février 1996\n", True),
+        ("csvd:%d %b %Y", "15 jan 1985\n1996-02-13\n", False),
+        # an analysis with no format at all still validates against the generic test
+        (None, "07/03/2024\n15 jan 1985\n", True),
+    ),
+)
+def test_validate_against_the_pinned_date_format(date_format, values, should_be_valid):
+    is_valid, _, _ = validate(
+        pd.io.common.StringIO("date\n" + values),
+        _date_analysis(date_format),
+    )
+    assert is_valid is should_be_valid
+
+
+def test_validate_rejects_an_analysis_made_with_an_unknown_format():
+    # date_fr was removed: an analysis mentioning it has to be redone, not crash on a KeyError
+    is_valid, analysis, col_values = validate(
+        pd.io.common.StringIO("date\n13 février 1996\n"),
+        _date_analysis(None, fmt="date_fr"),
+    )
+    assert is_valid is False
+    assert analysis is None and col_values is None
+
+
 @pytest.mark.parametrize(
     "modif_previous_analysis",
     (

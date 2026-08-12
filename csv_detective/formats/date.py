@@ -1,5 +1,4 @@
 import re
-import unicodedata
 from datetime import datetime
 from functools import lru_cache
 from typing import Any, Callable, Iterable
@@ -7,6 +6,7 @@ from typing import Any, Callable, Iterable
 from dateparser import parse as date_parser
 from dateutil.parser import ParserError
 from dateutil.parser import parse as dateutil_parser
+from unidecode import unidecode
 
 proportion = 1
 description = "Date (flexible formats)"
@@ -85,22 +85,22 @@ MONTH_NAMES: dict[str, list[list[str]]] = {
 }
 
 
-def _build_month_index() -> dict[str, int]:
+def build_month_index(month_names: dict[str, list[list[str]]]) -> dict[str, int]:
     index: dict[str, int] = {}
     ambiguous: set[str] = set()
-    for months in MONTH_NAMES.values():
+    for months in month_names.values():
         for number, names in enumerate(months, start=1):
             for name in names:
                 if index.setdefault(name, number) != number:
-                    # the same spelling means two different months depending on the language,
-                    # reading it would be a guess (this is what rules out "jui" for fr)
+                    # a spelling that means two different months depending on the language cannot
+                    # be read; no current entry does, this guards the languages added later
                     ambiguous.add(name)
     for name in ambiguous:
         del index[name]
     return index
 
 
-MONTHS = _build_month_index()
+MONTHS = build_month_index(MONTH_NAMES)
 
 _DIRECTIVES = {
     "%d": r"(?P<day>\d{1,2})",
@@ -118,19 +118,11 @@ def _compiled(fmt: str) -> re.Pattern:
     )
 
 
-def _deaccent(val: str) -> str:
-    return "".join(
-        char
-        for char in unicodedata.normalize("NFKD", val.lower())
-        if not unicodedata.combining(char)
-    )
-
-
 def _parse_custom(val: str, fmt: str) -> datetime | None:
     match = _compiled(fmt).fullmatch(val)
     if match is None:
         return None
-    month = MONTHS.get(_deaccent(match["month"]))
+    month = MONTHS.get(unidecode(match["month"]).lower())
     if month is None:
         return None
     groups = match.groupdict()
@@ -146,18 +138,41 @@ def _parse_custom(val: str, fmt: str) -> datetime | None:
         return None
 
 
+_OPTIONAL_PART = re.compile(r"\[([^\]]*)\]")
+
+
+@lru_cache(maxsize=None)
+def _variants(fmt: str) -> tuple[str, ...]:
+    """Expands the optional parts of a format, the most complete one first.
+
+    A column whose source only prints fractional seconds when they are non-zero uses one format
+    with an optional part, not two competing ones.
+    """
+    match = _OPTIONAL_PART.search(fmt)
+    if match is None:
+        return (fmt,)
+    head, tail = fmt[: match.start()], fmt[match.end() :]
+    return _variants(head + match.group(1) + tail) + _variants(head + tail)
+
+
+def _read(val: str, fmt: str) -> datetime | None:
+    if fmt.startswith(CUSTOM_PREFIX):
+        fmt = fmt[len(CUSTOM_PREFIX) :]
+    if "%b" in fmt:
+        return _parse_custom(val, fmt)
+    try:
+        return datetime.strptime(val, fmt)
+    except (ValueError, TypeError):
+        return None
+
+
 def parse(val: str, fmt: str) -> datetime | None:
     """Reads a value with one of our formats, the custom ones included."""
-    if fmt.startswith(CUSTOM_PREFIX):
-        parsed = _parse_custom(val, fmt[len(CUSTOM_PREFIX) :])
-    else:
-        try:
-            parsed = datetime.strptime(val, fmt)
-        except (ValueError, TypeError):
-            return None
-    if parsed is None or not (MIN_YEAR <= parsed.year <= MAX_YEAR):
-        return None
-    return parsed
+    for variant in _variants(fmt):
+        parsed = _read(val, variant)
+        if parsed is not None and MIN_YEAR <= parsed.year <= MAX_YEAR:
+            return parsed
+    return None
 
 
 # the order is the preference: an ambiguous value is read day-first, as French files are the
@@ -187,6 +202,13 @@ def separator_of(val: str) -> str | None:
     return found.pop() if found else ""
 
 
+def _marked(template: str) -> str:
+    """Marks the formats strptime cannot read as-is, so that consumers can tell them apart."""
+    if "[" in template and not template.startswith(CUSTOM_PREFIX):
+        return CUSTOM_PREFIX + template
+    return template
+
+
 def date_templates(val: str, *, text_month: bool = True) -> list[str]:
     """Every format the value could plausibly be read with, most preferred first."""
     sep = separator_of(val)
@@ -200,7 +222,11 @@ def date_templates(val: str, *, text_month: bool = True) -> list[str]:
 
 
 _DATETIME_SPLIT = re.compile(r"(?P<date>.+?)(?P<t>[T ])(?P<time>\d{1,2}:\d{2}.*)")
-_TIME_SUFFIXES = ("%H:%M:%S", "%H:%M:%S.%f", "%H:%M")
+# the fraction is listed on its own before the optional form, so that a column that always prints
+# it (or never does) is described exactly, and only a column that mixes both falls back on "[.%f]"
+_TIME_SUFFIXES = ("%H:%M:%S", "%H:%M:%S.%f", "%H:%M:%S[.%f]", "%H:%M")
+# %z refuses a space before the offset, so the spaced form is a template of its own
+_TIMEZONES = ("%z", " %z")
 
 
 def datetime_templates(val: str, *, aware: bool) -> list[str]:
@@ -211,11 +237,11 @@ def datetime_templates(val: str, *, aware: bool) -> list[str]:
     date_part = match["date"]
     if not (MIN_LENGTH <= len(date_part) <= MAX_LENGTH):
         return []
-    timezone = "%z" if aware else ""
     return [
-        f"{date}{match['t']}{time}{timezone}"
+        _marked(f"{date}{match['t']}{time}{timezone}")
         for date in date_templates(date_part, text_month=False)
         for time in _TIME_SUFFIXES
+        for timezone in (_TIMEZONES if aware else ("",))
     ]
 
 
@@ -241,6 +267,15 @@ def infer_column_format(
     return candidates[0] if candidates else None
 
 
+def matches_a_template(val: Any, templates_for: Callable[[str], list[str]]) -> bool:
+    """Whether some format reads this single value, without settling on which one.
+
+    This is the per-value check the engine runs on every column; unlike infer_column_format it
+    stops at the first format that fits, as it has no column to narrow down.
+    """
+    return isinstance(val, str) and any(parse(val, fmt) is not None for fmt in templates_for(val))
+
+
 def _templates_for(val: str) -> list[str]:
     if not (MIN_LENGTH <= len(val) <= MAX_LENGTH):
         return []
@@ -252,7 +287,7 @@ def _infer(values: Iterable[Any]) -> str | None:
 
 
 def _is(val: Any) -> bool:
-    return _infer([val]) is not None
+    return matches_a_template(val, _templates_for)
 
 
 _test_values = {

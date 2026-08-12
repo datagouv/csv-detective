@@ -621,6 +621,20 @@ def test_unique_values_output(nb_rows, mocked_responses):
     assert analysis["unique_values"]["json_cat"] == [1, 2, 3]
 
 
+def test_parquet_keeps_its_declared_types(tmp_path):
+    # parquet types its columns itself, so the column-wide date inference must not run on it:
+    # the values it would see are stringified (a null reads "NaT"), and no format fits them
+    pq_path = tmp_path / "dates.parquet"
+    pd.DataFrame(
+        {
+            "when": pd.to_datetime(["2024-03-07", "2024-12-25", None] * 10),
+            "label": ["a"] * 30,
+        }
+    ).to_parquet(pq_path)
+    analysis = routine(file_path=str(pq_path), num_rows=-1, save_results=False)
+    assert analysis["columns"]["when"]["python_type"] == "datetime"
+
+
 def test_parquet_file_analysis():
     pq_path = "tests/data/file.parquet"
     analysis, chunks = routine(

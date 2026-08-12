@@ -27,7 +27,8 @@ class Format:
             _test_values: lists of valid and invalid values, used in the tests
             infer: for formats whose detection needs the whole column, returns the single way to
                 read every value of it, or None if there is none (the column is then not of this
-                format). Values are still pre-filtered with func, which is the cheap check.
+                format). Only used when proportion is 1: a format the user made tolerant cannot
+                be pinned down to a single way of reading every value.
             labels: the dict of hint headers and their credibilty for the header score (NB: credibility is relative witin a single format, should be used to rank the valid labels)
             proportion: the tolerance (between 0 and 1) to say a column is valid for a format. (1 => 100% of the column has to pass the func check for the column to be considered valid)
             tags: to allow users to submit a file to only a subset of formats

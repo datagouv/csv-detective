@@ -177,6 +177,12 @@ def validate(
                 if detected["format"] == "string":
                     # no test for columns that have not been recognized as a specific format
                     continue
+                if detected["format"] not in formats:
+                    # the analysis was made against a format this version no longer knows
+                    # (or that the caller filtered out): it has to be redone from scratch
+                    if verbose:
+                        logging.warning(f"> Unknown format {detected['format']} for {col_name}")
+                    return False, None, None
                 to_check = chunk[col_name].dropna() if skipna else chunk[col_name]
                 if to_check.empty:
                     continue
@@ -193,11 +199,11 @@ def validate(
                     if date_format:
                         # the analysis pinned down how to read this column, so a single parse
                         # settles a value, where the generic test tries every shape it knows
-                        def reads(val, _fmt=date_format):
-                            return parse(val, _fmt) is not None
-
-                        check = reads
+                        def check(val):
+                            return parse(val, date_format) is not None
                     else:
+                        # analysis generated before the format inference, or by a tolerant
+                        # proportion: no format to validate against, fall back on the generic test
                         check = formats[detected["format"]].func
                     unique_results = value_counts.index.to_series().apply(check)
                     chunk_valid_values = (unique_results * value_counts.values).sum()

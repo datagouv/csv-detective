@@ -1,6 +1,10 @@
 from typing import Any, Iterable
 
-from csv_detective.formats.date import datetime_templates, infer_column_format
+from csv_detective.formats.date import (
+    datetime_templates,
+    infer_column_format,
+    matches_a_template,
+)
 from csv_detective.formats.datetime_aware import labels  # noqa
 
 proportion = 1
@@ -25,7 +29,7 @@ def _infer(values: Iterable[Any]) -> str | None:
 
 
 def _is(val: Any) -> bool:
-    return _infer([val]) is not None
+    return matches_a_template(val, _templates_for)
 
 
 _test_values = {

@@ -12,7 +12,7 @@ from csv_detective.detection.variables import (
     detect_continuous_variable,
 )
 from csv_detective.format import FormatsManager
-from csv_detective.formats.date import MONTH_NAMES, MONTHS, parse
+from csv_detective.formats.date import MONTH_NAMES, MONTHS, build_month_index, parse
 from csv_detective.formats.date import _infer as date_infer
 from csv_detective.formats.datetime_aware import _infer as datetime_aware_infer
 from csv_detective.formats.datetime_naive import _infer as datetime_naive_infer
@@ -227,6 +227,19 @@ def test_date_format_inferred_from_column(values, expected_format):
         (["2021-06-22 10:20:10-04:00"], False, None),
         (["2021-06-22 10:20:10"], True, None),
         (["Sun, 06 Nov 1994 08:49:37 GMT"], False, None),  # rfc822 has its own format
+        # a source that only prints the fraction when it is non-zero still has one format
+        (
+            ["2021-06-22 10:20:10", "2021-06-22 10:20:10.5"],
+            False,
+            "csvd:%Y-%m-%d %H:%M:%S[.%f]",
+        ),
+        (
+            ["2021-06-22 10:20:10+02:00", "2021-06-22 10:20:10.5+02:00"],
+            True,
+            "csvd:%Y-%m-%d %H:%M:%S[.%f]%z",
+        ),
+        # the offset is sometimes spaced out from the time
+        (["2021-06-22 10:20:10 +02:00"], True, "%Y-%m-%d %H:%M:%S %z"),
     ],
 )
 def test_datetime_format_inferred_from_column(values, aware, expected_format):
@@ -241,6 +254,13 @@ def test_datetime_format_inferred_from_column(values, aware, expected_format):
         ("15 Janv. 1985", "csvd:%d %b %Y", _datetime(1985, 1, 15)),
         ("15-dec-85", "csvd:%d-%b-%y", _datetime(1985, 12, 15)),
         ("15-dec-05", "csvd:%d-%b-%y", _datetime(2005, 12, 15)),
+        # an optional part is read whether the value carries it or not
+        ("2021-06-22 10:20:10", "csvd:%Y-%m-%d %H:%M:%S[.%f]", _datetime(2021, 6, 22, 10, 20, 10)),
+        (
+            "2021-06-22 10:20:10.5",
+            "csvd:%Y-%m-%d %H:%M:%S[.%f]",
+            _datetime(2021, 6, 22, 10, 20, 10, 500000),
+        ),
         ("31 février 1996", "csvd:%d %b %Y", None),  # not a real day of that month
         ("15 tambour 1985", "csvd:%d %b %Y", None),
         # years outside of what we accept as a date, whatever the format
@@ -252,16 +272,28 @@ def test_parse(value, fmt, expected):
     assert parse(value, fmt) == expected
 
 
-def test_month_names_are_unambiguous():
-    # a spelling that would mean two different months depending on the language is unreadable,
-    # so it must not be part of the index (this is what a new language could silently introduce)
-    assert "jui" not in MONTHS
+def test_every_month_name_reads_as_its_own_month():
     for language, months in MONTH_NAMES.items():
         for number, names in enumerate(months, start=1):
             for name in names:
-                assert MONTHS.get(name) in (number, None), (
+                assert MONTHS.get(name) == number, (
                     f"{name} ({language}) does not read as month {number}"
                 )
+
+
+def test_a_spelling_meaning_two_months_is_dropped():
+    # no current entry collides, so this guards the languages a later PR could add
+    first = [[f"a{number}"] for number in range(1, 13)]
+    second = [[f"b{number}"] for number in range(1, 13)]
+    first[0].append("shared")  # january in one language...
+    second[4].append("shared")  # ...may in the other
+    index = build_month_index({"first": first, "second": second})
+    assert "shared" not in index
+    assert index["a1"] == 1 and index["b5"] == 5
+
+
+def test_max_year_is_enforced():
+    assert parse("2150-12-15", "%Y-%m-%d") is None
 
 
 @pytest.mark.parametrize(
@@ -323,6 +355,37 @@ def test_every_detected_date_column_comes_with_a_format(tmp_path):
     for col_name, detection in analysis["columns"].items():
         if detection["python_type"] in ("date", "datetime"):
             assert detection.get("date_format"), f"{col_name} has no format to be read with"
+
+
+def test_a_tolerant_proportion_keeps_detecting_without_a_format(tmp_path):
+    # asking for tolerance contradicts pinning down one format that reads every value:
+    # the column stays a date, scored as before, and carries no format
+    values = ["07/03/2024"] * 9 + ["not a date"]
+    file_path = tmp_path / "dates.csv"
+    file_path.write_text("date;label\n" + "".join(f"{value};a\n" for value in values))
+    analysis = routine(
+        file_path=str(file_path),
+        num_rows=-1,
+        save_results=False,
+        custom_proportions={"date": 0.8},
+    )
+    assert analysis["columns"]["date"]["python_type"] == "date"
+    assert "date_format" not in analysis["columns"]["date"]
+
+
+def test_dates_in_a_list_output_carry_their_format(tmp_path):
+    file_path = tmp_path / "dates.csv"
+    file_path.write_text("date;label\n" + "".join("07/03/2024;a\n" for _ in range(10)))
+    analysis = routine(
+        file_path=str(file_path),
+        num_rows=-1,
+        save_results=False,
+        limited_output=False,
+    )
+    date_detection = next(
+        detection for detection in analysis["columns"]["date"] if detection["format"] == "date"
+    )
+    assert date_detection["date_format"] == "%d/%m/%Y"
 
 
 def test_date_order_is_settled_beyond_the_first_chunk(tmp_path):
