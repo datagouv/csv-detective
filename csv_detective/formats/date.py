@@ -1,5 +1,5 @@
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 from functools import lru_cache
 from typing import Any, Callable, Iterable
 
@@ -103,7 +103,8 @@ def build_month_index(month_names: dict[str, list[list[str]]]) -> dict[str, int]
 MONTHS = build_month_index(MONTH_NAMES)
 
 _DIRECTIVES = {
-    "%d": r"(?P<day>\d{1,2})",
+    # the ordinal suffix is part of how English writes a day ("31st december 2022")
+    "%d": r"(?P<day>\d{1,2})(?:st|nd|rd|th)?",
     "%b": r"(?P<month>[^\W\d_]+)\.?",
     "%Y": r"(?P<year>\d{4})",
     "%y": r"(?P<short_year>\d{2})",
@@ -155,15 +156,26 @@ def _variants(fmt: str) -> tuple[str, ...]:
     return _variants(head + match.group(1) + tail) + _variants(head + tail)
 
 
+_UTC_NAME = re.compile(r"\b(?:GMT|UTC)$", re.IGNORECASE)
+
+
 def _read(val: str, fmt: str) -> datetime | None:
     if fmt.startswith(CUSTOM_PREFIX):
         fmt = fmt[len(CUSTOM_PREFIX) :]
     if "%b" in fmt:
         return _parse_custom(val, fmt)
+    if "%Z" in fmt and not _UTC_NAME.search(val):
+        # %Z also accepts whatever the machine's own zone is called, which we would have no
+        # offset for; GMT and UTC are the two names we can turn into a timezone ourselves
+        return None
     try:
-        return datetime.strptime(val, fmt)
+        parsed = datetime.strptime(val, fmt)
     except (ValueError, TypeError):
         return None
+    if "%Z" in fmt:
+        # strptime reads the name but drops it, leaving a naive datetime
+        return parsed.replace(tzinfo=timezone.utc)
+    return parsed
 
 
 def parse(val: str, fmt: str) -> datetime | None:
@@ -181,7 +193,11 @@ _DAY_OR_MONTH_FIRST = (
     "%d{sep}%m{sep}%Y",
     "%m{sep}%d{sep}%Y",
 )
-_YEAR_FIRST = "%Y{sep}%m{sep}%d"
+# ISO first, but the year can also be followed by the day ("2022-31-12")
+_YEAR_FIRST = (
+    "%Y{sep}%m{sep}%d",
+    "%Y{sep}%d{sep}%m",
+)
 _TEXT_MONTH_TEMPLATES = (
     CUSTOM_PREFIX + "%d{sep}%b{sep}%Y",
     CUSTOM_PREFIX + "%d{sep}%b{sep}%y",
@@ -221,9 +237,8 @@ def _numeric_templates(sep: str, year_first: bool) -> tuple[str, ...]:
     if not sep:
         # without a separator, only the year-first order is unambiguous enough to be trusted
         return ("%Y%m%d",)
-    if year_first:
-        return (_YEAR_FIRST.format(sep=sep),)
-    return tuple(template.format(sep=sep) for template in _DAY_OR_MONTH_FIRST)
+    templates = _YEAR_FIRST if year_first else _DAY_OR_MONTH_FIRST
+    return tuple(template.format(sep=sep) for template in templates)
 
 
 @lru_cache(maxsize=None)
@@ -252,8 +267,9 @@ _DATETIME_SPLIT = re.compile(r"(?P<date>.+?)(?P<t>[T ])(?P<time>\d{1,2}:\d{2}.*)
 # the fraction is listed on its own before the optional form, so that a column that always prints
 # it (or never does) is described exactly, and only a column that mixes both falls back on "[.%f]"
 _TIME_SUFFIXES = ("%H:%M:%S", "%H:%M:%S.%f", "%H:%M:%S[.%f]", "%H:%M")
-# %z refuses a space before the offset, so the spaced form is a template of its own
-_TIMEZONES = ("%z", " %z")
+# %z refuses a space before the offset, so the spaced form is a template of its own, and it
+# only reads numeric offsets: a named zone needs %Z, which _read turns into UTC
+_TIMEZONES = ("%z", " %z", " %Z")
 
 
 @lru_cache(maxsize=None)

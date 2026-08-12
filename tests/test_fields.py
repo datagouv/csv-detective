@@ -1,5 +1,6 @@
 from datetime import date as _date
 from datetime import datetime as _datetime
+from datetime import timezone as _timezone
 from unittest.mock import patch
 
 import pandas as pd
@@ -195,6 +196,12 @@ def test_all_proportion_1():
         (["15 jan 1985", "13 février 1996"], "csvd:%d %b %Y"),
         (["15 janv. 1985"], "csvd:%d %b %Y"),
         (["15-dec-85"], "csvd:%d-%b-%y"),
+        # English writes the day with an ordinal suffix
+        (["31st december 2022"], "csvd:%d %b %Y"),
+        # the year can be followed by the day rather than the month
+        (["2022-31-12"], "%Y-%d-%m"),
+        # ISO stays the preferred reading when both orders fit
+        (["2022-01-12"], "%Y-%m-%d"),
         # "jui" is the prefix of both juin and juillet, it cannot be read
         (["15 jui 1985"], None),
         (["15 tambour 1985"], None),
@@ -240,6 +247,12 @@ def test_date_format_inferred_from_column(values, expected_format):
         ),
         # the offset is sometimes spaced out from the time
         (["2021-06-22 10:20:10 +02:00"], True, "%Y-%m-%d %H:%M:%S %z"),
+        # a named zone, which %z cannot read
+        (["1996/06/22 10:20:10 GMT"], True, "%Y/%m/%d %H:%M:%S %Z"),
+        # any other name would leave us without an offset to apply
+        (["1996/06/22 10:20:10 CEST"], True, None),
+        # the year can be followed by the day here too
+        (["2022-31-12 12:00:00.92"], False, "%Y-%d-%m %H:%M:%S.%f"),
     ],
 )
 def test_datetime_format_inferred_from_column(values, aware, expected_format):
@@ -260,6 +273,12 @@ def test_datetime_format_inferred_from_column(values, aware, expected_format):
             "2021-06-22 10:20:10.5",
             "csvd:%Y-%m-%d %H:%M:%S[.%f]",
             _datetime(2021, 6, 22, 10, 20, 10, 500000),
+        ),
+        ("31st december 2022", "csvd:%d %b %Y", _datetime(2022, 12, 31)),
+        (
+            "1996/06/22 10:20:10 GMT",
+            "%Y/%m/%d %H:%M:%S %Z",
+            _datetime(1996, 6, 22, 10, 20, 10, tzinfo=_timezone.utc),
         ),
         ("31 février 1996", "csvd:%d %b %Y", None),  # not a real day of that month
         ("15 tambour 1985", "csvd:%d %b %Y", None),
