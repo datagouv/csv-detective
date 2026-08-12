@@ -14,7 +14,7 @@ from csv_detective.format import FormatsManager
 from csv_detective.formats.float import float_casting
 from csv_detective.output.dataframe import cast
 from csv_detective.output.utils import prepare_output_dict
-from csv_detective.parsing.columns import test_col as col_test  # to prevent pytest from testing it
+from csv_detective.parsing.columns import count_values, score_columns
 
 fmtm = FormatsManager()
 
@@ -167,7 +167,9 @@ def test_all_proportion_1():
         }
     )
     # testing columns for all formats
-    returned_table = col_test(table, fmtm.formats, limited_output=True)
+    returned_table = score_columns(
+        {col: count_values(table[col]) for col in table.columns}, fmtm.formats
+    )
     # the analysis should have found no match on any format
     assert all(returned_table[col].sum() == 0 for col in table.columns)
 

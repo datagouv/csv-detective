@@ -15,8 +15,9 @@ from csv_detective.output.utils import (
 )
 from csv_detective.parsing.columns import (
     MAX_NUMBER_CATEGORICAL_VALUES,
+    count_values,
     handle_empty_columns,
-    test_col,
+    score_columns,
     test_col_chunks,
     test_label,
     test_parquet_cols,
@@ -53,16 +54,14 @@ def detect_formats(
             table=table,
             formats=formats,
             analysis=analysis,
-            limited_output=limited_output,
             skipna=skipna,
             verbose=verbose,
         )
     elif not in_chunks:
         # table is small enough to be tested in one go
-        scores_table_fields = test_col(
-            table=table,
-            formats=formats,
-            limited_output=limited_output,
+        scores_table_fields = score_columns(
+            {col: count_values(table[col]) for col in table.columns},
+            formats,
             skipna=skipna,
             verbose=verbose,
         )
@@ -79,7 +78,6 @@ def detect_formats(
             file_path=file_path,
             analysis=analysis,
             formats=formats,
-            limited_output=limited_output,
             skipna=skipna,
             na_values=na_values,
             verbose=verbose,
@@ -99,7 +97,7 @@ def detect_formats(
     else:
         for col in col_values.keys():
             if analysis["columns_fields"][col]["format"] == "json" and all(
-                value.startswith("[") for value in col_values[col].index
+                value.startswith("[") for value in col_values[col].index.dropna()
             ):
                 unique = extract_unique_from_multicat(col_values[col].index.to_series())
                 if unique is not None:
