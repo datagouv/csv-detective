@@ -177,11 +177,11 @@ def parse(val: str, fmt: str) -> datetime | None:
 
 # the order is the preference: an ambiguous value is read day-first, as French files are the
 # overwhelming majority of what csv-detective is fed
-_TEMPLATES = (
+_DAY_OR_MONTH_FIRST = (
     "%d{sep}%m{sep}%Y",
     "%m{sep}%d{sep}%Y",
-    "%Y{sep}%m{sep}%d",
 )
+_YEAR_FIRST = "%Y{sep}%m{sep}%d"
 _TEXT_MONTH_TEMPLATES = (
     CUSTOM_PREFIX + "%d{sep}%b{sep}%Y",
     CUSTOM_PREFIX + "%d{sep}%b{sep}%y",
@@ -209,16 +209,43 @@ def _marked(template: str) -> str:
     return template
 
 
-def date_templates(val: str, *, text_month: bool = True) -> list[str]:
-    """Every format the value could plausibly be read with, most preferred first."""
-    sep = separator_of(val)
-    if sep is None:
-        return []
+# every template starts with a digit, so a value that does not cannot be read by any of them.
+# Ruling those out with one match is what keeps the hot path off strptime, which costs an order
+# of magnitude more than a regex.
+_STARTS_LIKE_DATE = re.compile(r"\d")
+_HAS_LETTER = re.compile(r"[^\W\d_]")
+
+
+@lru_cache(maxsize=None)
+def _numeric_templates(sep: str, year_first: bool) -> tuple[str, ...]:
     if not sep:
         # without a separator, only the year-first order is unambiguous enough to be trusted
-        return ["%Y%m%d"]
-    templates = _TEMPLATES + (_TEXT_MONTH_TEMPLATES if text_month else ())
-    return [template.format(sep=sep) for template in templates]
+        return ("%Y%m%d",)
+    if year_first:
+        return (_YEAR_FIRST.format(sep=sep),)
+    return tuple(template.format(sep=sep) for template in _DAY_OR_MONTH_FIRST)
+
+
+@lru_cache(maxsize=None)
+def _text_month_templates(sep: str) -> tuple[str, ...]:
+    return tuple(template.format(sep=sep) for template in _TEXT_MONTH_TEMPLATES)
+
+
+def date_templates(val: str, *, text_month: bool = True) -> tuple[str, ...]:
+    """Every format the value could plausibly be read with, most preferred first.
+
+    Only the shapes that can possibly read the value are returned: one with a letter can only
+    have a text month, and %Y wants four digits where %d wants one or two, so the position of
+    the first separator settles the order. Trying the others would be as many failed strptime.
+    """
+    if not _STARTS_LIKE_DATE.match(val):
+        return ()
+    sep = separator_of(val)
+    if sep is None:
+        return ()
+    if _HAS_LETTER.search(val):
+        return _text_month_templates(sep) if text_month and sep else ()
+    return _numeric_templates(sep, year_first=bool(sep) and val.index(sep) == 4)
 
 
 _DATETIME_SPLIT = re.compile(r"(?P<date>.+?)(?P<t>[T ])(?P<time>\d{1,2}:\d{2}.*)")
@@ -229,20 +256,28 @@ _TIME_SUFFIXES = ("%H:%M:%S", "%H:%M:%S.%f", "%H:%M:%S[.%f]", "%H:%M")
 _TIMEZONES = ("%z", " %z")
 
 
-def datetime_templates(val: str, *, aware: bool) -> list[str]:
+@lru_cache(maxsize=None)
+def _with_time(dates: tuple[str, ...], date_time_sep: str, aware: bool) -> tuple[str, ...]:
+    return tuple(
+        _marked(f"{date}{date_time_sep}{time}{timezone}")
+        for date in dates
+        for time in _TIME_SUFFIXES
+        for timezone in (_TIMEZONES if aware else ("",))
+    )
+
+
+def datetime_templates(val: str, *, aware: bool) -> tuple[str, ...]:
     """Every format the datetime value could plausibly be read with, most preferred first."""
     match = _DATETIME_SPLIT.fullmatch(val)
     if match is None:
-        return []
+        return ()
     date_part = match["date"]
     if not (MIN_LENGTH <= len(date_part) <= MAX_LENGTH):
-        return []
-    return [
-        _marked(f"{date}{match['t']}{time}{timezone}")
-        for date in date_templates(date_part, text_month=False)
-        for time in _TIME_SUFFIXES
-        for timezone in (_TIMEZONES if aware else ("",))
-    ]
+        return ()
+    dates = date_templates(date_part, text_month=False)
+    if not dates:
+        return ()
+    return _with_time(dates, match["t"], aware)
 
 
 def infer_column_format(
