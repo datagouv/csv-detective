@@ -7,6 +7,7 @@ import pytest
 import responses
 
 from csv_detective import routine
+from csv_detective.formats import date as date_format
 from csv_detective.output.profile import create_profile
 from csv_detective.parsing.csv import CHUNK_SIZE
 from csv_detective.utils import sanitize_for_json
@@ -59,6 +60,58 @@ def test_columns_output_on_file(chunk_size):
         assert output["columns"]["STRUCTURED_INFO"]["format"] == "json"
         assert output["columns"]["GEO_INFO"]["python_type"] == "json"
         assert output["columns"]["GEO_INFO"]["format"] == "geojson"
+
+
+def _chunked_file(tmp_path, values):
+    file_path = tmp_path / "dates.csv"
+    file_path.write_text("date\n" + "".join(f"{value}\n" for value in values))
+    return file_path
+
+
+def _run_counting_date_tests(file_path, **kwargs):
+    """Runs an analysis over 21 chunks, recording every value the date format was asked about."""
+    tested = []
+    real_is = date_format._is
+
+    def counting_is(val):
+        tested.append(val)
+        return real_is(val)
+
+    with (
+        patch("csv_detective.parsing.csv.CHUNK_SIZE", 10),
+        patch("csv_detective.parsing.columns.CHUNK_SIZE", 10),
+        patch.object(date_format, "_is", counting_is),
+    ):
+        analysis = routine(file_path=str(file_path), num_rows=-1, save_results=False, **kwargs)
+    return analysis, tested
+
+
+def test_a_value_is_only_ever_tested_once_per_format(tmp_path):
+    # scoring happens once on the counts of the whole file, so a value repeated across chunks
+    # costs one test, not one per chunk it appears in
+    values = (["01/01/2024"] * 100 + ["02/02/2024"] * 110)[:210]
+    analysis, tested = _run_counting_date_tests(_chunked_file(tmp_path, values))
+    assert analysis["columns"]["date"]["format"] == "date"
+    assert sorted(tested) == ["01/01/2024", "02/02/2024"]
+
+
+def test_a_format_gives_up_once_it_has_failed_beyond_its_tolerance(tmp_path):
+    # date reads every value or none, so its budget is zero failures: the first value it cannot
+    # read settles the column, and the ones behind it are never looked at
+    values = ["not a date"] * 200 + ["01/01/2024"] * 10
+    _, tested = _run_counting_date_tests(_chunked_file(tmp_path, values))
+    assert tested == ["not a date"], "the format kept reading values after busting its budget"
+
+
+def test_a_tolerant_format_spends_its_whole_budget_before_giving_up(tmp_path):
+    # with half the values allowed to fail, one invalid value is not enough to rule the format
+    # out, so the valid ones behind it still have to be read
+    values = ["not a date"] * 100 + ["01/01/2024"] * 110
+    _, tested = _run_counting_date_tests(
+        _chunked_file(tmp_path, values),
+        custom_proportions={"date": 0.5},
+    )
+    assert sorted(tested) == ["01/01/2024", "not a date"]
 
 
 def test_profile_output_on_file():

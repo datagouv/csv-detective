@@ -1,12 +1,10 @@
 import logging
 import re
 from time import time
-from typing import Callable
 
 import numpy as np
 import pandas as pd
 import pyarrow.parquet as pq
-from more_itertools import peekable
 
 from csv_detective.format import Format
 from csv_detective.parsing.csv import CHUNK_SIZE
@@ -15,6 +13,8 @@ from csv_detective.utils import display_logs_depending_process_time
 # above this threshold, a column is not considered categorical
 MAX_NUMBER_CATEGORICAL_VALUES = 25
 RATIO_CATEGORICAL_VALUES = 0.05
+# how many chunks are concatenated before their values are counted
+CHUNKS_PER_BATCH = 10
 
 
 def handle_empty_columns(return_table: pd.DataFrame):
@@ -24,95 +24,105 @@ def handle_empty_columns(return_table: pd.DataFrame):
             return_table[col] = 0.0
 
 
-def test_col_val(
-    serie: pd.Series,
-    format: Format,
+def count_values(serie: pd.Series) -> pd.Series:
+    """How many times the column holds each of its distinct values."""
+    return serie.value_counts(dropna=False)
+
+
+def _testable_values(values: pd.Series, skipna: bool) -> pd.Series:
+    # NaNs are not values to test: with skipna they don't count at all, and without they are
+    # failures, which is what any format would return on them anyway
+    if skipna:
+        values = values[values.index.notna()]
+    # most frequent first, so that a format that does not fit the column runs out of its failure
+    # budget in as few tests as possible
+    return values.sort_values(ascending=False)
+
+
+def score_column(values: pd.Series, format: Format) -> float:
+    """The share of the column the format reads, 0.0 if it cannot reach its own proportion.
+
+    `values` counts every distinct value of the *whole* column, so the total is known up front:
+    that is what lets us give up as soon as the failures put the threshold out of reach, instead
+    of reading every value of every column for every format.
+    """
+    total = values.sum()
+    if not total:
+        # the whole column is empty, so every format fits it; handle_empty_columns settles the
+        # case afterwards, once we know they all did
+        return 1.0
+    max_failures = (1 - format.proportion) * total
+    matching = 0
+    failing = 0
+    for value, count in values.items():
+        if format.func(value):
+            matching += count
+        else:
+            failing += count
+            if failing > max_failures:
+                return 0.0
+    return matching / total
+
+
+def score_columns(
+    col_values: dict[str, pd.Series],
+    formats: dict[str, Format],
     *,
     skipna: bool = True,
-    limited_output: bool = False,
-    zero_if_too_low: bool = True,
+    mandatory_label_skip: dict[str, set[str]] | None = None,
+    known_columns: dict[str, str] | None = None,
     verbose: bool = False,
-) -> float:
-    """Tests values of the serie using test_func.
-         - skipna : if True indicates that NaNs are considered True
-    for the serie to be detected as a certain format
-    """
+) -> pd.DataFrame:
+    """Scores every column against every format, from the value counts of the whole file."""
     if verbose:
         start = time()
-
-    # TODO : change for a cleaner method and only test columns in modules labels
-    def apply_test_func(serie: pd.Series, test_func: Callable, _range: int):
-        return serie.sample(n=_range).apply(test_func)
-
-    try:
-        if skipna:
-            serie = serie.dropna()
-        ser_len = len(serie)
-        if ser_len == 0:
-            # being here means the whole column is NaN, so if skipna it's a pass
-            return 1.0 if skipna else 0.0
-        if not limited_output or format.proportion < 1:
-            # we want or have to go through the whole column to have the proportion
-            value_counts = serie.value_counts()
-            unique_results = value_counts.index.to_series().apply(format.func)
-            result: float = (unique_results * value_counts.values).sum() / ser_len
-            return 0.0 if result < format.proportion and zero_if_too_low else result
-        else:
-            # the whole column has to be valid so we have early stops (1 then 5 rows)
-            # to not waste time if directly unsuccessful
-            for _range in [
-                min(1, ser_len),
-                min(5, ser_len),
-            ]:
-                if not all(apply_test_func(serie, format.func, _range)):
-                    return 0.0
-            return float(all(format.func(v) for v in serie.unique()))
-    finally:
-        if verbose and time() - start > 3:
+        logging.info("Scoring columns against every format")
+    return_table = pd.DataFrame(columns=list(col_values.keys()), index=list(formats.keys()))
+    for col, raw_values in col_values.items():
+        start_col = time()
+        values = _testable_values(raw_values, skipna)
+        if not values.sum():
+            # an empty column fits every format, including the ones we would otherwise skip:
+            # handle_empty_columns needs to see them all agree to settle the case
+            return_table[col] = 1.0
+            continue
+        skipped = (mandatory_label_skip or {}).get(col, set())
+        for label, format in formats.items():
+            if (known_columns or {}).get(col) == label:
+                # the file's own metadata already tells us this column is of that type
+                return_table.loc[label, col] = 1.0
+            elif label in skipped:
+                # mandatory_label formats are zeroed out at the end if the label doesn't match,
+                # so there's no point running the expensive field tests on those columns
+                return_table.loc[label, col] = 0.0
+            else:
+                return_table.loc[label, col] = score_column(values, format)
+        if verbose and time() - start_col > 3:
             display_logs_depending_process_time(
-                f"\t/!\\ Column '{serie.name}' took too long ({round(time() - start, 3)}s)",
-                time() - start,
+                f"\t/!\\ Column '{col}' took too long ({round(time() - start_col, 3)}s)",
+                time() - start_col,
             )
+    if verbose:
+        display_logs_depending_process_time(
+            f"Done scoring columns in {round(time() - start, 3)}s", time() - start
+        )
+    return return_table
 
 
 def test_col(
     table: pd.DataFrame,
     formats: dict[str, Format],
     *,
-    limited_output: bool,
+    limited_output: bool = True,
     skipna: bool = True,
-    zero_if_too_low: bool = True,
     verbose: bool = False,
-):
-    if verbose:
-        start = time()
-        logging.info("Testing columns to get formats")
-    return_table = pd.DataFrame(columns=table.columns)
-    for idx, (label, format) in enumerate(formats.items()):
-        if verbose:
-            start_type = time()
-            logging.info(f"\t- Starting with format '{label}'")
-        # improvement lead : put the longest tests behind and make them only if previous tests not satisfactory
-        # => the following needs to change, "apply" means all columns are tested for one type at once
-        for col in table.columns:
-            return_table.loc[label, col] = test_col_val(
-                table[col],
-                format,
-                skipna=skipna,
-                zero_if_too_low=zero_if_too_low,
-                limited_output=limited_output,
-                verbose=verbose,
-            )
-        if verbose:
-            display_logs_depending_process_time(
-                f'\t> Done with format "{label}" in {round(time() - start_type, 3)}s ({idx + 1}/{len(formats)})',
-                time() - start_type,
-            )
-    if verbose:
-        display_logs_depending_process_time(
-            f"Done testing columns in {round(time() - start, 3)}s", time() - start
-        )
-    return return_table
+) -> pd.DataFrame:
+    return score_columns(
+        {col: count_values(table[col]) for col in table.columns},
+        formats,
+        skipna=skipna,
+        verbose=verbose,
+    )
 
 
 def test_label(columns: list[str], formats: dict[str, Format], verbose: bool = False):
@@ -137,41 +147,6 @@ def test_label(columns: list[str], formats: dict[str, Format], verbose: bool = F
     return return_table
 
 
-def _build_remaining_tests_per_col(
-    return_table: pd.DataFrame,
-    mandatory_label_skip: dict[str, set[str]],
-    known_columns: dict[str, str] = {},
-) -> dict[str, list[str]]:
-    # returns a dict with the table's columns as keys and the list of remaining format labels to apply
-    return {
-        col: [
-            fmt_label
-            for fmt_label in return_table.index
-            # for parquet we know for sure some column types
-            if known_columns.get(col) != fmt_label
-            and return_table.loc[fmt_label, col] > 0
-            and fmt_label not in mandatory_label_skip.get(col, set())
-        ]
-        for col in return_table.columns
-    }
-
-
-def _apply_proportion_thresholds(
-    return_table: pd.DataFrame,
-    formats: dict[str, Format],
-) -> None:
-    """Zero scores still below format.proportion after full-file aggregation.
-
-    Chunk scoring may keep fractional scores (zero_if_too_low=False) so formats
-    are not eliminated mid-file; the global proportion requirement is enforced here.
-    """
-    for label, fmt in formats.items():
-        if label not in return_table.index:
-            continue
-        below = return_table.loc[label] < fmt.proportion
-        return_table.loc[label, below] = 0.0
-
-
 def test_col_chunks(
     table: pd.DataFrame,
     file_path: str,
@@ -184,35 +159,13 @@ def test_col_chunks(
 ) -> tuple[pd.DataFrame, dict, dict[str, pd.Series]]:
     if verbose:
         start = time()
-        logging.info("Testing columns to get formats on chunks")
-
-    # analysing the sample to get a first guess
-    return_table = test_col(
-        table,
-        formats,
-        limited_output=limited_output,
-        zero_if_too_low=False,  # we don't know the valid/invalid repartition of the values in the whole table
-        skipna=skipna,
-        verbose=verbose,
-    )
-    # mandatory_label formats are zeroed out at the end if the label doesn't match,
-    # so there's no point running the expensive field tests on those columns
-    mandatory_label_skip: dict[str, set[str]] = {
-        col: {
-            fmt_label
-            for fmt_label, fmt in formats.items()
-            if fmt.mandatory_label and fmt.is_valid_label(col) == 0
-        }
-        for col in table.columns
-    }
-    handle_empty_columns(return_table)
-    empty_cols = {col for col in table.columns if table[col].dropna().empty}
-    remaining_tests_per_col = _build_remaining_tests_per_col(return_table, mandatory_label_skip)
+        logging.info("Reading the file to count the values of each column")
 
     # hashing rows to get nb_duplicates
     row_hashes_count = pd.util.hash_pandas_object(table, index=False).value_counts()
     # getting values for profile to read the file only once
-    col_values = {col: table[col].value_counts(dropna=False) for col in table.columns}
+    col_values = {col: count_values(table[col]) for col in table.columns}
+    analysis["total_lines"] = len(table)
 
     # only csv files can end up here, can't chunk excel
     chunks = pd.read_csv(
@@ -225,65 +178,53 @@ def test_col_chunks(
         chunksize=CHUNK_SIZE,
         na_values=na_values,
     )
-    analysis["total_lines"] = CHUNK_SIZE
-    batch, batch_number = [], 1
-    iterator = peekable(enumerate(chunks))
-    while iterator:
-        idx, chunk = next(iterator)
-        if idx == 0:
-            # we have read and analysed the first chunk already
-            continue
-        if len(batch) < 10:
-            # it's too slow to process chunks directly, but we want to keep the first analysis
-            # on a "small" chunk, so partial analyses are done on batches of chunks
-            batch.append(chunk)
-            # we don't know when the chunks end, and doing one additionnal step
-            # for the final batch is ugly
-            try:
-                iterator.peek()
-                continue
-            except StopIteration:
-                pass
-        if verbose:
-            logging.info(f"> Testing batch number {batch_number}")
-        batch = pd.concat(batch, ignore_index=True)
-        # we can't early stop because we need the infos of all chunks for some fields
-        # and some empty-for-now columns may actually not be
-        analysis["total_lines"] += len(batch)
+
+    def add_to_counts(rows: pd.DataFrame) -> None:
+        nonlocal row_hashes_count
+        analysis["total_lines"] += len(rows)
         row_hashes_count = row_hashes_count.add(
-            pd.util.hash_pandas_object(batch, index=False).value_counts(),
+            pd.util.hash_pandas_object(rows, index=False).value_counts(),
             fill_value=0,
         )
-        for col in batch.columns:
-            col_values[col] = col_values[col].add(
-                batch[col].value_counts(dropna=False),
-                fill_value=0,
-            )
-        for col in list(empty_cols):
-            if not batch[col].dropna().empty:
-                empty_cols.discard(col)
-                remaining_tests_per_col[col] = [
-                    fmt_label
-                    for fmt_label in formats.keys()
-                    if fmt_label not in mandatory_label_skip.get(col, set())
-                ]
-        for col, fmt_labels in remaining_tests_per_col.items():
-            # testing each column with the tests that are still competing
-            # after previous batchs analyses
-            for label in fmt_labels:
-                batch_col_test = test_col_val(
-                    batch[col],
-                    formats[label],
-                    limited_output=limited_output,
-                    zero_if_too_low=False,
-                    skipna=skipna,
-                )
-                return_table.loc[label, col] = (
-                    # updating the score with weighted average
-                    (return_table.loc[label, col] * idx + batch_col_test) / (idx + 1)
-                )
-        remaining_tests_per_col = _build_remaining_tests_per_col(return_table, mandatory_label_skip)
-        batch, batch_number = [], batch_number + 1
+        for col in rows.columns:
+            col_values[col] = col_values[col].add(count_values(rows[col]), fill_value=0)
+
+    # chunks are grouped before being counted: each add() realigns the running index, which holds
+    # every distinct value seen so far, so doing it once per chunk would dominate the reading
+    batch: list[pd.DataFrame] = []
+    for idx, chunk in enumerate(chunks):
+        if idx == 0:
+            # we have read this one already, it is the sample we were given
+            continue
+        batch.append(chunk)
+        if len(batch) < CHUNKS_PER_BATCH:
+            continue
+        if verbose:
+            logging.info(f"> Reading up to chunk number {idx}")
+        add_to_counts(pd.concat(batch, ignore_index=True))
+        batch = []
+    if batch:
+        add_to_counts(pd.concat(batch, ignore_index=True))
+
+    # Formats are scored once, here, on the counts of the whole file rather than chunk by chunk.
+    # Averaging chunk scores gave a short chunk the same weight as a long one, and no format could
+    # ever be ruled out mid-file since the batches left could always bring it back up. With the
+    # totals in hand the score is exact, and a format is dropped as soon as it has failed on more
+    # values than its proportion allows.
+    return_table = score_columns(
+        col_values,
+        formats,
+        skipna=skipna,
+        mandatory_label_skip={
+            col: {
+                fmt_label
+                for fmt_label, fmt in formats.items()
+                if fmt.mandatory_label and fmt.is_valid_label(col) == 0
+            }
+            for col in table.columns
+        },
+        verbose=verbose,
+    )
     analysis["nb_duplicates"] = sum(row_hashes_count > 1)
     analysis["categorical"] = [
         col
@@ -291,7 +232,6 @@ def test_col_chunks(
         if len(values) <= MAX_NUMBER_CATEGORICAL_VALUES
         or (len(values) / sum(values)) <= RATIO_CATEGORICAL_VALUES
     ]
-    _apply_proportion_thresholds(return_table, formats)
     handle_empty_columns(return_table)
     if verbose:
         display_logs_depending_process_time(
@@ -351,39 +291,12 @@ def test_parquet_cols(
         logging.info("Testing columns to get formats on chunks")
 
     columns = build_known_columns(table)
-    mandatory_label_skip: dict[str, set[str]] = {
-        col: {
-            fmt_label
-            for fmt_label, fmt in formats.items()
-            if fmt.mandatory_label and fmt.is_valid_label(col) == 0
-        }
-        for col in columns.keys()
-    }
-    remaining_tests_per_col = {
-        col: {
-            fmt_label
-            for fmt_label, fmt in formats.items()
-            # keeping formats that have the valid python type
-            if fmt.python_type == pytype
-            # except if the column label doesn't fit
-            and fmt_label not in mandatory_label_skip.get(col, set())
-            # we already know pure types are valid, only formats remain
-            and fmt_label != pytype
-        }
-        for col, pytype in columns.items()
-    }
-    return_table = pd.DataFrame(columns=list(columns.keys()), index=list(formats.keys()))
-    for col, pytype in columns.items():
-        if pytype != "string":
-            # setting types that we know are 100% valid from metadata
-            return_table.loc[pytype, col] = 1
-
     row_hashes_count = pd.Series()
     col_values = {col: pd.Series() for col in columns.keys()}
     # we keep the same chunk size as for csv
     for idx, batch in enumerate(table.iter_batches(CHUNK_SIZE * 10)):
         if verbose:
-            logging.info(f"> Testing batch number {idx + 1}")
+            logging.info(f"> Reading batch number {idx + 1}")
         batch = batch.to_pandas()
         str_batch = batch.map(
             # not simply using astype(str) because lists are numpy arrays, cast as str they lose their commas
@@ -394,36 +307,25 @@ def test_parquet_cols(
             fill_value=0,
         )
         for col in batch.columns:
-            col_values[col] = col_values[col].add(
-                str_batch[col].value_counts(dropna=False),
-                fill_value=0,
-            )
-        if not any(remaining_tests for remaining_tests in remaining_tests_per_col.values()):
-            # no more potential tests to do on any column, early stop
-            break
-        for col, fmt_labels in remaining_tests_per_col.items():
-            # testing each column with the tests that are still competing
-            # after previous batchs analyses
-            for label in fmt_labels:
-                batch_col_test = test_col_val(
-                    batch[col],
-                    formats[label],
-                    limited_output=limited_output,
-                    skipna=skipna,
-                )
-                return_table.loc[label, col] = (
-                    # if this batch's column tested 0 then test fails overall
-                    0
-                    if batch_col_test == 0
-                    # set the first score
-                    else batch_col_test
-                    if pd.isna(return_table.loc[label, col])
-                    # otherwise updating the score with weighted average
-                    else ((return_table.loc[label, col] * idx + batch_col_test) / (idx + 1))
-                )
-        remaining_tests_per_col = _build_remaining_tests_per_col(
-            return_table, mandatory_label_skip, known_columns=columns
-        )
+            col_values[col] = col_values[col].add(count_values(str_batch[col]), fill_value=0)
+
+    return_table = score_columns(
+        col_values,
+        formats,
+        skipna=skipna,
+        mandatory_label_skip={
+            col: {
+                fmt_label
+                for fmt_label, fmt in formats.items()
+                # the metadata gives the type away, so only the formats of that type can apply
+                if fmt.python_type != pytype
+                or (fmt.mandatory_label and fmt.is_valid_label(col) == 0)
+            }
+            for col, pytype in columns.items()
+        },
+        known_columns=columns,
+        verbose=verbose,
+    )
     analysis["nb_duplicates"] = sum(row_hashes_count > 1)
     analysis["categorical"] = [
         col for col, values in col_values.items() if len(values) <= MAX_NUMBER_CATEGORICAL_VALUES
