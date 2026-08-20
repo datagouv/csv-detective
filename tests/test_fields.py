@@ -284,9 +284,16 @@ def test_datetime_format_inferred_from_column(values, aware, expected_format):
         ),
         ("31 février 1996", "csvd:%d %b %Y", None),  # not a real day of that month
         ("15 tambour 1985", "csvd:%d %b %Y", None),
-        # years outside of what we accept as a date, whatever the format
-        ("15 dec 1850", "csvd:%d %b %Y", None),
-        ("1850-12-15", "%Y-%m-%d", None),
+        # a separated value is shaped like a date whatever its year: archives and civil
+        # registers go back well before 1900, and nothing else reads like "15 dec 1850"
+        ("15 dec 1850", "csvd:%d %b %Y", _datetime(1850, 12, 15)),
+        ("1850-12-15", "%Y-%m-%d", _datetime(1850, 12, 15)),
+        ("12-04-0012", "%d-%m-%Y", _datetime(12, 4, 12)),
+        ("9999-12-31", "%Y-%m-%d", _datetime(9999, 12, 31)),  # the usual "no end date" sentinel
+        # eight bare digits are just a number, so this shape alone keeps a year window
+        ("18501215", "%Y%m%d", None),
+        ("21501215", "%Y%m%d", None),
+        ("19501215", "%Y%m%d", _datetime(1950, 12, 15)),
     ],
 )
 def test_parse(value, fmt, expected):
@@ -313,8 +320,12 @@ def test_a_spelling_meaning_two_months_is_dropped():
     assert index["a1"] == 1 and index["b5"] == 5
 
 
-def test_max_year_is_enforced():
-    assert parse("2150-12-15", "%Y-%m-%d") is None
+def test_the_year_window_only_guards_the_separator_less_shape():
+    # a datetime built on the bare-digits date inherits the window...
+    assert parse("21501215T10:20:10", "%Y%m%dT%H:%M:%S") is None
+    assert parse("19501215T10:20:10", "%Y%m%dT%H:%M:%S") == _datetime(1950, 12, 15, 10, 20, 10)
+    # ...where the same value written with a separator keeps none
+    assert parse("2150-12-15 10:20:10", "%Y-%m-%d %H:%M:%S") == _datetime(2150, 12, 15, 10, 20, 10)
 
 
 @pytest.mark.parametrize(

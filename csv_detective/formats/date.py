@@ -48,6 +48,12 @@ CUSTOM_PREFIX = "csvd:"
 SEPARATORS = " /-*_|;.,"
 MIN_LENGTH = 8  # "1/2/2024"
 MAX_LENGTH = 20
+
+# The only shape made of nothing but digits, and hence the only one a year window has to guard:
+# eight bare digits are just a number, of which about one in thirty reads as a valid YYYYMMDD.
+# A value that carries separators is specific enough on its own, so no year bounds it — museum
+# records and civil registers are routinely dated well before 1900.
+_NO_SEPARATOR_DATE = "%Y%m%d"
 MIN_YEAR = 1900
 MAX_YEAR = 2099
 
@@ -159,9 +165,12 @@ def _variants(fmt: str) -> tuple[str, ...]:
 _UTC_NAME = re.compile(r"\b(?:GMT|UTC)$", re.IGNORECASE)
 
 
+def _without_prefix(fmt: str) -> str:
+    return fmt[len(CUSTOM_PREFIX) :] if fmt.startswith(CUSTOM_PREFIX) else fmt
+
+
 def _read(val: str, fmt: str) -> datetime | None:
-    if fmt.startswith(CUSTOM_PREFIX):
-        fmt = fmt[len(CUSTOM_PREFIX) :]
+    fmt = _without_prefix(fmt)
     if "%b" in fmt:
         return _parse_custom(val, fmt)
     if "%Z" in fmt and not _UTC_NAME.search(val):
@@ -182,8 +191,13 @@ def parse(val: str, fmt: str) -> datetime | None:
     """Reads a value with one of our formats, the custom ones included."""
     for variant in _variants(fmt):
         parsed = _read(val, variant)
-        if parsed is not None and MIN_YEAR <= parsed.year <= MAX_YEAR:
-            return parsed
+        if parsed is None:
+            continue
+        if _without_prefix(variant).startswith(_NO_SEPARATOR_DATE) and not (
+            MIN_YEAR <= parsed.year <= MAX_YEAR
+        ):
+            continue
+        return parsed
     return None
 
 
@@ -240,7 +254,7 @@ _HAS_LETTER = re.compile(r"[^\W\d_]")
 def _numeric_templates(sep: str, year_first: bool, short_year: bool) -> tuple[str, ...]:
     if not sep:
         # without a separator, only the year-first order is unambiguous enough to be trusted
-        return ("%Y%m%d",)
+        return (_NO_SEPARATOR_DATE,)
     if year_first:
         templates = _YEAR_FIRST
     elif short_year:
@@ -364,6 +378,7 @@ _test_values = {
         "20030502",
         "2003.05.02",
         "1/2/2024",
+        "15-12-1850",
     ],
     False: [
         "1993-1993-1993",
@@ -373,6 +388,8 @@ _test_values = {
         "12152003",
         "20031512",
         "02052003",
+        # a plausible day and month, so only the year window tells this apart from an identifier
+        "12341215",
         "6.27367393749392839",
         "1993-12/02",
         "15 jui 1985",
