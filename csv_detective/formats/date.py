@@ -46,7 +46,7 @@ def date_casting(val: str) -> datetime | None:
 CUSTOM_PREFIX = "csvd:"
 
 SEPARATORS = " /-*_|;.,"
-MIN_LENGTH = 8  # "1/2/2024"
+MIN_LENGTH = 6  # "1/2/85", the shortest shape we read: no padding and a two-digit year
 MAX_LENGTH = 20
 
 # The only shape made of nothing but digits, and hence the only one a year window has to guard:
@@ -372,6 +372,7 @@ _test_values = {
         "1960-08-07",
         "12/02/2007",
         "12/02/85",
+        "1/2/85",
         "15 jan 1985",
         "15 décembre 1985",
         "02 05 2003",
