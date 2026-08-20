@@ -70,8 +70,11 @@ The program creates a `python` dictionary with the following information :
             "score": 1.0,
             # How to read every value of that column: a column that no single format reads
             # is not detected as a date at all. Present on every `date` / `datetime_naive` /
-            # `datetime_aware` column, except when a custom proportion made the format
-            # tolerant; `datetime_rfc822` has a single shape and carries no format.
+            # `datetime_aware` column the inference ran on, and absent everywhere else, so a
+            # consumer always needs a path without it: parquet columns come typed from the
+            # file itself, `datetime_rfc822` has a single shape, a custom proportion
+            # deliberately makes the format tolerant, and an analysis produced before this
+            # key existed is replayed as is.
             # A format prefixed with "csvd:" is not readable by datetime.strptime and has to
             # go through csv-detective: text months (strptime only knows the ones of the
             # process locale) and optional parts, written "[.%f]" for a column whose source
