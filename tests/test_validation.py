@@ -228,9 +228,30 @@ def test_validate_against_the_pinned_date_format(date_format, values, should_be_
 
 
 def test_validate_rejects_an_analysis_made_with_an_unknown_format():
-    # date_fr was removed: an analysis mentioning it has to be redone, not crash on a KeyError
+    # an analysis naming a format nothing supersedes has to be redone, not crash on a KeyError
     is_valid, analysis, col_values = validate(
         pd.io.common.StringIO("date\n13 février 1996\n"),
+        _date_analysis(None, fmt="a_format_no_version_ever_had"),
+    )
+    assert is_valid is False
+    assert analysis is None and col_values is None
+
+
+def test_a_superseded_format_keeps_validating_its_stored_analyses():
+    # date_fr is gone but `date` reads the same values, so an analysis naming it stays valid
+    # rather than forcing a full re-detection of the file
+    is_valid, analysis, _ = validate(
+        pd.io.common.StringIO("date\n13 février 1996\n15 decembre 2024\n"),
+        _date_analysis(None, fmt="date_fr"),
+    )
+    assert is_valid is True
+    # returned as it was recorded: the column keeps the type it was ingested with
+    assert analysis["columns"]["date"]["format"] == "date_fr"
+
+
+def test_a_superseded_format_still_rejects_values_it_no_longer_matches():
+    is_valid, analysis, col_values = validate(
+        pd.io.common.StringIO("date\n13 février 1996\nnot a date at all\n"),
         _date_analysis(None, fmt="date_fr"),
     )
     assert is_valid is False

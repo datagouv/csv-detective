@@ -4,7 +4,7 @@ from collections import defaultdict
 import numpy as np
 import pandas as pd
 
-from csv_detective.format import FormatsManager
+from csv_detective.format import Format, FormatsManager
 from csv_detective.formats.date import parse
 from csv_detective.output.utils import extract_unique_from_multicat
 from csv_detective.parsing.columns import (
@@ -18,6 +18,12 @@ from csv_detective.parsing.parquet import load_as_parquetfile
 # it's faster to validate so we can afford to load more rows
 VALIDATION_CHUNK_SIZE = int(1e5)
 logging.basicConfig(level=logging.INFO)
+
+# Formats a stored analysis may name that this version no longer has, mapped to the one that now
+# reads the same values. Without this, every analysis mentioning a removed format is rejected and
+# the whole file has to be analysed again. The analysis itself is returned untouched, so a column
+# keeps the python_type it was recorded with.
+SUPERSEDED_FORMATS = {"date_fr": "date"}
 
 
 def validate(
@@ -43,13 +49,18 @@ def validate(
     formats = FormatsManager(custom_proportions=custom_proportions).formats
     if verbose:
         logging.info("Checking given formats exist")
+    # resolved once, and used everywhere below instead of indexing `formats` again: a superseded
+    # format has to be looked up under its new name at every single one of those places
+    col_formats: dict[str, Format] = {}
     for col_name, detected in previous_analysis["columns"].items():
         if detected["format"] == "string":
             continue
-        elif detected["format"] not in formats:
+        label = SUPERSEDED_FORMATS.get(detected["format"], detected["format"])
+        if label not in formats:
             if verbose:
                 logging.warning(f"> Unknown format `{detected['format']}` in analysis")
             return False, None, None
+        col_formats[col_name] = formats[label]
     try:
         if previous_analysis.get("separator"):
             # loading the table in chunks
@@ -177,12 +188,6 @@ def validate(
                 if detected["format"] == "string":
                     # no test for columns that have not been recognized as a specific format
                     continue
-                if detected["format"] not in formats:
-                    # the analysis was made against a format this version no longer knows
-                    # (or that the caller filtered out): it has to be redone from scratch
-                    if verbose:
-                        logging.warning(f"> Unknown format {detected['format']} for {col_name}")
-                    return False, None, None
                 to_check = chunk[col_name].dropna() if skipna else chunk[col_name]
                 if to_check.empty:
                     continue
@@ -204,12 +209,10 @@ def validate(
                     else:
                         # analysis generated before the format inference, or by a tolerant
                         # proportion: no format to validate against, fall back on the generic test
-                        check = formats[detected["format"]].func
+                        check = col_formats[col_name].func
                     unique_results = value_counts.index.to_series().apply(check)
                     chunk_valid_values = (unique_results * value_counts.values).sum()
-                if formats[detected["format"]].proportion == 1 and chunk_valid_values < len(
-                    to_check
-                ):
+                if col_formats[col_name].proportion == 1 and chunk_valid_values < len(to_check):
                     # we can early stop in this case, not all values are valid while we want 100%
                     if verbose:
                         logging.warning(
@@ -238,8 +241,7 @@ def validate(
             continue
         if (
             checked_values[col_name] > 0
-            and valid_values[col_name] / checked_values[col_name]
-            < formats[detected["format"]].proportion
+            and valid_values[col_name] / checked_values[col_name] < col_formats[col_name].proportion
         ):
             if verbose:
                 logging.warning(
