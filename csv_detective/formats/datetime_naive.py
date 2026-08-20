@@ -12,9 +12,9 @@ description = "Datetime with no timezone information (flexible formats)"
 tags = ["temp", "type"]
 python_type = "datetime"
 
-# 15 is the minimal length of a datetime format YYMMDDTHH:MM:SS
+# 12 is the length of a fully packed datetime, YYYYMMDDHHMM
 # 30 is the maximal length of an ISO datetime format YYYY-MM-DDTHH:MM:SS.dddddd, with slack
-MIN_LENGTH = 15
+MIN_LENGTH = 12
 MAX_LENGTH = 30
 
 

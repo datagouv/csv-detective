@@ -1,5 +1,5 @@
 import re
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from functools import lru_cache
 from typing import Any, Callable, Iterable
 
@@ -162,7 +162,22 @@ def _variants(fmt: str) -> tuple[str, ...]:
     return _variants(head + match.group(1) + tail) + _variants(head + tail)
 
 
-_UTC_NAME = re.compile(r"\b(?:GMT|UTC)$", re.IGNORECASE)
+# Zone names we resolve ourselves rather than leaving to strptime, which reads %Z against the
+# machine's own zone (time.tzname) and drops it anyway: the same file would not read the same on
+# a laptop in Paris as on a server in UTC. Abbreviations are not standardised and many of them
+# name two zones — CST is -6 in the US and +8 in China, IST is +5:30, +2 or +1, EST is -5 but
+# also +10 in Australia — so only the ones with a single meaning are listed here.
+NAMED_ZONES = {
+    "UTC": 0,
+    "GMT": 0,
+    "WET": 0,
+    "WEST": 1,
+    "CET": 1,
+    "CEST": 2,
+    "EET": 2,
+    "EEST": 3,
+}
+_ZONE_NAME = re.compile(r"\b([A-Za-z]+)$")
 
 
 def _without_prefix(fmt: str) -> str:
@@ -173,18 +188,18 @@ def _read(val: str, fmt: str) -> datetime | None:
     fmt = _without_prefix(fmt)
     if "%b" in fmt:
         return _parse_custom(val, fmt)
-    if "%Z" in fmt and not _UTC_NAME.search(val):
-        # %Z also accepts whatever the machine's own zone is called, which we would have no
-        # offset for; GMT and UTC are the two names we can turn into a timezone ourselves
-        return None
+    if "%Z" in fmt:
+        name = _ZONE_NAME.search(val)
+        offset = NAMED_ZONES.get(name.group(1).upper()) if name else None
+        if offset is None:
+            return None
+        # read what precedes the name, then apply the offset the name stands for
+        naive = _read(val[: name.start()].rstrip(), fmt[: fmt.index("%Z")].rstrip())
+        return naive and naive.replace(tzinfo=timezone(timedelta(hours=offset)))
     try:
-        parsed = datetime.strptime(val, fmt)
+        return datetime.strptime(val, fmt)
     except (ValueError, TypeError):
         return None
-    if "%Z" in fmt:
-        # strptime reads the name but drops it, leaving a naive datetime
-        return parsed.replace(tzinfo=timezone.utc)
-    return parsed
 
 
 def parse(val: str, fmt: str) -> datetime | None:
@@ -222,15 +237,18 @@ _TEXT_MONTH_TEMPLATES = (
 )
 
 
+# the full stop of an abbreviated month is not a separator ("15 janv. 1985")
+_ABBREVIATION_DOT = re.compile(r"(?<=[^\W\d_])\.")
+_SEPARATOR_RUN = re.compile(f"[{re.escape(SEPARATORS)}]+")
+
+
 def separator_of(val: str) -> str | None:
-    """The single separator the value uses, "" if it uses none, None if it mixes several."""
-    found = {
-        char
-        for index, char in enumerate(val)
-        if char in SEPARATORS
-        # the full stop of an abbreviated month is not a separator ("15 janv. 1985")
-        and not (char == "." and index and val[index - 1].isalpha())
-    }
+    """The single separator the value uses, "" if it uses none, None if it mixes several.
+
+    A separator is a run of characters rather than a single one, so a value that spaces its
+    separators out ("1789 / 07 / 14") uses one separator, not two mixed together.
+    """
+    found = set(_SEPARATOR_RUN.findall(_ABBREVIATION_DOT.sub("", val)))
     if len(found) > 1:
         return None
     return found.pop() if found else ""
@@ -295,32 +313,47 @@ def date_templates(val: str, *, text_month: bool = True) -> tuple[str, ...]:
         return ()
     if _HAS_LETTER.search(val):
         return _text_month_templates(sep) if text_month and sep else ()
-    year_first = bool(sep) and val.index(sep) == 4
-    short_year = bool(sep) and not year_first and len(val) - val.rindex(sep) - 1 == 2
+    # both hold for a value with no separator at all: "".index("") is 0, and rindex("") is the
+    # whole length, so neither a four-digit head nor a two-digit tail is ever found
+    year_first = val.index(sep) == 4
+    short_year = not year_first and len(val) - val.rindex(sep) - len(sep) == 2
     return _numeric_templates(sep, year_first, short_year)
 
 
-_DATETIME_SPLIT = re.compile(r"(?P<date>.+?)(?P<t>[T ])(?P<time>\d{1,2}:\d{2}.*)")
+# the time is either written with colons, minutes and seconds not necessarily padded, or packed
+# into six bare digits next to a packed date ("20210622T102010")
+_DATETIME_SPLIT = re.compile(r"(?P<date>.+?)(?P<t>[T ])(?P<time>\d{1,2}:\d{1,2}.*|\d{6})")
 # the fraction is listed on its own before the optional form, so that a column that always prints
 # it (or never does) is described exactly, and only a column that mixes both falls back on "[.%f]"
 _TIME_SUFFIXES = ("%H:%M:%S", "%H:%M:%S.%f", "%H:%M:%S[.%f]", "%H:%M")
+_PACKED_TIME_SUFFIXES = ("%H%M%S",)
+# A value that is nothing but digits packs the date and the time with no separator at all, so
+# there is nothing to split it on: only these two widths read as a whole datetime, and every
+# other length of bare digits is left to `date` or to no format at all.
+_PACKED_DATETIMES = {12: "%Y%m%d%H%M", 14: "%Y%m%d%H%M%S"}
 # %z refuses a space before the offset, so the spaced form is a template of its own, and it
-# only reads numeric offsets: a named zone needs %Z, which _read turns into UTC
+# only reads numeric offsets: a named zone needs %Z, which _read resolves through NAMED_ZONES
 _TIMEZONES = ("%z", " %z", " %Z")
 
 
 @lru_cache(maxsize=None)
-def _with_time(dates: tuple[str, ...], date_time_sep: str, aware: bool) -> tuple[str, ...]:
+def _with_time(
+    dates: tuple[str, ...], date_time_sep: str, aware: bool, packed_time: bool
+) -> tuple[str, ...]:
     return tuple(
         _marked(f"{date}{date_time_sep}{time}{timezone}")
         for date in dates
-        for time in _TIME_SUFFIXES
+        for time in (_PACKED_TIME_SUFFIXES if packed_time else _TIME_SUFFIXES)
         for timezone in (_TIMEZONES if aware else ("",))
     )
 
 
 def datetime_templates(val: str, *, aware: bool) -> tuple[str, ...]:
     """Every format the datetime value could plausibly be read with, most preferred first."""
+    if val.isdigit():
+        # nothing to split on, and nothing to carry a zone either
+        packed = _PACKED_DATETIMES.get(len(val))
+        return (packed,) if packed and not aware else ()
     match = _DATETIME_SPLIT.fullmatch(val)
     if match is None:
         return ()
@@ -330,7 +363,7 @@ def datetime_templates(val: str, *, aware: bool) -> tuple[str, ...]:
     dates = date_templates(date_part, text_month=False)
     if not dates:
         return ()
-    return _with_time(dates, match["t"], aware)
+    return _with_time(dates, match["t"], aware, packed_time=":" not in match["time"])
 
 
 def infer_column_format(

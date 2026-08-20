@@ -212,6 +212,14 @@ def test_all_proportion_1():
         (["15 tambour 1985"], None),
         # neither component can be a month
         (["19/15/1993"], None),
+        # a separator can be more than one character, as long as the value keeps to the same one
+        (["1789 / 07 / 14"], "%Y / %m / %d"),
+        (["14 / 07 / 89"], "%d / %m / %y"),
+        # TODO: a real shape we do not read yet, month first and a comma after the day. The comma
+        # is in SEPARATORS, so separator_of sees {" ", ","} and gives up before a template is
+        # even picked; reading it means treating that comma as part of the format, the way the
+        # full stop of an abbreviated month already is.
+        (["Jun 22, 2021"], None),
         # mixed separators, within a value or across the column
         (["1993-12/02"], None),
         (["199302-05"], None),
@@ -252,12 +260,27 @@ def test_date_format_inferred_from_column(values, expected_format):
         ),
         # the offset is sometimes spaced out from the time
         (["2021-06-22 10:20:10 +02:00"], True, "%Y-%m-%d %H:%M:%S %z"),
-        # a named zone, which %z cannot read; marked because strptime reads the name then drops it
+        # a named zone, which %z cannot read; marked because we resolve the name ourselves
         (["1996/06/22 10:20:10 GMT"], True, "csvd:%Y/%m/%d %H:%M:%S %Z"),
-        # any other name would leave us without an offset to apply
-        (["1996/06/22 10:20:10 CEST"], True, None),
+        (["1996/06/22 10:20:10 CEST"], True, "csvd:%Y/%m/%d %H:%M:%S %Z"),
+        # a name that stands for two different zones leaves us without an offset to apply
+        (["1996/06/22 10:20:10 CST"], True, None),
         # the year can be followed by the day here too
         (["2022-31-12 12:00:00.92"], False, "%Y-%d-%m %H:%M:%S.%f"),
+        # the time does not have to be padded
+        (["2021-06-22 1:2:3"], False, "%Y-%m-%d %H:%M:%S"),
+        # nor written with colons at all, next to a packed date
+        (["20210622T102010"], False, "%Y%m%dT%H%M%S"),
+        # and a value that is nothing but digits packs both parts together
+        (["202501010000"], False, "%Y%m%d%H%M"),
+        (["20250101000000"], False, "%Y%m%d%H%M%S"),
+        # any other run of digits is a number, not a datetime: these are a phone number,
+        # a grid connection id and a station id met in real files
+        (["0680428426"], False, None),
+        (["0000000000000"], False, None),
+        (["91000906"], False, None),
+        # a packed value has nowhere to carry a zone
+        (["202501010000"], True, None),
     ],
 )
 def test_datetime_format_inferred_from_column(values, aware, expected_format):
