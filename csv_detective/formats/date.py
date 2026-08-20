@@ -193,6 +193,10 @@ _DAY_OR_MONTH_FIRST = (
     "%d{sep}%m{sep}%Y",
     "%m{sep}%d{sep}%Y",
 )
+_DAY_OR_MONTH_FIRST_SHORT = (
+    "%d{sep}%m{sep}%y",
+    "%m{sep}%d{sep}%y",
+)
 # ISO first, but the year can also be followed by the day ("2022-31-12")
 _YEAR_FIRST = (
     "%Y{sep}%m{sep}%d",
@@ -233,11 +237,16 @@ _HAS_LETTER = re.compile(r"[^\W\d_]")
 
 
 @lru_cache(maxsize=None)
-def _numeric_templates(sep: str, year_first: bool) -> tuple[str, ...]:
+def _numeric_templates(sep: str, year_first: bool, short_year: bool) -> tuple[str, ...]:
     if not sep:
         # without a separator, only the year-first order is unambiguous enough to be trusted
         return ("%Y%m%d",)
-    templates = _YEAR_FIRST if year_first else _DAY_OR_MONTH_FIRST
+    if year_first:
+        templates = _YEAR_FIRST
+    elif short_year:
+        templates = _DAY_OR_MONTH_FIRST_SHORT
+    else:
+        templates = _DAY_OR_MONTH_FIRST
     return tuple(template.format(sep=sep) for template in templates)
 
 
@@ -251,7 +260,8 @@ def date_templates(val: str, *, text_month: bool = True) -> tuple[str, ...]:
 
     Only the shapes that can possibly read the value are returned: one with a letter can only
     have a text month, and %Y wants four digits where %d wants one or two, so the position of
-    the first separator settles the order. Trying the others would be as many failed strptime.
+    the first separator settles the order. A two-digit last component is %y, not %Y.
+    Trying the others would be as many failed strptime.
     """
     if not _STARTS_LIKE_DATE.match(val):
         return ()
@@ -260,7 +270,9 @@ def date_templates(val: str, *, text_month: bool = True) -> tuple[str, ...]:
         return ()
     if _HAS_LETTER.search(val):
         return _text_month_templates(sep) if text_month and sep else ()
-    return _numeric_templates(sep, year_first=bool(sep) and val.index(sep) == 4)
+    year_first = bool(sep) and val.index(sep) == 4
+    short_year = bool(sep) and not year_first and len(val) - val.rindex(sep) - 1 == 2
+    return _numeric_templates(sep, year_first, short_year)
 
 
 _DATETIME_SPLIT = re.compile(r"(?P<date>.+?)(?P<t>[T ])(?P<time>\d{1,2}:\d{2}.*)")
@@ -345,6 +357,7 @@ _test_values = {
     True: [
         "1960-08-07",
         "12/02/2007",
+        "12/02/85",
         "15 jan 1985",
         "15 décembre 1985",
         "02 05 2003",

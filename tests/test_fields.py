@@ -183,6 +183,8 @@ def test_all_proportion_1():
         (["2003.05.02"], "%Y.%m.%d"),
         # day and month are both <= 12 and nothing tells the two orders apart: day-first wins
         (["12/02/2007"], "%d/%m/%Y"),
+        # numeric dates keep a two-digit year, same order as the four-digit form
+        (["12/02/85"], "%d/%m/%y"),
         (["02 05 2003"], "%d %m %Y"),
         # one value whose day is above 12 settles the order for the whole column
         (["07/03/2024", "25/12/2024"], "%d/%m/%Y"),
