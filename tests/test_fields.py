@@ -13,7 +13,7 @@ from csv_detective.detection.variables import (
     detect_continuous_variable,
 )
 from csv_detective.format import FormatsManager
-from csv_detective.formats.date import MONTH_NAMES, MONTHS, build_month_index, parse
+from csv_detective.formats.date import CUSTOM_PREFIX, MONTH_NAMES, MONTHS, build_month_index, parse
 from csv_detective.formats.date import _infer as date_infer
 from csv_detective.formats.datetime_aware import _infer as datetime_aware_infer
 from csv_detective.formats.datetime_naive import _infer as datetime_naive_infer
@@ -252,8 +252,8 @@ def test_date_format_inferred_from_column(values, expected_format):
         ),
         # the offset is sometimes spaced out from the time
         (["2021-06-22 10:20:10 +02:00"], True, "%Y-%m-%d %H:%M:%S %z"),
-        # a named zone, which %z cannot read
-        (["1996/06/22 10:20:10 GMT"], True, "%Y/%m/%d %H:%M:%S %Z"),
+        # a named zone, which %z cannot read; marked because strptime reads the name then drops it
+        (["1996/06/22 10:20:10 GMT"], True, "csvd:%Y/%m/%d %H:%M:%S %Z"),
         # any other name would leave us without an offset to apply
         (["1996/06/22 10:20:10 CEST"], True, None),
         # the year can be followed by the day here too
@@ -282,7 +282,7 @@ def test_datetime_format_inferred_from_column(values, aware, expected_format):
         ("31st december 2022", "csvd:%d %b %Y", _datetime(2022, 12, 31)),
         (
             "1996/06/22 10:20:10 GMT",
-            "%Y/%m/%d %H:%M:%S %Z",
+            "csvd:%Y/%m/%d %H:%M:%S %Z",
             _datetime(1996, 6, 22, 10, 20, 10, tzinfo=_timezone.utc),
         ),
         ("31 février 1996", "csvd:%d %b %Y", None),  # not a real day of that month
@@ -321,6 +321,68 @@ def test_a_spelling_meaning_two_months_is_dropped():
     index = build_month_index({"first": first, "second": second})
     assert "shared" not in index
     assert index["a1"] == 1 and index["b5"] == 5
+
+
+@pytest.mark.parametrize(
+    "value, infer",
+    (
+        ("1960-08-07", date_infer),
+        ("20030502", date_infer),
+        ("12/02/2007", date_infer),
+        ("12/02/85", date_infer),
+        ("2003.05.02", date_infer),
+        ("15 décembre 1985", date_infer),
+        ("15-dec-85", date_infer),
+        ("31st december 2022", date_infer),
+        ("2021-06-22 10:20:10", datetime_naive_infer),
+        ("2030/06/22 00:00:00.0028", datetime_naive_infer),
+        ("1996/06/22 10:20", datetime_naive_infer),
+        ("2021-06-22 10:20:10-04:00", datetime_aware_infer),
+        ("2000-12-21 10:20:10.1Z", datetime_aware_infer),
+        ("2024-12-19T10:53:36.428000+00:00", datetime_aware_infer),
+        ("2021-06-22 10:20:10 +02:00", datetime_aware_infer),
+        ("1996/06/22 10:20:10 GMT", datetime_aware_infer),
+    ),
+)
+def test_an_unmarked_format_reads_the_same_through_strptime(value, infer):
+    """The marker is a contract, so the formats without it have to honour it.
+
+    A consumer reading `date_format` out of an analysis may well hand it to strptime rather than
+    call parse(). The marker is what tells it not to; a format that carries no marker yet reads
+    differently through strptime would silently give that consumer another date — which is how
+    `%Z` used to drop the timezone.
+    """
+    fmt = infer([value])
+    assert fmt is not None, f"{value} should be inferred"
+    if fmt.startswith(CUSTOM_PREFIX):
+        return
+    assert _datetime.strptime(value, fmt) == parse(value, fmt)
+
+
+@pytest.mark.parametrize(
+    "value, infer, expected_format",
+    (
+        # strptime only knows the abbreviated months of the process locale
+        ("15 décembre 1985", date_infer, "csvd:%d %b %Y"),
+        # strptime has no syntax for an optional part
+        ("2021-06-22 10:20:10", datetime_naive_infer, "csvd:%Y-%m-%d %H:%M:%S[.%f]"),
+        # strptime reads the zone name then drops it, leaving a naive datetime
+        ("1996/06/22 10:20:10 GMT", datetime_aware_infer, "csvd:%Y/%m/%d %H:%M:%S %Z"),
+    ),
+)
+def test_a_format_strptime_cannot_read_is_marked(value, infer, expected_format):
+    # the second value is what forces the optional part, and is dropped for the other two
+    values = [value, "2021-06-22 10:20:10.5"] if "[" in expected_format else [value]
+    assert infer(values) == expected_format
+
+
+def test_strptime_silently_drops_the_zone_a_marked_format_keeps():
+    # the divergence the marker exists for: no error, just another datetime
+    value, fmt = "1996/06/22 10:20:10 GMT", "%Y/%m/%d %H:%M:%S %Z"
+    assert _datetime.strptime(value, fmt).tzinfo is None
+    assert parse(value, CUSTOM_PREFIX + fmt) == _datetime(
+        1996, 6, 22, 10, 20, 10, tzinfo=_timezone.utc
+    )
 
 
 def test_the_year_window_only_guards_the_separator_less_shape():

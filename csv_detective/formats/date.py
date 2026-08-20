@@ -217,8 +217,8 @@ _YEAR_FIRST = (
     "%Y{sep}%d{sep}%m",
 )
 _TEXT_MONTH_TEMPLATES = (
-    CUSTOM_PREFIX + "%d{sep}%b{sep}%Y",
-    CUSTOM_PREFIX + "%d{sep}%b{sep}%y",
+    "%d{sep}%b{sep}%Y",
+    "%d{sep}%b{sep}%y",
 )
 
 
@@ -236,9 +236,20 @@ def separator_of(val: str) -> str | None:
     return found.pop() if found else ""
 
 
+# What makes strptime read a template differently from us, and hence what CUSTOM_PREFIX marks.
+# Each entry is something _read has to handle itself, so a consumer that hands the format to
+# strptime would get a wrong answer rather than an error — which is the whole point of marking:
+#   "%b"  strptime only knows the abbreviated months of the process locale, we know the
+#         abbreviated and the full ones of every language in MONTH_NAMES
+#   "["   an optional part, which strptime has no syntax for; parse() expands it first
+#   "%Z"  strptime accepts the zone name then drops it, leaving a naive datetime where _read
+#         returns an aware one
+_UNREADABLE_BY_STRPTIME = ("%b", "[", "%Z")
+
+
 def _marked(template: str) -> str:
     """Marks the formats strptime cannot read as-is, so that consumers can tell them apart."""
-    if "[" in template and not template.startswith(CUSTOM_PREFIX):
+    if any(marker in template for marker in _UNREADABLE_BY_STRPTIME):
         return CUSTOM_PREFIX + template
     return template
 
@@ -266,7 +277,7 @@ def _numeric_templates(sep: str, year_first: bool, short_year: bool) -> tuple[st
 
 @lru_cache(maxsize=None)
 def _text_month_templates(sep: str) -> tuple[str, ...]:
-    return tuple(template.format(sep=sep) for template in _TEXT_MONTH_TEMPLATES)
+    return tuple(_marked(template.format(sep=sep)) for template in _TEXT_MONTH_TEMPLATES)
 
 
 def date_templates(val: str, *, text_month: bool = True) -> tuple[str, ...]:

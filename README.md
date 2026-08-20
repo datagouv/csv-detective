@@ -75,10 +75,13 @@ The program creates a `python` dictionary with the following information :
             # file itself, `datetime_rfc822` has a single shape, a custom proportion
             # deliberately makes the format tolerant, and an analysis produced before this
             # key existed is replayed as is.
-            # A format prefixed with "csvd:" is not readable by datetime.strptime and has to
-            # go through csv-detective: text months (strptime only knows the ones of the
-            # process locale) and optional parts, written "[.%f]" for a column whose source
-            # only prints fractional seconds when they are non-zero.
+            # A format without the "csvd:" prefix can be handed to datetime.strptime as it is,
+            # and reads the same there as through csv-detective. A prefixed one cannot, and has
+            # to go through `csv_detective.formats.date.parse`: text months (strptime only knows
+            # the abbreviated ones of the process locale, we know the full and abbreviated ones
+            # of several languages), optional parts written "[.%f]" for a column whose source
+            # only prints fractional seconds when they are non-zero, and named time zones, which
+            # strptime reads then drops, leaving a naive datetime where we return an aware one.
             "date_format": "%d/%m/%Y"
         },
     },
