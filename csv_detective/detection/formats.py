@@ -89,7 +89,7 @@ def detect_formats(
     if col_values is None:
         for col in table.columns:
             if analysis["columns_fields"][col]["format"] == "json" and all(
-                value.startswith("[") for value in table[col]
+                value.startswith("[") for value in table[col].dropna()
             ):
                 unique = extract_unique_from_multicat(table[col])
                 if unique is not None:
@@ -99,7 +99,7 @@ def detect_formats(
     else:
         for col in col_values.keys():
             if analysis["columns_fields"][col]["format"] == "json" and all(
-                value.startswith("[") for value in col_values[col].index
+                value.startswith("[") for value in col_values[col].index.dropna()
             ):
                 unique = extract_unique_from_multicat(col_values[col].index.to_series())
                 if unique is not None:
