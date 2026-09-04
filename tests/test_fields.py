@@ -265,6 +265,16 @@ def test_date_format_inferred_from_column(values, expected_format):
         (["1996/06/22 10:20:10 CEST"], True, "csvd:%Y/%m/%d %H:%M:%S %Z"),
         # a name that stands for two different zones leaves us without an offset to apply
         (["1996/06/22 10:20:10 CST"], True, None),
+        # a 12-hour clock names its half of the day; marked because %p only spells "AM" and "PM"
+        # in the C locale, so strptime refuses the value under any other one
+        (["06/12/2022 11:00:15 PM"], False, "csvd:%d/%m/%Y %I:%M:%S %p"),
+        (["06/12/2022 11:00 PM"], False, "csvd:%d/%m/%Y %I:%M %p"),
+        (["12/25/2024 11:00:15 AM"], False, "csvd:%m/%d/%Y %I:%M:%S %p"),
+        # an hour past 12 is not a 12-hour clock, and no other shape reads a trailing marker
+        (["06/12/2022 13:00:15 PM"], False, None),
+        # nothing in the corpus pairs a 12-hour clock with an offset, and the marker closes the
+        # value, so there would be no tail left to read one in
+        (["06/12/2022 11:00:15 PM"], True, None),
         # the year can be followed by the day here too
         (["2022-31-12 12:00:00.92"], False, "%Y-%d-%m %H:%M:%S.%f"),
         # the time does not have to be padded
@@ -308,6 +318,14 @@ def test_datetime_format_inferred_from_column(values, aware, expected_format):
             "csvd:%Y/%m/%d %H:%M:%S %Z",
             _datetime(1996, 6, 22, 10, 20, 10, tzinfo=_timezone.utc),
         ),
+        # a 12-hour clock, including the two hours the convention numbers 12
+        ("06/12/2022 11:00:15 PM", "csvd:%d/%m/%Y %I:%M:%S %p", _datetime(2022, 12, 6, 23, 0, 15)),
+        ("06/12/2022 09:14:34 AM", "csvd:%d/%m/%Y %I:%M:%S %p", _datetime(2022, 12, 6, 9, 14, 34)),
+        ("06/12/2022 12:00:00 AM", "csvd:%d/%m/%Y %I:%M:%S %p", _datetime(2022, 12, 6, 0, 0, 0)),
+        ("06/12/2022 12:00:00 PM", "csvd:%d/%m/%Y %I:%M:%S %p", _datetime(2022, 12, 6, 12, 0, 0)),
+        ("06/12/2022 13:00:15 PM", "csvd:%d/%m/%Y %I:%M:%S %p", None),
+        ("06/12/2022 11:00:15 XM", "csvd:%d/%m/%Y %I:%M:%S %p", None),
+        ("06/12/2022 11:00:15", "csvd:%d/%m/%Y %I:%M:%S %p", None),
         ("31 février 1996", "csvd:%d %b %Y", None),  # not a real day of that month
         ("15 tambour 1985", "csvd:%d %b %Y", None),
         # a separated value is shaped like a date whatever its year: archives and civil
@@ -391,6 +409,8 @@ def test_an_unmarked_format_reads_the_same_through_strptime(value, infer):
         ("2021-06-22 10:20:10", datetime_naive_infer, "csvd:%Y-%m-%d %H:%M:%S[.%f]"),
         # strptime reads the zone name then drops it, leaving a naive datetime
         ("1996/06/22 10:20:10 GMT", datetime_aware_infer, "csvd:%Y/%m/%d %H:%M:%S %Z"),
+        # strptime only spells the 12-hour markers "AM" and "PM" in the C locale
+        ("06/12/2022 11:00:15 PM", datetime_naive_infer, "csvd:%d/%m/%Y %I:%M:%S %p"),
     ),
 )
 def test_a_format_strptime_cannot_read_is_marked(value, infer, expected_format):

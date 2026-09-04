@@ -178,6 +178,9 @@ NAMED_ZONES = {
     "EEST": 3,
 }
 _ZONE_NAME = re.compile(r"\b([A-Za-z]+)$")
+# The marker of a 12-hour clock, which only ever closes a value: "06/12/2022 11:00:15 PM".
+# Templates never place anything after it, so the whole tail is ours to read.
+_MERIDIEM = re.compile(r"([AaPp])\.?[Mm]\.?$")
 
 
 def _without_prefix(fmt: str) -> str:
@@ -196,6 +199,16 @@ def _read(val: str, fmt: str) -> datetime | None:
         # read what precedes the name, then apply the offset the name stands for
         naive = _read(val[: name.start()].rstrip(), fmt[: fmt.index("%Z")].rstrip())
         return naive and naive.replace(tzinfo=timezone(timedelta(hours=offset)))
+    if fmt.endswith("%p"):
+        marker = _MERIDIEM.search(val)
+        if marker is None:
+            return None
+        # everything before the marker is a 12-hour clock read by %I, which strptime bounds to
+        # 1..12 on its own; the marker then says which half of the day it belongs to
+        clock = _read(val[: marker.start()], fmt[: -len("%p")])
+        if clock is None:
+            return None
+        return clock.replace(hour=clock.hour % 12 + (12 if marker.group(1).lower() == "p" else 0))
     try:
         return datetime.strptime(val, fmt)
     except (ValueError, TypeError):
@@ -262,7 +275,9 @@ def separator_of(val: str) -> str | None:
 #   "["   an optional part, which strptime has no syntax for; parse() expands it first
 #   "%Z"  strptime accepts the zone name then drops it, leaving a naive datetime where _read
 #         returns an aware one
-_UNREADABLE_BY_STRPTIME = ("%b", "[", "%Z")
+#   "%p"  same locale problem as "%b": only the C locale spells the markers "AM" and "PM", so
+#         strptime refuses "11:00:15 PM" as soon as the process runs under a French locale
+_UNREADABLE_BY_STRPTIME = ("%b", "[", "%Z", "%p")
 
 
 def _marked(template: str) -> str:
@@ -327,6 +342,10 @@ _DATETIME_SPLIT = re.compile(r"(?P<date>.+?)(?P<t>[T ])(?P<time>\d{1,2}:\d{1,2}.
 # it (or never does) is described exactly, and only a column that mixes both falls back on "[.%f]"
 _TIME_SUFFIXES = ("%H:%M:%S", "%H:%M:%S.%f", "%H:%M:%S[.%f]", "%H:%M")
 _PACKED_TIME_SUFFIXES = ("%H%M%S",)
+# A 12-hour clock names its half of the day, so it is a shape of its own rather than a suffix
+# added to the others: offering it only to the values that carry the marker keeps every other
+# value on the same number of templates as before.
+_MERIDIEM_SUFFIXES = ("%I:%M:%S %p", "%I:%M %p")
 # A value that is nothing but digits packs the date and the time with no separator at all, so
 # there is nothing to split it on: only these two widths read as a whole datetime, and every
 # other length of bare digits is left to `date` or to no format at all.
@@ -338,12 +357,12 @@ _TIMEZONES = ("%z", " %z", " %Z")
 
 @lru_cache(maxsize=None)
 def _with_time(
-    dates: tuple[str, ...], date_time_sep: str, aware: bool, packed_time: bool
+    dates: tuple[str, ...], date_time_sep: str, aware: bool, times: tuple[str, ...]
 ) -> tuple[str, ...]:
     return tuple(
         _marked(f"{date}{date_time_sep}{time}{timezone}")
         for date in dates
-        for time in (_PACKED_TIME_SUFFIXES if packed_time else _TIME_SUFFIXES)
+        for time in times
         for timezone in (_TIMEZONES if aware else ("",))
     )
 
@@ -363,7 +382,18 @@ def datetime_templates(val: str, *, aware: bool) -> tuple[str, ...]:
     dates = date_templates(date_part, text_month=False)
     if not dates:
         return ()
-    return _with_time(dates, match["t"], aware, packed_time=":" not in match["time"])
+    time_part = match["time"]
+    if ":" not in time_part:
+        times = _PACKED_TIME_SUFFIXES
+    elif _MERIDIEM.search(time_part):
+        if aware:
+            # a 12-hour clock is a human-facing spelling; nothing in the corpus pairs it with an
+            # offset, and _read has no tail left to look for one in
+            return ()
+        times = _MERIDIEM_SUFFIXES
+    else:
+        times = _TIME_SUFFIXES
+    return _with_time(dates, match["t"], aware, times)
 
 
 def infer_column_format(
