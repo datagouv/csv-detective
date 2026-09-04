@@ -10,6 +10,7 @@ from csv_detective.detection.variables import (
 )
 from csv_detective.format import Format, FormatsManager
 from csv_detective.output.utils import (
+    build_unique_values,
     extract_unique_from_multicat,
     prepare_output_dict,
 )
@@ -97,15 +98,7 @@ def detect_formats(
             elif table[col].nunique() <= MAX_NUMBER_CATEGORICAL_VALUES:
                 analysis["unique_values"][col] = list(table[col].dropna().unique())
     else:
-        for col in col_values.keys():
-            if analysis["columns_fields"][col]["format"] == "json" and all(
-                value.startswith("[") for value in col_values[col].index.dropna()
-            ):
-                unique = extract_unique_from_multicat(col_values[col].index.to_series())
-                if unique is not None:
-                    analysis["unique_values"][col] = unique
-            elif len(col_values[col]) <= MAX_NUMBER_CATEGORICAL_VALUES:
-                analysis["unique_values"][col] = list(col_values[col].index.dropna())
+        analysis["unique_values"] = build_unique_values(col_values, analysis["columns_fields"])
 
     # Perform testing on labels
     scores_table_labels = test_label(analysis["header"], formats, verbose=verbose)

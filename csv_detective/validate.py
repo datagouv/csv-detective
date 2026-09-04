@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 from csv_detective.format import FormatsManager
-from csv_detective.output.utils import extract_unique_from_multicat
+from csv_detective.output.utils import build_unique_values
 from csv_detective.parsing.columns import (
     MAX_NUMBER_CATEGORICAL_VALUES,
     RATIO_CATEGORICAL_VALUES,
@@ -241,16 +241,7 @@ def validate(
         if len(values) <= MAX_NUMBER_CATEGORICAL_VALUES
         or (len(values) / sum(values)) <= RATIO_CATEGORICAL_VALUES
     ]
-    analysis["unique_values"] = {}
-    for col in col_values.keys():
-        if previous_analysis["columns"][col]["format"] == "json" and all(
-            value.startswith("[") for value in col_values[col].index
-        ):
-            unique = extract_unique_from_multicat(col_values[col].index.to_series())
-            if unique is not None:
-                analysis["unique_values"][col] = unique
-        elif len(col_values[col]) <= MAX_NUMBER_CATEGORICAL_VALUES:
-            analysis["unique_values"][col] = list(col_values[col].index.dropna())
+    analysis["unique_values"] = build_unique_values(col_values, previous_analysis["columns"])
     return (
         True,
         analysis

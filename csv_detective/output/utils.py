@@ -87,3 +87,21 @@ def extract_unique_from_multicat(values: pd.Series) -> list | None:
         return unique.tolist() if len(unique) <= MAX_NUMBER_CATEGORICAL_VALUES else None
     except Exception:
         return None
+
+
+def build_unique_values(
+    col_values: dict[str, pd.Series],
+    columns: dict[str, dict],
+) -> dict[str, list]:
+    """Build the unique_values map from per-column value counts (chunked detect or validate)."""
+    unique_values: dict[str, list] = {}
+    for col in col_values:
+        if columns[col]["format"] == "json" and all(
+            value.startswith("[") for value in col_values[col].index.dropna()
+        ):
+            unique = extract_unique_from_multicat(col_values[col].index.to_series())
+            if unique is not None:
+                unique_values[col] = unique
+        elif len(col_values[col]) <= MAX_NUMBER_CATEGORICAL_VALUES:
+            unique_values[col] = list(col_values[col].index.dropna())
+    return unique_values
