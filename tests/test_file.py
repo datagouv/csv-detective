@@ -1,4 +1,5 @@
 import json
+from datetime import date, datetime
 from tempfile import NamedTemporaryFile
 from unittest.mock import MagicMock, patch
 
@@ -442,40 +443,59 @@ def test_almost_uniform_column(mocked_responses):
 
 @pytest.mark.parametrize("nb_rows", (CHUNK_SIZE // 10, CHUNK_SIZE + 1))
 @pytest.mark.parametrize(
-    "last_value, expected_format, expected_date_format",
+    "last_value, expected_format, expected_date_format, expected_first, expected_last",
     (
         # a time part that is nothing but midnight is how a spreadsheet prints a date cell
-        ("2015-04-08 00:00:00", "date", "%Y-%m-%d 00:00:00"),
+        ("2015-04-08 00:00:00", "date", "%Y-%m-%d 00:00:00", date(2015, 4, 7), date(2015, 4, 8)),
         # a source that cannot represent every date of its column falls back on plain text for
         # those, so both spellings meet and only the optional part reads them all
-        ("1869-01-14", "date", "csvd:%Y-%m-%d[ 00:00:00]"),
+        (
+            "1869-01-14",
+            "date",
+            "csvd:%Y-%m-%d[ 00:00:00]",
+            date(2015, 4, 7),
+            date(1869, 1, 14),
+        ),
         # but one genuine hour, anywhere in the column, and the whole column is a datetime
-        ("2015-04-08 10:20:10", "datetime_naive", "%Y-%m-%d %H:%M:%S"),
+        (
+            "2015-04-08 10:20:10",
+            "datetime_naive",
+            "%Y-%m-%d %H:%M:%S",
+            datetime(2015, 4, 7, 0, 0, 0),
+            datetime(2015, 4, 8, 10, 20, 10),
+        ),
     ),
 )
 def test_a_column_of_midnights_is_a_date(
-    mocked_responses, nb_rows, last_value, expected_format, expected_date_format
+    nb_rows,
+    last_value,
+    expected_format,
+    expected_date_format,
+    expected_first,
+    expected_last,
 ):
     # the odd value out is the very last row, so a file read in chunks only meets it at the end
     col_name = "midnights"
-    expected_content = (
-        f"{col_name},second_col\n" + "2015-04-07 00:00:00,1\n" * nb_rows + f"{last_value},1\n"
-    )
-    mocked_responses.get("http://example.com/test.csv", body=expected_content, status=200)
-    with patch("urllib.request.urlopen") as mock_urlopen:
-        mock_response = MagicMock()
-        mock_response.read.return_value = expected_content.encode("utf-8")
-        mock_response.__enter__.return_value = mock_response
-        mock_urlopen.return_value = mock_response
-        analysis = routine(
-            file_path="http://example.com/test.csv",
+    content = f"{col_name},second_col\n" + "2015-04-07 00:00:00,1\n" * nb_rows + f"{last_value},1\n"
+    with NamedTemporaryFile(suffix=".csv") as tmp:
+        tmp.write(content.encode("utf-8"))
+        tmp.flush()
+        analysis, df_chunks = routine(
+            file_path=tmp.name,
             num_rows=-1,
             output_profile=False,
             save_results=False,
+            output_df=True,
         )
+        # the chunks are read lazily, so they have to be consumed while the file is still there
+        df = pd.concat(df_chunks, ignore_index=True)
     detection = analysis["columns"][col_name]
     assert detection["format"] == expected_format
     assert detection["date_format"] == expected_date_format
+    # a format is only worth what the cast makes of it: both spellings have to come out as the
+    # value they name, the odd last row included
+    assert df[col_name][0] == expected_first
+    assert df[col_name].iloc[-1] == expected_last
 
 
 @pytest.mark.parametrize("nb_rows", (CHUNK_SIZE // 10, CHUNK_SIZE + 1))

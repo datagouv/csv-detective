@@ -215,6 +215,14 @@ def _date_analysis(date_format: str | None, fmt: str = "date") -> dict:
         # the custom formats go through the same path
         ("csvd:%d %b %Y", "15 jan 1985\n13 février 1996\n", True),
         ("csvd:%d %b %Y", "15 jan 1985\n1996-02-13\n", False),
+        # an optional midnight validates a column that mixes both spellings, and nothing else
+        ("csvd:%Y-%m-%d[ 00:00:00]", "1869-01-14\n1900-02-24 00:00:00\n", True),
+        ("csvd:%Y-%m-%d[ 00:00:00]", "1869-01-14\n1900-02-24 10:20:10\n", False),
+        ("%Y-%m-%d 00:00:00", "1900-02-24 00:00:00\n", True),
+        ("%Y-%m-%d 00:00:00", "1900-02-24 00:00:00\n1869-01-14\n", False),
+        # the 12-hour clock too, whose marker strptime only reads in the C locale
+        ("csvd:%d/%m/%Y %I:%M:%S %p", "06/12/2022 11:00:15 PM\n07/12/2022 09:14:34 AM\n", True),
+        ("csvd:%d/%m/%Y %I:%M:%S %p", "06/12/2022 11:00:15 PM\n07/12/2022 13:14:34 PM\n", False),
         # an analysis with no format at all still validates against the generic test
         (None, "07/03/2024\n15 jan 1985\n", True),
     ),
