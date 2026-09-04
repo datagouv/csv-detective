@@ -33,7 +33,7 @@ def test_col_val(
     zero_if_too_low: bool = True,
     verbose: bool = False,
 ) -> float:
-    """Tests values of the serie using test_func.
+    """Tests values of the serie using format.func.
          - skipna : if True indicates that NaNs are considered True
     for the serie to be detected as a certain format
     """
@@ -83,7 +83,7 @@ def test_col(
     skipna: bool = True,
     zero_if_too_low: bool = True,
     verbose: bool = False,
-):
+) -> pd.DataFrame:
     if verbose:
         start = time()
         logging.info("Testing columns to get formats")
@@ -92,8 +92,9 @@ def test_col(
         if verbose:
             start_type = time()
             logging.info(f"\t- Starting with format '{label}'")
-        # improvement lead : put the longest tests behind and make them only if previous tests not satisfactory
-        # => the following needs to change, "apply" means all columns are tested for one type at once
+        # improvement lead : put the longest tests behind and make them only if previous tests
+        # not satisfactory, and mutualise per column what does not depend on the format
+        # (dropna, unique) instead of recomputing it for each of them
         for col in table.columns:
             return_table.loc[label, col] = test_col_val(
                 table[col],

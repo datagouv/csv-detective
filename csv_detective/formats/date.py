@@ -1,9 +1,12 @@
 import re
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
+from functools import lru_cache
+from typing import Any, Callable, Iterable
 
 from dateparser import parse as date_parser
 from dateutil.parser import ParserError
 from dateutil.parser import parse as dateutil_parser
+from unidecode import unidecode
 
 proportion = 1
 description = "Date (flexible formats)"
@@ -38,64 +41,446 @@ def date_casting(val: str) -> datetime | None:
         return None
 
 
-threshold = 0.3
-seps = r"[\s/\-\*_\|;.,]"
-# matches JJ-MM-AAAA with any of the listed separators
-jjmmaaaa_pattern = r"^(0[1-9]|[12][0-9]|3[01])SEP(0[1-9]|1[0-2])SEP((19|20)\d{2})$".replace(
-    "SEP", seps
-)
-# matches AAAA-MM-JJ with any of the listed separators OR NO SEPARATOR
-aaaammjj_pattern = r"^((19|20)\d{2})SEP(0[1-9]|1[0-2])SEP(0[1-9]|[12][0-9]|3[01])$".replace(
-    "SEP", seps + "?"
-)
-# matches JJ-mmm-AAAA and JJ-mmm...mm-AAAA with any of the listed separators OR NO SEPARATOR
-string_month_pattern = (
-    r"^(0[1-9]|[12][0-9]|3[01])SEP(jan|fev|feb|mar|avr|apr"
-    r"|mai|may|jun|jui|jul|aou|aug|sep|oct|nov|dec|janvier|fevrier|mars|avril|"
-    r"mai|juin|juillet|aout|septembre|octobre|novembre|decembre)SEP"
-    r"([0-9]{2}$|(19|20)[0-9]{2}$)"
-).replace("SEP", seps + "?")
+# Formats that strptime cannot express are prefixed with this marker and read by parse() itself.
+# So far only text months: strptime only knows the ones of the process locale.
+CUSTOM_PREFIX = "csvd:"
+
+SEPARATORS = " /-*_|;.,"
+MIN_LENGTH = 6  # "1/2/85", the shortest shape we read: no padding and a two-digit year
+MAX_LENGTH = 20
+
+# The only shape made of nothing but digits, and hence the only one a year window has to guard:
+# eight bare digits are just a number, of which about one in thirty reads as a valid YYYYMMDD.
+# A value that carries separators is specific enough on its own, so no year bounds it — museum
+# records and civil registers are routinely dated well before 1900.
+_NO_SEPARATOR_DATE = "%Y%m%d"
+MIN_YEAR = 1900
+MAX_YEAR = 2099
+
+# Standard forms come from the system locale tables (the CLDR data that PHP and Java also use),
+# tolerated variants are what published files actually contain. Adding a language is one entry.
+MONTH_NAMES: dict[str, list[list[str]]] = {
+    "fr": [
+        ["janvier", "janv", "jan"],
+        ["fevrier", "fevr", "fev"],
+        ["mars", "mar"],
+        ["avril", "avr"],
+        ["mai"],
+        ["juin"],
+        ["juillet", "juil"],
+        ["aout", "aou"],
+        ["septembre", "sept", "sep"],
+        ["octobre", "oct"],
+        ["novembre", "nov"],
+        ["decembre", "dec"],
+    ],
+    "en": [
+        ["january", "jan"],
+        ["february", "feb"],
+        ["march", "mar"],
+        ["april", "apr"],
+        ["may"],
+        ["june", "jun"],
+        ["july", "jul"],
+        ["august", "aug"],
+        ["september", "sept", "sep"],
+        ["october", "oct"],
+        ["november", "nov"],
+        ["december", "dec"],
+    ],
+}
 
 
-def _is(val) -> bool:
-    # many early stops, to cut processing time
-    # and avoid the costly use of date_casting as much as possible
-    # /!\ timestamps are considered ints, not dates
-    if not isinstance(val, str) or len(val) > 20 or len(val) < 8:
-        return False
-    # if it's a usual date pattern
-    if (
-        # with this syntax, if any of the first value is True, the next ones are not computed
-        bool(re.match(jjmmaaaa_pattern, val))
-        or bool(re.match(aaaammjj_pattern, val))
-        or bool(re.match(string_month_pattern, val, re.IGNORECASE))
-    ):
-        return True
-    if re.match(r"^-?\d+[\.|,]\d+$", val):
-        # regular floats are excluded
-        return False
-    # not enough digits => not a date (slightly arbitrary)
-    if sum([char.isdigit() for char in val]) / len(val) < threshold:
-        return False
-    # last resort
-    res = date_casting(val)
-    if not res or res.hour or res.minute or res.second:
-        return False
-    return True
+def build_month_index(month_names: dict[str, list[list[str]]]) -> dict[str, int]:
+    index: dict[str, int] = {}
+    ambiguous: set[str] = set()
+    for months in month_names.values():
+        for number, names in enumerate(months, start=1):
+            for name in names:
+                if index.setdefault(name, number) != number:
+                    # a spelling that means two different months depending on the language cannot
+                    # be read; no current entry does, this guards the languages added later
+                    ambiguous.add(name)
+    for name in ambiguous:
+        del index[name]
+    return index
+
+
+MONTHS = build_month_index(MONTH_NAMES)
+
+_DIRECTIVES = {
+    # the ordinal suffix is part of how English writes a day ("31st december 2022")
+    "%d": r"(?P<day>\d{1,2})(?:st|nd|rd|th)?",
+    "%b": r"(?P<month>[^\W\d_]+)\.?",
+    "%Y": r"(?P<year>\d{4})",
+    "%y": r"(?P<short_year>\d{2})",
+}
+_TOKENS = re.compile(r"%.|.", re.DOTALL)
+
+
+@lru_cache(maxsize=None)
+def _compiled(fmt: str) -> re.Pattern:
+    return re.compile(
+        "".join(_DIRECTIVES.get(token, re.escape(token)) for token in _TOKENS.findall(fmt))
+    )
+
+
+def _parse_custom(val: str, fmt: str) -> datetime | None:
+    match = _compiled(fmt).fullmatch(val)
+    if match is None:
+        return None
+    month = MONTHS.get(unidecode(match["month"]).lower())
+    if month is None:
+        return None
+    groups = match.groupdict()
+    if groups.get("year"):
+        year = int(groups["year"])
+    else:
+        # same two-digit window as strptime's %y
+        short_year = int(groups["short_year"])
+        year = 2000 + short_year if short_year < 69 else 1900 + short_year
+    try:
+        return datetime(year, month, int(groups["day"]))
+    except ValueError:
+        return None
+
+
+_OPTIONAL_PART = re.compile(r"\[([^\]]*)\]")
+
+
+@lru_cache(maxsize=None)
+def _variants(fmt: str) -> tuple[str, ...]:
+    """Expands the optional parts of a format, the most complete one first.
+
+    A column whose source only prints fractional seconds when they are non-zero uses one format
+    with an optional part, not two competing ones.
+    """
+    match = _OPTIONAL_PART.search(fmt)
+    if match is None:
+        return (fmt,)
+    head, tail = fmt[: match.start()], fmt[match.end() :]
+    return _variants(head + match.group(1) + tail) + _variants(head + tail)
+
+
+# Zone names we resolve ourselves rather than leaving to strptime, which reads %Z against the
+# machine's own zone (time.tzname) and drops it anyway: the same file would not read the same on
+# a laptop in Paris as on a server in UTC. Abbreviations are not standardised and many of them
+# name two zones — CST is -6 in the US and +8 in China, IST is +5:30, +2 or +1, EST is -5 but
+# also +10 in Australia — so only the ones with a single meaning are listed here.
+NAMED_ZONES = {
+    "UTC": 0,
+    "GMT": 0,
+    "WET": 0,
+    "WEST": 1,
+    "CET": 1,
+    "CEST": 2,
+    "EET": 2,
+    "EEST": 3,
+}
+_ZONE_NAME = re.compile(r"\b([A-Za-z]+)$")
+# The marker of a 12-hour clock, which only ever closes a value: "06/12/2022 11:00:15 PM".
+# Templates never place anything after it, so the whole tail is ours to read.
+_MERIDIEM = re.compile(r"([AaPp])\.?[Mm]\.?$")
+
+
+def _without_prefix(fmt: str) -> str:
+    return fmt[len(CUSTOM_PREFIX) :] if fmt.startswith(CUSTOM_PREFIX) else fmt
+
+
+def _read(val: str, fmt: str) -> datetime | None:
+    fmt = _without_prefix(fmt)
+    if "%b" in fmt:
+        return _parse_custom(val, fmt)
+    if "%Z" in fmt:
+        name = _ZONE_NAME.search(val)
+        offset = NAMED_ZONES.get(name.group(1).upper()) if name else None
+        if offset is None:
+            return None
+        # read what precedes the name, then apply the offset the name stands for
+        naive = _read(val[: name.start()].rstrip(), fmt[: fmt.index("%Z")].rstrip())
+        return naive and naive.replace(tzinfo=timezone(timedelta(hours=offset)))
+    if fmt.endswith("%p"):
+        marker = _MERIDIEM.search(val)
+        if marker is None:
+            return None
+        # everything before the marker is a 12-hour clock read by %I, which strptime bounds to
+        # 1..12 on its own; the marker then says which half of the day it belongs to
+        clock = _read(val[: marker.start()], fmt[: -len("%p")])
+        if clock is None:
+            return None
+        return clock.replace(hour=clock.hour % 12 + (12 if marker.group(1).lower() == "p" else 0))
+    try:
+        return datetime.strptime(val, fmt)
+    except (ValueError, TypeError):
+        return None
+
+
+def parse(val: str, fmt: str) -> datetime | None:
+    """Reads a value with one of our formats, the custom ones included."""
+    for variant in _variants(fmt):
+        parsed = _read(val, variant)
+        if parsed is None:
+            continue
+        if _without_prefix(variant).startswith(_NO_SEPARATOR_DATE) and not (
+            MIN_YEAR <= parsed.year <= MAX_YEAR
+        ):
+            continue
+        return parsed
+    return None
+
+
+# the order is the preference: an ambiguous value is read day-first, as French files are the
+# overwhelming majority of what csv-detective is fed
+_DAY_OR_MONTH_FIRST = (
+    "%d{sep}%m{sep}%Y",
+    "%m{sep}%d{sep}%Y",
+)
+_DAY_OR_MONTH_FIRST_SHORT = (
+    "%d{sep}%m{sep}%y",
+    "%m{sep}%d{sep}%y",
+)
+# ISO first, but the year can also be followed by the day ("2022-31-12")
+_YEAR_FIRST = (
+    "%Y{sep}%m{sep}%d",
+    "%Y{sep}%d{sep}%m",
+)
+_TEXT_MONTH_TEMPLATES = (
+    "%d{sep}%b{sep}%Y",
+    "%d{sep}%b{sep}%y",
+)
+
+
+# the full stop of an abbreviated month is not a separator ("15 janv. 1985")
+_ABBREVIATION_DOT = re.compile(r"(?<=[^\W\d_])\.")
+_SEPARATOR_RUN = re.compile(f"[{re.escape(SEPARATORS)}]+")
+
+
+def separator_of(val: str) -> str | None:
+    """The single separator the value uses, "" if it uses none, None if it mixes several.
+
+    A separator is a run of characters rather than a single one, so a value that spaces its
+    separators out ("1789 / 07 / 14") uses one separator, not two mixed together.
+    """
+    found = set(_SEPARATOR_RUN.findall(_ABBREVIATION_DOT.sub("", val)))
+    if len(found) > 1:
+        return None
+    return found.pop() if found else ""
+
+
+# What makes strptime read a template differently from us, and hence what CUSTOM_PREFIX marks.
+# Each entry is something _read has to handle itself, so a consumer that hands the format to
+# strptime would get a wrong answer rather than an error — which is the whole point of marking:
+#   "%b"  strptime only knows the abbreviated months of the process locale, we know the
+#         abbreviated and the full ones of every language in MONTH_NAMES
+#   "["   an optional part, which strptime has no syntax for; parse() expands it first
+#   "%Z"  strptime accepts the zone name then drops it, leaving a naive datetime where _read
+#         returns an aware one
+#   "%p"  same locale problem as "%b": only the C locale spells the markers "AM" and "PM", so
+#         strptime refuses "11:00:15 PM" as soon as the process runs under a French locale
+_UNREADABLE_BY_STRPTIME = ("%b", "[", "%Z", "%p")
+
+
+def _marked(template: str) -> str:
+    """Marks the formats strptime cannot read as-is, so that consumers can tell them apart."""
+    if any(marker in template for marker in _UNREADABLE_BY_STRPTIME):
+        return CUSTOM_PREFIX + template
+    return template
+
+
+# every template starts with a digit, so a value that does not cannot be read by any of them.
+# Ruling those out with one match is what keeps the hot path off strptime, which costs an order
+# of magnitude more than a regex.
+_STARTS_LIKE_DATE = re.compile(r"\d")
+_HAS_LETTER = re.compile(r"[^\W\d_]")
+
+
+@lru_cache(maxsize=None)
+def _numeric_templates(sep: str, year_first: bool, short_year: bool) -> tuple[str, ...]:
+    if not sep:
+        # without a separator, only the year-first order is unambiguous enough to be trusted
+        return (_NO_SEPARATOR_DATE,)
+    if year_first:
+        templates = _YEAR_FIRST
+    elif short_year:
+        templates = _DAY_OR_MONTH_FIRST_SHORT
+    else:
+        templates = _DAY_OR_MONTH_FIRST
+    return tuple(template.format(sep=sep) for template in templates)
+
+
+@lru_cache(maxsize=None)
+def _text_month_templates(sep: str) -> tuple[str, ...]:
+    return tuple(_marked(template.format(sep=sep)) for template in _TEXT_MONTH_TEMPLATES)
+
+
+def date_templates(val: str, *, text_month: bool = True) -> tuple[str, ...]:
+    """Every format the value could plausibly be read with, most preferred first.
+
+    Only the shapes that can possibly read the value are returned: one with a letter can only
+    have a text month, and %Y wants four digits where %d wants one or two, so the position of
+    the first separator settles the order. A two-digit last component is %y, not %Y.
+    Trying the others would be as many failed strptime.
+    """
+    if not _STARTS_LIKE_DATE.match(val):
+        return ()
+    sep = separator_of(val)
+    if sep is None:
+        return ()
+    if _HAS_LETTER.search(val):
+        return _text_month_templates(sep) if text_month and sep else ()
+    # both hold for a value with no separator at all: "".index("") is 0, and rindex("") is the
+    # whole length, so neither a four-digit head nor a two-digit tail is ever found
+    year_first = val.index(sep) == 4
+    short_year = not year_first and len(val) - val.rindex(sep) - len(sep) == 2
+    return _numeric_templates(sep, year_first, short_year)
+
+
+# the time is either written with colons, minutes and seconds not necessarily padded, or packed
+# into six bare digits next to a packed date ("20210622T102010")
+_DATETIME_SPLIT = re.compile(r"(?P<date>.+?)(?P<t>[T ])(?P<time>\d{1,2}:\d{1,2}.*|\d{6})")
+# the fraction is listed on its own before the optional form, so that a column that always prints
+# it (or never does) is described exactly, and only a column that mixes both falls back on "[.%f]"
+_TIME_SUFFIXES = ("%H:%M:%S", "%H:%M:%S.%f", "%H:%M:%S[.%f]", "%H:%M")
+_PACKED_TIME_SUFFIXES = ("%H%M%S",)
+# A 12-hour clock names its half of the day, so it is a shape of its own rather than a suffix
+# added to the others: offering it only to the values that carry the marker keeps every other
+# value on the same number of templates as before.
+_MERIDIEM_SUFFIXES = ("%I:%M:%S %p", "%I:%M %p")
+# A value that is nothing but digits packs the date and the time with no separator at all, so
+# there is nothing to split it on: only these two widths read as a whole datetime, and every
+# other length of bare digits is left to `date` or to no format at all.
+_PACKED_DATETIMES = {12: "%Y%m%d%H%M", 14: "%Y%m%d%H%M%S"}
+# %z refuses a space before the offset, so the spaced form is a template of its own, and it
+# only reads numeric offsets: a named zone needs %Z, which _read resolves through NAMED_ZONES
+_TIMEZONES = ("%z", " %z", " %Z")
+
+
+@lru_cache(maxsize=None)
+def _with_time(
+    dates: tuple[str, ...], date_time_sep: str, aware: bool, times: tuple[str, ...]
+) -> tuple[str, ...]:
+    return tuple(
+        _marked(f"{date}{date_time_sep}{time}{timezone}")
+        for date in dates
+        for time in times
+        for timezone in (_TIMEZONES if aware else ("",))
+    )
+
+
+def datetime_templates(val: str, *, aware: bool) -> tuple[str, ...]:
+    """Every format the datetime value could plausibly be read with, most preferred first."""
+    if val.isdigit():
+        # nothing to split on, and nothing to carry a zone either
+        packed = _PACKED_DATETIMES.get(len(val))
+        return (packed,) if packed and not aware else ()
+    match = _DATETIME_SPLIT.fullmatch(val)
+    if match is None:
+        return ()
+    date_part = match["date"]
+    if not (MIN_LENGTH <= len(date_part) <= MAX_LENGTH):
+        return ()
+    dates = date_templates(date_part, text_month=False)
+    if not dates:
+        return ()
+    time_part = match["time"]
+    if ":" not in time_part:
+        times = _PACKED_TIME_SUFFIXES
+    elif _MERIDIEM.search(time_part):
+        if aware:
+            # a 12-hour clock is a human-facing spelling; nothing in the corpus pairs it with an
+            # offset, and _read has no tail left to look for one in
+            return ()
+        times = _MERIDIEM_SUFFIXES
+    else:
+        times = _TIME_SUFFIXES
+    return _with_time(dates, match["t"], aware, times)
+
+
+def infer_column_format(
+    values: Iterable[Any],
+    templates_for: Callable[[str], list[str]],
+) -> str | None:
+    """The single format that reads every value of the column, None if no format reads them all.
+
+    Taken one by one, values are often ambiguous ("07/03/2024" reads both ways); a column rarely
+    is, as one "25/03/2024" rules out the month-first reading for all the others. A column no
+    format fits is not a date at all, which is why this both detects and describes.
+    """
+    candidates: list[str] | None = None
+    for val in values:
+        if not isinstance(val, str):
+            return None
+        if candidates is None:
+            candidates = templates_for(val)
+        candidates = [fmt for fmt in candidates if parse(val, fmt) is not None]
+        if not candidates:
+            return None
+    return candidates[0] if candidates else None
+
+
+def matches_a_template(val: Any, templates_for: Callable[[str], list[str]]) -> bool:
+    """Whether some format reads this single value, without settling on which one.
+
+    This is the per-value check the engine runs on every column; unlike infer_column_format it
+    stops at the first format that fits, as it has no column to narrow down.
+    """
+    return isinstance(val, str) and any(parse(val, fmt) is not None for fmt in templates_for(val))
+
+
+# A time part that is nothing but midnight says nothing: it is how a spreadsheet prints a date
+# cell, not an hour someone recorded. Spelling it out as a literal is what lets a date keep it
+# without letting a real time through — strptime refuses any other hour against "00:00:00", so
+# a column with one genuine time falls to the datetime formats as before.
+MIDNIGHT = "00:00:00"
+_MIDNIGHT_TIME = re.compile(f"(?P<date>.+?)(?P<t>[T ]){MIDNIGHT}")
+# A source that cannot represent every date of its column falls back on plain text for those
+# (Excel has no day before 1900), so both spellings meet in one column and the optional part is
+# the only thing that reads them all. Listing the exact forms first describes a column that
+# always prints midnight, or never does, as what it is.
+_MIDNIGHT_SEPARATORS = (" ", "T")
+
+
+def _templates_for(val: str) -> list[str]:
+    midnight = _MIDNIGHT_TIME.fullmatch(val)
+    if midnight is None:
+        date_part, suffixes = val, ("",)
+    else:
+        date_part = midnight["date"]
+        suffixes = (f"{midnight['t']}{MIDNIGHT}",)
+    if not (MIN_LENGTH <= len(date_part) <= MAX_LENGTH):
+        return []
+    # date_templates has already marked the text-month shapes, and appending to a marked format
+    # would prefix it twice; strip and let _marked decide once on the whole thing
+    dates = [_without_prefix(date) for date in date_templates(date_part)]
+    suffixes += tuple(f"[{sep}{MIDNIGHT}]" for sep in _MIDNIGHT_SEPARATORS)
+    return [_marked(f"{date}{suffix}") for suffix in suffixes for date in dates]
+
+
+def _infer(values: Iterable[Any]) -> str | None:
+    return infer_column_format(values, _templates_for)
+
+
+def _is(val: Any) -> bool:
+    return matches_a_template(val, _templates_for)
 
 
 _test_values = {
     True: [
         "1960-08-07",
         "12/02/2007",
+        "12/02/85",
+        "1/2/85",
         "15 jan 1985",
         "15 décembre 1985",
         "02 05 2003",
         "20030502",
         "2003.05.02",
-        "1993-12/02",
+        "1/2/2024",
+        "15-12-1850",
+        "1900-02-24 00:00:00",
     ],
     False: [
+        "2015-04-07 10:20:10",  # a real hour makes it a datetime
         "1993-1993-1993",
         "39-10-1993",
         "19-15-1993",
@@ -103,6 +488,10 @@ _test_values = {
         "12152003",
         "20031512",
         "02052003",
+        # a plausible day and month, so only the year window tells this apart from an identifier
+        "12341215",
         "6.27367393749392839",
+        "1993-12/02",
+        "15 jui 1985",
     ],
 }

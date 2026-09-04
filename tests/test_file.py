@@ -1,4 +1,5 @@
 import json
+from datetime import date, datetime
 from tempfile import NamedTemporaryFile
 from unittest.mock import MagicMock, patch
 
@@ -441,6 +442,63 @@ def test_almost_uniform_column(mocked_responses):
 
 
 @pytest.mark.parametrize("nb_rows", (CHUNK_SIZE // 10, CHUNK_SIZE + 1))
+@pytest.mark.parametrize(
+    "last_value, expected_format, expected_date_format, expected_first, expected_last",
+    (
+        # a time part that is nothing but midnight is how a spreadsheet prints a date cell
+        ("2015-04-08 00:00:00", "date", "%Y-%m-%d 00:00:00", date(2015, 4, 7), date(2015, 4, 8)),
+        # a source that cannot represent every date of its column falls back on plain text for
+        # those, so both spellings meet and only the optional part reads them all
+        (
+            "1869-01-14",
+            "date",
+            "csvd:%Y-%m-%d[ 00:00:00]",
+            date(2015, 4, 7),
+            date(1869, 1, 14),
+        ),
+        # but one genuine hour, anywhere in the column, and the whole column is a datetime
+        (
+            "2015-04-08 10:20:10",
+            "datetime_naive",
+            "%Y-%m-%d %H:%M:%S",
+            datetime(2015, 4, 7, 0, 0, 0),
+            datetime(2015, 4, 8, 10, 20, 10),
+        ),
+    ),
+)
+def test_a_column_of_midnights_is_a_date(
+    nb_rows,
+    last_value,
+    expected_format,
+    expected_date_format,
+    expected_first,
+    expected_last,
+):
+    # the odd value out is the very last row, so a file read in chunks only meets it at the end
+    col_name = "midnights"
+    content = f"{col_name},second_col\n" + "2015-04-07 00:00:00,1\n" * nb_rows + f"{last_value},1\n"
+    with NamedTemporaryFile(suffix=".csv") as tmp:
+        tmp.write(content.encode("utf-8"))
+        tmp.flush()
+        analysis, df_chunks = routine(
+            file_path=tmp.name,
+            num_rows=-1,
+            output_profile=False,
+            save_results=False,
+            output_df=True,
+        )
+        # the chunks are read lazily, so they have to be consumed while the file is still there
+        df = pd.concat(df_chunks, ignore_index=True)
+    detection = analysis["columns"][col_name]
+    assert detection["format"] == expected_format
+    assert detection["date_format"] == expected_date_format
+    # a format is only worth what the cast makes of it: both spellings have to come out as the
+    # value they name, the odd last row included
+    assert df[col_name][0] == expected_first
+    assert df[col_name].iloc[-1] == expected_last
+
+
+@pytest.mark.parametrize("nb_rows", (CHUNK_SIZE // 10, CHUNK_SIZE + 1))
 def test_full_nan_column(mocked_responses, nb_rows):
     # we want a file that needs sampling
     col_name = "only_nan"
@@ -619,6 +677,20 @@ def test_unique_values_output(nb_rows, mocked_responses):
     # few enough values => testing output
     assert analysis["unique_values"]["cat"] == ["a", "b", "c", "d"]
     assert analysis["unique_values"]["json_cat"] == [1, 2, 3]
+
+
+def test_parquet_keeps_its_declared_types(tmp_path):
+    # parquet types its columns itself, so the column-wide date inference must not run on it:
+    # the values it would see are stringified (a null reads "NaT"), and no format fits them
+    pq_path = tmp_path / "dates.parquet"
+    pd.DataFrame(
+        {
+            "when": pd.to_datetime(["2024-03-07", "2024-12-25", None] * 10),
+            "label": ["a"] * 30,
+        }
+    ).to_parquet(pq_path)
+    analysis = routine(file_path=str(pq_path), num_rows=-1, save_results=False)
+    assert analysis["columns"]["when"]["python_type"] == "datetime"
 
 
 def test_parquet_file_analysis():
