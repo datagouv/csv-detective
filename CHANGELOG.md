@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.12.1 (2026-09-04)
+
+- chore(ruff): exclude pyproject.toml from lint checks
+- ci: run tests on Python 3.14 ([#262](https://github.com/datagouv/csv-detective/pull/262))
+- docs: fix readme code block formatting ([#264](https://github.com/datagouv/csv-detective/pull/264))
+- feat: add performance benchmarking in CI ([#261](https://github.com/datagouv/csv-detective/pull/261))
+- Fix `total_lines` and `categorical` in chunks analysis ([#249](https://github.com/datagouv/csv-detective/pull/249))
+- fix: fix format docs
+- fix: fix tags
+- fix: json missing values ([#272](https://github.com/datagouv/csv-detective/pull/272))
+- fix: json missing values in validate ([#273](https://github.com/datagouv/csv-detective/pull/273))
+- fix: typing ([#263](https://github.com/datagouv/csv-detective/pull/263))
+
+
 ## 0.12.0 (2026-07-08)
 
 - Add unique values list for (multi)categorical columns ([#250](https://github.com/datagouv/csv-detective/pull/250))
