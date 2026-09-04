@@ -441,6 +441,44 @@ def test_almost_uniform_column(mocked_responses):
 
 
 @pytest.mark.parametrize("nb_rows", (CHUNK_SIZE // 10, CHUNK_SIZE + 1))
+@pytest.mark.parametrize(
+    "last_value, expected_format, expected_date_format",
+    (
+        # a time part that is nothing but midnight is how a spreadsheet prints a date cell
+        ("2015-04-08 00:00:00", "date", "%Y-%m-%d 00:00:00"),
+        # a source that cannot represent every date of its column falls back on plain text for
+        # those, so both spellings meet and only the optional part reads them all
+        ("1869-01-14", "date", "csvd:%Y-%m-%d[ 00:00:00]"),
+        # but one genuine hour, anywhere in the column, and the whole column is a datetime
+        ("2015-04-08 10:20:10", "datetime_naive", "%Y-%m-%d %H:%M:%S"),
+    ),
+)
+def test_a_column_of_midnights_is_a_date(
+    mocked_responses, nb_rows, last_value, expected_format, expected_date_format
+):
+    # the odd value out is the very last row, so a file read in chunks only meets it at the end
+    col_name = "midnights"
+    expected_content = (
+        f"{col_name},second_col\n" + "2015-04-07 00:00:00,1\n" * nb_rows + f"{last_value},1\n"
+    )
+    mocked_responses.get("http://example.com/test.csv", body=expected_content, status=200)
+    with patch("urllib.request.urlopen") as mock_urlopen:
+        mock_response = MagicMock()
+        mock_response.read.return_value = expected_content.encode("utf-8")
+        mock_response.__enter__.return_value = mock_response
+        mock_urlopen.return_value = mock_response
+        analysis = routine(
+            file_path="http://example.com/test.csv",
+            num_rows=-1,
+            output_profile=False,
+            save_results=False,
+        )
+    detection = analysis["columns"][col_name]
+    assert detection["format"] == expected_format
+    assert detection["date_format"] == expected_date_format
+
+
+@pytest.mark.parametrize("nb_rows", (CHUNK_SIZE // 10, CHUNK_SIZE + 1))
 def test_full_nan_column(mocked_responses, nb_rows):
     # we want a file that needs sampling
     col_name = "only_nan"

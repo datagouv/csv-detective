@@ -220,6 +220,20 @@ def test_all_proportion_1():
         # even picked; reading it means treating that comma as part of the format, the way the
         # full stop of an abbreviated month already is.
         (["Jun 22, 2021"], None),
+        # a time part that is nothing but midnight is how a spreadsheet prints a date cell
+        (["1900-02-24 00:00:00"], "%Y-%m-%d 00:00:00"),
+        (["1900-02-24T00:00:00"], "%Y-%m-%dT00:00:00"),
+        (["25/12/2024 00:00:00"], "%d/%m/%Y 00:00:00"),
+        # Excel has no day before 1900, so a column reaching further back mixes both spellings
+        (["1869-01-14", "1900-02-24 00:00:00"], "csvd:%Y-%m-%d[ 00:00:00]"),
+        (["1900-02-24 00:00:00", "1869-01-14"], "csvd:%Y-%m-%d[ 00:00:00]"),
+        # one genuine hour and the column is a datetime, not a date
+        (["2015-04-07 10:20:10"], None),
+        (["1869-01-14", "2015-04-07 10:20:10"], None),
+        (["1900-02-24 00:00:00", "2015-04-07 10:20:10"], None),
+        # the separator between the two parts is part of the format, like any other
+        (["1869-01-14", "1900-02-24T00:00:00"], "csvd:%Y-%m-%d[T00:00:00]"),
+        (["1900-02-24 00:00:00", "1900-03-24T00:00:00"], None),
         # mixed separators, within a value or across the column
         (["1993-12/02"], None),
         (["199302-05"], None),
@@ -318,6 +332,11 @@ def test_datetime_format_inferred_from_column(values, aware, expected_format):
             "csvd:%Y/%m/%d %H:%M:%S %Z",
             _datetime(1996, 6, 22, 10, 20, 10, tzinfo=_timezone.utc),
         ),
+        # midnight is spelled out as a literal, so no other hour gets through
+        ("1900-02-24 00:00:00", "%Y-%m-%d 00:00:00", _datetime(1900, 2, 24)),
+        ("1900-02-24 10:20:10", "%Y-%m-%d 00:00:00", None),
+        ("1869-01-14", "csvd:%Y-%m-%d[ 00:00:00]", _datetime(1869, 1, 14)),
+        ("1900-02-24 00:00:00", "csvd:%Y-%m-%d[ 00:00:00]", _datetime(1900, 2, 24)),
         # a 12-hour clock, including the two hours the convention numbers 12
         ("06/12/2022 11:00:15 PM", "csvd:%d/%m/%Y %I:%M:%S %p", _datetime(2022, 12, 6, 23, 0, 15)),
         ("06/12/2022 09:14:34 AM", "csvd:%d/%m/%Y %I:%M:%S %p", _datetime(2022, 12, 6, 9, 14, 34)),

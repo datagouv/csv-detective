@@ -427,10 +427,33 @@ def matches_a_template(val: Any, templates_for: Callable[[str], list[str]]) -> b
     return isinstance(val, str) and any(parse(val, fmt) is not None for fmt in templates_for(val))
 
 
+# A time part that is nothing but midnight says nothing: it is how a spreadsheet prints a date
+# cell, not an hour someone recorded. Spelling it out as a literal is what lets a date keep it
+# without letting a real time through — strptime refuses any other hour against "00:00:00", so
+# a column with one genuine time falls to the datetime formats as before.
+MIDNIGHT = "00:00:00"
+_MIDNIGHT_TIME = re.compile(f"(?P<date>.+?)(?P<t>[T ]){MIDNIGHT}")
+# A source that cannot represent every date of its column falls back on plain text for those
+# (Excel has no day before 1900), so both spellings meet in one column and the optional part is
+# the only thing that reads them all. Listing the exact forms first describes a column that
+# always prints midnight, or never does, as what it is.
+_MIDNIGHT_SEPARATORS = (" ", "T")
+
+
 def _templates_for(val: str) -> list[str]:
-    if not (MIN_LENGTH <= len(val) <= MAX_LENGTH):
+    midnight = _MIDNIGHT_TIME.fullmatch(val)
+    if midnight is None:
+        date_part, suffixes = val, ("",)
+    else:
+        date_part = midnight["date"]
+        suffixes = (f"{midnight['t']}{MIDNIGHT}",)
+    if not (MIN_LENGTH <= len(date_part) <= MAX_LENGTH):
         return []
-    return date_templates(val)
+    # date_templates has already marked the text-month shapes, and appending to a marked format
+    # would prefix it twice; strip and let _marked decide once on the whole thing
+    dates = [_without_prefix(date) for date in date_templates(date_part)]
+    suffixes += tuple(f"[{sep}{MIDNIGHT}]" for sep in _MIDNIGHT_SEPARATORS)
+    return [_marked(f"{date}{suffix}") for suffix in suffixes for date in dates]
 
 
 def _infer(values: Iterable[Any]) -> str | None:
@@ -454,8 +477,10 @@ _test_values = {
         "2003.05.02",
         "1/2/2024",
         "15-12-1850",
+        "1900-02-24 00:00:00",
     ],
     False: [
+        "2015-04-07 10:20:10",  # a real hour makes it a datetime
         "1993-1993-1993",
         "39-10-1993",
         "19-15-1993",
