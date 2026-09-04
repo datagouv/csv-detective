@@ -621,6 +621,39 @@ def test_unique_values_output(nb_rows, mocked_responses):
     assert analysis["unique_values"]["json_cat"] == [1, 2, 3]
 
 
+@pytest.mark.parametrize(
+    "nb_rows",
+    (CHUNK_SIZE // 10, CHUNK_SIZE + 1),
+)
+def test_unique_values_json_with_missing_values(nb_rows):
+    """JSON-format columns with empty cells (NaN) should not crash and be in unique_values"""
+    json_values = ['["a"]', '["b"]', '["c"]', ""]
+    csv_content = "json_col;id\n"
+    for k in range(nb_rows):
+        csv_content += f"{json_values[k % len(json_values)]};{k}\n"
+    with NamedTemporaryFile(
+        "w",
+        suffix=".csv",
+        delete=False,
+    ) as f:
+        f.write(csv_content)
+        tmp_path = f.name
+    try:
+        analysis = routine(
+            file_path=tmp_path,
+            num_rows=-1,
+            output_profile=False,
+            save_results=False,
+        )
+    finally:
+        import os
+
+        os.unlink(tmp_path)
+    assert analysis["columns"]["json_col"]["python_type"] == "json"
+    assert isinstance(analysis.get("unique_values"), dict)
+    assert analysis["unique_values"]["json_col"] == ["a", "b", "c"]
+
+
 def test_parquet_file_analysis():
     pq_path = "tests/data/file.parquet"
     analysis, chunks = routine(
