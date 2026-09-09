@@ -21,7 +21,6 @@ dependencies = [
     "frformat==0.5.0",
     "Faker>=33.0.0",
     "rstr>=3.2.2",
-    "more-itertools>=10.8.0",
     "pyarrow>=23.0.0",
 ]
 requires-python = ">=3.11,<3.15"
