@@ -8,7 +8,7 @@ import pandas as pd
 import pyarrow.parquet as pq
 from more_itertools import peekable
 
-from csv_detective.format import Format
+from csv_detective.format import Format, get_leaf_formats
 from csv_detective.parsing.csv import CHUNK_SIZE
 from csv_detective.utils import display_logs_depending_process_time
 
@@ -75,6 +75,80 @@ def test_col_val(
             )
 
 
+def _test_column_with_linked_checks(
+    serie: pd.Series,
+    formats: dict[str, Format],
+    leaf_formats: dict[str, Format],
+    *,
+    skipna: bool,
+    limited_output: bool,
+    zero_if_too_low: bool,
+    verbose: bool,
+) -> dict[str, float]:
+    """Score every format for one column while avoiding redundant checks.
+
+    Some formats are more specific versions of others (e.g.
+    ``float`` → ``latitude_wgs`` → ``latitude_wgs_fr_metropole``), linked
+    through each format's ``parent`` attribute. Instead of running every
+    format's value test independently, we:
+
+    1. Test only *leaf* formats first (most specific end of each chain, e.g.
+       ``latitude_wgs_fr_metropole`` — not ``float``, which is above it).
+    2. Walk up each leaf's parent chain. For each parent not yet scored:
+       - reuse the child's score for the parent if it is >= the parent's
+         ``proportion`` (skip the parent test);
+       - otherwise retest the parent (child failed, or score too low for the
+         parent's ``proportion``).
+
+    This saves work when a column matches a specialized format: one float
+    check instead of three, for example. Copying the child score to the parent
+    is an approximation (many floats are not valid latitudes) but is much
+    faster than testing every format on every column.
+    """
+    results: dict[str, float] = {}
+
+    # Step 1: run the expensive column test on every leaf format.
+    for format_name, format in leaf_formats.items():
+        results[format_name] = test_col_val(
+            serie,
+            format,
+            skipna=skipna,
+            limited_output=limited_output,
+            zero_if_too_low=zero_if_too_low,
+            verbose=verbose,
+        )
+
+    # Step 2: walk up parent chains, best-matching leaves first (highest
+    # match rate). Shared parents (e.g. float) get scored once, not retested.
+    for format_name, _score in reversed(sorted(results.items(), key=lambda item: item[1])):
+        current = format_name
+        parent_name = formats[current].parent
+        while parent_name is not None and parent_name in formats:
+            if parent_name in results:
+                break  # another leaf already scored this parent
+            # Reuse the child's score for the parent if it is >= the parent's
+            # proportion; otherwise retest the parent.
+            if results[current] >= formats[parent_name].proportion:
+                results[parent_name] = results[current]
+            else:
+                # Child failed, or score too low for parent's stricter threshold
+                # (e.g. child 85% with proportion 0.8, parent needs 100%).
+                results[parent_name] = test_col_val(
+                    serie,
+                    formats[parent_name],
+                    skipna=skipna,
+                    limited_output=limited_output,
+                    zero_if_too_low=zero_if_too_low,
+                    verbose=verbose,
+                )
+            current = parent_name
+            parent_name = formats[current].parent
+
+    missing = set(formats) - set(results)
+    assert not missing, f"Formats not scored: {missing}"
+    return {name: results[name] for name in formats}
+
+
 def test_col(
     table: pd.DataFrame,
     formats: dict[str, Format],
@@ -87,32 +161,32 @@ def test_col(
     if verbose:
         start = time()
         logging.info("Testing columns to get formats")
-    return_table = pd.DataFrame(columns=table.columns)
-    for idx, (label, format) in enumerate(formats.items()):
+    leaf_formats = get_leaf_formats(formats)
+    column_results: dict[str, dict[str, float]] = {}
+    nb_cols = len(table.columns)
+    for idx, column in enumerate(table.columns):
         if verbose:
-            start_type = time()
-            logging.info(f"\t- Starting with format '{label}'")
-        # improvement lead : put the longest tests behind and make them only if previous tests not satisfactory
-        # => the following needs to change, "apply" means all columns are tested for one type at once
-        for col in table.columns:
-            return_table.loc[label, col] = test_col_val(
-                table[col],
-                format,
-                skipna=skipna,
-                zero_if_too_low=zero_if_too_low,
-                limited_output=limited_output,
-                verbose=verbose,
-            )
+            start_col = time()
+            logging.info(f"\t- Starting with column '{column}' ({idx + 1}/{nb_cols})")
+        column_results[column] = _test_column_with_linked_checks(
+            table[column],
+            formats,
+            leaf_formats,
+            skipna=skipna,
+            limited_output=limited_output,
+            zero_if_too_low=zero_if_too_low,
+            verbose=verbose,
+        )
         if verbose:
             display_logs_depending_process_time(
-                f'\t> Done with format "{label}" in {round(time() - start_type, 3)}s ({idx + 1}/{len(formats)})',
-                time() - start_type,
+                f'\t> Done with column "{column}" in {round(time() - start_col, 3)}s',
+                time() - start_col,
             )
     if verbose:
         display_logs_depending_process_time(
             f"Done testing columns in {round(time() - start, 3)}s", time() - start
         )
-    return return_table
+    return pd.DataFrame(column_results)
 
 
 def test_label(columns: list[str], formats: dict[str, Format], verbose: bool = False):

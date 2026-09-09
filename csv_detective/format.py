@@ -15,6 +15,7 @@ class Format:
         tags: list[str] = [],
         mandatory_label: bool = False,
         python_type: str = "string",
+        parent: str | None = None,
     ) -> None:
         """
         Instanciates a Format object.
@@ -29,6 +30,7 @@ class Format:
             tags: to allow users to submit a file to only a subset of formats
             mandatory_label: whether the format can only be considered if the column passes both field and label tests
             python_type: the python type related to the format (less specific, used for downstream casting)
+            parent: optional name of a less specific format to test when this one fails or to skip when it matches
         """
         self.name: str = name
         self.description: str = description
@@ -39,6 +41,7 @@ class Format:
         self.tags: list[str] = tags
         self.mandatory_label: bool = mandatory_label
         self.python_type: str = python_type
+        self.parent: str | None = parent
 
     def is_valid_label(self, val: str) -> float:
         return header_score(val, self.labels)
@@ -48,6 +51,12 @@ class Format:
         if proportion <= 0 or proportion > 1:
             raise ValueError("proportion should be between 0 (excluded) and 1 (included)")
         return proportion
+
+
+def get_leaf_formats(formats: dict[str, Format]) -> dict[str, Format]:
+    """Return formats that are not parent of any other format (most specific first)."""
+    parents = {fmt.parent for fmt in formats.values() if fmt.parent}
+    return {name: fmt for name, fmt in formats.items() if name not in parents}
 
 
 class FormatsManager:
@@ -97,9 +106,13 @@ class FormatsManager:
                         else getattr(module, "proportion", 1)
                     )
                 },
+                parent=getattr(module, "parent", None),
             )
             for label in format_labels
         }
+
+    def get_leaf_formats(self) -> dict[str, Format]:
+        return get_leaf_formats(self.formats)
 
     def get_formats_from_tags(self, tags: list[str]) -> dict[str, Format]:
         return {

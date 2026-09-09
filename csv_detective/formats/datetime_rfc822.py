@@ -3,6 +3,7 @@ import re
 from csv_detective.formats.datetime_aware import labels  # noqa
 
 proportion = 1
+parent = "datetime_aware"
 description = "Datetime in the RFC822 format"
 tags = ["temp", "type"]
 python_type = "datetime"

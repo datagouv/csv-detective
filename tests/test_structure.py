@@ -37,6 +37,28 @@ def test_conformity():
         assert format.labels
 
 
+def test_format_parents_are_valid():
+    for name, format in fmtm.formats.items():
+        if format.parent is not None:
+            assert format.parent in fmtm.formats, (
+                f"{name}.parent={format.parent!r} is not a known format"
+            )
+
+
+def test_format_child_proportion_not_above_parent():
+    # Convention, not a hard runtime rule: linked checks can retest the parent
+    # when the child score is below the parent's proportion, and custom_proportions
+    # may still diverge at runtime. This guards against surprising defaults in
+    # format modules (a specialized format should not be stricter than its parent).
+    for name, format in fmtm.formats.items():
+        if format.parent is not None:
+            parent = fmtm.formats[format.parent]
+            assert format.proportion <= parent.proportion, (
+                f"{name}.proportion ({format.proportion}) > "
+                f"{format.parent}.proportion ({parent.proportion})"
+            )
+
+
 @pytest.mark.parametrize(
     "tags",
     (
