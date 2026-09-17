@@ -64,6 +64,26 @@ The program creates a `python` dictionary with the following information :
             "format": "code_commune",
             "score": 1.0
         },
+        "Date de création": {
+            "python_type": "date",
+            "format": "date",
+            "score": 1.0,
+            # How to read every value of that column: a column that no single format reads
+            # is not detected as a date at all. Present on every `date` / `datetime_naive` /
+            # `datetime_aware` column the inference ran on, and absent everywhere else, so a
+            # consumer always needs a path without it: parquet columns come typed from the
+            # file itself, `datetime_rfc822` has a single shape, a custom proportion
+            # deliberately makes the format tolerant, and an analysis produced before this
+            # key existed is replayed as is.
+            # A format without the "csvd:" prefix can be handed to datetime.strptime as it is,
+            # and reads the same there as through csv-detective. A prefixed one cannot, and has
+            # to go through `csv_detective.formats.date.parse`: text months (strptime only knows
+            # the abbreviated ones of the process locale, we know the full and abbreviated ones
+            # of several languages), optional parts written "[.%f]" for a column whose source
+            # only prints fractional seconds when they are non-zero, and named time zones, which
+            # strptime reads then drops, leaving a naive datetime where we return an aware one.
+            "date_format": "%d/%m/%Y"
+        },
     },
     "columns_labels": {                     # Property that return detection from header columns
         "Code commune": {
