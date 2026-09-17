@@ -11,8 +11,10 @@ from csv_detective.detection.variables import (
 )
 from csv_detective.format import Format, FormatsManager
 from csv_detective.output.utils import (
+    build_unique_values,
     extract_unique_from_multicat,
     prepare_output_dict,
+    winning_format,
 )
 from csv_detective.parsing.columns import (
     MAX_NUMBER_CATEGORICAL_VALUES,
@@ -22,13 +24,6 @@ from csv_detective.parsing.columns import (
     test_label,
     test_parquet_cols,
 )
-
-
-def _winning_format(detections: dict | list[dict], limited_output: bool) -> str:
-    """The format that won for a column, whatever shape prepare_output_dict produced."""
-    if limited_output:
-        return detections["format"]
-    return max(detections, key=lambda d: d["score"], default={"format": "string"})["format"]
 
 
 def _infer_column_formats(
@@ -144,7 +139,7 @@ def detect_formats(
     analysis["unique_values"] = {}
     if col_values is None:
         for col in table.columns:
-            if _winning_format(analysis["columns_fields"][col], limited_output) == "json" and all(
+            if winning_format(analysis["columns_fields"][col], limited_output) == "json" and all(
                 value.startswith("[") for value in table[col].dropna()
             ):
                 unique = extract_unique_from_multicat(table[col])
@@ -153,15 +148,9 @@ def detect_formats(
             elif table[col].nunique() <= MAX_NUMBER_CATEGORICAL_VALUES:
                 analysis["unique_values"][col] = list(table[col].dropna().unique())
     else:
-        for col in col_values.keys():
-            if _winning_format(analysis["columns_fields"][col], limited_output) == "json" and all(
-                value.startswith("[") for value in col_values[col].index.dropna()
-            ):
-                unique = extract_unique_from_multicat(col_values[col].index.to_series())
-                if unique is not None:
-                    analysis["unique_values"][col] = unique
-            elif len(col_values[col]) <= MAX_NUMBER_CATEGORICAL_VALUES:
-                analysis["unique_values"][col] = list(col_values[col].index.dropna())
+        analysis["unique_values"] = build_unique_values(
+            col_values, analysis["columns_fields"], limited_output
+        )
 
     # Perform testing on labels
     scores_table_labels = test_label(analysis["header"], formats, verbose=verbose)
