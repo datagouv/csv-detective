@@ -11,6 +11,7 @@ from csv_detective import routine
 from csv_detective.output.profile import create_profile
 from csv_detective.parsing.csv import CHUNK_SIZE
 from csv_detective.utils import sanitize_for_json
+from csv_detective.validate import validate
 
 
 @pytest.fixture
@@ -691,6 +692,72 @@ def test_parquet_keeps_its_declared_types(tmp_path):
     ).to_parquet(pq_path)
     analysis = routine(file_path=str(pq_path), num_rows=-1, save_results=False)
     assert analysis["columns"]["when"]["python_type"] == "datetime"
+
+
+@pytest.mark.parametrize(
+    "nb_rows",
+    (CHUNK_SIZE // 10, CHUNK_SIZE + 1),
+)
+def test_unique_values_json_with_missing_values(nb_rows):
+    """JSON-format columns with empty cells (NaN) should not crash and be in unique_values"""
+    json_values = ['["a"]', '["b"]', '["c"]', ""]
+    csv_content = "json_col;id\n"
+    for k in range(nb_rows):
+        csv_content += f"{json_values[k % len(json_values)]};{k}\n"
+    with NamedTemporaryFile(
+        "w",
+        suffix=".csv",
+        delete=False,
+    ) as f:
+        f.write(csv_content)
+        tmp_path = f.name
+    try:
+        analysis = routine(
+            file_path=tmp_path,
+            num_rows=-1,
+            output_profile=False,
+            save_results=False,
+        )
+    finally:
+        import os
+
+        os.unlink(tmp_path)
+    assert analysis["columns"]["json_col"]["python_type"] == "json"
+    assert isinstance(analysis.get("unique_values"), dict)
+    assert analysis["unique_values"]["json_col"] == ["a", "b", "c"]
+
+
+@pytest.mark.parametrize(
+    "nb_rows",
+    (CHUNK_SIZE // 10, CHUNK_SIZE + 1),
+)
+def test_validate_json_column_with_missing_values(nb_rows):
+    """JSON-format column with empty cells (NaN) must not crash validate."""
+    json_values = ['["a"]', '["b"]', '["c"]', ""]
+    csv_content = "json_col;id\n"
+    for k in range(nb_rows):
+        csv_content += f"{json_values[k % len(json_values)]};{k}\n"
+    with NamedTemporaryFile(
+        "w",
+        suffix=".csv",
+        delete=False,
+    ) as f:
+        f.write(csv_content)
+        tmp_path = f.name
+    try:
+        analysis = routine(
+            file_path=tmp_path,
+            num_rows=-1,
+            output_profile=False,
+            save_results=False,
+        )
+        is_valid, _, _ = validate(tmp_path, analysis)
+    finally:
+        import os
+
+        os.unlink(tmp_path)
+    assert is_valid
+    assert analysis["unique_values"]["json_col"] == ["a", "b", "c"]
 
 
 def test_parquet_file_analysis():
