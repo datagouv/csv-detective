@@ -18,7 +18,6 @@
 | commune | French commune name | string | fr, geo | 0.8 | False | `saint denis` |
 | csp_insee | French socio-professional category label, from the INSEE reference source | string | fr | 1 | False | `employes de la poste` |
 | date | Date (flexible formats) | date | temp, type | 1 | False | `1960-08-07` |
-| date_fr | Full text date in French | string | fr, temp | 1 | False | `13 février 1996` |
 | datetime_aware | Datetime with timezone information (flexible formats) | datetime | temp, type | 1 | False | `2021-06-22 10:20:10-04:00` |
 | datetime_naive | Datetime with no timezone information (flexible formats) | datetime | temp, type | 1 | False | `2021-06-22 10:20:10` |
 | datetime_rfc822 | Datetime in the RFC822 format | datetime | temp, type | 1 | False | `Sun, 06 Nov 1994 08:49:37 GMT` |

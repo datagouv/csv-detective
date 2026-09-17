@@ -79,6 +79,13 @@ def prepare_output_dict(return_table: pd.DataFrame, limited_output: bool):
     return output_dict
 
 
+def winning_format(detections: dict | list[dict], limited_output: bool) -> str:
+    """The format that won for a column, whatever shape prepare_output_dict produced."""
+    if limited_output:
+        return detections["format"]
+    return max(detections, key=lambda d: d["score"], default={"format": "string"})["format"]
+
+
 def extract_unique_from_multicat(values: pd.Series) -> list | None:
     # we can safely cast as json here
     loaded = values.apply(lambda v: json.loads(v) if isinstance(v, str) else pd.NA)
@@ -91,12 +98,13 @@ def extract_unique_from_multicat(values: pd.Series) -> list | None:
 
 def build_unique_values(
     col_values: dict[str, pd.Series],
-    columns: dict[str, dict],
+    columns: dict[str, dict | list[dict]],
+    limited_output: bool,
 ) -> dict[str, list]:
     """Build the unique_values map from per-column value counts (chunked detect or validate)."""
     unique_values: dict[str, list] = {}
     for col in col_values:
-        if columns[col]["format"] == "json" and all(
+        if winning_format(columns[col], limited_output) == "json" and all(
             value.startswith("[") for value in col_values[col].index.dropna()
         ):
             unique = extract_unique_from_multicat(col_values[col].index.to_series())
