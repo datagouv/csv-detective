@@ -372,6 +372,19 @@ def test_nan_values(expected_type):
     assert output["columns"]["partly_empty"]["python_type"] == expected_type
 
 
+@pytest.mark.parametrize("skipna", (True, False))
+def test_empty_column_is_a_string(tmp_path, skipna):
+    file_path = tmp_path / "data.csv"
+    file_path.write_text("id,only_nan\n" + "".join(f"{k},\n" for k in range(5)))
+    output = routine(
+        file_path=str(file_path),
+        num_rows=-1,
+        save_results=False,
+        skipna=skipna,
+    )
+    assert output["columns"]["only_nan"]["format"] == "string"
+
+
 def test_output_df():
     output, df_chunks = routine(
         file_path="tests/data/b_test_file.csv",
