@@ -16,12 +16,11 @@ labels = {
     "ape": 0.5,
 }
 
-f = open(join(dirname(__file__), "data", "insee_ape700.txt"), "r")
-codes_insee_ape = f.read().split("\n")
+with open(join(dirname(__file__), "data", "insee_ape700.txt"), "r") as f:
+    codes_insee_ape = f.read().split("\n")
 # removing empty str due to additionnal line in file
 del codes_insee_ape[-1]
 codes_insee_ape = set(codes_insee_ape)
-f.close()
 
 
 def _is(val) -> bool:

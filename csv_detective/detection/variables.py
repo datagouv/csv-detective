@@ -27,10 +27,7 @@ def detect_continuous_variable(
             nb_floats = count[float]
         else:
             return False
-        if nb_floats / total_nb >= continuous_th:
-            return True
-        else:
-            return False
+        return nb_floats / total_nb >= continuous_th
 
     def parses_to_integer(value: str):
         try:

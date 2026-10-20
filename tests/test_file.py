@@ -71,28 +71,24 @@ def test_profile_output_on_file():
         save_results=False,
     )
     assert all(
-        [
-            c in list(output["profile"]["TXCOUVGLO_COM_2014"].keys())
-            for c in [
-                "min",
-                "max",
-                "mean",
-                "std",
-                "tops",
-                "nb_distinct",
-                "nb_missing_values",
-            ]
+        c in list(output["profile"]["TXCOUVGLO_COM_2014"].keys())
+        for c in [
+            "min",
+            "max",
+            "mean",
+            "std",
+            "tops",
+            "nb_distinct",
+            "nb_missing_values",
         ]
     )
     assert not any(
-        [
-            c in list(output["profile"]["NUMCOM"].keys())
-            for c in [
-                "min",
-                "max",
-                "mean",
-                "std",
-            ]
+        c in list(output["profile"]["NUMCOM"].keys())
+        for c in [
+            "min",
+            "max",
+            "mean",
+            "std",
         ]
     )
     assert output["profile"]["TXCOUVGLO_COM_2014"]["min"] == 0.0
@@ -326,7 +322,8 @@ def test_non_csv_files(params):
 def test_urls(mocked_responses, params):
     file_name, checks = params
     url = f"http://example.com/{file_name}"
-    expected_content = open(f"tests/data/{file_name}", "rb").read()
+    with open(f"tests/data/{file_name}", "rb") as file:
+        expected_content = file.read()
     mocked_responses.get(
         url,
         body=expected_content,
@@ -827,7 +824,7 @@ def test_parquet_file_analysis():
             },
         },
     }
-    for field in expected:
+    for field, expected_value in expected.items():
         if field == "columns":
             assert all(
                 analysis["columns"][col][key] == value
@@ -835,7 +832,7 @@ def test_parquet_file_analysis():
                 for key, value in d.items()
             )
         else:
-            assert analysis[field] == expected[field]
+            assert analysis[field] == expected_value
     df = next(chunks)
     assert isinstance(df, pd.DataFrame)
     assert len(df) == expected["total_lines"]

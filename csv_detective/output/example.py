@@ -77,7 +77,7 @@ def create_example_csv_file(
         required: bool = True,
     ) -> str:
         # the bounds specified in date_range are expected in the same format as the desired output format
-        assert all([k in format for k in ["%d", "%m", "%Y"]])
+        assert all(k in format for k in ["%d", "%m", "%Y"])
         if potential_skip(required):
             return ""
         if date_range is None:
@@ -94,7 +94,7 @@ def create_example_csv_file(
         format: str = "%H:%M:%S",
         required: bool = True,
     ) -> str:
-        assert all([k in format for k in ["%H", "%M", "%S"]])
+        assert all(k in format for k in ["%H", "%M", "%S"])
         if potential_skip(required):
             return ""
         # maybe add a time_range argument?
@@ -106,7 +106,7 @@ def create_example_csv_file(
         required: bool = True,
     ) -> str:
         # the bounds specified in datetime_range are expected in the same format as the desired output format
-        assert all([k in format for k in ["%d", "%m", "%Y", "%H", "%M", "%S"]])
+        assert all(k in format for k in ["%d", "%m", "%Y", "%H", "%M", "%S"])
         if potential_skip(required):
             return ""
         if datetime_range is None:
@@ -190,7 +190,7 @@ def create_example_csv_file(
         else:
             with open(schema_path, encoding=encoding) as jsonfile:
                 schema = json.load(jsonfile)
-        if "fields" not in schema.keys():
+        if "fields" not in schema:
             raise ValueError("The schema must have a 'fields' key.")
         else:
             fields = [
@@ -201,9 +201,9 @@ def create_example_csv_file(
                     # linked to https://github.com/datagouv/fr-format/issues/26
                     "args": (
                         build_args_from_constraints(f["constraints"])
-                        if "constraints" in f.keys()
+                        if "constraints" in f
                         else build_args_from_constraints(f["arrayItem"]["constraints"])
-                        if "arrayItem" in f.keys() and "constraints" in f["arrayItem"].keys()
+                        if "arrayItem" in f and "constraints" in f["arrayItem"]
                         else {}
                     ),
                 }

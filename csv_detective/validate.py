@@ -259,7 +259,7 @@ def validate(
         or (len(values) / sum(values)) <= RATIO_CATEGORICAL_VALUES
     ]
     analysis["unique_values"] = {}
-    for col in col_values.keys():
+    for col in col_values:
         if previous_analysis["columns"][col]["format"] == "json" and all(
             value.startswith("[") for value in col_values[col].index.dropna()
         ):

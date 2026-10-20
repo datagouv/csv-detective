@@ -46,7 +46,7 @@ def prepare_output_dict(return_table: pd.DataFrame, limited_output: bool):
             ("datetime_rfc822", ("datetime_aware",)),
             ("code_epci", ("siren",)),
         ]
-        detected_formats = set(x["format"] for x in output_dict[column_name])
+        detected_formats = {x["format"] for x in output_dict[column_name]}
         formats_to_remove = set()
         # Deprioritise float and int detection vs others
         if len(detected_formats - {"float", "int"}) > 0:

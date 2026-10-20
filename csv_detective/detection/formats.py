@@ -154,7 +154,7 @@ def detect_formats(
             elif table[col].nunique() <= MAX_NUMBER_CATEGORICAL_VALUES:
                 analysis["unique_values"][col] = list(table[col].dropna().unique())
     else:
-        for col in col_values.keys():
+        for col in col_values:
             if _winning_format(analysis["columns_fields"][col], limited_output) == "json" and all(
                 value.startswith("[") for value in col_values[col].index.dropna()
             ):

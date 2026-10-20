@@ -133,4 +133,4 @@ class FormatsManager:
         return {label: fmt for label, fmt in self.formats.items() if fmt.mandatory_label}
 
     def available_tags(self) -> set[str]:
-        return set(tag for format in self.formats.values() for tag in format.tags)
+        return {tag for format in self.formats.values() for tag in format.tags}

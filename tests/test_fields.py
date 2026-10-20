@@ -76,7 +76,7 @@ def test_all_fields_have_tests():
         # checking structure
         assert all(isinstance(key, bool) and isinstance(vals, list) for key, vals in valid.items())
         # checking that we have valid and invalid cases for each
-        assert all(b in valid.keys() for b in [True, False])
+        assert all(b in valid for b in [True, False])
 
 
 # this is based on the _test_values of each <format>.py file
