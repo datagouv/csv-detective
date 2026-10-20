@@ -20,7 +20,7 @@ parameters:
 jobs:
   install:
     docker:
-      - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-bookworm
+      - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-trixie
     steps:
       - checkout
       - run:
@@ -44,7 +44,7 @@ jobs:
 
   lint:
     docker:
-      - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-bookworm
+      - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-trixie
     steps:
       - attach_workspace:
           at: .
@@ -59,7 +59,7 @@ jobs:
 
   tests:
     docker:
-      - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-bookworm
+      - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-trixie
     steps:
       - attach_workspace:
           at: .
@@ -72,7 +72,7 @@ jobs:
 
   check-doc:
     docker:
-      - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-bookworm
+      - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-trixie
     steps:
       - attach_workspace:
           at: .
@@ -84,7 +84,7 @@ jobs:
 
   build:
     docker:
-      - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-bookworm  # needs git for setuptools_scm
+      - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-trixie  # needs git for setuptools_scm
     steps:
       - attach_workspace:
           at: .
@@ -122,7 +122,7 @@ jobs:
 
   publish:
     docker:
-      - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-bookworm
+      - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-trixie
     steps:
       - attach_workspace:
           at: .
@@ -133,7 +133,7 @@ jobs:
 
   benchmark:
     docker:
-      - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-bookworm
+      - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-trixie
     resource_class: large
     environment:
       BENCHMARK_CI: circleci
