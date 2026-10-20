@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.13.0 (2026-10-20)
+
+- chore: upgrade dependencies ([#275](https://github.com/datagouv/csv-detective/pull/275))
+- feat: improve date parsing ([#245](https://github.com/datagouv/csv-detective/pull/245))
+- fix: close csv files when reading fails ([#277](https://github.com/datagouv/csv-detective/pull/277))
+- perf: add linked format checks to skip redundant field tests ([#265](https://github.com/datagouv/csv-detective/pull/265))
+
+
 ## 0.12.1 (2026-09-04)
 
 - chore(ruff): exclude pyproject.toml from lint checks
