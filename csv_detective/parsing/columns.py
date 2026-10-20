@@ -1,12 +1,13 @@
 import logging
 import re
+from itertools import islice
 from time import time
 from typing import Callable
 
 import numpy as np
 import pandas as pd
 import pyarrow.parquet as pq
-from more_itertools import peekable
+from more_itertools import chunked
 
 from csv_detective.format import Format, get_leaf_formats
 from csv_detective.parsing.csv import CHUNK_SIZE
@@ -300,19 +301,12 @@ def test_col_chunks(
         na_values=na_values,
     )
     analysis["total_lines"] = CHUNK_SIZE
-    batch, batch_number = [], 1
-    iterator = peekable(enumerate(chunks))
-    for idx, chunk in iterator:
-        if idx == 0:
-            # we have read and analysed the first chunk already
-            continue
-        # it's too slow to process chunks directly, but we want to keep the first analysis
-        # on a "small" chunk, so partial analyses are done on batches of chunks
-        batch.append(chunk)
-        # peeking tells whether this is the last chunk, so that the final, partial batch
-        # is processed in the loop rather than in an additional step after it
-        if len(batch) < 10 and iterator:
-            continue
+    idx = 0
+    # we have read and analysed the first chunk already.
+    # it's too slow to process chunks directly, but we want to keep the first analysis
+    # on a "small" chunk, so partial analyses are done on batches of chunks
+    for batch_number, batch in enumerate(chunked(islice(chunks, 1, None), 10), start=1):
+        idx += len(batch)
         if verbose:
             logging.info(f"> Testing batch number {batch_number}")
         batch = pd.concat(batch, ignore_index=True)
@@ -352,7 +346,6 @@ def test_col_chunks(
                     (return_table.loc[label, col] * idx + batch_col_test) / (idx + 1)
                 )
         remaining_tests_per_col = _build_remaining_tests_per_col(return_table, mandatory_label_skip)
-        batch, batch_number = [], batch_number + 1
     analysis["nb_duplicates"] = sum(row_hashes_count > 1)
     analysis["categorical"] = [
         col
