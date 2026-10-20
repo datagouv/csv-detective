@@ -1,7 +1,8 @@
 import re
+from collections.abc import Callable, Iterable
 from datetime import datetime, timedelta, timezone
-from functools import lru_cache
-from typing import Any, Callable, Iterable
+from functools import cache
+from typing import Any
 
 from dateparser import parse as date_parser
 from dateutil.parser import ParserError
@@ -118,7 +119,7 @@ _DIRECTIVES = {
 _TOKENS = re.compile(r"%.|.", re.DOTALL)
 
 
-@lru_cache(maxsize=None)
+@cache
 def _compiled(fmt: str) -> re.Pattern:
     return re.compile(
         "".join(_DIRECTIVES.get(token, re.escape(token)) for token in _TOKENS.findall(fmt))
@@ -148,7 +149,7 @@ def _parse_custom(val: str, fmt: str) -> datetime | None:
 _OPTIONAL_PART = re.compile(r"\[([^\]]*)\]")
 
 
-@lru_cache(maxsize=None)
+@cache
 def _variants(fmt: str) -> tuple[str, ...]:
     """Expands the optional parts of a format, the most complete one first.
 
@@ -184,7 +185,7 @@ _MERIDIEM = re.compile(r"([AaPp])\.?[Mm]\.?$")
 
 
 def _without_prefix(fmt: str) -> str:
-    return fmt[len(CUSTOM_PREFIX) :] if fmt.startswith(CUSTOM_PREFIX) else fmt
+    return fmt.removeprefix(CUSTOM_PREFIX)
 
 
 def _read(val: str, fmt: str) -> datetime | None:
@@ -294,7 +295,7 @@ _STARTS_LIKE_DATE = re.compile(r"\d")
 _HAS_LETTER = re.compile(r"[^\W\d_]")
 
 
-@lru_cache(maxsize=None)
+@cache
 def _numeric_templates(sep: str, year_first: bool, short_year: bool) -> tuple[str, ...]:
     if not sep:
         # without a separator, only the year-first order is unambiguous enough to be trusted
@@ -308,7 +309,7 @@ def _numeric_templates(sep: str, year_first: bool, short_year: bool) -> tuple[st
     return tuple(template.format(sep=sep) for template in templates)
 
 
-@lru_cache(maxsize=None)
+@cache
 def _text_month_templates(sep: str) -> tuple[str, ...]:
     return tuple(_marked(template.format(sep=sep)) for template in _TEXT_MONTH_TEMPLATES)
 
@@ -355,7 +356,7 @@ _PACKED_DATETIMES = {12: "%Y%m%d%H%M", 14: "%Y%m%d%H%M%S"}
 _TIMEZONES = ("%z", " %z", " %Z")
 
 
-@lru_cache(maxsize=None)
+@cache
 def _with_time(
     dates: tuple[str, ...], date_time_sep: str, aware: bool, times: tuple[str, ...]
 ) -> tuple[str, ...]:

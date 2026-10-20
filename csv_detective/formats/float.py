@@ -16,14 +16,14 @@ def float_casting(val: str) -> float:
 def _is(val) -> bool:
     try:
         if (
-            not isinstance(val, str)
-            or "_" in val
-            or (val.startswith("0") and len(val) > 1 and val[1] not in [".", ","])
-            or ("." not in val and "," not in val and len(val) >= 20)
-        ):
-            return False
-        elif any(k in val for k in ["+", "e", "E"]) and not re.match(
-            scientific_notation_pattern, val
+            (
+                not isinstance(val, str)
+                or "_" in val
+                or (val.startswith("0") and len(val) > 1 and val[1] not in [".", ","])
+                or ("." not in val and "," not in val and len(val) >= 20)
+            )
+            or any(k in val for k in ["+", "e", "E"])
+            and not re.match(scientific_notation_pattern, val)
         ):
             return False
         float_casting(val)

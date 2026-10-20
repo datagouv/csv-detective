@@ -7,7 +7,9 @@ logging.basicConfig(level=logging.INFO)
 logging.addLevelName(
     logging.CRITICAL, "\033[1;41m%s\033[1;0m" % logging.getLevelName(logging.CRITICAL)
 )
-logging.addLevelName(logging.WARN, "\033[1;31m%s\033[1;0m" % logging.getLevelName(logging.WARN))
+logging.addLevelName(
+    logging.WARNING, "\033[1;31m%s\033[1;0m" % logging.getLevelName(logging.WARNING)
+)
 
 THRESHOLD_WARN = 1
 THRESHOLD_CRITICAL = 3

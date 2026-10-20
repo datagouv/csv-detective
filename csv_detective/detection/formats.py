@@ -1,5 +1,6 @@
 from collections import defaultdict
-from typing import Any, Callable, Iterable
+from collections.abc import Callable, Iterable
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -74,7 +75,7 @@ def detect_formats(
     tags: list[str] | None = None,
     limited_output: bool = True,
     skipna: bool = True,
-    custom_proportions: float | int | dict[str, float | int] | None = None,
+    custom_proportions: float | dict[str, float | int] | None = None,
     na_values: list[str] | None = None,
     verbose: bool = False,
 ) -> tuple[dict, dict[str, pd.Series] | None]:

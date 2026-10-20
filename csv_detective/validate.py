@@ -32,7 +32,7 @@ def validate(
     *,
     verbose: bool = False,
     skipna: bool = True,
-    custom_proportions: float | int | dict[str, float | int] | None = None,
+    custom_proportions: float | dict[str, float | int] | None = None,
     na_values: list[str] | None = None,
 ) -> tuple[bool, dict | None, dict[str, pd.Series] | None]:
     """

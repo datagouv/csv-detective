@@ -3,7 +3,7 @@ import random
 import string
 import uuid
 from datetime import datetime
-from typing import Any, Type, cast
+from typing import Any, cast
 
 import pandas as pd
 import requests
@@ -125,7 +125,7 @@ def create_example_csv_file(
         return f"http://{rstr.domainsafe()}.{rstr.letters(3)}/{rstr.urlsafe()}"
 
     def _number(
-        num_type: Type[int | float] = int,
+        num_type: type[int | float] = int,
         num_range: list[int | float] | None = None,
         enum: list | None = None,
         required: bool = True,

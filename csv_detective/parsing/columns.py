@@ -1,7 +1,7 @@
 import logging
 import re
+from collections.abc import Callable
 from time import time
-from typing import Callable
 
 import numpy as np
 import pandas as pd
@@ -338,7 +338,7 @@ def test_col_chunks(
                 empty_cols.discard(col)
                 remaining_tests_per_col[col] = [
                     fmt_label
-                    for fmt_label in formats.keys()
+                    for fmt_label in formats
                     if fmt_label not in mandatory_label_skip.get(col, set())
                 ]
         for col, fmt_labels in remaining_tests_per_col.items():
