@@ -48,7 +48,7 @@ def test_col_val(
         if skipna:
             serie = serie.dropna()
         ser_len = len(serie)
-        if ser_len == 0:
+        if serie.count() == 0:
             # being here means the whole column is NaN, so if skipna it's a pass
             return 1.0 if skipna else 0.0
         if not limited_output or format.proportion < 1:
