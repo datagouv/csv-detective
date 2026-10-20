@@ -499,6 +499,31 @@ def test_a_column_of_midnights_is_a_date(
     assert df[col_name].iloc[-1] == expected_last
 
 
+def test_every_chunk_is_analysed(tmp_path):
+    chunk_size = 10
+    # chunks after the first one are analysed by batches of 10: this spans two full batches
+    # and a partial one, and the odd value sits in the chunk that comes right after a full batch
+    nb_rows = 25 * chunk_size + 3
+    odd_row = 11 * chunk_size
+    file_path = tmp_path / "data.csv"
+    file_path.write_text(
+        "id,value\n"
+        + "".join(f"{k},{'not_an_int' if k == odd_row else k}\n" for k in range(nb_rows))
+    )
+    with (
+        patch("csv_detective.parsing.csv.CHUNK_SIZE", chunk_size),
+        patch("csv_detective.parsing.columns.CHUNK_SIZE", chunk_size),
+    ):
+        analysis = routine(
+            file_path=str(file_path),
+            num_rows=-1,
+            output_profile=False,
+            save_results=False,
+        )
+    assert analysis["total_lines"] == nb_rows
+    assert analysis["columns"]["value"]["format"] == "string"
+
+
 @pytest.mark.parametrize("nb_rows", (CHUNK_SIZE // 10, CHUNK_SIZE + 1))
 def test_full_nan_column(mocked_responses, nb_rows):
     # we want a file that needs sampling
