@@ -525,6 +525,41 @@ def test_every_chunk_is_analysed():
     assert analysis["columns"]["value"]["format"] == "string"
 
 
+VALID_EMAIL, INVALID_EMAIL = "someone@data.gouv.fr", "not an email"
+
+
+@pytest.mark.parametrize(
+    "first_chunk, next_chunks, expected_format",
+    (
+        # email requires 90% of valid values: 170 out of 210 overall, despite a perfect start
+        ([VALID_EMAIL] * 10, [VALID_EMAIL] * 8 + [INVALID_EMAIL] * 2, "string"),
+        # 205 out of 210 overall, despite a bad start
+        ([VALID_EMAIL] * 5 + [INVALID_EMAIL] * 5, [VALID_EMAIL] * 10, "email"),
+        # missing values are not counted, so a column that starts empty is only judged on the rest
+        ([""] * 10, [VALID_EMAIL] * 10, "email"),
+    ),
+)
+def test_chunks_scores_are_weighted_by_tested_values(first_chunk, next_chunks, expected_format):
+    chunk_size = 10
+    # the first chunk is analysed alone, the 20 next ones in two batches of 10
+    values = first_chunk + next_chunks * 20
+    content = "id,value\n" + "".join(f"{k},{value}\n" for k, value in enumerate(values))
+    with (
+        patch("csv_detective.parsing.csv.CHUNK_SIZE", chunk_size),
+        patch("csv_detective.parsing.columns.CHUNK_SIZE", chunk_size),
+        NamedTemporaryFile(suffix=".csv") as tmp,
+    ):
+        tmp.write(content.encode("utf-8"))
+        tmp.flush()
+        analysis = routine(
+            file_path=tmp.name,
+            num_rows=-1,
+            output_profile=False,
+            save_results=False,
+        )
+    assert analysis["columns"]["value"]["format"] == expected_format
+
+
 @pytest.mark.parametrize("nb_rows", (CHUNK_SIZE // 10, CHUNK_SIZE + 1))
 def test_full_nan_column(mocked_responses, nb_rows):
     # we want a file that needs sampling
