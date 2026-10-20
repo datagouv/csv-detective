@@ -17,11 +17,27 @@ parameters:
     default: false
     description: "Set to true via Trigger Pipeline to run the performance benchmark workflow"
 
+commands:
+  install-apt-packages:
+    description: Install Debian packages required on slim images (not persisted across jobs)
+    parameters:
+      packages:
+        type: string
+    steps:
+      - run:
+          name: Install << parameters.packages >>
+          command: |
+            apt-get update
+            apt-get install -y --no-install-recommends << parameters.packages >>
+            rm -rf /var/lib/apt/lists/*
+
 jobs:
   install:
     docker:
-      - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-trixie
+      - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-trixie-slim
     steps:
+      - install-apt-packages:
+          packages: git
       - checkout
       - run:
           name: Get the base reference branch
@@ -44,7 +60,7 @@ jobs:
 
   lint:
     docker:
-      - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-trixie
+      - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-trixie-slim
     steps:
       - attach_workspace:
           at: .
@@ -59,10 +75,12 @@ jobs:
 
   tests:
     docker:
-      - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-trixie
+      - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-trixie-slim
     steps:
       - attach_workspace:
           at: .
+      - install-apt-packages:
+          packages: libmagic1
       - run:
           name: Run tests
           command: |
@@ -72,10 +90,12 @@ jobs:
 
   check-doc:
     docker:
-      - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-trixie
+      - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-trixie-slim
     steps:
       - attach_workspace:
           at: .
+      - install-apt-packages:
+          packages: git
       - run:
           name: Check that documentation is up to date
           command: uv run python ./docs/generate_doc.py && git add ./docs/formats.md && git diff --cached --exit-code
@@ -84,10 +104,12 @@ jobs:
 
   build:
     docker:
-      - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-trixie  # needs git for setuptools_scm
+      - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-trixie-slim
     steps:
       - attach_workspace:
           at: .
+      - install-apt-packages:
+          packages: git  # needed for setuptools_scm
       - run:
           name: Install build tools
           command: |
@@ -122,7 +144,7 @@ jobs:
 
   publish:
     docker:
-      - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-trixie
+      - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-trixie-slim
     steps:
       - attach_workspace:
           at: .
@@ -133,7 +155,7 @@ jobs:
 
   benchmark:
     docker:
-      - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-trixie
+      - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-trixie-slim
     resource_class: large
     environment:
       BENCHMARK_CI: circleci
@@ -142,6 +164,8 @@ jobs:
     steps:
       - attach_workspace:
           at: .
+      - install-apt-packages:
+          packages: libmagic1
       - run:
           name: Run performance benchmarks
           no_output_timeout: 30m
