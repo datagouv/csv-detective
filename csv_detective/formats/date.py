@@ -38,7 +38,7 @@ def date_casting(val: str) -> datetime | None:
         return dateutil_parser(val)
     except ParserError:
         return date_parser(val)
-    except Exception:
+    except (OverflowError, TypeError):
         return None
 
 

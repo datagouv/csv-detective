@@ -1,4 +1,5 @@
 import json
+from json import JSONDecodeError
 
 proportion = 1
 parent = "json"
@@ -29,7 +30,7 @@ def _is(val) -> bool:
         j = json.loads(val)
         if isinstance(j, dict):
             return _check_dict(j)
-    except Exception:
+    except (JSONDecodeError, TypeError):
         pass
     return False
 

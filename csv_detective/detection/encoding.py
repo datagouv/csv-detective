@@ -19,7 +19,7 @@ def detect_encoding(binary_file: BinaryIO, verbose: bool = False) -> str:
         # utf-8 is the most common encoding, we should start there
         read.decode("utf-8")
         encoding_dict = {"encoding": "utf-8", "confidence": 1}
-    except Exception:
+    except UnicodeDecodeError:
         encoding_dict = detect(read)
     if not encoding_dict["encoding"]:
         raise ValueError(

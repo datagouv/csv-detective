@@ -34,7 +34,7 @@ def detect_continuous_variable(
             value = value.replace(",", ".")
             value = literal_eval(value)
             return type(value)
-        except Exception:
+        except (ValueError, SyntaxError, TypeError, AttributeError):
             return False
 
     if verbose:
