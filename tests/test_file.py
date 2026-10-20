@@ -538,20 +538,20 @@ VALID_EMAIL, INVALID_EMAIL = "someone@data.gouv.fr", "not an email"
         ([""] * 10, [VALID_EMAIL] * 10, "email"),
     ),
 )
-def test_chunks_scores_are_weighted_by_tested_values(first_chunk, next_chunks, expected_format):
+def test_chunks_scores_are_weighted_by_tested_values(
+    tmp_path, first_chunk, next_chunks, expected_format
+):
     chunk_size = 10
     # the first chunk is analysed alone, the 20 next ones in two batches of 10
     values = first_chunk + next_chunks * 20
-    content = "id,value\n" + "".join(f"{k},{value}\n" for k, value in enumerate(values))
+    file_path = tmp_path / "data.csv"
+    file_path.write_text("id,value\n" + "".join(f"{k},{value}\n" for k, value in enumerate(values)))
     with (
         patch("csv_detective.parsing.csv.CHUNK_SIZE", chunk_size),
         patch("csv_detective.parsing.columns.CHUNK_SIZE", chunk_size),
-        NamedTemporaryFile(suffix=".csv") as tmp,
     ):
-        tmp.write(content.encode("utf-8"))
-        tmp.flush()
         analysis = routine(
-            file_path=tmp.name,
+            file_path=str(file_path),
             num_rows=-1,
             output_profile=False,
             save_results=False,
