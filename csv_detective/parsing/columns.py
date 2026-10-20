@@ -33,7 +33,7 @@ def test_col_val(
     zero_if_too_low: bool = True,
     verbose: bool = False,
 ) -> float:
-    """Tests values of the serie using test_func.
+    """Tests values of the serie using format.func.
          - skipna : if True indicates that NaNs are considered True
     for the serie to be detected as a certain format
     """
@@ -157,7 +157,7 @@ def test_col(
     skipna: bool = True,
     zero_if_too_low: bool = True,
     verbose: bool = False,
-):
+) -> pd.DataFrame:
     if verbose:
         start = time()
         logging.info("Testing columns to get formats")

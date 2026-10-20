@@ -1,16 +1,22 @@
 from datetime import date as _date
 from datetime import datetime as _datetime
+from datetime import timezone as _timezone
 from unittest.mock import patch
 
 import pandas as pd
 import pytest
 from numpy import random
 
+from csv_detective import routine
 from csv_detective.detection.variables import (
     detect_categorical_variable,
     detect_continuous_variable,
 )
 from csv_detective.format import FormatsManager
+from csv_detective.formats.date import CUSTOM_PREFIX, MONTH_NAMES, MONTHS, build_month_index, parse
+from csv_detective.formats.date import _infer as date_infer
+from csv_detective.formats.datetime_aware import _infer as datetime_aware_infer
+from csv_detective.formats.datetime_naive import _infer as datetime_naive_infer
 from csv_detective.formats.float import float_casting
 from csv_detective.output.dataframe import cast
 from csv_detective.output.utils import prepare_output_dict
@@ -148,12 +154,9 @@ def test_priority(args):
         ("1925 12 20 14:30:00Z", fmtm.formats["datetime_aware"]),
     ),
 )
-def test_early_detection(args):
+def test_usual_formats_are_detected(args):
     value, format = args
-    with patch("csv_detective.formats.date.date_casting") as mock_func:
-        res = format.func(value)
-        assert res
-        mock_func.assert_not_called()
+    assert format.func(value)
 
 
 def test_all_proportion_1():
@@ -170,6 +173,448 @@ def test_all_proportion_1():
     returned_table = col_test(table, fmtm.formats, limited_output=True)
     # the analysis should have found no match on any format
     assert all(returned_table[col].sum() == 0 for col in table.columns)
+
+
+@pytest.mark.parametrize(
+    "values, expected_format",
+    [
+        (["1960-08-07"], "%Y-%m-%d"),
+        (["20030502"], "%Y%m%d"),
+        (["2003.05.02"], "%Y.%m.%d"),
+        # day and month are both <= 12 and nothing tells the two orders apart: day-first wins
+        (["12/02/2007"], "%d/%m/%Y"),
+        # numeric dates keep a two-digit year, same order as the four-digit form
+        (["12/02/85"], "%d/%m/%y"),
+        # and it is the shortest shape we read, so no padding either
+        (["1/2/85"], "%d/%m/%y"),
+        (["1/12/85", "25/2/85"], "%d/%m/%y"),
+        (["02 05 2003"], "%d %m %Y"),
+        # one value whose day is above 12 settles the order for the whole column
+        (["07/03/2024", "25/12/2024"], "%d/%m/%Y"),
+        # and one value whose month is above 12 settles it the other way around
+        (["07/03/2024", "12/25/2024"], "%m/%d/%Y"),
+        # the values contradict each other, no single format reads them all
+        (["25/12/2024", "12/25/2024"], None),
+        # zero-padding is optional and does not make a second format
+        (["1/2/2024", "25/03/2024"], "%d/%m/%Y"),
+        # text months, in any of the supported languages and spellings
+        (["15 jan 1985", "13 février 1996"], "csvd:%d %b %Y"),
+        (["15 janv. 1985"], "csvd:%d %b %Y"),
+        (["15-dec-85"], "csvd:%d-%b-%y"),
+        # English writes the day with an ordinal suffix
+        (["31st december 2022"], "csvd:%d %b %Y"),
+        # the year can be followed by the day rather than the month
+        (["2022-31-12"], "%Y-%d-%m"),
+        # ISO stays the preferred reading when both orders fit
+        (["2022-01-12"], "%Y-%m-%d"),
+        # "jui" is the prefix of both juin and juillet, it cannot be read
+        (["15 jui 1985"], None),
+        (["15 tambour 1985"], None),
+        # neither component can be a month
+        (["19/15/1993"], None),
+        # a separator can be more than one character, as long as the value keeps to the same one
+        (["1789 / 07 / 14"], "%Y / %m / %d"),
+        (["14 / 07 / 89"], "%d / %m / %y"),
+        # TODO: a real shape we do not read yet, month first and a comma after the day. The comma
+        # is in SEPARATORS, so separator_of sees {" ", ","} and gives up before a template is
+        # even picked; reading it means treating that comma as part of the format, the way the
+        # full stop of an abbreviated month already is.
+        (["Jun 22, 2021"], None),
+        # a time part that is nothing but midnight is how a spreadsheet prints a date cell
+        (["1900-02-24 00:00:00"], "%Y-%m-%d 00:00:00"),
+        (["1900-02-24T00:00:00"], "%Y-%m-%dT00:00:00"),
+        (["25/12/2024 00:00:00"], "%d/%m/%Y 00:00:00"),
+        # Excel has no day before 1900, so a column reaching further back mixes both spellings
+        (["1869-01-14", "1900-02-24 00:00:00"], "csvd:%Y-%m-%d[ 00:00:00]"),
+        (["1900-02-24 00:00:00", "1869-01-14"], "csvd:%Y-%m-%d[ 00:00:00]"),
+        # one genuine hour and the column is a datetime, not a date
+        (["2015-04-07 10:20:10"], None),
+        (["1869-01-14", "2015-04-07 10:20:10"], None),
+        (["1900-02-24 00:00:00", "2015-04-07 10:20:10"], None),
+        # the separator between the two parts is part of the format, like any other
+        (["1869-01-14", "1900-02-24T00:00:00"], "csvd:%Y-%m-%d[T00:00:00]"),
+        (["1900-02-24 00:00:00", "1900-03-24T00:00:00"], None),
+        # mixed separators, within a value or across the column
+        (["1993-12/02"], None),
+        (["199302-05"], None),
+        (["2003.05.02", "1960-08-07"], None),
+    ],
+)
+def test_date_format_inferred_from_column(values, expected_format):
+    assert date_infer(values) == expected_format
+
+
+@pytest.mark.parametrize(
+    "values, aware, expected_format",
+    [
+        (["2021-06-22 10:20:10"], False, "%Y-%m-%d %H:%M:%S"),
+        (["2030/06/22 00:00:00.0028"], False, "%Y/%m/%d %H:%M:%S.%f"),
+        (["1925_12_20T14:30:00.2763"], False, "%Y_%m_%dT%H:%M:%S.%f"),
+        (["2021-06-22 10:20:10-04:00"], True, "%Y-%m-%d %H:%M:%S%z"),
+        (["2000-12-21 10:20:10.1Z"], True, "%Y-%m-%d %H:%M:%S.%f%z"),
+        (["2024-12-19T10:53:36.428000+00:00"], True, "%Y-%m-%dT%H:%M:%S.%f%z"),
+        (["1925 12 20 14:30:00Z"], True, "%Y %m %d %H:%M:%S%z"),
+        # the date part carries the same ambiguity as a plain date, settled the same way
+        (["07/03/2024 10:20:10"], False, "%d/%m/%Y %H:%M:%S"),
+        (["07/03/2024 10:20:10", "12/25/2024 10:20:10"], False, "%m/%d/%Y %H:%M:%S"),
+        # a timezone is required by one format and refused by the other
+        (["2021-06-22 10:20:10-04:00"], False, None),
+        (["2021-06-22 10:20:10"], True, None),
+        (["Sun, 06 Nov 1994 08:49:37 GMT"], False, None),  # rfc822 has its own format
+        # a source that only prints the fraction when it is non-zero still has one format
+        (
+            ["2021-06-22 10:20:10", "2021-06-22 10:20:10.5"],
+            False,
+            "csvd:%Y-%m-%d %H:%M:%S[.%f]",
+        ),
+        (
+            ["2021-06-22 10:20:10+02:00", "2021-06-22 10:20:10.5+02:00"],
+            True,
+            "csvd:%Y-%m-%d %H:%M:%S[.%f]%z",
+        ),
+        # the offset is sometimes spaced out from the time
+        (["2021-06-22 10:20:10 +02:00"], True, "%Y-%m-%d %H:%M:%S %z"),
+        # a named zone, which %z cannot read; marked because we resolve the name ourselves
+        (["1996/06/22 10:20:10 GMT"], True, "csvd:%Y/%m/%d %H:%M:%S %Z"),
+        (["1996/06/22 10:20:10 CEST"], True, "csvd:%Y/%m/%d %H:%M:%S %Z"),
+        # a name that stands for two different zones leaves us without an offset to apply
+        (["1996/06/22 10:20:10 CST"], True, None),
+        # a 12-hour clock names its half of the day; marked because %p only spells "AM" and "PM"
+        # in the C locale, so strptime refuses the value under any other one
+        (["06/12/2022 11:00:15 PM"], False, "csvd:%d/%m/%Y %I:%M:%S %p"),
+        (["06/12/2022 11:00 PM"], False, "csvd:%d/%m/%Y %I:%M %p"),
+        (["12/25/2024 11:00:15 AM"], False, "csvd:%m/%d/%Y %I:%M:%S %p"),
+        # an hour past 12 is not a 12-hour clock, and no other shape reads a trailing marker
+        (["06/12/2022 13:00:15 PM"], False, None),
+        # nothing in the corpus pairs a 12-hour clock with an offset, and the marker closes the
+        # value, so there would be no tail left to read one in
+        (["06/12/2022 11:00:15 PM"], True, None),
+        # the year can be followed by the day here too
+        (["2022-31-12 12:00:00.92"], False, "%Y-%d-%m %H:%M:%S.%f"),
+        # the time does not have to be padded
+        (["2021-06-22 1:2:3"], False, "%Y-%m-%d %H:%M:%S"),
+        # nor written with colons at all, next to a packed date
+        (["20210622T102010"], False, "%Y%m%dT%H%M%S"),
+        # and a value that is nothing but digits packs both parts together
+        (["202501010000"], False, "%Y%m%d%H%M"),
+        (["20250101000000"], False, "%Y%m%d%H%M%S"),
+        # any other run of digits is a number, not a datetime: these are a phone number,
+        # a grid connection id and a station id met in real files
+        (["0680428426"], False, None),
+        (["0000000000000"], False, None),
+        (["91000906"], False, None),
+        # a packed value has nowhere to carry a zone
+        (["202501010000"], True, None),
+    ],
+)
+def test_datetime_format_inferred_from_column(values, aware, expected_format):
+    infer = datetime_aware_infer if aware else datetime_naive_infer
+    assert infer(values) == expected_format
+
+
+@pytest.mark.parametrize(
+    "value, fmt, expected",
+    [
+        ("15 décembre 1985", "csvd:%d %b %Y", _datetime(1985, 12, 15)),
+        ("15 Janv. 1985", "csvd:%d %b %Y", _datetime(1985, 1, 15)),
+        ("15-dec-85", "csvd:%d-%b-%y", _datetime(1985, 12, 15)),
+        ("15-dec-05", "csvd:%d-%b-%y", _datetime(2005, 12, 15)),
+        # an optional part is read whether the value carries it or not
+        ("2021-06-22 10:20:10", "csvd:%Y-%m-%d %H:%M:%S[.%f]", _datetime(2021, 6, 22, 10, 20, 10)),
+        (
+            "2021-06-22 10:20:10.5",
+            "csvd:%Y-%m-%d %H:%M:%S[.%f]",
+            _datetime(2021, 6, 22, 10, 20, 10, 500000),
+        ),
+        ("31st december 2022", "csvd:%d %b %Y", _datetime(2022, 12, 31)),
+        (
+            "1996/06/22 10:20:10 GMT",
+            "csvd:%Y/%m/%d %H:%M:%S %Z",
+            _datetime(1996, 6, 22, 10, 20, 10, tzinfo=_timezone.utc),
+        ),
+        # midnight is spelled out as a literal, so no other hour gets through
+        ("1900-02-24 00:00:00", "%Y-%m-%d 00:00:00", _datetime(1900, 2, 24)),
+        ("1900-02-24 10:20:10", "%Y-%m-%d 00:00:00", None),
+        ("1869-01-14", "csvd:%Y-%m-%d[ 00:00:00]", _datetime(1869, 1, 14)),
+        ("1900-02-24 00:00:00", "csvd:%Y-%m-%d[ 00:00:00]", _datetime(1900, 2, 24)),
+        # a 12-hour clock, including the two hours the convention numbers 12
+        ("06/12/2022 11:00:15 PM", "csvd:%d/%m/%Y %I:%M:%S %p", _datetime(2022, 12, 6, 23, 0, 15)),
+        ("06/12/2022 09:14:34 AM", "csvd:%d/%m/%Y %I:%M:%S %p", _datetime(2022, 12, 6, 9, 14, 34)),
+        ("06/12/2022 12:00:00 AM", "csvd:%d/%m/%Y %I:%M:%S %p", _datetime(2022, 12, 6, 0, 0, 0)),
+        ("06/12/2022 12:00:00 PM", "csvd:%d/%m/%Y %I:%M:%S %p", _datetime(2022, 12, 6, 12, 0, 0)),
+        ("06/12/2022 13:00:15 PM", "csvd:%d/%m/%Y %I:%M:%S %p", None),
+        ("06/12/2022 11:00:15 XM", "csvd:%d/%m/%Y %I:%M:%S %p", None),
+        ("06/12/2022 11:00:15", "csvd:%d/%m/%Y %I:%M:%S %p", None),
+        ("31 février 1996", "csvd:%d %b %Y", None),  # not a real day of that month
+        ("15 tambour 1985", "csvd:%d %b %Y", None),
+        # a separated value is shaped like a date whatever its year: archives and civil
+        # registers go back well before 1900, and nothing else reads like "15 dec 1850"
+        ("15 dec 1850", "csvd:%d %b %Y", _datetime(1850, 12, 15)),
+        ("1850-12-15", "%Y-%m-%d", _datetime(1850, 12, 15)),
+        ("12-04-0012", "%d-%m-%Y", _datetime(12, 4, 12)),
+        ("9999-12-31", "%Y-%m-%d", _datetime(9999, 12, 31)),  # the usual "no end date" sentinel
+        # eight bare digits are just a number, so this shape alone keeps a year window
+        ("18501215", "%Y%m%d", None),
+        ("21501215", "%Y%m%d", None),
+        ("19501215", "%Y%m%d", _datetime(1950, 12, 15)),
+    ],
+)
+def test_parse(value, fmt, expected):
+    assert parse(value, fmt) == expected
+
+
+def test_every_month_name_reads_as_its_own_month():
+    for language, months in MONTH_NAMES.items():
+        for number, names in enumerate(months, start=1):
+            for name in names:
+                assert MONTHS.get(name) == number, (
+                    f"{name} ({language}) does not read as month {number}"
+                )
+
+
+def test_a_spelling_meaning_two_months_is_dropped():
+    # no current entry collides, so this guards the languages a later PR could add
+    first = [[f"a{number}"] for number in range(1, 13)]
+    second = [[f"b{number}"] for number in range(1, 13)]
+    first[0].append("shared")  # january in one language...
+    second[4].append("shared")  # ...may in the other
+    index = build_month_index({"first": first, "second": second})
+    assert "shared" not in index
+    assert index["a1"] == 1 and index["b5"] == 5
+
+
+@pytest.mark.parametrize(
+    "value, infer",
+    (
+        ("1960-08-07", date_infer),
+        ("20030502", date_infer),
+        ("12/02/2007", date_infer),
+        ("12/02/85", date_infer),
+        ("2003.05.02", date_infer),
+        ("15 décembre 1985", date_infer),
+        ("15-dec-85", date_infer),
+        ("31st december 2022", date_infer),
+        ("2021-06-22 10:20:10", datetime_naive_infer),
+        ("2030/06/22 00:00:00.0028", datetime_naive_infer),
+        ("1996/06/22 10:20", datetime_naive_infer),
+        ("2021-06-22 10:20:10-04:00", datetime_aware_infer),
+        ("2000-12-21 10:20:10.1Z", datetime_aware_infer),
+        ("2024-12-19T10:53:36.428000+00:00", datetime_aware_infer),
+        ("2021-06-22 10:20:10 +02:00", datetime_aware_infer),
+        ("1996/06/22 10:20:10 GMT", datetime_aware_infer),
+    ),
+)
+def test_an_unmarked_format_reads_the_same_through_strptime(value, infer):
+    """The marker is a contract, so the formats without it have to honour it.
+
+    A consumer reading `date_format` out of an analysis may well hand it to strptime rather than
+    call parse(). The marker is what tells it not to; a format that carries no marker yet reads
+    differently through strptime would silently give that consumer another date — which is how
+    `%Z` used to drop the timezone.
+    """
+    fmt = infer([value])
+    assert fmt is not None, f"{value} should be inferred"
+    if fmt.startswith(CUSTOM_PREFIX):
+        return
+    assert _datetime.strptime(value, fmt) == parse(value, fmt)
+
+
+@pytest.mark.parametrize(
+    "value, infer, expected_format",
+    (
+        # strptime only knows the abbreviated months of the process locale
+        ("15 décembre 1985", date_infer, "csvd:%d %b %Y"),
+        # strptime has no syntax for an optional part
+        ("2021-06-22 10:20:10", datetime_naive_infer, "csvd:%Y-%m-%d %H:%M:%S[.%f]"),
+        # strptime reads the zone name then drops it, leaving a naive datetime
+        ("1996/06/22 10:20:10 GMT", datetime_aware_infer, "csvd:%Y/%m/%d %H:%M:%S %Z"),
+        # strptime only spells the 12-hour markers "AM" and "PM" in the C locale
+        ("06/12/2022 11:00:15 PM", datetime_naive_infer, "csvd:%d/%m/%Y %I:%M:%S %p"),
+    ),
+)
+def test_a_format_strptime_cannot_read_is_marked(value, infer, expected_format):
+    # the second value is what forces the optional part, and is dropped for the other two
+    values = [value, "2021-06-22 10:20:10.5"] if "[" in expected_format else [value]
+    assert infer(values) == expected_format
+
+
+def test_strptime_silently_drops_the_zone_a_marked_format_keeps():
+    # the divergence the marker exists for: no error, just another datetime
+    value, fmt = "1996/06/22 10:20:10 GMT", "%Y/%m/%d %H:%M:%S %Z"
+    assert _datetime.strptime(value, fmt).tzinfo is None
+    assert parse(value, CUSTOM_PREFIX + fmt) == _datetime(
+        1996, 6, 22, 10, 20, 10, tzinfo=_timezone.utc
+    )
+
+
+def test_the_year_window_only_guards_the_separator_less_shape():
+    # a datetime built on the bare-digits date inherits the window...
+    assert parse("21501215T10:20:10", "%Y%m%dT%H:%M:%S") is None
+    assert parse("19501215T10:20:10", "%Y%m%dT%H:%M:%S") == _datetime(1950, 12, 15, 10, 20, 10)
+    # ...where the same value written with a separator keeps none
+    assert parse("2150-12-15 10:20:10", "%Y-%m-%d %H:%M:%S") == _datetime(2150, 12, 15, 10, 20, 10)
+
+
+@pytest.mark.parametrize(
+    "values, expected_format, expected_dates",
+    [
+        (
+            ["07/03/2024", "25/12/2024"],
+            "%d/%m/%Y",
+            [_date(2024, 3, 7), _date(2024, 12, 25)],
+        ),
+        (
+            ["07/03/2024", "12/25/2024"],
+            "%m/%d/%Y",
+            [_date(2024, 7, 3), _date(2024, 12, 25)],
+        ),
+        (
+            ["07/03/2024", "01/02/2024"],
+            "%d/%m/%Y",
+            [_date(2024, 3, 7), _date(2024, 2, 1)],
+        ),
+        (
+            ["15 jan 1985", "13 février 1996"],
+            "csvd:%d %b %Y",
+            [_date(1985, 1, 15), _date(1996, 2, 13)],
+        ),
+    ],
+)
+def test_date_order_is_settled_by_the_column(tmp_path, values, expected_format, expected_dates):
+    file_path = tmp_path / "dates.csv"
+    file_path.write_text("date;label\n" + "".join(f"{value};a\n" for value in values * 5))
+    analysis, dfs = routine(
+        file_path=str(file_path),
+        num_rows=-1,
+        save_results=False,
+        output_df=True,
+    )
+    assert analysis["columns"]["date"]["python_type"] == "date"
+    assert analysis["columns"]["date"]["date_format"] == expected_format
+    assert list(pd.concat(list(dfs))["date"]) == expected_dates * 5
+
+
+def test_column_without_a_single_format_is_not_a_date(tmp_path):
+    # the values contradict each other: no format reads them all, so this is not a date column
+    values = ["25/12/2024", "12/25/2024"]
+    file_path = tmp_path / "dates.csv"
+    file_path.write_text("date;label\n" + "".join(f"{value};a\n" for value in values * 5))
+    analysis = routine(file_path=str(file_path), num_rows=-1, save_results=False)
+    assert analysis["columns"]["date"]["python_type"] == "string"
+    assert "date_format" not in analysis["columns"]["date"]
+
+
+def test_every_detected_date_column_comes_with_a_format(tmp_path):
+    values = ["07/03/2024", "25/12/2024"]
+    file_path = tmp_path / "dates.csv"
+    file_path.write_text(
+        "date;datetime;label\n" + "".join(f"{value};{value} 10:20:10;a\n" for value in values * 5)
+    )
+    analysis = routine(file_path=str(file_path), num_rows=-1, save_results=False)
+    for col_name, detection in analysis["columns"].items():
+        if detection["python_type"] in ("date", "datetime"):
+            assert detection.get("date_format"), f"{col_name} has no format to be read with"
+
+
+def test_a_tolerant_proportion_keeps_detecting_without_a_format(tmp_path):
+    # asking for tolerance contradicts pinning down one format that reads every value:
+    # the column stays a date, scored as before, and carries no format
+    values = ["07/03/2024"] * 9 + ["not a date"]
+    file_path = tmp_path / "dates.csv"
+    file_path.write_text("date;label\n" + "".join(f"{value};a\n" for value in values))
+    analysis = routine(
+        file_path=str(file_path),
+        num_rows=-1,
+        save_results=False,
+        custom_proportions={"date": 0.8},
+    )
+    assert analysis["columns"]["date"]["python_type"] == "date"
+    assert "date_format" not in analysis["columns"]["date"]
+
+
+def test_dates_in_a_list_output_carry_their_format(tmp_path):
+    file_path = tmp_path / "dates.csv"
+    file_path.write_text("date;label\n" + "".join("07/03/2024;a\n" for _ in range(10)))
+    analysis = routine(
+        file_path=str(file_path),
+        num_rows=-1,
+        save_results=False,
+        limited_output=False,
+    )
+    date_detection = next(
+        detection for detection in analysis["columns"]["date"] if detection["format"] == "date"
+    )
+    assert date_detection["date_format"] == "%d/%m/%Y"
+
+
+def test_date_order_is_settled_beyond_the_first_chunk(tmp_path):
+    # the only value that settles the order sits in the last chunk
+    values = ["07/03/2024"] * 50 + ["12/25/2024"]
+    file_path = tmp_path / "dates.csv"
+    file_path.write_text("date;label\n" + "".join(f"{value};a\n" for value in values))
+    with (
+        patch("csv_detective.parsing.csv.CHUNK_SIZE", 10),
+        patch("csv_detective.parsing.columns.CHUNK_SIZE", 10),
+    ):
+        analysis = routine(file_path=str(file_path), num_rows=-1, save_results=False)
+    assert analysis["columns"]["date"]["date_format"] == "%m/%d/%Y"
+
+
+@pytest.mark.parametrize(
+    "values, expected_format, expected_datetimes",
+    [
+        (
+            ["07/03/2024 10:20:10", "25/12/2024 10:20:10"],
+            "%d/%m/%Y %H:%M:%S",
+            [_datetime(2024, 3, 7, 10, 20, 10), _datetime(2024, 12, 25, 10, 20, 10)],
+        ),
+        (
+            ["07/03/2024 10:20:10", "12/25/2024 10:20:10"],
+            "%m/%d/%Y %H:%M:%S",
+            [_datetime(2024, 7, 3, 10, 20, 10), _datetime(2024, 12, 25, 10, 20, 10)],
+        ),
+        (
+            ["07/03/2024 10:20:10", "01/02/2024 10:20:10"],
+            "%d/%m/%Y %H:%M:%S",
+            [_datetime(2024, 3, 7, 10, 20, 10), _datetime(2024, 2, 1, 10, 20, 10)],
+        ),
+    ],
+)
+def test_datetime_order_is_settled_by_the_column(
+    tmp_path, values, expected_format, expected_datetimes
+):
+    file_path = tmp_path / "datetimes.csv"
+    file_path.write_text("datetime;label\n" + "".join(f"{value};a\n" for value in values * 5))
+    analysis, dfs = routine(
+        file_path=str(file_path),
+        num_rows=-1,
+        save_results=False,
+        output_df=True,
+    )
+    assert analysis["columns"]["datetime"]["python_type"] == "datetime"
+    assert analysis["columns"]["datetime"]["date_format"] == expected_format
+    assert list(pd.concat(list(dfs))["datetime"]) == expected_datetimes * 5
+
+
+@pytest.mark.parametrize(
+    "value, _type, date_format, expected",
+    [
+        ("2022-08-01", "date", "%Y-%m-%d", _date(2022, 8, 1)),
+        # dateutil reads 12/02 as MM/DD (US) where the column said DD/MM
+        ("12/02/2007", "date", "%d/%m/%Y", _date(2007, 2, 12)),
+        ("15 décembre 1985", "date", "csvd:%d %b %Y", _date(1985, 12, 15)),
+        (
+            "2024-09-23 17:32:07",
+            "datetime",
+            "%Y-%m-%d %H:%M:%S",
+            _datetime(2024, 9, 23, 17, 32, 7),
+        ),
+        # no format: an analysis generated before the inference existed
+        ("2022-08-01", "date", None, _date(2022, 8, 1)),
+    ],
+)
+def test_cast_with_date_format(value, _type, date_format, expected):
+    assert cast(value, _type, date_format=date_format) == expected
 
 
 @pytest.mark.parametrize(
