@@ -301,12 +301,15 @@ def test_col_chunks(
         na_values=na_values,
     )
     analysis["total_lines"] = CHUNK_SIZE
-    idx = 0
+    # a score is the share of valid values among the tested ones, so the score of each batch
+    # weighs as much as the values it tested (missing values are not tested when skipna)
+    nb_tested_values = {
+        col: int(table[col].count()) if skipna else len(table) for col in table.columns
+    }
     # we have read and analysed the first chunk already.
     # it's too slow to process chunks directly, but we want to keep the first analysis
     # on a "small" chunk, so partial analyses are done on batches of chunks
     for batch_number, batch in enumerate(chunked(islice(chunks, 1, None), 10), start=1):
-        idx += len(batch)
         if verbose:
             logging.info(f"> Testing batch number {batch_number}")
         batch = pd.concat(batch, ignore_index=True)
@@ -331,6 +334,7 @@ def test_col_chunks(
                     if fmt_label not in mandatory_label_skip.get(col, set())
                 ]
         for col, fmt_labels in remaining_tests_per_col.items():
+            nb_batch_values = int(batch[col].count()) if skipna else len(batch)
             # testing each column with the tests that are still competing
             # after previous batchs analyses
             for label in fmt_labels:
@@ -342,9 +346,10 @@ def test_col_chunks(
                     skipna=skipna,
                 )
                 return_table.loc[label, col] = (
-                    # updating the score with weighted average
-                    (return_table.loc[label, col] * idx + batch_col_test) / (idx + 1)
-                )
+                    return_table.loc[label, col] * nb_tested_values[col]
+                    + batch_col_test * nb_batch_values
+                ) / (nb_tested_values[col] + nb_batch_values)
+            nb_tested_values[col] += nb_batch_values
         remaining_tests_per_col = _build_remaining_tests_per_col(return_table, mandatory_label_skip)
     analysis["nb_duplicates"] = sum(row_hashes_count > 1)
     analysis["categorical"] = [

@@ -524,6 +524,51 @@ def test_every_chunk_is_analysed(tmp_path):
     assert analysis["columns"]["value"]["format"] == "string"
 
 
+VALID_EMAIL, INVALID_EMAIL = "someone@data.gouv.fr", "not an email"
+
+
+@pytest.mark.parametrize(
+    "first_chunk, next_values, skipna, expected_format",
+    (
+        # email requires 90% of valid values: 170 out of 210 overall, despite a perfect start
+        (
+            [VALID_EMAIL] * 10,
+            ([VALID_EMAIL] * 8 + [INVALID_EMAIL] * 2) * 20,
+            True,
+            "string",
+        ),
+        # 205 out of 210 overall, despite a bad start
+        ([VALID_EMAIL] * 5 + [INVALID_EMAIL] * 5, [VALID_EMAIL] * 200, True, "email"),
+        # missing values are not tested: 95 valid out of the 100 tested values
+        ([""] * 10, [VALID_EMAIL] * 95 + [INVALID_EMAIL] * 5, True, "email"),
+        # 13 valid out of the 15 tested values
+        ([VALID_EMAIL] * 8 + [INVALID_EMAIL] * 2, [VALID_EMAIL] * 5 + [""] * 95, True, "string"),
+        # unless they are not skipped: 96 valid out of 110
+        ([VALID_EMAIL] + [""] * 9, [VALID_EMAIL] * 95 + [INVALID_EMAIL] * 5, False, "string"),
+    ),
+)
+def test_chunks_scores_are_weighted_by_tested_values(
+    tmp_path, first_chunk, next_values, skipna, expected_format
+):
+    chunk_size = 10
+    # the first chunk is analysed alone, the next ones by batches of 10
+    values = first_chunk + next_values
+    file_path = tmp_path / "data.csv"
+    file_path.write_text("id,value\n" + "".join(f"{k},{value}\n" for k, value in enumerate(values)))
+    with (
+        patch("csv_detective.parsing.csv.CHUNK_SIZE", chunk_size),
+        patch("csv_detective.parsing.columns.CHUNK_SIZE", chunk_size),
+    ):
+        analysis = routine(
+            file_path=str(file_path),
+            num_rows=-1,
+            output_profile=False,
+            save_results=False,
+            skipna=skipna,
+        )
+    assert analysis["columns"]["value"]["format"] == expected_format
+
+
 @pytest.mark.parametrize("nb_rows", (CHUNK_SIZE // 10, CHUNK_SIZE + 1))
 def test_full_nan_column(mocked_responses, nb_rows):
     # we want a file that needs sampling
