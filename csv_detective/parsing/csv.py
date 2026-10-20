@@ -48,7 +48,13 @@ def parse_csv(
         if num_rows > 0:
             num_rows = min(num_rows, total_lines or len(table))
             table = table.sample(num_rows, random_state=random_state)
-    except Exception as e:
+    except (
+        pd.errors.ParserError,
+        pd.errors.EmptyDataError,
+        UnicodeDecodeError,
+        ValueError,
+        OSError,
+    ) as e:
         raise ValueError("Could not load file") from e
     if verbose:
         display_logs_depending_process_time(

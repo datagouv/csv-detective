@@ -1,7 +1,7 @@
 import logging
 import re
+from collections.abc import Callable
 from time import time
-from typing import Callable
 
 import numpy as np
 import pandas as pd
@@ -338,7 +338,7 @@ def test_col_chunks(
                 empty_cols.discard(col)
                 remaining_tests_per_col[col] = [
                     fmt_label
-                    for fmt_label in formats.keys()
+                    for fmt_label in formats
                     if fmt_label not in mandatory_label_skip.get(col, set())
                 ]
         for col, fmt_labels in remaining_tests_per_col.items():
@@ -431,7 +431,7 @@ def test_parquet_cols(
             for fmt_label, fmt in formats.items()
             if fmt.mandatory_label and fmt.is_valid_label(col) == 0
         }
-        for col in columns.keys()
+        for col in columns
     }
     remaining_tests_per_col = {
         col: {
@@ -453,7 +453,7 @@ def test_parquet_cols(
             return_table.loc[pytype, col] = 1
 
     row_hashes_count = pd.Series()
-    col_values = {col: pd.Series() for col in columns.keys()}
+    col_values = {col: pd.Series() for col in columns}
     # we keep the same chunk size as for csv
     for idx, batch in enumerate(table.iter_batches(CHUNK_SIZE * 10)):
         if verbose:

@@ -17,7 +17,7 @@ def detect_separator(file: TextIO, verbose: bool = False) -> str:
     file.seek(0)
     header = file.readline()
     possible_separators = [";", ",", "|", "\t"]
-    sep_count = dict()
+    sep_count = {}
     for sep in possible_separators:
         sep_count[sep] = header.count(sep)
     sep = max(sep_count, key=lambda k: sep_count[k])

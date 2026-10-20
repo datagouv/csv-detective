@@ -20,6 +20,7 @@ def test_cli_runs_on_csv(csv_detective_bin):
         [csv_detective_bin, "tests/data/a_test_file.csv"],
         capture_output=True,
         text=True,
+        check=False,
     )
     assert result.returncode == 0, f"CLI failed with stderr:\n{result.stderr}"
     output = json.loads(result.stdout)
@@ -34,6 +35,7 @@ def test_cli_with_num_rows(csv_detective_bin):
         [csv_detective_bin, "tests/data/b_test_file.csv", "-n", "5"],
         capture_output=True,
         text=True,
+        check=False,
     )
     assert result.returncode == 0, f"CLI failed with stderr:\n{result.stderr}"
     output = json.loads(result.stdout)
@@ -47,6 +49,7 @@ def test_cli_missing_file(csv_detective_bin):
         [csv_detective_bin, "nonexistent_file.csv"],
         capture_output=True,
         text=True,
+        check=False,
     )
     assert result.returncode != 0
 
@@ -57,6 +60,7 @@ def test_cli_no_args(csv_detective_bin):
         [csv_detective_bin],
         capture_output=True,
         text=True,
+        check=False,
     )
     assert result.returncode != 0
     assert "usage" in result.stderr.lower() or "error" in result.stderr.lower()

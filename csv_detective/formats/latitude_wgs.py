@@ -40,7 +40,7 @@ def _is(val: str | float) -> bool:
             # but 1.200 is saved as 1.2 in csv so we just discriminate ints
             and not is_int(val)
         )
-    except Exception:
+    except (ValueError, OverflowError):
         return False
 
 

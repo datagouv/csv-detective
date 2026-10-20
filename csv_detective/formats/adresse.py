@@ -81,7 +81,6 @@ voies = {
     "av ",
     "pl ",
     "bd ",
-    "cami ",
     # 'che',
     "chs ",
     "dom ",

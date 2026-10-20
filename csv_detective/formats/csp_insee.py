@@ -12,12 +12,11 @@ labels = {
     "sociopro": 1,
 }
 
-f = open(join(dirname(__file__), "data", "csp_insee.txt"), "r")
-codes_insee = f.read().split("\n")
+with open(join(dirname(__file__), "data", "csp_insee.txt"), "r") as f:
+    codes_insee = f.read().split("\n")
 # removing empty str due to additionnal line in file
 del codes_insee[-1]
 codes_insee = set(codes_insee)
-f.close()
 
 
 def _is(val) -> bool:

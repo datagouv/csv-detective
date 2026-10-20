@@ -1,8 +1,11 @@
 import logging
+import zipfile
 from collections import defaultdict
 
 import numpy as np
 import pandas as pd
+import pyarrow as pa
+import xlrd
 
 from csv_detective.format import Format, FormatsManager
 from csv_detective.formats.date import parse
@@ -25,6 +28,17 @@ logging.basicConfig(level=logging.INFO)
 # keeps the python_type it was recorded with.
 SUPERSEDED_FORMATS = {"date_fr": "date"}
 
+# A file that cannot be read with the stored analysis is a failed validation, not a crash.
+LOAD_FAILURES = (
+    OSError,
+    UnicodeDecodeError,
+    LookupError,  # unknown encoding name, or a column missing from the file
+    ValueError,
+    zipfile.BadZipFile,
+    xlrd.XLRDError,
+    pa.ArrowInvalid,
+)
+
 
 def validate(
     file_path: str,
@@ -32,7 +46,7 @@ def validate(
     *,
     verbose: bool = False,
     skipna: bool = True,
-    custom_proportions: float | int | dict[str, float | int] | None = None,
+    custom_proportions: float | dict[str, float | int] | None = None,
     na_values: list[str] | None = None,
 ) -> tuple[bool, dict | None, dict[str, pd.Series] | None]:
     """
@@ -134,7 +148,7 @@ def validate(
                 for k, v in previous_analysis.items()
                 if k in ["header_row_idx", "header", "engine", "sheet_name"]
             }
-    except Exception as e:
+    except LOAD_FAILURES as e:
         if verbose:
             logging.warning(f"> Could not load the file with previous analysis values: {e}")
         return False, None, None
@@ -231,7 +245,7 @@ def validate(
                 )  # rename_axis because *sometimes* pandas doesn't pass on the column's name ¯\_(ツ)_/¯
             del chunk
             del str_chunk
-    except Exception as e:
+    except (*LOAD_FAILURES, TypeError) as e:
         if verbose:
             logging.warning(f"> Could not load the file with previous analysis values: {e}")
         return False, None, None
@@ -259,7 +273,7 @@ def validate(
         or (len(values) / sum(values)) <= RATIO_CATEGORICAL_VALUES
     ]
     analysis["unique_values"] = {}
-    for col in col_values.keys():
+    for col in col_values:
         if previous_analysis["columns"][col]["format"] == "json" and all(
             value.startswith("[") for value in col_values[col].index.dropna()
         ):

@@ -24,8 +24,8 @@ def _process_text(val: str):
     des méthodes hybrides, mais aucune ne s'est avérée plus performante."""
     val = camel_case_split(val)
     val = val.lower()
-    for target in translate_dict:
-        for source in translate_dict[target]:
+    for target, sources in translate_dict.items():
+        for source in sources:
             val = val.replace(source, target)
     val = val.strip()
     return val
