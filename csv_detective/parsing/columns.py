@@ -335,8 +335,6 @@ def test_col_chunks(
                 ]
         for col, fmt_labels in remaining_tests_per_col.items():
             nb_batch_values = int(batch[col].count()) if skipna else len(batch)
-            if nb_batch_values == 0:
-                continue
             # testing each column with the tests that are still competing
             # after previous batchs analyses
             for label in fmt_labels:
