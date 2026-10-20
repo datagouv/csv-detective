@@ -302,22 +302,17 @@ def test_col_chunks(
     analysis["total_lines"] = CHUNK_SIZE
     batch, batch_number = [], 1
     iterator = peekable(enumerate(chunks))
-    while iterator:
-        idx, chunk = next(iterator)
+    for idx, chunk in iterator:
         if idx == 0:
             # we have read and analysed the first chunk already
             continue
-        if len(batch) < 10:
-            # it's too slow to process chunks directly, but we want to keep the first analysis
-            # on a "small" chunk, so partial analyses are done on batches of chunks
-            batch.append(chunk)
-            # we don't know when the chunks end, and doing one additionnal step
-            # for the final batch is ugly
-            try:
-                iterator.peek()
-                continue
-            except StopIteration:
-                pass
+        # it's too slow to process chunks directly, but we want to keep the first analysis
+        # on a "small" chunk, so partial analyses are done on batches of chunks
+        batch.append(chunk)
+        # peeking tells whether this is the last chunk, so that the final, partial batch
+        # is processed in the loop rather than in an additional step after it
+        if len(batch) < 10 and iterator:
+            continue
         if verbose:
             logging.info(f"> Testing batch number {batch_number}")
         batch = pd.concat(batch, ignore_index=True)
