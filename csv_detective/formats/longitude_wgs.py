@@ -3,6 +3,7 @@ from csv_detective.formats.float import float_casting
 from csv_detective.formats.int import _is as is_int
 
 proportion = 1
+parent = "float"
 description = "Longitude in the WGS format"
 tags = ["geo"]
 mandatory_label = True

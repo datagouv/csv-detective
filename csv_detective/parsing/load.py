@@ -1,7 +1,7 @@
 import codecs
 import logging
 from io import BytesIO, StringIO
-from typing import Any
+from typing import Any, BinaryIO
 
 import pandas as pd
 import pyarrow.parquet as pq
@@ -24,6 +24,18 @@ from csv_detective.parsing.excel import (
 )
 from csv_detective.parsing.parquet import parse_parquet
 from csv_detective.utils import is_url
+
+
+def _decode_binary(binary_file: BinaryIO, encoding: str) -> StringIO:
+    decoder = codecs.getincrementaldecoder(encoding)()
+    text_file = StringIO()
+    while True:
+        chunk = binary_file.read(1024**2)
+        if not chunk:
+            break
+        text_file.write(decoder.decode(chunk))
+    text_file.seek(0)
+    return text_file
 
 
 def load_file(
@@ -68,44 +80,39 @@ def load_file(
         if is_url(file_path):
             r = requests.get(file_path, allow_redirects=True)
             r.raise_for_status()
-            binary_file = BytesIO(r.content)
+            binary_context = BytesIO(r.content)
         else:
-            binary_file = open(file_path, "rb")
-        # handling compression
-        if engine in COMPRESSION_ENGINES:
-            binary_file = unzip(binary_file=binary_file, engine=engine)
-        # detecting encoding if not specified
-        if encoding is None:
-            encoding = detect_encoding(binary_file, verbose=verbose)
-            binary_file.seek(0)
-        # decoding and reading file
-        if is_url(file_path) or engine in COMPRESSION_ENGINES:
-            decoder = codecs.getincrementaldecoder(encoding)()
-            str_file = StringIO()
-            while True:
-                chunk = binary_file.read(1024**2)
-                if not chunk:
-                    break
-                str_file.write(decoder.decode(chunk))
-            del binary_file
-            str_file.seek(0)
-        else:
-            str_file = open(file_path, "r", encoding=encoding)
-        if sep is None:
-            sep = detect_separator(str_file, verbose=verbose)
-        header_row_idx = detect_header_position(str_file, verbose=verbose)
-        heading_columns = detect_heading_columns(str_file, sep, verbose=verbose)
-        trailing_columns = detect_trailing_columns(str_file, sep, heading_columns, verbose=verbose)
-        table, total_lines, nb_duplicates = parse_csv(
-            str_file,
-            encoding,
-            sep,
-            num_rows,
-            header_row_idx,
-            na_values=na_values,
-            verbose=verbose,
-        )
-        del str_file
+            binary_context = open(file_path, "rb")
+        with binary_context as binary_file:
+            # handling compression
+            if engine in COMPRESSION_ENGINES:
+                binary_file = unzip(binary_file=binary_file, engine=engine)
+            # detecting encoding if not specified
+            if encoding is None:
+                encoding = detect_encoding(binary_file, verbose=verbose)
+                binary_file.seek(0)
+            # decoding and reading file
+            if is_url(file_path) or engine in COMPRESSION_ENGINES:
+                text_context = _decode_binary(binary_file, encoding)
+            else:
+                text_context = open(file_path, "r", encoding=encoding)
+            with text_context as str_file:
+                if sep is None:
+                    sep = detect_separator(str_file, verbose=verbose)
+                header_row_idx = detect_header_position(str_file, verbose=verbose)
+                heading_columns = detect_heading_columns(str_file, sep, verbose=verbose)
+                trailing_columns = detect_trailing_columns(
+                    str_file, sep, heading_columns, verbose=verbose
+                )
+                table, total_lines, nb_duplicates = parse_csv(
+                    str_file,
+                    encoding,
+                    sep,
+                    num_rows,
+                    header_row_idx,
+                    na_values=na_values,
+                    verbose=verbose,
+                )
         if table.empty:
             raise ValueError("Table seems to be empty")
         analysis = {

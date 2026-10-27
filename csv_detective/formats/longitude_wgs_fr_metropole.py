@@ -1,6 +1,7 @@
 from csv_detective.formats.longitude_wgs import _is as is_longitude, labels  # noqa
 
 proportion = 1
+parent = "longitude_wgs"
 description = "Longitude within the French metropole bounds in the WGS format"
 tags = ["fr", "geo"]
 mandatory_label = True

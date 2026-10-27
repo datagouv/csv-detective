@@ -1,4 +1,5 @@
 proportion = 1
+parent = "int"
 description = "Year"
 tags = ["temp"]
 python_type = "int"
