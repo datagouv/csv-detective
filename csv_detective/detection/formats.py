@@ -12,12 +12,9 @@ from csv_detective.detection.variables import (
 from csv_detective.format import Format, FormatsManager
 from csv_detective.output.utils import (
     build_unique_values,
-    extract_unique_from_multicat,
     prepare_output_dict,
-    winning_format,
 )
 from csv_detective.parsing.columns import (
-    MAX_NUMBER_CATEGORICAL_VALUES,
     handle_empty_columns,
     test_col,
     test_col_chunks,
@@ -136,21 +133,13 @@ def detect_formats(
             else (lambda col: col_values[col].index.dropna()),
         )
     analysis["columns_fields"] = prepare_output_dict(scores_table_fields, limited_output)
-    analysis["unique_values"] = {}
-    if col_values is None:
-        for col in table.columns:
-            if winning_format(analysis["columns_fields"][col], limited_output) == "json" and all(
-                value.startswith("[") for value in table[col].dropna()
-            ):
-                unique = extract_unique_from_multicat(table[col])
-                if unique is not None:
-                    analysis["unique_values"][col] = unique
-            elif table[col].nunique() <= MAX_NUMBER_CATEGORICAL_VALUES:
-                analysis["unique_values"][col] = list(table[col].dropna().unique())
-    else:
-        analysis["unique_values"] = build_unique_values(
-            col_values, analysis["columns_fields"], limited_output
-        )
+    analysis["unique_values"] = build_unique_values(
+        {col: table[col].dropna().unique() for col in table.columns}
+        if col_values is None
+        else {col: values.index.dropna() for col, values in col_values.items()},
+        analysis["columns_fields"],
+        limited_output,
+    )
 
     # Perform testing on labels
     scores_table_labels = test_label(analysis["header"], formats, verbose=verbose)

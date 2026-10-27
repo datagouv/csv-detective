@@ -1,4 +1,5 @@
 import json
+from typing import Iterable
 
 import pandas as pd
 
@@ -96,20 +97,31 @@ def extract_unique_from_multicat(values: pd.Series) -> list | None:
         return None
 
 
+def unique_values_for_column(values: Iterable, is_json: bool) -> list | None:
+    """The unique values to report for a column, or None if it has too many.
+
+    `values` must be the column's distinct values with NaN already dropped, so that every
+    caller counts the same way.
+    """
+    values = pd.Series(values)
+    if is_json and all(value.startswith("[") for value in values):
+        return extract_unique_from_multicat(values)
+    if len(values) <= MAX_NUMBER_CATEGORICAL_VALUES:
+        return list(values)
+    return None
+
+
 def build_unique_values(
-    col_values: dict[str, pd.Series],
+    distinct_values: dict[str, Iterable],
     columns: dict[str, dict | list[dict]],
     limited_output: bool,
 ) -> dict[str, list]:
-    """Build the unique_values map from per-column value counts (chunked detect or validate)."""
+    """Build the unique_values map from each column's distinct non-NaN values."""
     unique_values: dict[str, list] = {}
-    for col in col_values:
-        if winning_format(columns[col], limited_output) == "json" and all(
-            value.startswith("[") for value in col_values[col].index.dropna()
-        ):
-            unique = extract_unique_from_multicat(col_values[col].index.to_series())
-            if unique is not None:
-                unique_values[col] = unique
-        elif len(col_values[col]) <= MAX_NUMBER_CATEGORICAL_VALUES:
-            unique_values[col] = list(col_values[col].index.dropna())
+    for col, values in distinct_values.items():
+        unique = unique_values_for_column(
+            values, winning_format(columns[col], limited_output) == "json"
+        )
+        if unique is not None:
+            unique_values[col] = unique
     return unique_values

@@ -261,7 +261,9 @@ def validate(
     # a previous_analysis always carries the limited_output shape: the checks above read
     # previous_analysis["columns"][col]["format"] directly
     analysis["unique_values"] = build_unique_values(
-        col_values, previous_analysis["columns"], limited_output=True
+        {col: values.index.dropna() for col, values in col_values.items()},
+        previous_analysis["columns"],
+        limited_output=True,
     )
     return (
         True,
