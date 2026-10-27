@@ -1,4 +1,5 @@
 import json
+from typing import Iterable
 
 import pandas as pd
 
@@ -79,6 +80,13 @@ def prepare_output_dict(return_table: pd.DataFrame, limited_output: bool):
     return output_dict
 
 
+def winning_format(detections: dict | list[dict], limited_output: bool) -> str:
+    """The format that won for a column, whatever shape prepare_output_dict produced."""
+    if limited_output:
+        return detections["format"]
+    return max(detections, key=lambda d: d["score"], default={"format": "string"})["format"]
+
+
 def extract_unique_from_multicat(values: pd.Series) -> list | None:
     # we can safely cast as json here
     loaded = values.apply(lambda v: json.loads(v) if isinstance(v, str) else pd.NA)
@@ -87,3 +95,33 @@ def extract_unique_from_multicat(values: pd.Series) -> list | None:
         return unique.tolist() if len(unique) <= MAX_NUMBER_CATEGORICAL_VALUES else None
     except Exception:
         return None
+
+
+def unique_values_for_column(values: Iterable, is_json: bool) -> list | None:
+    """The unique values to report for a column, or None if it has too many.
+
+    `values` must be the column's distinct values with NaN already dropped, so that every
+    caller counts the same way.
+    """
+    values = pd.Series(values)
+    if is_json and all(value.startswith("[") for value in values):
+        return extract_unique_from_multicat(values)
+    if len(values) <= MAX_NUMBER_CATEGORICAL_VALUES:
+        return list(values)
+    return None
+
+
+def build_unique_values(
+    distinct_values: dict[str, Iterable],
+    columns: dict[str, dict | list[dict]],
+    limited_output: bool,
+) -> dict[str, list]:
+    """Build the unique_values map from each column's distinct non-NaN values."""
+    unique_values: dict[str, list] = {}
+    for col, values in distinct_values.items():
+        unique = unique_values_for_column(
+            values, winning_format(columns[col], limited_output) == "json"
+        )
+        if unique is not None:
+            unique_values[col] = unique
+    return unique_values

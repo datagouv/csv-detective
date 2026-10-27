@@ -764,13 +764,45 @@ def test_validate_json_column_with_missing_values(nb_rows):
             output_profile=False,
             save_results=False,
         )
-        is_valid, _, _ = validate(tmp_path, analysis)
+        is_valid, validated, _ = validate(tmp_path, analysis)
     finally:
         import os
 
         os.unlink(tmp_path)
     assert is_valid
-    assert analysis["unique_values"]["json_col"] == ["a", "b", "c"]
+    assert validated["unique_values"]["json_col"] == ["a", "b", "c"]
+    assert validated["unique_values"] == analysis["unique_values"]
+
+
+@pytest.mark.parametrize(
+    "nb_rows",
+    (CHUNK_SIZE // 10, CHUNK_SIZE + 1),
+)
+def test_unique_values_ignore_missing_values(nb_rows):
+    """Empty cells must not count as a value, whether the file is read in chunks or not."""
+    values = [f"v{k}" for k in range(25)] + [""]
+    csv_content = "cat;id\n"
+    for k in range(nb_rows):
+        csv_content += f"{values[k % len(values)]};{k}\n"
+    with NamedTemporaryFile(
+        "w",
+        suffix=".csv",
+        delete=False,
+    ) as f:
+        f.write(csv_content)
+        tmp_path = f.name
+    try:
+        analysis = routine(
+            file_path=tmp_path,
+            num_rows=-1,
+            output_profile=False,
+            save_results=False,
+        )
+    finally:
+        import os
+
+        os.unlink(tmp_path)
+    assert sorted(analysis["unique_values"]["cat"]) == sorted(values[:-1])
 
 
 def test_parquet_file_analysis():
