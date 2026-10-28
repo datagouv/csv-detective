@@ -131,7 +131,8 @@ def validate_then_detect(
     """
     Performs a validation of the given file against the given analysis.
     If the validation fails, performs a full analysis and return it.
-    Otherwise return the previous analysis (which is therefore still valid).
+    Otherwise return the previous analysis (which is therefore still valid), with the date format
+    of the date columns that lacked one inferred from the file.
     NB: if asked, the profile is recreated in both cases.
 
     Args:
