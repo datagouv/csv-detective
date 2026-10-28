@@ -1,4 +1,5 @@
 import json
+from datetime import date
 from tempfile import NamedTemporaryFile
 from unittest.mock import MagicMock, patch
 
@@ -223,8 +224,6 @@ def _date_analysis(date_format: str | None, fmt: str = "date") -> dict:
         # the 12-hour clock too, whose marker strptime only reads in the C locale
         ("csvd:%d/%m/%Y %I:%M:%S %p", "06/12/2022 11:00:15 PM\n07/12/2022 09:14:34 AM\n", True),
         ("csvd:%d/%m/%Y %I:%M:%S %p", "06/12/2022 11:00:15 PM\n07/12/2022 13:14:34 PM\n", False),
-        # an analysis with no format at all still validates against the generic test
-        (None, "07/03/2024\n15 jan 1985\n", True),
     ),
 )
 def test_validate_against_the_pinned_date_format(date_format, values, should_be_valid):
@@ -233,6 +232,50 @@ def test_validate_against_the_pinned_date_format(date_format, values, should_be_
         _date_analysis(date_format),
     )
     assert is_valid is should_be_valid
+
+
+@pytest.mark.parametrize(
+    "values, expected_format",
+    (
+        # a single day-only value settles the whole column, the ambiguous one included
+        ("07/01/2021\n25/12/2020\n", "%d/%m/%Y"),
+        ("07/01/2021\n12/25/2020\n", "%m/%d/%Y"),
+    ),
+)
+def test_validate_infers_the_date_format_an_older_analysis_lacks(values, expected_format):
+    previous_analysis = _date_analysis(None)
+    is_valid, analysis, _ = validate(pd.io.common.StringIO("date\n" + values), previous_analysis)
+    assert is_valid is True
+    assert analysis["columns"]["date"]["date_format"] == expected_format
+    # the caller's analysis is left as it was given
+    assert "date_format" not in previous_analysis["columns"]["date"]
+
+
+def test_validate_rejects_an_older_analysis_no_date_format_can_read():
+    # each value is a date on its own, but no single format reads both: a detection would not
+    # call this column a date, so the analysis has to be redone
+    is_valid, analysis, col_values = validate(
+        pd.io.common.StringIO("date\n07/03/2024\n15 jan 1985\n"),
+        _date_analysis(None),
+    )
+    assert is_valid is False
+    assert analysis is None and col_values is None
+
+
+def test_validate_then_detect_casts_an_older_analysis_with_the_inferred_format():
+    with NamedTemporaryFile(mode="w", suffix=".csv") as f:
+        f.write("date\n07/01/2021\n25/12/2020\n")
+        f.flush()
+        analysis, chunks = validate_then_detect(
+            f.name,
+            previous_analysis=_date_analysis(None),
+            num_rows=-1,
+            output_df=True,
+            save_results=False,
+        )
+        df = pd.concat(chunks)
+    assert analysis["columns"]["date"]["date_format"] == "%d/%m/%Y"
+    assert list(df["date"]) == [date(2021, 1, 7), date(2020, 12, 25)]
 
 
 def test_validate_rejects_an_analysis_made_with_an_unknown_format():

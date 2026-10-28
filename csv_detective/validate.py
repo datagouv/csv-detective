@@ -248,6 +248,24 @@ def validate(
                     f"> Test failed for column {col_name} with format {detected['format']}"
                 )
             return False, None, None
+    columns = dict(previous_analysis["columns"])
+    if previous_analysis.get("engine") != "parquet":
+        # an analysis stored before the column-wide inference has no date format, so casting would
+        # read each value on its own, month-first when it is ambiguous. The values are all counted
+        # by now: infer the format from them, as detect_formats does, instead of redoing it all
+        for col_name, fmt in col_formats.items():
+            if fmt.infer is None or fmt.proportion != 1 or "date_format" in columns[col_name]:
+                continue
+            values = col_values[col_name].index.dropna()
+            if values.empty:
+                continue
+            date_format = fmt.infer(values)
+            if date_format is None:
+                # no single format reads the whole column, which a detection would not call a date
+                if verbose:
+                    logging.warning(f"> No date format reads all the values of column {col_name}")
+                return False, None, None
+            columns[col_name] = columns[col_name] | {"date_format": date_format}
     if verbose:
         logging.info("> All checks successful")
     analysis["nb_duplicates"] = sum(row_hashes_count > 1)
@@ -275,11 +293,11 @@ def validate(
             k: previous_analysis[k]
             for k in [
                 "categorical",
-                "columns",
                 "columns_fields",
                 "columns_labels",
                 "formats",
             ]
-        },
+        }
+        | {"columns": columns},
         col_values,
     )
