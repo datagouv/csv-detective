@@ -21,8 +21,8 @@ logging.basicConfig(level=logging.INFO)
 
 # Formats a stored analysis may name that this version no longer has, mapped to the one that now
 # reads the same values. Without this, every analysis mentioning a removed format is rejected and
-# the whole file has to be analysed again. The analysis itself is returned untouched, so a column
-# keeps the python_type it was recorded with.
+# the whole file has to be analysed again. The column keeps the format and python_type it was
+# recorded with; only a missing date format is filled in, as for any other date column.
 SUPERSEDED_FORMATS = {"date_fr": "date"}
 
 
@@ -252,14 +252,14 @@ def validate(
     if previous_analysis.get("engine") != "parquet":
         # an analysis stored before the column-wide inference has no date format, so casting would
         # read each value on its own, month-first when it is ambiguous. The values are all counted
-        # by now: infer the format from them, as detect_formats does, instead of redoing it all
-        for col_name, fmt in col_formats.items():
+        # by now: infer the format from them, as detect_formats does, instead of redoing it all.
+        # Iterating col_values rather than indexing it: a defaultdict would gain an empty entry for
+        # each column no chunk filled, and that entry would end up in unique_values
+        for col_name, counts in col_values.items():
+            fmt = col_formats[col_name]
             if fmt.infer is None or fmt.proportion != 1 or "date_format" in columns[col_name]:
                 continue
-            values = col_values[col_name].index.dropna()
-            if values.empty:
-                continue
-            date_format = fmt.infer(values)
+            date_format = fmt.infer(counts.index.dropna())
             if date_format is None:
                 # no single format reads the whole column, which a detection would not call a date
                 if verbose:

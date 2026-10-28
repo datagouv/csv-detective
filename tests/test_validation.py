@@ -278,6 +278,46 @@ def test_validate_then_detect_casts_an_older_analysis_with_the_inferred_format()
     assert list(df["date"]) == [date(2021, 1, 7), date(2020, 12, 25)]
 
 
+def test_validate_infers_the_date_format_from_the_whole_file():
+    # the ambiguous value and the one that settles it are read in two different chunks
+    with patch("csv_detective.validate.VALIDATION_CHUNK_SIZE", 1):
+        is_valid, analysis, _ = validate(
+            pd.io.common.StringIO("date\n07/01/2021\n25/12/2020\n"),
+            _date_analysis(None),
+        )
+    assert is_valid is True
+    assert analysis["columns"]["date"]["date_format"] == "%d/%m/%Y"
+
+
+def test_validate_leaves_a_tolerant_date_column_without_format():
+    # a tolerated share of invalid values cannot be read by a single format, and asking for
+    # one would reject the analysis on every validation
+    is_valid, analysis, _ = validate(
+        pd.io.common.StringIO("date\n07/03/2024\nnot a date\n"),
+        _date_analysis(None),
+        custom_proportions={"date": 0.5},
+    )
+    assert is_valid is True
+    assert "date_format" not in analysis["columns"]["date"]
+
+
+def test_validate_leaves_an_empty_date_column_out_of_the_unique_values():
+    previous_analysis = _date_analysis(None)
+    previous_analysis["header"] = ["other", "date"]
+    previous_analysis["columns"] = {
+        "other": {"format": "int", "python_type": "int", "score": 1.0},
+        **previous_analysis["columns"],
+    }
+    is_valid, analysis, col_values = validate(
+        pd.io.common.StringIO("other;date\n1;\n2;\n"),
+        previous_analysis,
+    )
+    assert is_valid is True
+    assert "date_format" not in analysis["columns"]["date"]
+    assert "date" not in analysis["unique_values"]
+    assert "date" not in col_values
+
+
 def test_validate_rejects_an_analysis_made_with_an_unknown_format():
     # an analysis naming a format nothing supersedes has to be redone, not crash on a KeyError
     is_valid, analysis, col_values = validate(
@@ -353,11 +393,14 @@ def test_parquet_file_validation():
         output_profile=True,
         save_results=False,
     )
-    is_valid, _, _ = validate(
+    is_valid, validated, _ = validate(
         pq_path,
         analysis,
     )
     assert is_valid
+    # parquet types its own columns, there is no format to read a date column with
+    assert validated["columns"]["debutalim"]["format"] == "date"
+    assert "date_format" not in validated["columns"]["debutalim"]
 
 
 @pytest.mark.parametrize("nb_rows", (CHUNK_SIZE // 10, CHUNK_SIZE + 1))
