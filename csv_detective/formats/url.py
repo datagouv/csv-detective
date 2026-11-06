@@ -20,7 +20,7 @@ labels = {
 }
 
 pattern = re.compile(
-    r"^((https?|ftp)://|www\.)(([A-Za-z0-9-]+\.)+[A-Za-z]{2,6})"
+    r"^((https?|ftp)://|www\.)(([A-Za-z0-9-]+\.)+[A-Za-z]{2,63})"
     r"(/[A-Za-z\u00C0-\u024F\u1E00-\u1EFF0-9\s._~:/?#[@!$&'()*+,;=%-]*)?$"
 )
 
@@ -42,6 +42,8 @@ _test_values = {
             "?score__greater=0.9&decompte__exact=13"
         ),
         "https://une-ville.fr/délibérations/2025/Doc avec espaces et àccëñts.pdf",
+        "https://lcdf.education",
+        "https://www.jmonnet36.college",
     ],
     False: ["tmp@data.gouv.fr"],
 }
