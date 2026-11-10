@@ -58,12 +58,15 @@ def run():
 
     opts = explorer.parse_args()
 
-    inspection_results = routine(
-        file_path=opts.file_path,
-        num_rows=opts.num_rows,
-        sep=opts.sep,
-        save_results=opts.save_results,
-        verbose=opts.verbose,
-    )
+    try:
+        inspection_results = routine(
+            file_path=opts.file_path,
+            num_rows=opts.num_rows,
+            sep=opts.sep,
+            save_results=opts.save_results,
+            verbose=opts.verbose,
+        )
+    except OSError as e:
+        explorer.error(f"cannot read file {opts.file_path!r}: {e.strerror or e}")
 
     print(json.dumps(inspection_results, indent=4, ensure_ascii=False, cls=_NumpyEncoder))
