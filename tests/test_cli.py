@@ -51,6 +51,18 @@ def test_cli_missing_file(csv_detective_bin):
     assert result.returncode != 0
 
 
+def test_cli_missing_file_clean_error(csv_detective_bin):
+    """E2E: a missing file should fail cleanly (no traceback) with exit code 2."""
+    result = subprocess.run(
+        [csv_detective_bin, "nonexistent_file.csv"],
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 2, f"CLI failed with stderr:\n{result.stderr}"
+    assert "Traceback" not in result.stderr
+    assert "nonexistent_file.csv" in result.stderr
+
+
 def test_cli_no_args(csv_detective_bin):
     """E2E: the CLI should fail when called without arguments."""
     result = subprocess.run(
