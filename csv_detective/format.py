@@ -1,4 +1,5 @@
-from typing import Any, Callable, Iterable
+from collections.abc import Callable, Iterable
+from typing import Any
 
 from csv_detective.parsing.text import header_score
 
@@ -12,7 +13,7 @@ class Format:
         _test_values: dict[bool, list[str]],
         infer: Callable[[Iterable[Any]], str | None] | None = None,
         labels: dict[str, float] = {},
-        proportion: float | int = 1,
+        proportion: float = 1,
         tags: list[str] = [],
         mandatory_label: bool = False,
         python_type: str = "string",
@@ -53,7 +54,7 @@ class Format:
         return header_score(val, self.labels)
 
     @classmethod
-    def check_proportion(cls, proportion: float | int) -> float | int:
+    def check_proportion(cls, proportion: float) -> float | int:
         if proportion <= 0 or proportion > 1:
             raise ValueError("proportion should be between 0 (excluded) and 1 (included)")
         return proportion
@@ -71,9 +72,9 @@ class FormatsManager:
     def __init__(
         self,
         *,
-        custom_proportions: float | int | dict[str, float | int] | None = None,
+        custom_proportions: float | dict[str, float | int] | None = None,
     ) -> None:
-        import csv_detective.formats as formats
+        from csv_detective import formats
 
         if custom_proportions is not None and not isinstance(
             custom_proportions, (float, int, dict)
@@ -132,4 +133,4 @@ class FormatsManager:
         return {label: fmt for label, fmt in self.formats.items() if fmt.mandatory_label}
 
     def available_tags(self) -> set[str]:
-        return set(tag for format in self.formats.values() for tag in format.tags)
+        return {tag for format in self.formats.values() for tag in format.tags}

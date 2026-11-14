@@ -1,5 +1,6 @@
 from collections import defaultdict
-from typing import Any, Callable, Iterable
+from collections.abc import Callable, Iterable
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -74,7 +75,7 @@ def detect_formats(
     tags: list[str] | None = None,
     limited_output: bool = True,
     skipna: bool = True,
-    custom_proportions: float | int | dict[str, float | int] | None = None,
+    custom_proportions: float | dict[str, float | int] | None = None,
     na_values: list[str] | None = None,
     verbose: bool = False,
 ) -> tuple[dict, dict[str, pd.Series] | None]:
@@ -153,7 +154,7 @@ def detect_formats(
             elif table[col].nunique() <= MAX_NUMBER_CATEGORICAL_VALUES:
                 analysis["unique_values"][col] = list(table[col].dropna().unique())
     else:
-        for col in col_values.keys():
+        for col in col_values:
             if _winning_format(analysis["columns_fields"][col], limited_output) == "json" and all(
                 value.startswith("[") for value in col_values[col].index.dropna()
             ):

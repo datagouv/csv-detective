@@ -22,7 +22,6 @@ mois = {
     "fev",
     "mar",
     "avr",
-    "mai",
     "jun",
     "jui",
     "juil",

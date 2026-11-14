@@ -17,7 +17,7 @@ def _is(val) -> bool:
     ):
         try:
             return isinstance(binary_casting(val), bytes)
-        except Exception:
+        except ValueError:
             return False
     return False
 

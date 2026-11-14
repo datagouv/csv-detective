@@ -10,7 +10,7 @@ import os
 import statistics
 import sys
 from collections.abc import Callable
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from random import Random
 from time import perf_counter
@@ -193,7 +193,7 @@ def _write_scenario_result(
         report = json.loads(BENCHMARK_JSON.read_text(encoding="utf-8"))
     else:
         report = {
-            "datetime": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "datetime": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "ci": os.environ.get("BENCHMARK_CI", "local"),
             "commit_id": os.environ.get("CIRCLE_SHA1", "")[:7],
             "runner_class": os.environ.get("BENCHMARK_RUNNER_CLASS", ""),

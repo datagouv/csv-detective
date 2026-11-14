@@ -5,9 +5,9 @@ import pandas as pd
 
 logging.basicConfig(level=logging.INFO)
 logging.addLevelName(
-    logging.CRITICAL, "\033[1;41m%s\033[1;0m" % logging.getLevelName(logging.CRITICAL)
+    logging.CRITICAL, f"\033[1;41m{logging.getLevelName(logging.CRITICAL)}\033[1;0m"
 )
-logging.addLevelName(logging.WARN, "\033[1;31m%s\033[1;0m" % logging.getLevelName(logging.WARN))
+logging.addLevelName(logging.WARNING, f"\033[1;31m{logging.getLevelName(logging.WARNING)}\033[1;0m")
 
 THRESHOLD_WARN = 1
 THRESHOLD_CRITICAL = 3

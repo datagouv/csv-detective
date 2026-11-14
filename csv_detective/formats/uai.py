@@ -27,9 +27,7 @@ labels = {
 def _is(val):
     if not isinstance(val, str) or len(val) != 8:
         return False
-    if not bool(re.match(r"^(0[0-8][0-9]|09[0-5]|9[78][0-9]|[67]20)[0-9]{4}[A-Z]$", val)):
-        return False
-    return True
+    return bool(re.match(r"^(0[0-8][0-9]|09[0-5]|9[78][0-9]|[67]20)[0-9]{4}[A-Z]$", val))
 
 
 _test_values = {

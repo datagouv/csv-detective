@@ -33,7 +33,7 @@ keywords = ["CSV", "data processing", "encoding", "guess", "parser", "tabular"]
 dev = [
     "pytest>=8.3.0",
     "responses>=0.25.0",
-    "ruff>=0.9.3,<0.16.0",
+    "ruff>=0.9.3",
     "ty>=0.0.61",
 ]
 
@@ -67,6 +67,7 @@ exclude = ["pyproject.toml"]
 
 [tool.ruff.lint]
 extend-select = ["I"] # also sort imports with an isort rule
+ignore = ["LOG015"] # messages go through the root logger on purpose
 
 [tool.uv.build-backend]
 module-name = "csv_detective"

@@ -23,19 +23,21 @@ Say you have a tabular file located at `file_path`. This is how you could use `c
 ```python
 # Import the csv_detective package
 from csv_detective import routine
-import os # for this example only
+import os  # for this example only
 
 # Replace by your file path
-file_path = os.path.join('.', 'tests', 'code_postaux_v201410.csv')
+file_path = os.path.join(".", "tests", "code_postaux_v201410.csv")
 
 # Open your file and run csv_detective
 inspection_results = routine(
-  file_path, # or file URL
-  num_rows=-1, # Value -1 will analyze all lines of your file, you can change with the number of lines you wish to analyze
-  save_results=False, # Default False. If True, it will save result output into the same directory as the analyzed file, using the same name as your file and .json extension
-  output_profile=True, # Default False. If True, returned dict will contain a property "profile" indicating profile (min, max, mean, tops...) of every column of your csv
-  output_schema=True, # Default False. If True, returned dict will contain a property "schema" containing basic [tableschema](https://specs.frictionlessdata.io/table-schema/) of your file. This can be used to validate structure of other csv which should match same structure. 
-  tags=["fr"],  # Default None. If set as a list of strings, only performs checks related to the specified tags (you can see the available tags with FormatsManager().available_tags())
+    file_path,  # or file URL
+    num_rows=-1,  # Value -1 will analyze all lines of your file, you can change with the number of lines you wish to analyze
+    save_results=False,  # Default False. If True, it will save result output into the same directory as the analyzed file, using the same name as your file and .json extension
+    output_profile=True,  # Default False. If True, returned dict will contain a property "profile" indicating profile (min, max, mean, tops...) of every column of your csv
+    output_schema=True,  # Default False. If True, returned dict will contain a property "schema" containing basic [tableschema](https://specs.frictionlessdata.io/table-schema/) of your file. This can be used to validate structure of other csv which should match same structure.
+    tags=[
+        "fr"
+    ],  # Default None. If set as a list of strings, only performs checks related to the specified tags (you can see the available tags with FormatsManager().available_tags())
 )
 ```
 
@@ -47,23 +49,24 @@ The program creates a `python` dictionary with the following information :
 
 ```python
 {
-    "encoding": "windows-1252",             # Encoding detected
-    "separator": ";",                       # Detected CSV separator
-    "header_row_idx": 0,                    # Index of the header (aka how many lines to skip to get it)
-    "headers": [                            # Header row
-        'code commune INSEE', 'nom de la commune', 'code postal', "libellé d'acheminement"
+    "encoding": "windows-1252",  # Encoding detected
+    "separator": ";",  # Detected CSV separator
+    "header_row_idx": 0,  # Index of the header (aka how many lines to skip to get it)
+    "headers": [  # Header row
+        "code commune INSEE",
+        "nom de la commune",
+        "code postal",
+        "libellé d'acheminement",
     ],
-    "total_lines": 42,                      # Number of rows (excluding header)
-    "nb_duplicates": 0,                     # Number of exact duplicates in rows
-    "heading_columns": 0,                   # Number of heading columns
-    "trailing_columns": 0,                  # Number of trailing columns
-    "categorical": ['Code commune'],        # Columns that contain less than 25 different values (arbitrary threshold)
-    "columns": {                            # Property that conciliate detection from labels and content of a column
-        "Code commune": {
-            "python_type": "string",
-            "format": "code_commune",
-            "score": 1.0
-        },
+    "total_lines": 42,  # Number of rows (excluding header)
+    "nb_duplicates": 0,  # Number of exact duplicates in rows
+    "heading_columns": 0,  # Number of heading columns
+    "trailing_columns": 0,  # Number of trailing columns
+    "categorical": [
+        "Code commune"
+    ],  # Columns that contain less than 25 different values (arbitrary threshold)
+    "columns": {  # Property that conciliate detection from labels and content of a column
+        "Code commune": {"python_type": "string", "format": "code_commune", "score": 1.0},
         "Date de création": {
             "python_type": "date",
             "format": "date",
@@ -82,71 +85,71 @@ The program creates a `python` dictionary with the following information :
             # of several languages), optional parts written "[.%f]" for a column whose source
             # only prints fractional seconds when they are non-zero, and named time zones, which
             # strptime reads then drops, leaving a naive datetime where we return an aware one.
-            "date_format": "%d/%m/%Y"
+            "date_format": "%d/%m/%Y",
         },
     },
-    "columns_labels": {                     # Property that return detection from header columns
-        "Code commune": {
-            "python_type": "string",
-            "format": "code_commune",
-            "score": 0.5
-        },
+    "columns_labels": {  # Property that return detection from header columns
+        "Code commune": {"python_type": "string", "format": "code_commune", "score": 0.5},
     },
-    "columns_fields": {                     # Property that return detection from content columns
-        "Code commune": {
-            "python_type": "string",
-            "format": "code_commune",
-            "score": 1.25
-        },
+    "columns_fields": {  # Property that return detection from content columns
+        "Code commune": {"python_type": "string", "format": "code_commune", "score": 1.25},
     },
     "profile": {
         "column_name": {
-            "min": 1,                       # only int and float
-            "max": 12,                      # only int and float
-            "mean": 5,                      # only int and float
-            "std": 5,                       # only int and float
-            "tops": [                       # 10 most frequent values in the column
+            "min": 1,  # only int and float
+            "max": 12,  # only int and float
+            "mean": 5,  # only int and float
+            "std": 5,  # only int and float
+            "tops": [  # 10 most frequent values in the column
                 "xxx",
                 "yyy",
-                "..."
+                "...",
             ],
-            "nb_distinct": 67,              # number of distinct values
-            "nb_missing_values": 102        # number of empty cells in the column
+            "nb_distinct": 67,  # number of distinct values
+            "nb_missing_values": 102,  # number of empty cells in the column
         }
     },
-    "schema": {                             # TableSchema of the file if `output_schema` was set to `True`
-      "$schema": "https://frictionlessdata.io/schemas/table-schema.json",
-      "name": "",
-      "title": "",
-      "description": "",
-      "countryCode": "FR",
-      "homepage": "",
-      "path": "https://github.com/datagouv/csv-detective",
-      "resources": [],
-      "sources": [
-        {"title": "Spécification Tableschema", "path": "https://specs.frictionlessdata.io/table-schema"},
-        {"title": "schema.data.gouv.fr", "path": "https://schema.data.gouv.fr"}
-      ],
-      "created": "2023-02-10",
-      "lastModified": "2023-02-10",
-      "version": "0.0.1",
-      "contributors": [
-        {"title": "Table schema bot", "email": "schema@data.gouv.fr", "organisation": "data.gouv.fr", "role": "author"}
-      ],
-      "fields": [
-        {
-          "name": "Code commune",
-          "description": "Le code INSEE de la commune",
-          "example": "23150",
-          "type": "string",
-          "formatFR": "code_commune",
-          "constraints": {
-            "required": False,
-            "pattern": "^([013-9]\\d|2[AB1-9])\\d{3}$",
-          }
-        }
-      ]
-    }
+    "schema": {  # TableSchema of the file if `output_schema` was set to `True`
+        "$schema": "https://frictionlessdata.io/schemas/table-schema.json",
+        "name": "",
+        "title": "",
+        "description": "",
+        "countryCode": "FR",
+        "homepage": "",
+        "path": "https://github.com/datagouv/csv-detective",
+        "resources": [],
+        "sources": [
+            {
+                "title": "Spécification Tableschema",
+                "path": "https://specs.frictionlessdata.io/table-schema",
+            },
+            {"title": "schema.data.gouv.fr", "path": "https://schema.data.gouv.fr"},
+        ],
+        "created": "2023-02-10",
+        "lastModified": "2023-02-10",
+        "version": "0.0.1",
+        "contributors": [
+            {
+                "title": "Table schema bot",
+                "email": "schema@data.gouv.fr",
+                "organisation": "data.gouv.fr",
+                "role": "author",
+            }
+        ],
+        "fields": [
+            {
+                "name": "Code commune",
+                "description": "Le code INSEE de la commune",
+                "example": "23150",
+                "type": "string",
+                "formatFR": "code_commune",
+                "constraints": {
+                    "required": False,
+                    "pattern": "^([013-9]\\d|2[AB1-9])\\d{3}$",
+                },
+            }
+        ],
+    },
 }
 ```
 
@@ -185,9 +188,10 @@ See the complete list [here](./docs/formats.md).
 If you have a pre-made analysis of a file, you can check whether another file conforms to the same analysis:
 ```python
 from csv_detective import validate
+
 is_valid, *_ = validate(
-  file_path,
-  previous_analysis,  # exactly as it came out from the routine function
+    file_path,
+    previous_analysis,  # exactly as it came out from the routine function
 )
 ```
 

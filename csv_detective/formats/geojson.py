@@ -1,4 +1,5 @@
 import json
+from json import JSONDecodeError
 
 proportion = 1
 parent = "json"
@@ -19,9 +20,7 @@ labels = {
 def _check_dict(d: dict) -> bool:
     if "type" in d and "coordinates" in d:
         return True
-    if "geometry" in d and "coordinates" in d["geometry"]:
-        return True
-    return False
+    return "geometry" in d and "coordinates" in d["geometry"]
 
 
 def _is(val) -> bool:
@@ -31,7 +30,7 @@ def _is(val) -> bool:
         j = json.loads(val)
         if isinstance(j, dict):
             return _check_dict(j)
-    except Exception:
+    except (JSONDecodeError, TypeError):
         pass
     return False
 

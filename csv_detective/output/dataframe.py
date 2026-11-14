@@ -1,8 +1,8 @@
 import json
+from collections.abc import Iterator
 from datetime import date, datetime
 from functools import partial
 from time import time
-from typing import Iterator
 
 import pandas as pd
 import pyarrow.parquet as pq

@@ -1,6 +1,6 @@
 import logging
+from collections.abc import Iterator
 from time import time
-from typing import Iterator
 
 import pandas as pd
 
@@ -29,7 +29,7 @@ def routine(
     cast_json: bool = True,
     verbose: bool = False,
     sheet_name: str | int | None = None,
-    custom_proportions: float | int | dict[str, float | int] | None = None,
+    custom_proportions: float | dict[str, float | int] | None = None,
     na_values: list[str] | None = None,
 ) -> dict | tuple[dict, Iterator[pd.DataFrame]]:
     """
@@ -124,7 +124,7 @@ def validate_then_detect(
     output_schema: bool = False,
     output_df: bool = False,
     cast_json: bool = True,
-    custom_proportions: float | int | dict[str, float | int] | None = None,
+    custom_proportions: float | dict[str, float | int] | None = None,
     na_values: list[str] | None = None,
     verbose: bool = False,
 ) -> dict | tuple[dict, Iterator[pd.DataFrame]]:

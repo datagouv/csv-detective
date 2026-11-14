@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Iterator
+from collections.abc import Iterator
 
 import pandas as pd
 import pyarrow.parquet as pq

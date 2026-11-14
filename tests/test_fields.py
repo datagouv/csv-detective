@@ -1,6 +1,6 @@
+from datetime import UTC
 from datetime import date as _date
 from datetime import datetime as _datetime
-from datetime import timezone as _timezone
 from unittest.mock import patch
 
 import pandas as pd
@@ -76,7 +76,7 @@ def test_all_fields_have_tests():
         # checking structure
         assert all(isinstance(key, bool) and isinstance(vals, list) for key, vals in valid.items())
         # checking that we have valid and invalid cases for each
-        assert all(b in valid.keys() for b in [True, False])
+        assert all(b in valid for b in [True, False])
 
 
 # this is based on the _test_values of each <format>.py file
@@ -330,7 +330,7 @@ def test_datetime_format_inferred_from_column(values, aware, expected_format):
         (
             "1996/06/22 10:20:10 GMT",
             "csvd:%Y/%m/%d %H:%M:%S %Z",
-            _datetime(1996, 6, 22, 10, 20, 10, tzinfo=_timezone.utc),
+            _datetime(1996, 6, 22, 10, 20, 10, tzinfo=UTC),
         ),
         # midnight is spelled out as a literal, so no other hour gets through
         ("1900-02-24 00:00:00", "%Y-%m-%d 00:00:00", _datetime(1900, 2, 24)),
@@ -442,9 +442,7 @@ def test_strptime_silently_drops_the_zone_a_marked_format_keeps():
     # the divergence the marker exists for: no error, just another datetime
     value, fmt = "1996/06/22 10:20:10 GMT", "%Y/%m/%d %H:%M:%S %Z"
     assert _datetime.strptime(value, fmt).tzinfo is None
-    assert parse(value, CUSTOM_PREFIX + fmt) == _datetime(
-        1996, 6, 22, 10, 20, 10, tzinfo=_timezone.utc
-    )
+    assert parse(value, CUSTOM_PREFIX + fmt) == _datetime(1996, 6, 22, 10, 20, 10, tzinfo=UTC)
 
 
 def test_the_year_window_only_guards_the_separator_less_shape():
