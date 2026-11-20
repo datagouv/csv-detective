@@ -1,7 +1,7 @@
 """Slow end-to-end performance canary for csv-detective.
 
 Excluded from default CI via ``pytest -m "not slow"``. Run manually or via the
-CircleCI ``benchmark-workflow`` (pipeline parameter ``run-benchmarks=true``).
+GitHub Actions ``Benchmark`` workflow (manual ``workflow_dispatch`` trigger).
 """
 
 import csv
@@ -195,7 +195,7 @@ def _write_scenario_result(
         report = {
             "datetime": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "ci": os.environ.get("BENCHMARK_CI", "local"),
-            "commit_id": os.environ.get("CIRCLE_SHA1", "")[:7],
+            "commit_id": os.environ.get("GITHUB_SHA", "")[:7],
             "runner_class": os.environ.get("BENCHMARK_RUNNER_CLASS", ""),
             "runner_cpu": _runner_cpu(),
             "runner_memory_mb": _runner_memory_mb(),

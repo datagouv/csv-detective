@@ -1,0 +1,105 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+env:
+  PYTHON_VERSION: "3.14"
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+      - run: uv sync --frozen
+      - name: Lint and format code and sort imports
+        run: |
+          uv run ruff --version
+          uv run ruff check --extend-select I .
+          uv run ruff format --check .
+
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0  # setuptools_scm needs tags
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+      - run: uv sync --frozen
+      - name: Run tests
+        run: uv run pytest -s tests/ -m "not slow" --junitxml=reports/python/tests.xml -p no:sugar --color=yes
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: reports/python
+
+  check-doc:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+      - run: uv sync --frozen
+      - name: Check that documentation is up to date
+        run: uv run python ./docs/generate_doc.py && git add ./docs/formats.md && git diff --cached --exit-code
+
+  build:
+    needs: [lint, tests, check-doc]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0  # setuptools_scm needs the full history and tags
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+      - run: uv sync --frozen
+      - name: Compute and display build info
+        run: |
+          uv pip install setuptools-scm
+          RELEASE_VERSION=$(uv run python -m setuptools_scm)
+          echo "Building a wheel release with version $RELEASE_VERSION"
+          echo "Run number: $GITHUB_RUN_NUMBER"
+          echo "Commit hash: ${GITHUB_SHA:0:7}"
+          echo "Ref: $GITHUB_REF_NAME"
+      - name: Build a distributable package as a wheel release
+        run: uv build --wheel
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+  publish:
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write  # PyPI Trusted Publishing
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+      - uses: astral-sh/setup-uv@v6
+      - name: Publish on PyPI
+        run: uv publish --trusted-publishing always dist/*
