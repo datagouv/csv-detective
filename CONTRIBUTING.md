@@ -29,8 +29,9 @@ uv run pytest tests/ -m "not slow"
 # Local run
 uv run pytest tests/test_benchmark.py -m slow -v -s
 
-# CircleCI: Trigger Pipeline with run-benchmarks=true, then check the
-# job logs or download benchmark.json from the Artifacts tab
+# GitHub Actions: run the "Benchmark" workflow from the Actions tab
+# (or `gh workflow run benchmark.yml`), then check the job logs or
+# download the "benchmark" artifact
 ```
 
 
