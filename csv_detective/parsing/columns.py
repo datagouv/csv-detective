@@ -473,8 +473,9 @@ def test_parquet_cols(
                 fill_value=0,
             )
         if not any(remaining_tests for remaining_tests in remaining_tests_per_col.values()):
-            # no more potential tests to do on any column, early stop
-            break
+            # no more potential tests to do on any column, but we can't early stop
+            # because we need the infos of all batches for some fields
+            continue
         for col, fmt_labels in remaining_tests_per_col.items():
             # testing each column with the tests that are still competing
             # after previous batchs analyses
