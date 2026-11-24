@@ -44,7 +44,7 @@ jobs:
 
   lint:
     docker:
-      - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-trixie
+      - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-trixie-slim
     steps:
       - attach_workspace:
           at: .
@@ -122,7 +122,7 @@ jobs:
 
   publish:
     docker:
-      - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-trixie
+      - image: ghcr.io/astral-sh/uv:python<< pipeline.parameters.python-version >>-trixie-slim
     steps:
       - attach_workspace:
           at: .
