@@ -732,6 +732,19 @@ def test_parquet_keeps_its_declared_types(tmp_path):
     assert analysis["columns"]["when"]["python_type"] == "datetime"
 
 
+def test_parquet_profile_covers_every_batch(tmp_path):
+    # the formats are settled on the first batch, the profile still needs all the others
+    pq_path = tmp_path / "ids.parquet"
+    pd.DataFrame({"id": range(250)}).to_parquet(pq_path)
+    with patch("csv_detective.parsing.columns.CHUNK_SIZE", 10):
+        analysis = routine(
+            file_path=str(pq_path), num_rows=-1, output_profile=True, save_results=False
+        )
+    assert analysis["total_lines"] == 250
+    assert analysis["profile"]["id"]["nb_distinct"] == 250
+    assert analysis["profile"]["id"]["max"] == 249
+
+
 @pytest.mark.parametrize(
     "nb_rows",
     (CHUNK_SIZE // 10, CHUNK_SIZE + 1),
