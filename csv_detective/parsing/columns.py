@@ -463,6 +463,7 @@ def test_parquet_cols(
             # not simply using astype(str) because lists are numpy arrays, cast as str they lose their commas
             lambda x: str(x.tolist()) if isinstance(x, np.ndarray) else str(x)
         )
+        # we can't early stop because we need the infos of all batches for some fields
         row_hashes_count = row_hashes_count.add(
             pd.util.hash_pandas_object(str_batch, index=False).value_counts(),
             fill_value=0,
@@ -472,10 +473,6 @@ def test_parquet_cols(
                 str_batch[col].value_counts(dropna=False),
                 fill_value=0,
             )
-        if not any(remaining_tests for remaining_tests in remaining_tests_per_col.values()):
-            # no more potential tests to do on any column, but we can't early stop
-            # because we need the infos of all batches for some fields
-            continue
         for col, fmt_labels in remaining_tests_per_col.items():
             # testing each column with the tests that are still competing
             # after previous batchs analyses
