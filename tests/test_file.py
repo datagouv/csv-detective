@@ -558,6 +558,8 @@ VALID_EMAIL, INVALID_EMAIL = "someone@data.gouv.fr", "not an email"
         ([VALID_EMAIL] * 8 + [INVALID_EMAIL] * 2, [VALID_EMAIL] * 5 + [""] * 95, True, "string"),
         # unless they are not skipped: 96 valid out of 110
         ([VALID_EMAIL] + [""] * 9, [VALID_EMAIL] * 95 + [INVALID_EMAIL] * 5, False, "string"),
+        # a column empty in the first chunk is tested again once values show up: 200 out of 210
+        ([""] * 10, [VALID_EMAIL] * 200, False, "email"),
     ),
 )
 def test_chunks_scores_are_weighted_by_tested_values(
