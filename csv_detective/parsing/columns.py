@@ -348,7 +348,8 @@ def test_col_chunks(
                     zero_if_too_low=False,
                     skipna=skipna,
                 )
-                # a score is the share of valid values among the tested ones
+                # a score is the share of valid values among the tested ones, e.g. 10 values
+                # scored 0.5 then a batch of 100 scored 1.0 give (5 + 100) / 110 = 0.95
                 nb_valid_values = (
                     scores.loc[format_name, col] * nb_tested_values[col]
                     + batch_score * nb_batch_tested_values
