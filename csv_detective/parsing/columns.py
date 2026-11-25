@@ -301,12 +301,15 @@ def test_col_chunks(
         na_values=na_values,
     )
     analysis["total_lines"] = CHUNK_SIZE
-    idx = 0
+    # number of values each column's scores were computed on
+    # (missing values are not tested when skipna)
+    nb_tested_values = {
+        col: int(table[col].count()) if skipna else len(table) for col in table.columns
+    }
     # we have read and analysed the first chunk already.
     # it's too slow to process chunks directly, but we want to keep the first analysis
     # on a "small" chunk, so partial analyses are done on batches of chunks
     for batch_number, batch in enumerate(chunked(islice(chunks, 1, None), 10), start=1):
-        idx += len(batch)
         if verbose:
             logging.info(f"> Testing batch number {batch_number}")
         batch = pd.concat(batch, ignore_index=True)
@@ -331,20 +334,30 @@ def test_col_chunks(
                     if format_name not in mandatory_header_skip.get(col, set())
                 ]
         for col, format_names in remaining_tests_per_col.items():
+            nb_batch_tested_values = int(batch[col].count()) if skipna else len(batch)
+            if nb_batch_tested_values == 0:
+                # nothing tested in this batch, the scores are unchanged
+                continue
             # testing each column with the tests that are still competing
             # after previous batchs analyses
             for format_name in format_names:
-                batch_col_test = test_col_val(
+                batch_score = test_col_val(
                     batch[col],
                     formats[format_name],
                     limited_output=limited_output,
                     zero_if_too_low=False,
                     skipna=skipna,
                 )
-                scores.loc[format_name, col] = (
-                    # updating the score with weighted average
-                    (scores.loc[format_name, col] * idx + batch_col_test) / (idx + 1)
+                # a score is the share of valid values among the tested ones, e.g. 10 values
+                # scored 0.5 then a batch of 100 scored 1.0 give (5 + 100) / 110 = 0.95
+                nb_valid_values = (
+                    scores.loc[format_name, col] * nb_tested_values[col]
+                    + batch_score * nb_batch_tested_values
                 )
+                scores.loc[format_name, col] = nb_valid_values / (
+                    nb_tested_values[col] + nb_batch_tested_values
+                )
+            nb_tested_values[col] += nb_batch_tested_values
         remaining_tests_per_col = _build_remaining_tests_per_col(scores, mandatory_header_skip)
     analysis["nb_duplicates"] = sum(row_hashes_count > 1)
     analysis["categorical"] = [
