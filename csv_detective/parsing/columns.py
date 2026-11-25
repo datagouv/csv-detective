@@ -196,13 +196,13 @@ def test_headers(columns: list[str], formats: dict[str, Format], verbose: bool =
         logging.info("Testing headers to get formats")
 
     return_table = pd.DataFrame(columns=columns)
-    for idx, (label, format) in enumerate(formats.items()):
+    for idx, (format_name, format) in enumerate(formats.items()):
         if verbose:
             start_type = time()
-        return_table.loc[label] = [format.header_score(col_name) for col_name in columns]
+        return_table.loc[format_name] = [format.header_score(col_name) for col_name in columns]
         if verbose:
             display_logs_depending_process_time(
-                f'\t- Done with format "{label}" in {round(time() - start_type, 3)}s ({idx + 1}/{len(formats)})',
+                f'\t- Done with format "{format_name}" in {round(time() - start_type, 3)}s ({idx + 1}/{len(formats)})',
                 time() - start_type,
             )
     if verbose:
@@ -217,15 +217,15 @@ def _build_remaining_tests_per_col(
     mandatory_header_skip: dict[str, set[str]],
     known_columns: dict[str, str] = {},
 ) -> dict[str, list[str]]:
-    # returns a dict with the table's columns as keys and the list of remaining format labels to apply
+    # returns a dict with the table's columns as keys and the list of remaining format names to apply
     return {
         col: [
-            fmt_label
-            for fmt_label in return_table.index
+            format_name
+            for format_name in return_table.index
             # for parquet we know for sure some column types
-            if known_columns.get(col) != fmt_label
-            and return_table.loc[fmt_label, col] > 0
-            and fmt_label not in mandatory_header_skip.get(col, set())
+            if known_columns.get(col) != format_name
+            and return_table.loc[format_name, col] > 0
+            and format_name not in mandatory_header_skip.get(col, set())
         ]
         for col in return_table.columns
     }
@@ -240,11 +240,11 @@ def _apply_proportion_thresholds(
     Chunk scoring may keep fractional scores (zero_if_too_low=False) so formats
     are not eliminated mid-file; the global proportion requirement is enforced here.
     """
-    for label, fmt in formats.items():
-        if label not in return_table.index:
+    for format_name, fmt in formats.items():
+        if format_name not in return_table.index:
             continue
-        below = return_table.loc[label] < fmt.proportion
-        return_table.loc[label, below] = 0.0
+        below = return_table.loc[format_name] < fmt.proportion
+        return_table.loc[format_name, below] = 0.0
 
 
 def test_col_chunks(
@@ -274,8 +274,8 @@ def test_col_chunks(
     # so there's no point running the expensive field tests on those columns
     mandatory_header_skip: dict[str, set[str]] = {
         col: {
-            fmt_label
-            for fmt_label, fmt in formats.items()
+            format_name
+            for format_name, fmt in formats.items()
             if fmt.mandatory_header and fmt.header_score(col) == 0
         }
         for col in table.columns
@@ -326,24 +326,24 @@ def test_col_chunks(
             if not batch[col].dropna().empty:
                 empty_cols.discard(col)
                 remaining_tests_per_col[col] = [
-                    fmt_label
-                    for fmt_label in formats.keys()
-                    if fmt_label not in mandatory_header_skip.get(col, set())
+                    format_name
+                    for format_name in formats.keys()
+                    if format_name not in mandatory_header_skip.get(col, set())
                 ]
-        for col, fmt_labels in remaining_tests_per_col.items():
+        for col, format_names in remaining_tests_per_col.items():
             # testing each column with the tests that are still competing
             # after previous batchs analyses
-            for label in fmt_labels:
+            for format_name in format_names:
                 batch_col_test = test_col_val(
                     batch[col],
-                    formats[label],
+                    formats[format_name],
                     limited_output=limited_output,
                     zero_if_too_low=False,
                     skipna=skipna,
                 )
-                return_table.loc[label, col] = (
+                return_table.loc[format_name, col] = (
                     # updating the score with weighted average
-                    (return_table.loc[label, col] * idx + batch_col_test) / (idx + 1)
+                    (return_table.loc[format_name, col] * idx + batch_col_test) / (idx + 1)
                 )
         remaining_tests_per_col = _build_remaining_tests_per_col(
             return_table, mandatory_header_skip
@@ -417,22 +417,22 @@ def test_parquet_cols(
     columns = build_known_columns(table)
     mandatory_header_skip: dict[str, set[str]] = {
         col: {
-            fmt_label
-            for fmt_label, fmt in formats.items()
+            format_name
+            for format_name, fmt in formats.items()
             if fmt.mandatory_header and fmt.header_score(col) == 0
         }
         for col in columns.keys()
     }
     remaining_tests_per_col = {
         col: {
-            fmt_label
-            for fmt_label, fmt in formats.items()
+            format_name
+            for format_name, fmt in formats.items()
             # keeping formats that have the valid python type
             if fmt.python_type == pytype
             # except if the column header doesn't fit
-            and fmt_label not in mandatory_header_skip.get(col, set())
+            and format_name not in mandatory_header_skip.get(col, set())
             # we already know pure types are valid, only formats remain
-            and fmt_label != pytype
+            and format_name != pytype
         }
         for col, pytype in columns.items()
     }
@@ -463,25 +463,25 @@ def test_parquet_cols(
                 str_batch[col].value_counts(dropna=False),
                 fill_value=0,
             )
-        for col, fmt_labels in remaining_tests_per_col.items():
+        for col, format_names in remaining_tests_per_col.items():
             # testing each column with the tests that are still competing
             # after previous batchs analyses
-            for label in fmt_labels:
+            for format_name in format_names:
                 batch_col_test = test_col_val(
                     batch[col],
-                    formats[label],
+                    formats[format_name],
                     limited_output=limited_output,
                     skipna=skipna,
                 )
-                return_table.loc[label, col] = (
+                return_table.loc[format_name, col] = (
                     # if this batch's column tested 0 then test fails overall
                     0
                     if batch_col_test == 0
                     # set the first score
                     else batch_col_test
-                    if pd.isna(return_table.loc[label, col])
+                    if pd.isna(return_table.loc[format_name, col])
                     # otherwise updating the score with weighted average
-                    else ((return_table.loc[label, col] * idx + batch_col_test) / (idx + 1))
+                    else ((return_table.loc[format_name, col] * idx + batch_col_test) / (idx + 1))
                 )
         remaining_tests_per_col = _build_remaining_tests_per_col(
             return_table, mandatory_header_skip, known_columns=columns

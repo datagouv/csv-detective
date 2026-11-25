@@ -103,18 +103,20 @@ class FormatsManager:
                 "custom_proportion should be None, int, float or dict[str, int | float], "
                 f"got {type(custom_proportions)}"
             )
-        format_labels: list[str] = [f for f in dir(formats) if "_is" in dir(getattr(formats, f))]
+        format_names: list[str] = [f for f in dir(formats) if "_is" in dir(getattr(formats, f))]
         if isinstance(custom_proportions, dict) and not all(
-            isinstance(label, str) and isinstance(prop, (float, int)) and label in format_labels
-            for label, prop in custom_proportions.items()
+            isinstance(format_name, str)
+            and isinstance(prop, (float, int))
+            and format_name in format_names
+            for format_name, prop in custom_proportions.items()
         ):
             raise ValueError(
-                "custom_proportions as a dict should contain valid format labels as keys and floats between 0 and 1 as values"
+                "custom_proportions as a dict should contain valid format names as keys and floats between 0 and 1 as values"
             )
         self.formats = {
-            label: Format(
-                name=label,
-                func=(module := getattr(formats, label))._is,
+            format_name: Format(
+                name=format_name,
+                func=(module := getattr(formats, format_name))._is,
                 _test_values=module._test_values,
                 infer=getattr(module, "_infer", None),
                 **{
@@ -134,7 +136,7 @@ class FormatsManager:
                         if isinstance(custom_proportions, (float, int))
                         else (
                             # default to the internal value if not custom
-                            custom_proportions.get(label, getattr(module, "proportion", 1))
+                            custom_proportions.get(format_name, getattr(module, "proportion", 1))
                         )
                         if isinstance(custom_proportions, dict)
                         else getattr(module, "proportion", 1)
@@ -142,7 +144,7 @@ class FormatsManager:
                 },
                 parent=getattr(module, "parent", None),
             )
-            for label in format_labels
+            for format_name in format_names
         }
 
     def get_leaf_formats(self) -> dict[str, Format]:
@@ -150,13 +152,15 @@ class FormatsManager:
 
     def get_formats_from_tags(self, tags: list[str]) -> dict[str, Format]:
         return {
-            label: fmt
-            for label, fmt in self.formats.items()
+            format_name: fmt
+            for format_name, fmt in self.formats.items()
             if all(tag in fmt.tags for tag in tags)
         }
 
     def get_formats_with_mandatory_header(self) -> dict[str, Format]:
-        return {label: fmt for label, fmt in self.formats.items() if fmt.mandatory_header}
+        return {
+            format_name: fmt for format_name, fmt in self.formats.items() if fmt.mandatory_header
+        }
 
     def get_formats_with_mandatory_label(self) -> dict[str, Format]:
         _warn_deprecated(

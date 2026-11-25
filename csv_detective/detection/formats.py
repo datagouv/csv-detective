@@ -42,28 +42,30 @@ def _infer_column_formats(
     test only says that each value looks valid on its own, not that a single format reads them all.
     """
     inferable = [
-        (label, fmt)
-        for label, fmt in formats.items()
+        (format_name, fmt)
+        for format_name, fmt in formats.items()
         if fmt.infer is not None
         # a format the user made tolerant cannot be pinned down: asking for a single format that
         # reads every value contradicts the proportion of failures they just allowed
         and fmt.proportion == 1
-        and label in scores_table_fields.index
+        and format_name in scores_table_fields.index
     ]
     inferred: dict[str, dict[str, str]] = {}
     for col in scores_table_fields.columns:
         candidates = [
-            (label, fmt) for label, fmt in inferable if scores_table_fields.loc[label, col]
+            (format_name, fmt)
+            for format_name, fmt in inferable
+            if scores_table_fields.loc[format_name, col]
         ]
         if not candidates:
             continue
         values = list(values_of(col))
-        for label, fmt in candidates:
+        for format_name, fmt in candidates:
             column_format = fmt.infer(values)
             if column_format is None:
-                scores_table_fields.loc[label, col] = 0.0
+                scores_table_fields.loc[format_name, col] = 0.0
             else:
-                inferred.setdefault(col, {})[label] = column_format
+                inferred.setdefault(col, {})[format_name] = column_format
     return inferred
 
 

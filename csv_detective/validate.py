@@ -55,12 +55,12 @@ def validate(
     for col_name, detected in previous_analysis["columns"].items():
         if detected["format"] == "string":
             continue
-        label = SUPERSEDED_FORMATS.get(detected["format"], detected["format"])
-        if label not in formats:
+        format_name = SUPERSEDED_FORMATS.get(detected["format"], detected["format"])
+        if format_name not in formats:
             if verbose:
                 logging.warning(f"> Unknown format `{detected['format']}` in analysis")
             return False, None, None
-        col_formats[col_name] = formats[label]
+        col_formats[col_name] = formats[format_name]
     try:
         if previous_analysis.get("separator"):
             # loading the table in chunks
