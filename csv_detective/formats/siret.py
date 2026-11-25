@@ -18,7 +18,7 @@ def _is(val):
     if not isinstance(val, str):
         return False
     val = val.replace(" ", "")
-    if not bool(re.match(r"^[0-9]{14}$", val)):
+    if not re.fullmatch(r"^[0-9]{14}$", val):
         return False
 
     # Vérification par clé de luhn du SIREN
@@ -43,5 +43,5 @@ def _is(val):
 
 _test_values = {
     True: ["13002526500013", "130 025 265 00013"],
-    False: ["13002526500012"],
+    False: ["13002526500012", "13002526500013\n"],
 }

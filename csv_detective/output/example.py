@@ -3,7 +3,7 @@ import random
 import string
 import uuid
 from datetime import datetime
-from typing import Any, Type
+from typing import Any, Type, cast
 
 import pandas as pd
 import requests
@@ -16,7 +16,7 @@ fake = Faker()
 
 
 def create_example_csv_file(
-    fields: dict | None = None,
+    fields: list[dict] | None = None,
     schema_path: str | None = None,
     file_length: int = 10,
     output_name: str | None = "example_file.csv",
@@ -41,7 +41,7 @@ def create_example_csv_file(
     if not (fields or schema_path):
         raise ValueError("At least fields or schema_path must be specified.")
 
-    def potential_skip(required: bool) -> bool:
+    def potential_skip(required: bool) -> bool | None:
         if ignore_required:
             return False
         if not required:
@@ -126,10 +126,10 @@ def create_example_csv_file(
 
     def _number(
         num_type: Type[int | float] = int,
-        num_range: list[float] | None = None,
+        num_range: list[int | float] | None = None,
         enum: list | None = None,
         required: bool = True,
-    ) -> int | float:
+    ) -> int | float | str:
         assert num_range is None or len(num_range) == 2
         if potential_skip(required):
             return ""
@@ -138,11 +138,11 @@ def create_example_csv_file(
         if num_range is None:
             num_range = [0, 1000]
         if num_type is int:
-            return random.randint(num_range[0], num_range[1])
+            return random.randint(cast(int, num_range[0]), cast(int, num_range[1]))
         else:
             return round(random.uniform(num_range[0], num_range[1]), 1)
 
-    def _bool(required: bool = True) -> bool:
+    def _bool(required: bool = True) -> bool | str:
         if potential_skip(required):
             return ""
         return random.randint(0, 1) == 0
@@ -210,6 +210,7 @@ def create_example_csv_file(
                 for f in schema["fields"]
             ]
 
+    fields = cast(list[dict], fields)
     for k in range(len(fields)):
         if "args" not in fields[k]:
             fields[k]["args"] = {}
@@ -238,7 +239,7 @@ def create_example_csv_file(
     # would it be better to create by column or by row (as for now)?
     output = pd.DataFrame(
         [
-            [types_to_func.get(f["type"], "str")(**f["args"]) for f in fields]
+            [cast(Any, types_to_func.get(f["type"], "str"))(**f["args"]) for f in fields]
             for _ in range(file_length)
         ],
         columns=[f["name"] for f in fields],

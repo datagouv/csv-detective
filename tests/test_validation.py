@@ -1,10 +1,12 @@
 import json
+from tempfile import NamedTemporaryFile
 from unittest.mock import MagicMock, patch
 
 import pandas as pd
 import pytest
 
-from csv_detective.explore_csv import validate_then_detect
+from csv_detective.explore_csv import routine, validate_then_detect
+from csv_detective.parsing.csv import CHUNK_SIZE
 from csv_detective.validate import validate
 
 
@@ -65,6 +67,34 @@ def test_validation(_params):
         assert col_values is None
 
 
+def test_validation_crash_in_chunks():
+    # previous analysis had "," for sep, it's now ";" but there are "," in rows
+    cols = ["col1", "col2", "col3"]
+    expected_content = f"{';'.join(cols)}\n"
+    for _ in range(100):
+        expected_content = f"a;{_};{'a,b' if _ < 50 else 'a,b,c'}\n"
+    previous_analysis = {
+        "encoding": "utf-8",
+        "separator": ",",
+        "header_row_idx": 0,
+        "header": cols,
+        "columns": {
+            col: {"python_type": "string", "format": "string", "score": 1.5} for col in cols
+        },
+    }
+    with patch("urllib.request.urlopen") as mock_urlopen:
+        mock_response = MagicMock()
+        mock_response.read.return_value = expected_content.encode("utf-8")
+        mock_response.__enter__.return_value = mock_response
+        mock_urlopen.return_value = mock_response
+        mock_urlopen.return_value = mock_response
+        is_valid, *_ = validate(
+            file_path="http://example.com/test.csv",
+            previous_analysis=previous_analysis,
+        )
+    assert is_valid is False
+
+
 @pytest.mark.parametrize(
     "_params",
     (
@@ -89,7 +119,7 @@ def test_validation(_params):
 def test_validation_with_proportions(_params):
     # testing the behaviour for a file that has 15% invalid values, but all in a single chunk
     valid_value, invalid_value, detected, should_be_valid = _params
-    url = f"http://example.com/test.csv"
+    url = "http://example.com/test.csv"
     expected_content = "col\n"
     for _ in range(60):
         # 60 rows of valid values
@@ -127,6 +157,115 @@ def test_validation_with_proportions(_params):
     assert is_valid == should_be_valid
 
 
+def test_validate_with_all_nan_column():
+    """Column entirely NaN in a chunk must not crash validate.
+
+    In some pandas versions, an empty Series with StringDtype (from read_csv(dtype=str))
+    returns "" from .sum() instead of 0, causing TypeError on comparison.
+    """
+    previous_analysis = {
+        "header": ["a", "b"],
+        "columns": {
+            "a": {"format": "int", "python_type": "int", "score": 1.0},
+            "b": {"format": "int", "python_type": "int", "score": 1.0},
+        },
+        "encoding": "utf-8",
+        "separator": "|",
+        "header_row_idx": 0,
+        "heading_columns": 0,
+        "trailing_columns": 0,
+        "categorical": [],
+        "columns_fields": {},
+        "columns_labels": {},
+        "formats": {},
+    }
+    is_valid, _, _ = validate(
+        pd.io.common.StringIO("a|b\n1|\n2|\n"),
+        previous_analysis,
+    )
+    assert is_valid
+
+
+def _date_analysis(date_format: str | None, fmt: str = "date") -> dict:
+    columns: dict = {"date": {"format": fmt, "python_type": "date", "score": 1.0}}
+    if date_format is not None:
+        columns["date"]["date_format"] = date_format
+    return {
+        "header": ["date"],
+        "columns": columns,
+        "encoding": "utf-8",
+        "separator": ";",
+        "header_row_idx": 0,
+        "heading_columns": 0,
+        "trailing_columns": 0,
+        "categorical": [],
+        "columns_fields": {},
+        "columns_labels": {},
+        "formats": {},
+    }
+
+
+@pytest.mark.parametrize(
+    "date_format, values, should_be_valid",
+    (
+        # the file is read the way the analysis says it is
+        ("%d/%m/%Y", "07/03/2024\n25/12/2024\n", True),
+        # 12/25/2024 cannot be read day-first, so the file no longer matches its analysis
+        ("%d/%m/%Y", "07/03/2024\n12/25/2024\n", False),
+        # the custom formats go through the same path
+        ("csvd:%d %b %Y", "15 jan 1985\n13 février 1996\n", True),
+        ("csvd:%d %b %Y", "15 jan 1985\n1996-02-13\n", False),
+        # an optional midnight validates a column that mixes both spellings, and nothing else
+        ("csvd:%Y-%m-%d[ 00:00:00]", "1869-01-14\n1900-02-24 00:00:00\n", True),
+        ("csvd:%Y-%m-%d[ 00:00:00]", "1869-01-14\n1900-02-24 10:20:10\n", False),
+        ("%Y-%m-%d 00:00:00", "1900-02-24 00:00:00\n", True),
+        ("%Y-%m-%d 00:00:00", "1900-02-24 00:00:00\n1869-01-14\n", False),
+        # the 12-hour clock too, whose marker strptime only reads in the C locale
+        ("csvd:%d/%m/%Y %I:%M:%S %p", "06/12/2022 11:00:15 PM\n07/12/2022 09:14:34 AM\n", True),
+        ("csvd:%d/%m/%Y %I:%M:%S %p", "06/12/2022 11:00:15 PM\n07/12/2022 13:14:34 PM\n", False),
+        # an analysis with no format at all still validates against the generic test
+        (None, "07/03/2024\n15 jan 1985\n", True),
+    ),
+)
+def test_validate_against_the_pinned_date_format(date_format, values, should_be_valid):
+    is_valid, _, _ = validate(
+        pd.io.common.StringIO("date\n" + values),
+        _date_analysis(date_format),
+    )
+    assert is_valid is should_be_valid
+
+
+def test_validate_rejects_an_analysis_made_with_an_unknown_format():
+    # an analysis naming a format nothing supersedes has to be redone, not crash on a KeyError
+    is_valid, analysis, col_values = validate(
+        pd.io.common.StringIO("date\n13 février 1996\n"),
+        _date_analysis(None, fmt="a_format_no_version_ever_had"),
+    )
+    assert is_valid is False
+    assert analysis is None and col_values is None
+
+
+def test_a_superseded_format_keeps_validating_its_stored_analyses():
+    # date_fr is gone but `date` reads the same values, so an analysis naming it stays valid
+    # rather than forcing a full re-detection of the file
+    is_valid, analysis, _ = validate(
+        pd.io.common.StringIO("date\n13 février 1996\n15 decembre 2024\n"),
+        _date_analysis(None, fmt="date_fr"),
+    )
+    assert is_valid is True
+    # returned as it was recorded: the column keeps the type it was ingested with
+    assert analysis["columns"]["date"]["format"] == "date_fr"
+
+
+def test_a_superseded_format_still_rejects_values_it_no_longer_matches():
+    is_valid, analysis, col_values = validate(
+        pd.io.common.StringIO("date\n13 février 1996\nnot a date at all\n"),
+        _date_analysis(None, fmt="date_fr"),
+    )
+    assert is_valid is False
+    assert analysis is None and col_values is None
+
+
 @pytest.mark.parametrize(
     "modif_previous_analysis",
     (
@@ -161,3 +300,40 @@ def test_validate_then_detect(modif_previous_analysis):
     # checking that if not valid, the analysis has managed to retrieve the right values
     for dotkey in modif_previous_analysis:
         assert get_nested_value(analysis, dotkey.split(".")) == valid_values[dotkey]
+
+
+def test_parquet_file_validation():
+    pq_path = "tests/data/file.parquet"
+    analysis = routine(
+        file_path=pq_path,
+        num_rows=-1,
+        output_profile=True,
+        save_results=False,
+    )
+    is_valid, _, _ = validate(
+        pq_path,
+        analysis,
+    )
+    assert is_valid
+
+
+@pytest.mark.parametrize("nb_rows", (CHUNK_SIZE // 10, CHUNK_SIZE + 1))
+def test_validation_with_custom_na(nb_rows):
+    new_na = "Non spécifié"
+    expected_content = "a,b\n" + "99,10.0\n" * nb_rows + f"{new_na},{new_na}\n"
+    with NamedTemporaryFile() as tmp:
+        tmp.write(expected_content.encode("utf-8"))
+        tmp.flush()
+        analysis = routine(
+            file_path=tmp.name,
+            num_rows=-1,
+            output_profile=True,
+            save_results=False,
+            na_values=[new_na],
+        )
+        is_valid, _, _ = validate(
+            tmp.name,
+            analysis,
+            na_values=[new_na],
+        )
+    assert is_valid

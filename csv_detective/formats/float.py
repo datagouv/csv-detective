@@ -22,7 +22,7 @@ def _is(val) -> bool:
             or ("." not in val and "," not in val and len(val) >= 20)
         ):
             return False
-        elif any([k in val for k in ["+", "e", "E"]]) and not re.match(
+        elif any(k in val for k in ["+", "e", "E"]) and not re.match(
             scientific_notation_pattern, val
         ):
             return False

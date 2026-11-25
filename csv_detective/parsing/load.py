@@ -1,7 +1,10 @@
 import codecs
+import logging
 from io import BytesIO, StringIO
+from typing import Any, BinaryIO
 
 import pandas as pd
+import pyarrow.parquet as pq
 import requests
 
 from csv_detective.detection.columns import detect_heading_columns, detect_trailing_columns
@@ -19,7 +22,20 @@ from csv_detective.parsing.excel import (
     XLS_LIKE_EXT,
     parse_excel,
 )
+from csv_detective.parsing.parquet import parse_parquet
 from csv_detective.utils import is_url
+
+
+def _decode_binary(binary_file: BinaryIO, encoding: str) -> StringIO:
+    decoder = codecs.getincrementaldecoder(encoding)()
+    text_file = StringIO()
+    while True:
+        chunk = binary_file.read(1024**2)
+        if not chunk:
+            break
+        text_file.write(decoder.decode(chunk))
+    text_file.seek(0)
+    return text_file
 
 
 def load_file(
@@ -30,63 +46,73 @@ def load_file(
     verbose: bool = False,
     engine: str | None = None,
     sheet_name: str | int | None = None,
-) -> tuple[pd.DataFrame, dict]:
+    na_values: list[str] | None = None,
+) -> tuple[pd.DataFrame | pq.ParquetFile, dict]:
     file_name = file_path.split("/")[-1]
     if ("." not in file_name or not file_name.endswith("csv")) and engine is None and sep is None:
         # file has no extension and we don't have insights from arguments, we'll investigate how to read it
         engine = detect_engine(file_path, verbose=verbose)
 
-    if engine in EXCEL_ENGINES or any([file_path.endswith(k) for k in XLS_LIKE_EXT]):
+    if engine in EXCEL_ENGINES or any(file_path.endswith(k) for k in XLS_LIKE_EXT):
         table, total_lines, nb_duplicates, sheet_name, engine, header_row_idx = parse_excel(
             file_path=file_path,
             num_rows=num_rows,
             engine=engine,
             sheet_name=sheet_name,
+            na_values=na_values,
             verbose=verbose,
         )
         if table.empty:
             raise ValueError("Table seems to be empty")
-        analysis = {
+        analysis: dict[str, Any] = {
             "engine": engine,
             "sheet_name": sheet_name,
         }
+    elif engine == "parquet" or file_path.endswith(".parquet"):
+        if verbose:
+            if num_rows != -1:
+                logging.warning("Ignoring `num_rows` argument, parquet files are read entirely")
+            if na_values:
+                logging.warning("Ignoring `na_values` argument for parquet files")
+        return parse_parquet(file_path, verbose=verbose)
     else:
         # fetching or reading file as binary
         if is_url(file_path):
             r = requests.get(file_path, allow_redirects=True)
             r.raise_for_status()
-            binary_file = BytesIO(r.content)
+            binary_context = BytesIO(r.content)
         else:
-            binary_file = open(file_path, "rb")
-        # handling compression
-        if engine in COMPRESSION_ENGINES:
-            binary_file: BytesIO = unzip(binary_file=binary_file, engine=engine)
-        # detecting encoding if not specified
-        if encoding is None:
-            encoding: str = detect_encoding(binary_file, verbose=verbose)
-            binary_file.seek(0)
-        # decoding and reading file
-        if is_url(file_path) or engine in COMPRESSION_ENGINES:
-            decoder = codecs.getincrementaldecoder(encoding)()
-            str_file = StringIO()
-            while True:
-                chunk = binary_file.read(1024**2)
-                if not chunk:
-                    break
-                str_file.write(decoder.decode(chunk))
-            del binary_file
-            str_file.seek(0)
-        else:
-            str_file = open(file_path, "r", encoding=encoding)
-        if sep is None:
-            sep = detect_separator(str_file, verbose=verbose)
-        header_row_idx = detect_header_position(str_file, verbose=verbose)
-        heading_columns = detect_heading_columns(str_file, sep, verbose=verbose)
-        trailing_columns = detect_trailing_columns(str_file, sep, heading_columns, verbose=verbose)
-        table, total_lines, nb_duplicates = parse_csv(
-            str_file, encoding, sep, num_rows, header_row_idx, verbose=verbose
-        )
-        del str_file
+            binary_context = open(file_path, "rb")
+        with binary_context as binary_file:
+            # handling compression
+            if engine in COMPRESSION_ENGINES:
+                binary_file = unzip(binary_file=binary_file, engine=engine)
+            # detecting encoding if not specified
+            if encoding is None:
+                encoding = detect_encoding(binary_file, verbose=verbose)
+                binary_file.seek(0)
+            # decoding and reading file
+            if is_url(file_path) or engine in COMPRESSION_ENGINES:
+                text_context = _decode_binary(binary_file, encoding)
+            else:
+                text_context = open(file_path, "r", encoding=encoding)
+            with text_context as str_file:
+                if sep is None:
+                    sep = detect_separator(str_file, verbose=verbose)
+                header_row_idx = detect_header_position(str_file, verbose=verbose)
+                heading_columns = detect_heading_columns(str_file, sep, verbose=verbose)
+                trailing_columns = detect_trailing_columns(
+                    str_file, sep, heading_columns, verbose=verbose
+                )
+                table, total_lines, nb_duplicates = parse_csv(
+                    str_file,
+                    encoding,
+                    sep,
+                    num_rows,
+                    header_row_idx,
+                    na_values=na_values,
+                    verbose=verbose,
+                )
         if table.empty:
             raise ValueError("Table seems to be empty")
         analysis = {
@@ -99,10 +125,12 @@ def load_file(
             analysis["compression"] = engine
     if any(not isinstance(col, str) or col.startswith("Unnamed:") for col in table.columns):
         raise ValueError("Could not accurately detect the file's columns")
-    analysis |= {
-        "header_row_idx": header_row_idx,
-        "header": list(table.columns),
-    }
+    analysis.update(
+        {
+            "header_row_idx": header_row_idx,
+            "header": list(table.columns),
+        }
+    )
     if total_lines is not None:
         analysis["total_lines"] = total_lines
     if nb_duplicates is not None:

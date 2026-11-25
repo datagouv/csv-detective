@@ -30,6 +30,7 @@ def routine(
     verbose: bool = False,
     sheet_name: str | int | None = None,
     custom_proportions: float | int | dict[str, float | int] | None = None,
+    na_values: list[str] | None = None,
 ) -> dict | tuple[dict, Iterator[pd.DataFrame]]:
     """
     Returns a dict with information about the table and possible column contents, and if requested the DataFrame with columns cast according to analysis.
@@ -48,6 +49,7 @@ def routine(
         sheet_name: if reading multi-sheet file (xls-like), which sheet to consider
         skipna: whether to keep NaN (empty cells) for tests
         custom_proportions: allows to set a custom level of tolerance for all or specific formats
+        na_values: list of strings to consider NaN when loading the file, on top of pandas STR_NA_VALUES
 
     Returns:
         dict: a dict with information about the csv and possible formats for each column
@@ -71,6 +73,7 @@ def routine(
         sep=sep,
         verbose=verbose,
         sheet_name=sheet_name,
+        na_values=na_values,
     )
 
     analysis, _col_values = detect_formats(
@@ -81,6 +84,7 @@ def routine(
         limited_output=limited_output,
         skipna=skipna,
         custom_proportions=custom_proportions,
+        na_values=na_values,
         verbose=verbose,
     )
 
@@ -96,6 +100,7 @@ def routine(
             output_schema=output_schema,
             output_df=output_df,
             cast_json=cast_json,
+            na_values=na_values,
             verbose=verbose,
             _col_values=_col_values,
         )
@@ -120,6 +125,7 @@ def validate_then_detect(
     output_df: bool = False,
     cast_json: bool = True,
     custom_proportions: float | int | dict[str, float | int] | None = None,
+    na_values: list[str] | None = None,
     verbose: bool = False,
 ) -> dict | tuple[dict, Iterator[pd.DataFrame]]:
     """
@@ -141,6 +147,7 @@ def validate_then_detect(
         output_df: whether or not to return the loaded DataFrame along with the analysis report
         cast_json: whether or not to cast json columns into objects (otherwise they are returned as strings)
         custom_proportions: allows to set a custom level of tolerance for all or specific formats
+        na_values: list of strings to consider NaN when loading the file, on top of pandas STR_NA_VALUES
         verbose: whether the code displays the steps it's going through
     """
     if verbose:
@@ -154,6 +161,7 @@ def validate_then_detect(
         verbose=verbose,
         custom_proportions=custom_proportions,
         skipna=skipna,
+        na_values=na_values,
     )
     if not is_valid:
         # if loading failed in validate, we load it from scratch and initiate an analysis
@@ -161,6 +169,7 @@ def validate_then_detect(
             file_path=file_path,
             num_rows=num_rows,
             verbose=verbose,
+            na_values=na_values,
         )
         analysis, col_values = detect_formats(
             table=table,
@@ -170,6 +179,7 @@ def validate_then_detect(
             limited_output=limited_output,
             skipna=skipna,
             custom_proportions=custom_proportions,
+            na_values=na_values,
             verbose=verbose,
         )
     else:
@@ -183,6 +193,7 @@ def validate_then_detect(
             encoding=analysis.get("encoding"),
             engine=analysis.get("engine"),
             sheet_name=analysis.get("sheet_name"),
+            na_values=na_values,
         )
     try:
         return generate_output(
@@ -196,6 +207,7 @@ def validate_then_detect(
             output_schema=output_schema,
             output_df=output_df,
             cast_json=cast_json,
+            na_values=na_values,
             verbose=verbose,
             _col_values=col_values,
         )

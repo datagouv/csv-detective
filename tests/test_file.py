@@ -1,3 +1,6 @@
+import json
+from datetime import date, datetime
+from tempfile import NamedTemporaryFile
 from unittest.mock import MagicMock, patch
 
 import pandas as pd
@@ -8,6 +11,7 @@ from csv_detective import routine
 from csv_detective.output.profile import create_profile
 from csv_detective.parsing.csv import CHUNK_SIZE
 from csv_detective.utils import sanitize_for_json
+from csv_detective.validate import validate
 
 
 @pytest.fixture
@@ -225,7 +229,7 @@ def test_exception_malformed_columns(mocked_responses):
     """
     A ValueError should be raised if any column is Unnamed
     """
-    url = f"http://example.com/bad_cols.csv"
+    url = "http://example.com/bad_cols.csv"
     expected_content = b"col1,col2,\n1,2,\n3,4,"
     mocked_responses.get(
         url,
@@ -368,6 +372,19 @@ def test_nan_values(expected_type):
     assert output["columns"]["partly_empty"]["python_type"] == expected_type
 
 
+@pytest.mark.parametrize("skipna", (True, False))
+def test_empty_column_is_a_string(tmp_path, skipna):
+    file_path = tmp_path / "data.csv"
+    file_path.write_text("id,only_nan\n" + "".join(f"{k},\n" for k in range(5)))
+    output = routine(
+        file_path=str(file_path),
+        num_rows=-1,
+        save_results=False,
+        skipna=skipna,
+    )
+    assert output["columns"]["only_nan"]["format"] == "string"
+
+
 def test_output_df():
     output, df_chunks = routine(
         file_path="tests/data/b_test_file.csv",
@@ -436,6 +453,88 @@ def test_almost_uniform_column(mocked_responses):
             save_results=False,
         )
     assert analysis["columns"][col_name]["format"] == "int"
+
+
+@pytest.mark.parametrize("nb_rows", (CHUNK_SIZE // 10, CHUNK_SIZE + 1))
+@pytest.mark.parametrize(
+    "last_value, expected_format, expected_date_format, expected_first, expected_last",
+    (
+        # a time part that is nothing but midnight is how a spreadsheet prints a date cell
+        ("2015-04-08 00:00:00", "date", "%Y-%m-%d 00:00:00", date(2015, 4, 7), date(2015, 4, 8)),
+        # a source that cannot represent every date of its column falls back on plain text for
+        # those, so both spellings meet and only the optional part reads them all
+        (
+            "1869-01-14",
+            "date",
+            "csvd:%Y-%m-%d[ 00:00:00]",
+            date(2015, 4, 7),
+            date(1869, 1, 14),
+        ),
+        # but one genuine hour, anywhere in the column, and the whole column is a datetime
+        (
+            "2015-04-08 10:20:10",
+            "datetime_naive",
+            "%Y-%m-%d %H:%M:%S",
+            datetime(2015, 4, 7, 0, 0, 0),
+            datetime(2015, 4, 8, 10, 20, 10),
+        ),
+    ),
+)
+def test_a_column_of_midnights_is_a_date(
+    nb_rows,
+    last_value,
+    expected_format,
+    expected_date_format,
+    expected_first,
+    expected_last,
+):
+    # the odd value out is the very last row, so a file read in chunks only meets it at the end
+    col_name = "midnights"
+    content = f"{col_name},second_col\n" + "2015-04-07 00:00:00,1\n" * nb_rows + f"{last_value},1\n"
+    with NamedTemporaryFile(suffix=".csv") as tmp:
+        tmp.write(content.encode("utf-8"))
+        tmp.flush()
+        analysis, df_chunks = routine(
+            file_path=tmp.name,
+            num_rows=-1,
+            output_profile=False,
+            save_results=False,
+            output_df=True,
+        )
+        # the chunks are read lazily, so they have to be consumed while the file is still there
+        df = pd.concat(df_chunks, ignore_index=True)
+    detection = analysis["columns"][col_name]
+    assert detection["format"] == expected_format
+    assert detection["date_format"] == expected_date_format
+    # a format is only worth what the cast makes of it: both spellings have to come out as the
+    # value they name, the odd last row included
+    assert df[col_name][0] == expected_first
+    assert df[col_name].iloc[-1] == expected_last
+
+
+def test_every_chunk_is_analysed(tmp_path):
+    chunk_size = 10
+    # chunks after the first one are analysed by batches of 10: this spans two full batches
+    # and a partial one, and the odd value sits in the chunk that comes right after a full batch
+    nb_rows = 25 * chunk_size + 3
+    odd_row = 11 * chunk_size
+    file_path = tmp_path / "data.csv"
+    file_path.write_text(
+        "id,value\n"
+        + "".join(f"{k},{'not_an_int' if k == odd_row else k}\n" for k in range(nb_rows))
+    )
+    with (
+        patch("csv_detective.parsing.csv.CHUNK_SIZE", chunk_size),
+        patch("csv_detective.parsing.columns.CHUNK_SIZE", chunk_size),
+    ):
+        analysis = routine(
+            file_path=str(file_path),
+            num_rows=-1,
+            output_profile=False,
+            save_results=False,
+        )
+    assert analysis["total_lines"] == nb_rows
+    assert analysis["columns"]["value"]["format"] == "string"
 
 
 @pytest.mark.parametrize("nb_rows", (CHUNK_SIZE // 10, CHUNK_SIZE + 1))
@@ -530,7 +629,7 @@ def test_multiple_geo_columns(mocked_responses):
     ),
 )
 def test_diff_epci_siren(col_name, value, expected, mocked_responses):
-    url = f"http://example.com/file.csv"
+    url = "http://example.com/file.csv"
     expected_content = f"{col_name},ratio\n" + f"{value},10.0\n" * 50
     mocked_responses.get(
         url,
@@ -563,3 +662,268 @@ def test_diff_epci_siren(col_name, value, expected, mocked_responses):
 )
 def test_sanitize_for_json(to_export, expected):
     assert sanitize_for_json(to_export) == expected
+
+
+@pytest.mark.parametrize("nb_rows", (CHUNK_SIZE // 10, CHUNK_SIZE + 1))
+def test_unique_values_output(nb_rows, mocked_responses):
+    expected_content = "cat;not_cat;json_cat;json_not_cat;too_complex\n"
+    for k in range(nb_rows):
+        cat = (
+            "a"
+            if k < nb_rows // 4
+            else "b"
+            if k < nb_rows // 2
+            else "c"
+            if k < nb_rows // 4 * 3
+            else "d"
+        )
+        json_cat = (
+            [1]
+            if k < nb_rows // 4
+            else [1, 2]
+            if k < nb_rows // 2
+            else [3, 2, 1]
+            if k < nb_rows // 4 * 3
+            else []
+        )
+        json_not_cat = [k, k + 1] if k % 2 == 0 else [k] if k % 3 == 0 else []
+        too_complex = json.dumps([{"a": 1}])
+        expected_content += f"{cat};{k};{json_cat};{json_not_cat};{too_complex}\n"
+    mocked_responses.get(
+        "http://example.com/test.csv",
+        body=expected_content,
+        status=200,
+    )
+    with patch("urllib.request.urlopen") as mock_urlopen:
+        mock_response = MagicMock()
+        mock_response.read.return_value = expected_content.encode("utf-8")
+        mock_response.__enter__.return_value = mock_response
+        mock_urlopen.return_value = mock_response
+        analysis = routine(
+            file_path="http://example.com/test.csv",
+            num_rows=-1,
+            output_profile=False,
+            save_results=False,
+        )
+    assert analysis["columns"]["json_cat"]["python_type"] == "json"
+    assert analysis["columns"]["json_not_cat"]["python_type"] == "json"
+    assert isinstance(analysis.get("unique_values"), dict)
+    # too many values => not in unique_values
+    assert "not_cat" not in analysis["unique_values"]
+    assert "json_not_cat" not in analysis["unique_values"]
+    # too complex data in column => not in unique_values
+    assert "too_complex" not in analysis["unique_values"]
+    # few enough values => testing output
+    assert analysis["unique_values"]["cat"] == ["a", "b", "c", "d"]
+    assert analysis["unique_values"]["json_cat"] == [1, 2, 3]
+
+
+def test_parquet_keeps_its_declared_types(tmp_path):
+    # parquet types its columns itself, so the column-wide date inference must not run on it:
+    # the values it would see are stringified (a null reads "NaT"), and no format fits them
+    pq_path = tmp_path / "dates.parquet"
+    pd.DataFrame(
+        {
+            "when": pd.to_datetime(["2024-03-07", "2024-12-25", None] * 10),
+            "label": ["a"] * 30,
+        }
+    ).to_parquet(pq_path)
+    analysis = routine(file_path=str(pq_path), num_rows=-1, save_results=False)
+    assert analysis["columns"]["when"]["python_type"] == "datetime"
+
+
+def test_parquet_profile_covers_every_batch(tmp_path):
+    # the formats are settled on the first batch, the profile still needs all the others
+    pq_path = tmp_path / "ids.parquet"
+    pd.DataFrame({"id": range(250)}).to_parquet(pq_path)
+    with patch("csv_detective.parsing.columns.CHUNK_SIZE", 10):
+        analysis = routine(
+            file_path=str(pq_path), num_rows=-1, output_profile=True, save_results=False
+        )
+    assert analysis["total_lines"] == 250
+    assert analysis["profile"]["id"]["nb_distinct"] == 250
+    assert analysis["profile"]["id"]["max"] == 249
+
+
+@pytest.mark.parametrize(
+    "nb_rows",
+    (CHUNK_SIZE // 10, CHUNK_SIZE + 1),
+)
+def test_unique_values_json_with_missing_values(nb_rows):
+    """JSON-format columns with empty cells (NaN) should not crash and be in unique_values"""
+    json_values = ['["a"]', '["b"]', '["c"]', ""]
+    csv_content = "json_col;id\n"
+    for k in range(nb_rows):
+        csv_content += f"{json_values[k % len(json_values)]};{k}\n"
+    with NamedTemporaryFile(
+        "w",
+        suffix=".csv",
+        delete=False,
+    ) as f:
+        f.write(csv_content)
+        tmp_path = f.name
+    try:
+        analysis = routine(
+            file_path=tmp_path,
+            num_rows=-1,
+            output_profile=False,
+            save_results=False,
+        )
+    finally:
+        import os
+
+        os.unlink(tmp_path)
+    assert analysis["columns"]["json_col"]["python_type"] == "json"
+    assert isinstance(analysis.get("unique_values"), dict)
+    assert analysis["unique_values"]["json_col"] == ["a", "b", "c"]
+
+
+@pytest.mark.parametrize(
+    "nb_rows",
+    (CHUNK_SIZE // 10, CHUNK_SIZE + 1),
+)
+def test_validate_json_column_with_missing_values(nb_rows):
+    """JSON-format column with empty cells (NaN) must not crash validate."""
+    json_values = ['["a"]', '["b"]', '["c"]', ""]
+    csv_content = "json_col;id\n"
+    for k in range(nb_rows):
+        csv_content += f"{json_values[k % len(json_values)]};{k}\n"
+    with NamedTemporaryFile(
+        "w",
+        suffix=".csv",
+        delete=False,
+    ) as f:
+        f.write(csv_content)
+        tmp_path = f.name
+    try:
+        analysis = routine(
+            file_path=tmp_path,
+            num_rows=-1,
+            output_profile=False,
+            save_results=False,
+        )
+        is_valid, _, _ = validate(tmp_path, analysis)
+    finally:
+        import os
+
+        os.unlink(tmp_path)
+    assert is_valid
+    assert analysis["unique_values"]["json_col"] == ["a", "b", "c"]
+
+
+def test_parquet_file_analysis():
+    pq_path = "tests/data/file.parquet"
+    analysis, chunks = routine(
+        file_path=pq_path,
+        num_rows=-1,
+        output_profile=True,
+        save_results=False,
+        output_df=True,
+    )
+    expected = {
+        "total_lines": 1000,
+        "engine": "parquet",
+        "header": [
+            "inseecommune",
+            "nomcommune",
+            "nomreseau",
+            "debutalim",
+            "annee",
+            "lat",
+            "categories",
+            "score",
+            "is_true",
+            "timestamp",
+        ],
+        "columns": {
+            "inseecommune": {
+                "format": "code_commune",
+                "python_type": "string",
+            },
+            "nomcommune": {
+                "format": "commune",
+                "python_type": "string",
+            },
+            "nomreseau": {
+                "format": "string",
+                "python_type": "string",
+            },
+            "debutalim": {
+                "format": "date",
+                "python_type": "date",
+            },
+            "annee": {
+                "format": "year",
+                "python_type": "int",
+            },
+            "lat": {
+                "format": "latitude_wgs",
+                "python_type": "float",
+            },
+            "categories": {
+                "format": "json",
+                "python_type": "json",
+            },
+            "score": {
+                "format": "float",
+                "python_type": "float",
+            },
+            "is_true": {
+                "format": "bool",
+                "python_type": "bool",
+            },
+            "timestamp": {
+                "format": "datetime_naive",
+                "python_type": "datetime",
+            },
+        },
+    }
+    for field in expected:
+        if field == "columns":
+            assert all(
+                analysis["columns"][col][key] == value
+                for col, d in expected["columns"].items()
+                for key, value in d.items()
+            )
+        else:
+            assert analysis[field] == expected[field]
+    df = next(chunks)
+    assert isinstance(df, pd.DataFrame)
+    assert len(df) == expected["total_lines"]
+
+
+@pytest.mark.parametrize(
+    "custom_na, nb_rows",
+    (
+        (None, CHUNK_SIZE // 10),
+        (["Non spécifié"], CHUNK_SIZE // 10),
+        (None, CHUNK_SIZE + 1),
+        (["Non spécifié"], CHUNK_SIZE + 1),
+    ),
+)
+def test_custom_na_values(custom_na, nb_rows):
+    expected_content = "a,b\n" + "99,10.0\n" * nb_rows + "Non spécifié,Non spécifié\n"
+    with NamedTemporaryFile() as tmp:
+        tmp.write(expected_content.encode("utf-8"))
+        tmp.flush()
+        analysis, df_chunks = routine(
+            file_path=tmp.name,
+            num_rows=-1,
+            output_profile=True,
+            save_results=False,
+            output_df=True,
+            na_values=custom_na,
+        )
+        df = pd.concat(df_chunks, ignore_index=True)
+    if custom_na:
+        assert analysis["columns"]["a"]["format"] == "int"
+        assert analysis["columns"]["b"]["format"] == "float"
+        assert analysis["profile"]["a"]["nb_missing_values"] == 1
+        assert analysis["profile"]["b"]["nb_missing_values"] == 1
+        assert len(df.loc[df["a"].isna()]) == 1
+    else:
+        assert analysis["columns"]["a"]["format"] == "string"
+        assert analysis["columns"]["b"]["format"] == "string"
+        assert analysis["profile"]["a"]["nb_missing_values"] == 0
+        assert analysis["profile"]["b"]["nb_missing_values"] == 0
+        assert len(df.loc[df["a"].isna()]) == 0

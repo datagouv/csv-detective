@@ -32,7 +32,6 @@ def get_description(format: str) -> str:
         "code_rna": "Le code RNA de l'association",
         "code_waldec": "Le code WALDEC de l'association",
         "csp_insee": "La catégorie socio-professionnel INSEE",
-        "date_fr": "Data au format français",
         "sexe": "Le sexe",
         "siren": "Le numéro SIREN à 9 chiffres de l'entreprise (unité légale)",
         "siret": "Le numéro SIRET à 14 chiffres de l'établissement d'une entreprise",
@@ -44,7 +43,7 @@ def get_description(format: str) -> str:
         "longitude_wgs": "La longitude au format WGS",
         "latlon_wgs": "Les coordonnées XY (latitude et longitude)",
         "lonlat_wgs": "Les coordonnées XY (longitude et latitude)",
-        "booleen": "Booléen",
+        "bool": "Booléen",
         "email": "L'adresse couriel (email)",
         "float": "Nombre flottant (à virgule)",
         "int": "Nombre entier",
@@ -62,7 +61,7 @@ def get_description(format: str) -> str:
     return format_to_desc.get(format, "")
 
 
-def get_pattern(format: str) -> str:
+def get_pattern(format: str) -> dict:
     """Returns the pattern for a particular format"""
     format_to_pattern = {
         "siren": r"^\d{9}$",
@@ -95,7 +94,7 @@ def get_pattern(format: str) -> str:
 def get_validata_type(format: str) -> str:
     """Returns the validata type for a given format"""
     metier_to_validata_type = {
-        "booleen": "boolean",
+        "bool": "boolean",
         "int": "integer",
         "float": "number",
         "string": "string",
@@ -119,10 +118,10 @@ def get_validata_type(format: str) -> str:
     return metier_to_validata_type.get(format, "string")
 
 
-def get_example(format: str) -> str:
+def get_example(format: str) -> str | int | float:
     """Returns the example for a given format"""
     format_to_example = {
-        "booleen": "true",
+        "bool": "true",
         "int": 42,
         "float": 42.42,
         "string": "Lorem ipsum dolor sit amet",
@@ -139,7 +138,6 @@ def get_example(format: str) -> str:
         "commune": "Joyeux",
         "csp_insee": "anciens agriculteurs exploitants",
         "date": "2020-01-01",
-        "date_fr": "12 janvier 2020",
         "datetime_aware": "2020-01-01T00:00:00+02:00",
         "datetime_naive": "2020-01-01T00:00:00",
         "datetime_rfc822": "Tue, 1 Jan 2020 00:00:00 +0000",

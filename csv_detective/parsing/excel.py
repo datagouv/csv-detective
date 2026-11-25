@@ -25,6 +25,7 @@ def parse_excel(
     engine: str | None = None,
     sheet_name: str | int | None = None,
     random_state: int = 42,
+    na_values: list[str] | None = None,
     verbose: bool = False,
 ) -> tuple[pd.DataFrame, int, int, str, str, int]:
     """ "Excel-like parsing is really slow, could be a good improvement for future development"""
@@ -33,7 +34,7 @@ def parse_excel(
     no_sheet_specified = sheet_name is None
 
     if engine in ["openpyxl", "xlrd"] or any(
-        [file_path.endswith(k) for k in NEW_EXCEL_EXT + OLD_EXCEL_EXT]
+        file_path.endswith(k) for k in NEW_EXCEL_EXT + OLD_EXCEL_EXT
     ):
         remote_content = None
         if is_url(file_path):
@@ -41,7 +42,7 @@ def parse_excel(
             r.raise_for_status()
             remote_content = BytesIO(r.content)
         if not engine:
-            if any([file_path.endswith(k) for k in NEW_EXCEL_EXT]):
+            if any(file_path.endswith(k) for k in NEW_EXCEL_EXT):
                 engine = "openpyxl"
             else:
                 engine = "xlrd"
@@ -75,7 +76,7 @@ def parse_excel(
                     else:
                         wb = xlrd.open_workbook(file_path)
                     sizes = {s.name: s.nrows * s.ncols for s in wb.sheets()}
-                sheet_name = max(sizes, key=sizes.get)
+                sheet_name = max(sizes, key=lambda k: sizes[k])
             except xlrd.biffh.XLRDError:
                 # sometimes a xls file is recognized as ods
                 if verbose:
@@ -85,7 +86,7 @@ def parse_excel(
                     )
                 engine = "odf"
 
-    if engine == "odf" or any([file_path.endswith(k) for k in OPEN_OFFICE_EXT]):
+    if engine == "odf" or any(file_path.endswith(k) for k in OPEN_OFFICE_EXT):
         # for ODS files, no way to get sheets' sizes without
         # loading the file one way or another (pandas or pure odfpy)
         # so all in one
@@ -101,9 +102,10 @@ def parse_excel(
                 engine="odf",
                 sheet_name=None,
                 dtype=str,
+                na_values=na_values,
             )
             sizes = {sheet_name: table.size for sheet_name, table in tables.items()}
-            sheet_name = max(sizes, key=sizes.get)
+            sheet_name = max(sizes, key=lambda k: sizes[k])
             if verbose:
                 display_logs_depending_process_time(
                     f'Going forwards with sheet "{sheet_name}"',
@@ -121,6 +123,7 @@ def parse_excel(
                 engine="odf",
                 sheet_name=sheet_name,
                 dtype=str,
+                na_values=na_values,
             )
         table, header_row_idx = remove_empty_first_rows(table)
         total_lines = len(table)
@@ -152,6 +155,7 @@ def parse_excel(
         engine=engine,
         sheet_name=sheet_name,
         dtype=str,
+        na_values=na_values,
     )
     table, header_row_idx = remove_empty_first_rows(table)
     total_lines = len(table)

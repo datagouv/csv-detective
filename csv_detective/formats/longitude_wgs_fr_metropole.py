@@ -1,13 +1,14 @@
 from csv_detective.formats.longitude_wgs import _is as is_longitude, labels  # noqa
 
 proportion = 1
+parent = "longitude_wgs"
 description = "Longitude within the French metropole bounds in the WGS format"
 tags = ["fr", "geo"]
 mandatory_label = True
 python_type = "float"
 
 
-def _is(val) -> bool:
+def _is(val: str | float) -> bool:
     try:
         return is_longitude(val) and -5.5 <= float(val) <= 9.8
     except Exception:

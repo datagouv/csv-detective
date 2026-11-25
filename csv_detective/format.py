@@ -1,4 +1,4 @@
-from typing import Any, Callable
+from typing import Any, Callable, Iterable
 
 from csv_detective.parsing.text import header_score
 
@@ -10,11 +10,13 @@ class Format:
         description: str,
         func: Callable[[Any], bool],
         _test_values: dict[bool, list[str]],
+        infer: Callable[[Iterable[Any]], str | None] | None = None,
         labels: dict[str, float] = {},
         proportion: float | int = 1,
         tags: list[str] = [],
         mandatory_label: bool = False,
         python_type: str = "string",
+        parent: str | None = None,
     ) -> None:
         """
         Instanciates a Format object.
@@ -24,21 +26,28 @@ class Format:
             descrption: a short description of the format.
             func: the value test for the format (returns whether a string is valid).
             _test_values: lists of valid and invalid values, used in the tests
+            infer: for formats whose detection needs the whole column, returns the single way to
+                read every value of it, or None if there is none (the column is then not of this
+                format). Only used when proportion is 1: a format the user made tolerant cannot
+                be pinned down to a single way of reading every value.
             labels: the dict of hint headers and their credibilty for the header score (NB: credibility is relative witin a single format, should be used to rank the valid labels)
             proportion: the tolerance (between 0 and 1) to say a column is valid for a format. (1 => 100% of the column has to pass the func check for the column to be considered valid)
             tags: to allow users to submit a file to only a subset of formats
             mandatory_label: whether the format can only be considered if the column passes both field and label tests
             python_type: the python type related to the format (less specific, used for downstream casting)
+            parent: optional name of a less specific format to test when this one fails or to skip when it matches
         """
         self.name: str = name
         self.description: str = description
         self.func: Callable[[Any], bool] = func
         self._test_values: dict[bool, list[str]] = _test_values
+        self.infer: Callable[[Iterable[Any]], str | None] | None = infer
         self.labels: dict[str, float] = labels
         self.proportion: float = self.check_proportion(proportion)
         self.tags: list[str] = tags
         self.mandatory_label: bool = mandatory_label
         self.python_type: str = python_type
+        self.parent: str | None = parent
 
     def is_valid_label(self, val: str) -> float:
         return header_score(val, self.labels)
@@ -48,6 +57,12 @@ class Format:
         if proportion <= 0 or proportion > 1:
             raise ValueError("proportion should be between 0 (excluded) and 1 (included)")
         return proportion
+
+
+def get_leaf_formats(formats: dict[str, Format]) -> dict[str, Format]:
+    """Return formats that are not parent of any other format (most specific first)."""
+    parents = {fmt.parent for fmt in formats.values() if fmt.parent}
+    return {name: fmt for name, fmt in formats.items() if name not in parents}
 
 
 class FormatsManager:
@@ -80,6 +95,7 @@ class FormatsManager:
                 name=label,
                 func=(module := getattr(formats, label))._is,
                 _test_values=module._test_values,
+                infer=getattr(module, "_infer", None),
                 **{
                     attr: val
                     for attr in ["labels", "description", "tags", "mandatory_label", "python_type"]
@@ -97,9 +113,13 @@ class FormatsManager:
                         else getattr(module, "proportion", 1)
                     )
                 },
+                parent=getattr(module, "parent", None),
             )
             for label in format_labels
         }
+
+    def get_leaf_formats(self) -> dict[str, Format]:
+        return get_leaf_formats(self.formats)
 
     def get_formats_from_tags(self, tags: list[str]) -> dict[str, Format]:
         return {

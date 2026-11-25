@@ -1,5 +1,53 @@
 # Changelog
 
+## 0.13.0 (2026-10-20)
+
+- chore: upgrade dependencies ([#275](https://github.com/datagouv/csv-detective/pull/275))
+- feat: improve date parsing ([#245](https://github.com/datagouv/csv-detective/pull/245))
+- fix: close csv files when reading fails ([#277](https://github.com/datagouv/csv-detective/pull/277))
+- perf: add linked format checks to skip redundant field tests ([#265](https://github.com/datagouv/csv-detective/pull/265))
+
+
+## 0.12.1 (2026-09-04)
+
+- chore(ruff): exclude pyproject.toml from lint checks
+- ci: run tests on Python 3.14 ([#262](https://github.com/datagouv/csv-detective/pull/262))
+- docs: fix readme code block formatting ([#264](https://github.com/datagouv/csv-detective/pull/264))
+- feat: add performance benchmarking in CI ([#261](https://github.com/datagouv/csv-detective/pull/261))
+- Fix `total_lines` and `categorical` in chunks analysis ([#249](https://github.com/datagouv/csv-detective/pull/249))
+- fix: fix format docs
+- fix: fix tags
+- fix: json missing values ([#272](https://github.com/datagouv/csv-detective/pull/272))
+- fix: json missing values in validate ([#273](https://github.com/datagouv/csv-detective/pull/273))
+- fix: typing ([#263](https://github.com/datagouv/csv-detective/pull/263))
+
+
+## 0.12.0 (2026-07-08)
+
+- Add unique values list for (multi)categorical columns ([#250](https://github.com/datagouv/csv-detective/pull/250))
+- Allow to analyse parquet files ([#253](https://github.com/datagouv/csv-detective/pull/253))
+- Allow to pass additional NaN values ([#255](https://github.com/datagouv/csv-detective/pull/255))
+- chore: add related test
+- chore: add test value
+- chore: bump urrlib3 ([#251](https://github.com/datagouv/csv-detective/pull/251))
+- chore: lint
+- chore/use-uv-publish-token ([#256](https://github.com/datagouv/csv-detective/pull/256))
+- clean: fix linting errors
+- feat: only run detection on unique values ([#241](https://github.com/datagouv/csv-detective/pull/241))
+- Fix datetime RFC 822 regex ([#244](https://github.com/datagouv/csv-detective/pull/244))
+- Fix unique values for too complex columns ([#257](https://github.com/datagouv/csv-detective/pull/257))
+- fix: bug on empty columns ([#246](https://github.com/datagouv/csv-detective/pull/246))
+- fix: digits
+- fix: digits
+- fix: fail validation if crash while loading chunks
+- fix(ci): fix lint check in CI
+- Rename `booleen` format into `bool` ([#252](https://github.com/datagouv/csv-detective/pull/252))
+- Update int.py
+- Update siren.py
+- Update siret.py
+- Use iterators in `any` and `all` ([#243](https://github.com/datagouv/csv-detective/pull/243))
+
+
 ## 0.11.2 (2026-04-03)
 
 - feat: do not run any tests on empty columns ([#240](https://github.com/etalab/csv-detective/pull/240))
