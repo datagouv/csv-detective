@@ -3,7 +3,7 @@ from csv_detective.parsing.text import _process_text
 proportion = 1
 description = "Gender label"
 tags = ["fr"]
-labels = {"sexe": 1, "sex": 1, "civilite": 1, "genre": 1}
+column_names = {"sexe": 1, "sex": 1, "civilite": 1, "genre": 1}
 
 
 def _is(val):

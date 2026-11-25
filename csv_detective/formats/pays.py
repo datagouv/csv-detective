@@ -3,7 +3,7 @@ from frformat import Millesime, Options, Pays
 proportion = 0.6
 description = "Country name in French"
 tags = ["fr", "geo"]
-labels = {
+column_names = {
     "pays": 1,
     "payslieu": 1,
     "paysorg": 1,

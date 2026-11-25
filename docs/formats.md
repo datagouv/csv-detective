@@ -1,7 +1,7 @@
 # List of currently available formats
 
-| name | description | python type | tags | default proportion | mandatory label | example |
-|------|-------------|-------------|------|--------------------|-----------------|---------|
+| name | description | python type | tags | default proportion | mandatory column name | example |
+|------|-------------|-------------|------|--------------------|-----------------------|---------|
 | adresse | French address | string | fr, geo | 0.55 | False | `rue du martyr` |
 | binary | Binary data (bytes string) | binary | type | 1 | False | `b''` |
 | bool | Boolean or boolean-like value (yes/no, 1/0...) | bool | type | 1 | False | `oui` |

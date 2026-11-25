@@ -4,9 +4,9 @@ from csv_detective.formats.longitude_wgs import _is as is_lon
 proportion = 1
 description = "Latitude and longitude pair in the WGS format"
 tags = ["geo"]
-mandatory_label = True
+mandatory_column_name = True
 
-SHARED_COORDS_LABELS = {
+SHARED_COORDS_COLUMN_NAMES = {
     "ban": 1,
     "coordinates": 1,
     "coordonnees": 1,
@@ -33,10 +33,15 @@ specific = {
 }
 
 # we aim wide to catch exact matches if possible for the highest possible score
-labels = (
-    SHARED_COORDS_LABELS
+column_names = (
+    SHARED_COORDS_COLUMN_NAMES
     | specific
-    | {w + sep + suf: 1 for suf in specific for w in SHARED_COORDS_LABELS for sep in ["", " "]}
+    | {
+        w + sep + suf: 1
+        for suf in specific
+        for w in SHARED_COORDS_COLUMN_NAMES
+        for sep in ["", " "]
+    }
 )
 
 

@@ -5,7 +5,7 @@ from csv_detective.formats.date import (
     infer_column_format,
     matches_a_template,
 )
-from csv_detective.formats.datetime_aware import labels  # noqa
+from csv_detective.formats.datetime_aware import column_names  # noqa
 
 proportion = 1
 description = "Datetime with no timezone information (flexible formats)"

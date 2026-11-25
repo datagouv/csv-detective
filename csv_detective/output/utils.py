@@ -5,9 +5,9 @@ import pandas as pd
 from csv_detective.parsing.columns import MAX_NUMBER_CATEGORICAL_VALUES
 
 
-def prepare_output_dict(return_table: pd.DataFrame, limited_output: bool):
+def prepare_output_dict(scores: pd.DataFrame, limited_output: bool):
     # -> dict[str, dict | list[dict]] (to be added when upgrading to python>=3.10)
-    return_dict_cols = return_table.to_dict("dict")
+    return_dict_cols = scores.to_dict("dict")
     output_dict = {}
     for column_name in return_dict_cols:
         # keep only formats with a non-zero score

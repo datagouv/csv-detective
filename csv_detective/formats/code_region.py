@@ -3,8 +3,8 @@ from frformat import CodeRegion, Millesime
 proportion = 1
 description = "French région code"
 tags = ["fr", "geo"]
-mandatory_label = True
-labels = {
+mandatory_column_name = True
+column_names = {
     "code region": 1,
     "reg": 0.5,
     "code insee region": 1,

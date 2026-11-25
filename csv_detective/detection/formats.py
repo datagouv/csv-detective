@@ -19,7 +19,7 @@ from csv_detective.parsing.columns import (
     handle_empty_columns,
     test_col,
     test_col_chunks,
-    test_label,
+    test_column_names,
     test_parquet_cols,
 )
 
@@ -42,28 +42,30 @@ def _infer_column_formats(
     test only says that each value looks valid on its own, not that a single format reads them all.
     """
     inferable = [
-        (label, fmt)
-        for label, fmt in formats.items()
+        (format_name, fmt)
+        for format_name, fmt in formats.items()
         if fmt.infer is not None
         # a format the user made tolerant cannot be pinned down: asking for a single format that
         # reads every value contradicts the proportion of failures they just allowed
         and fmt.proportion == 1
-        and label in scores_table_fields.index
+        and format_name in scores_table_fields.index
     ]
     inferred: dict[str, dict[str, str]] = {}
     for col in scores_table_fields.columns:
         candidates = [
-            (label, fmt) for label, fmt in inferable if scores_table_fields.loc[label, col]
+            (format_name, fmt)
+            for format_name, fmt in inferable
+            if scores_table_fields.loc[format_name, col]
         ]
         if not candidates:
             continue
         values = list(values_of(col))
-        for label, fmt in candidates:
+        for format_name, fmt in candidates:
             column_format = fmt.infer(values)
             if column_format is None:
-                scores_table_fields.loc[label, col] = 0.0
+                scores_table_fields.loc[format_name, col] = 0.0
             else:
-                inferred.setdefault(col, {})[label] = column_format
+                inferred.setdefault(col, {})[format_name] = column_format
     return inferred
 
 
@@ -163,25 +165,28 @@ def detect_formats(
             elif len(col_values[col]) <= MAX_NUMBER_CATEGORICAL_VALUES:
                 analysis["unique_values"][col] = list(col_values[col].index.dropna())
 
-    # Perform testing on labels
-    scores_table_labels = test_label(analysis["header"], formats, verbose=verbose)
-    analysis["columns_labels"] = prepare_output_dict(scores_table_labels, limited_output)
+    # Perform testing on column names
+    scores_table_column_names = test_column_names(analysis["header"], formats, verbose=verbose)
+    # the output key keeps its former name: it is part of the analysis that consumers read
+    analysis["columns_labels"] = prepare_output_dict(scores_table_column_names, limited_output)
 
-    # Multiply the results of the fields by 1 + 0.5 * the results of the labels.
-    # This is because the fields are more important than the labels and yields a max
+    # Multiply the results of the fields by 1 + 0.5 * the results of the column names.
+    # This is because the fields are more important than the column names and yields a max
     # of 1.5 for the final score.
     scores_table = scores_table_fields * (
-        1 + scores_table_labels.reindex(index=scores_table_fields.index, fill_value=0).values / 2
+        1
+        + scores_table_column_names.reindex(index=scores_table_fields.index, fill_value=0).values
+        / 2
     )
 
-    # To reduce false positives: ensure these formats are detected only if the label yields
-    # a detection (skipping the ones that have been excluded by the users).
-    formats_with_mandatory_label = [
-        f for f in fmtm.get_formats_with_mandatory_label() if f in scores_table.index
+    # To reduce false positives: ensure these formats are detected only if the column name
+    # yields a detection (skipping the ones that have been excluded by the users).
+    formats_with_mandatory_column_name = [
+        f for f in fmtm.get_formats_with_mandatory_column_name() if f in scores_table.index
     ]
-    scores_table.loc[formats_with_mandatory_label, :] = np.where(
-        scores_table_labels.loc[formats_with_mandatory_label, :],
-        scores_table.loc[formats_with_mandatory_label, :],
+    scores_table.loc[formats_with_mandatory_column_name, :] = np.where(
+        scores_table_column_names.loc[formats_with_mandatory_column_name, :],
+        scores_table.loc[formats_with_mandatory_column_name, :],
         0,
     )
     analysis["columns"] = prepare_output_dict(scores_table, limited_output)

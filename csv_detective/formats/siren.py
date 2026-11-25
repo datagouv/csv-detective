@@ -3,8 +3,8 @@ import re
 proportion = 0.9
 description = "French business identifier, from the INSEE reference source (SIRENE)"
 tags = ["fr"]
-mandatory_label = True
-labels = {
+mandatory_column_name = True
+column_names = {
     "siren": 1,
     "n° siren": 1,
     "siren organisme": 1,

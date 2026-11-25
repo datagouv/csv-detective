@@ -3,8 +3,8 @@ from frformat import CodePostal
 proportion = 0.9
 description = "French postcode from [La Poste registry](https://www.data.gouv.fr/datasets/base-officielle-des-codes-postaux)"
 tags = ["fr", "geo"]
-mandatory_label = True
-labels = {
+mandatory_column_name = True
+column_names = {
     "code postal": 1,
     "postal code": 1,
     "postcode": 1,

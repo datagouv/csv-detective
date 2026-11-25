@@ -5,7 +5,7 @@ parent = "json"
 description = "JSON object in the [GeoJSON](https://fr.wikipedia.org/wiki/GeoJSON) format"
 tags = ["geo"]
 python_type = "json"
-labels = {
+column_names = {
     "json geojson": 1,
     "json": 1,
     "geojson": 1,

@@ -3,8 +3,8 @@ from frformat import CodeDepartement, Millesime, Options
 proportion = 1
 description = "French département code"
 tags = ["fr", "geo"]
-mandatory_label = True
-labels = {
+mandatory_column_name = True
+column_names = {
     "code departement": 1,
     "code_departement": 1,
     "dep": 0.5,

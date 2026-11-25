@@ -36,22 +36,23 @@ def is_word_in_string(word: str, string: str):
     return len(word) > 2 and word in string
 
 
-def header_score(header: str, valid_headers: dict[str, float]) -> float:
+def column_name_score(column_name: str, valid_column_names: dict[str, float]) -> float:
     """Returns:
-    - the valid header's credibility if the header is exactly in the valid list
+    - the valid column name's credibility if the column name is exactly in the valid list
     - 0.5*credibility if any of the words is within the valid list
     - 0 otherwise"""
-    processed_header = _process_text(header)
+    processed_column_name = _process_text(column_name)
 
-    header_matches_valid = max(
-        (valid == processed_header) * credibility for valid, credibility in valid_headers.items()
+    column_name_matches_valid = max(
+        (valid == processed_column_name) * credibility
+        for valid, credibility in valid_column_names.items()
     )
 
     return max(
-        header_matches_valid,
+        column_name_matches_valid,
         0.5
         * max(
-            is_word_in_string(valid, processed_header) * credibility
-            for valid, credibility in valid_headers.items()
+            is_word_in_string(valid, processed_column_name) * credibility
+            for valid, credibility in valid_column_names.items()
         ),
     )

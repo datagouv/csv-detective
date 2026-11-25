@@ -5,7 +5,7 @@ description = (
     "French educational struture identifier from the Ministry of education reference source (UAI)"
 )
 tags = ["fr"]
-labels = {
+column_names = {
     "uai": 1,
     "code etablissement": 1,
     "code uai": 1,

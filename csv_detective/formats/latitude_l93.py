@@ -2,15 +2,15 @@ from frformat import LatitudeL93
 
 from csv_detective.formats.float import _is as is_float
 from csv_detective.formats.float import float_casting
-from csv_detective.formats.latitude_wgs import SHARED_LATITUDE_LABELS
+from csv_detective.formats.latitude_wgs import SHARED_LATITUDE_COLUMN_NAMES
 
 proportion = 1
 parent = "float"
 description = "Latitude in the Lambert 93 format"
 tags = ["fr", "geo"]
-mandatory_label = True
+mandatory_column_name = True
 python_type = "float"
-labels = SHARED_LATITUDE_LABELS | {
+column_names = SHARED_LATITUDE_COLUMN_NAMES | {
     "y l93": 1,
     "latitude lb93": 1,
     "lamby": 1,

@@ -3,7 +3,7 @@ parent = "int"
 description = "Year"
 tags = ["temp"]
 python_type = "int"
-labels = {
+column_names = {
     "year": 1,
     "annee": 1,
     "naissance": 1,

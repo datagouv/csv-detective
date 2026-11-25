@@ -2,7 +2,7 @@ proportion = 1
 description = "Boolean or boolean-like value (yes/no, 1/0...)"
 tags = ["type"]
 python_type = "bool"
-labels = {"is ": 1, "has ": 1, "est ": 1}
+column_names = {"is ": 1, "has ": 1, "est ": 1}
 
 bool_mapping = {
     "1": True,

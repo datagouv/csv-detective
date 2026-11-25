@@ -5,7 +5,7 @@ from csv_detective.parsing.text import _process_text
 proportion = 0.8
 description = "French acitvity code from the INSEE reference source (APE)"
 tags = ["fr"]
-labels = {
+column_names = {
     "code ape": 1,
     "code activite (ape)": 1,
     "code naf": 1,

@@ -5,7 +5,7 @@ from csv_detective.parsing.text import _process_text
 proportion = 1
 description = "French socio-professional category code, from the INSEE reference source"
 tags = ["fr"]
-labels = {"code csp insee": 1, "code csp": 1}
+column_names = {"code csp insee": 1, "code csp": 1}
 
 
 def _is(val) -> bool:
