@@ -5,7 +5,7 @@ from csv_detective.parsing.text import _process_text
 proportion = 1
 description = "French socio-professional category label, from the INSEE reference source"
 tags = ["fr"]
-labels = {
+headers = {
     "csp insee": 1,
     "csp": 0.75,
     "categorie socioprofessionnelle": 1,

@@ -1,7 +1,7 @@
 import re
 from os.path import dirname, join
 
-from csv_detective.formats.iso_country_code_alpha2 import labels  # noqa
+from csv_detective.formats.iso_country_code_alpha2 import headers  # noqa
 
 proportion = 1
 description = "[ISO alpha 3](https://fr.wikipedia.org/wiki/ISO_3166-1) country code"

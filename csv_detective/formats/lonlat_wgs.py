@@ -1,11 +1,11 @@
 from csv_detective.formats.latitude_wgs import _is as is_lat
-from csv_detective.formats.latlon_wgs import SHARED_COORDS_LABELS
+from csv_detective.formats.latlon_wgs import SHARED_COORDS_HEADERS
 from csv_detective.formats.longitude_wgs import _is as is_lon
 
 proportion = 1
 description = "Longitude and latitude pair in the WGS format"
 tags = ["geo"]
-mandatory_label = True
+mandatory_header = True
 
 specific = {
     "lonlat": 1,
@@ -15,10 +15,10 @@ specific = {
 }
 
 # we aim wide to catch exact matches if possible for the highest possible score
-labels = (
-    SHARED_COORDS_LABELS
+headers = (
+    SHARED_COORDS_HEADERS
     | specific
-    | {w + sep + suf: 1 for suf in specific for w in SHARED_COORDS_LABELS for sep in ["", " "]}
+    | {w + sep + suf: 1 for suf in specific for w in SHARED_COORDS_HEADERS for sep in ["", " "]}
 )
 
 

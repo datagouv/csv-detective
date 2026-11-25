@@ -3,7 +3,7 @@ from frformat import CodeRNA
 proportion = 0.9
 description = "French association identifier, from the national assiocation registry ([RNA](https://www.data.gouv.fr/datasets/repertoire-national-des-associations))"
 tags = ["fr"]
-labels = {
+headers = {
     "code rna": 1,
     "rna": 1,
     "n° inscription association": 1,

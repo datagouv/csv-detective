@@ -3,7 +3,7 @@ parent = "int"
 description = "Year"
 tags = ["temp"]
 python_type = "int"
-labels = {
+headers = {
     "year": 1,
     "annee": 1,
     "naissance": 1,

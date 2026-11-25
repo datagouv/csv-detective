@@ -6,9 +6,9 @@ proportion = 1
 parent = "float"
 description = "Latitude in the WGS format"
 tags = ["geo"]
-mandatory_label = True
+mandatory_header = True
 python_type = "float"
-SHARED_LATITUDE_LABELS = {
+SHARED_LATITUDE_HEADERS = {
     "latitude": 1,
     "lat": 0.75,
     "y": 0.5,
@@ -19,7 +19,7 @@ SHARED_LATITUDE_LABELS = {
     "ycoord": 1,
     "ylat": 1,
 }
-labels = SHARED_LATITUDE_LABELS | {
+headers = SHARED_LATITUDE_HEADERS | {
     "y gps": 1,
     "latitude wgs84": 1,
     "y wgs84": 1,

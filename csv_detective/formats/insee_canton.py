@@ -3,7 +3,7 @@ from frformat import Canton, Millesime, Options
 proportion = 0.9
 description = "French canton name"
 tags = ["fr", "geo"]
-labels = {
+headers = {
     "insee canton": 1,
     "canton": 1,
     "cant": 0.5,

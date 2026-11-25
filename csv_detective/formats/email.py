@@ -2,7 +2,7 @@ import re
 
 proportion = 0.9
 description = "Email"
-labels = {
+headers = {
     "email": 1,
     "mail": 1,
     "courriel": 1,

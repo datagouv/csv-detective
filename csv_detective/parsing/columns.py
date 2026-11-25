@@ -41,7 +41,7 @@ def test_col_val(
     if verbose:
         start = time()
 
-    # TODO : change for a cleaner method and only test columns in modules labels
+    # TODO : change for a cleaner method and only test columns in modules headers
     def apply_test_func(serie: pd.Series, test_func: Callable, _range: int):
         return serie.sample(n=_range).apply(test_func)
 
@@ -190,16 +190,16 @@ def test_col(
     return pd.DataFrame(column_results)
 
 
-def test_label(columns: list[str], formats: dict[str, Format], verbose: bool = False):
+def test_headers(columns: list[str], formats: dict[str, Format], verbose: bool = False):
     if verbose:
         start = time()
-        logging.info("Testing labels to get formats")
+        logging.info("Testing headers to get formats")
 
     return_table = pd.DataFrame(columns=columns)
     for idx, (label, format) in enumerate(formats.items()):
         if verbose:
             start_type = time()
-        return_table.loc[label] = [format.is_valid_label(col_name) for col_name in columns]
+        return_table.loc[label] = [format.header_score(col_name) for col_name in columns]
         if verbose:
             display_logs_depending_process_time(
                 f'\t- Done with format "{label}" in {round(time() - start_type, 3)}s ({idx + 1}/{len(formats)})',
@@ -207,14 +207,14 @@ def test_label(columns: list[str], formats: dict[str, Format], verbose: bool = F
             )
     if verbose:
         display_logs_depending_process_time(
-            f"Done testing labels in {round(time() - start, 3)}s", time() - start
+            f"Done testing headers in {round(time() - start, 3)}s", time() - start
         )
     return return_table
 
 
 def _build_remaining_tests_per_col(
     return_table: pd.DataFrame,
-    mandatory_label_skip: dict[str, set[str]],
+    mandatory_header_skip: dict[str, set[str]],
     known_columns: dict[str, str] = {},
 ) -> dict[str, list[str]]:
     # returns a dict with the table's columns as keys and the list of remaining format labels to apply
@@ -225,7 +225,7 @@ def _build_remaining_tests_per_col(
             # for parquet we know for sure some column types
             if known_columns.get(col) != fmt_label
             and return_table.loc[fmt_label, col] > 0
-            and fmt_label not in mandatory_label_skip.get(col, set())
+            and fmt_label not in mandatory_header_skip.get(col, set())
         ]
         for col in return_table.columns
     }
@@ -270,19 +270,19 @@ def test_col_chunks(
         skipna=skipna,
         verbose=verbose,
     )
-    # mandatory_label formats are zeroed out at the end if the label doesn't match,
+    # mandatory_header formats are zeroed out at the end if the header doesn't match,
     # so there's no point running the expensive field tests on those columns
-    mandatory_label_skip: dict[str, set[str]] = {
+    mandatory_header_skip: dict[str, set[str]] = {
         col: {
             fmt_label
             for fmt_label, fmt in formats.items()
-            if fmt.mandatory_label and fmt.is_valid_label(col) == 0
+            if fmt.mandatory_header and fmt.header_score(col) == 0
         }
         for col in table.columns
     }
     handle_empty_columns(return_table)
     empty_cols = {col for col in table.columns if table[col].dropna().empty}
-    remaining_tests_per_col = _build_remaining_tests_per_col(return_table, mandatory_label_skip)
+    remaining_tests_per_col = _build_remaining_tests_per_col(return_table, mandatory_header_skip)
 
     # hashing rows to get nb_duplicates
     row_hashes_count = pd.util.hash_pandas_object(table, index=False).value_counts()
@@ -328,7 +328,7 @@ def test_col_chunks(
                 remaining_tests_per_col[col] = [
                     fmt_label
                     for fmt_label in formats.keys()
-                    if fmt_label not in mandatory_label_skip.get(col, set())
+                    if fmt_label not in mandatory_header_skip.get(col, set())
                 ]
         for col, fmt_labels in remaining_tests_per_col.items():
             # testing each column with the tests that are still competing
@@ -345,7 +345,9 @@ def test_col_chunks(
                     # updating the score with weighted average
                     (return_table.loc[label, col] * idx + batch_col_test) / (idx + 1)
                 )
-        remaining_tests_per_col = _build_remaining_tests_per_col(return_table, mandatory_label_skip)
+        remaining_tests_per_col = _build_remaining_tests_per_col(
+            return_table, mandatory_header_skip
+        )
     analysis["nb_duplicates"] = sum(row_hashes_count > 1)
     analysis["categorical"] = [
         col
@@ -413,11 +415,11 @@ def test_parquet_cols(
         logging.info("Testing columns to get formats on chunks")
 
     columns = build_known_columns(table)
-    mandatory_label_skip: dict[str, set[str]] = {
+    mandatory_header_skip: dict[str, set[str]] = {
         col: {
             fmt_label
             for fmt_label, fmt in formats.items()
-            if fmt.mandatory_label and fmt.is_valid_label(col) == 0
+            if fmt.mandatory_header and fmt.header_score(col) == 0
         }
         for col in columns.keys()
     }
@@ -427,8 +429,8 @@ def test_parquet_cols(
             for fmt_label, fmt in formats.items()
             # keeping formats that have the valid python type
             if fmt.python_type == pytype
-            # except if the column label doesn't fit
-            and fmt_label not in mandatory_label_skip.get(col, set())
+            # except if the column header doesn't fit
+            and fmt_label not in mandatory_header_skip.get(col, set())
             # we already know pure types are valid, only formats remain
             and fmt_label != pytype
         }
@@ -482,7 +484,7 @@ def test_parquet_cols(
                     else ((return_table.loc[label, col] * idx + batch_col_test) / (idx + 1))
                 )
         remaining_tests_per_col = _build_remaining_tests_per_col(
-            return_table, mandatory_label_skip, known_columns=columns
+            return_table, mandatory_header_skip, known_columns=columns
         )
     analysis["nb_duplicates"] = sum(row_hashes_count > 1)
     analysis["categorical"] = [

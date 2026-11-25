@@ -28,13 +28,13 @@ def test_conformity():
                 "name",
                 "func",
                 "_test_values",
-                "labels",
+                "headers",
                 "proportion",
                 "tags",
             ]
         )
-        # all formats should have at least one label, for the header_score to work
-        assert format.labels
+        # all formats should have at least one header, for the header_score to work
+        assert format.headers
 
 
 def test_format_parents_are_valid():

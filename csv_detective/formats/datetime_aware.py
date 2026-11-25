@@ -1,7 +1,7 @@
 from typing import Any, Iterable
 
 from csv_detective.formats.date import (
-    SHARED_DATE_LABELS,
+    SHARED_DATE_HEADERS,
     datetime_templates,
     infer_column_format,
     matches_a_template,
@@ -11,7 +11,7 @@ proportion = 1
 description = "Datetime with timezone information (flexible formats)"
 tags = ["temp", "type"]
 python_type = "datetime"
-labels = SHARED_DATE_LABELS | {"datetime": 1, "timestamp": 1}
+headers = SHARED_DATE_HEADERS | {"datetime": 1, "timestamp": 1}
 
 # 16 is the minimal length of a datetime format YYMMDDTHH:MM:SSZ
 # 35 is the maximal length of an ISO datetime format YYYY-MM-DDTHH:MM:SS.dddddd+HH:MM, with slack

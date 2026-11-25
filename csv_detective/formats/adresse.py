@@ -3,7 +3,7 @@ from csv_detective.parsing.text import _process_text
 proportion = 0.55
 description = "French address"
 tags = ["fr", "geo"]
-labels = {
+headers = {
     "adresse": 1,
     "localisation": 1,
     "adresse postale": 1,

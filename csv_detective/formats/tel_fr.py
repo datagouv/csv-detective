@@ -3,7 +3,7 @@ import re
 proportion = 0.7
 description = "French phone number"
 tags = ["fr"]
-labels = {
+headers = {
     "telephone": 1,
     "tel": 1,
     "phone": 1,

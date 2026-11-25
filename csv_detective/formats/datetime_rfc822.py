@@ -1,6 +1,6 @@
 import re
 
-from csv_detective.formats.datetime_aware import labels  # noqa
+from csv_detective.formats.datetime_aware import headers  # noqa
 
 proportion = 1
 parent = "datetime_aware"

@@ -3,7 +3,7 @@ from frformat import Departement, Millesime, Options
 proportion = 0.9
 description = "French département name"
 tags = ["fr", "geo"]
-labels = {
+headers = {
     "departement": 1,
     "libelle du departement": 1,
     "deplib": 1,

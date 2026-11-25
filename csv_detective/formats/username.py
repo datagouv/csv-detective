@@ -2,7 +2,7 @@ import re
 
 proportion = 1
 description = "Username"
-labels = {"account": 1, "username": 1, "user": 0.75}
+headers = {"account": 1, "username": 1, "user": 0.75}
 
 
 def _is(val):

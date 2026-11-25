@@ -3,7 +3,7 @@ from frformat import Millesime, Options, Region
 proportion = 1
 description = "French région name"
 tags = ["fr", "geo"]
-labels = {
+headers = {
     "region": 1,
     "libelle region": 1,
     "nom region": 1,

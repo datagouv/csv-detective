@@ -19,7 +19,7 @@ from csv_detective.parsing.columns import (
     handle_empty_columns,
     test_col,
     test_col_chunks,
-    test_label,
+    test_headers,
     test_parquet_cols,
 )
 
@@ -163,25 +163,26 @@ def detect_formats(
             elif len(col_values[col]) <= MAX_NUMBER_CATEGORICAL_VALUES:
                 analysis["unique_values"][col] = list(col_values[col].index.dropna())
 
-    # Perform testing on labels
-    scores_table_labels = test_label(analysis["header"], formats, verbose=verbose)
-    analysis["columns_labels"] = prepare_output_dict(scores_table_labels, limited_output)
+    # Perform testing on headers
+    scores_table_headers = test_headers(analysis["header"], formats, verbose=verbose)
+    # the output key keeps its former name: it is part of the analysis that consumers read
+    analysis["columns_labels"] = prepare_output_dict(scores_table_headers, limited_output)
 
-    # Multiply the results of the fields by 1 + 0.5 * the results of the labels.
-    # This is because the fields are more important than the labels and yields a max
+    # Multiply the results of the fields by 1 + 0.5 * the results of the headers.
+    # This is because the fields are more important than the headers and yields a max
     # of 1.5 for the final score.
     scores_table = scores_table_fields * (
-        1 + scores_table_labels.reindex(index=scores_table_fields.index, fill_value=0).values / 2
+        1 + scores_table_headers.reindex(index=scores_table_fields.index, fill_value=0).values / 2
     )
 
-    # To reduce false positives: ensure these formats are detected only if the label yields
+    # To reduce false positives: ensure these formats are detected only if the header yields
     # a detection (skipping the ones that have been excluded by the users).
-    formats_with_mandatory_label = [
-        f for f in fmtm.get_formats_with_mandatory_label() if f in scores_table.index
+    formats_with_mandatory_header = [
+        f for f in fmtm.get_formats_with_mandatory_header() if f in scores_table.index
     ]
-    scores_table.loc[formats_with_mandatory_label, :] = np.where(
-        scores_table_labels.loc[formats_with_mandatory_label, :],
-        scores_table.loc[formats_with_mandatory_label, :],
+    scores_table.loc[formats_with_mandatory_header, :] = np.where(
+        scores_table_headers.loc[formats_with_mandatory_header, :],
+        scores_table.loc[formats_with_mandatory_header, :],
         0,
     )
     analysis["columns"] = prepare_output_dict(scores_table, limited_output)

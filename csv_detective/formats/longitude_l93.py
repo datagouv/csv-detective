@@ -2,15 +2,15 @@ from frformat import LongitudeL93
 
 from csv_detective.formats.float import _is as is_float
 from csv_detective.formats.float import float_casting
-from csv_detective.formats.longitude_wgs import SHARED_LONGITUDE_LABELS
+from csv_detective.formats.longitude_wgs import SHARED_LONGITUDE_HEADERS
 
 proportion = 1
 parent = "float"
 description = "Longitude in the Lambert 93 format"
 tags = ["fr", "geo"]
-mandatory_label = True
+mandatory_header = True
 python_type = "float"
-labels = SHARED_LONGITUDE_LABELS | {
+headers = SHARED_LONGITUDE_HEADERS | {
     "x l93": 1,
     "longitude lb93": 1,
     "lambx": 1,

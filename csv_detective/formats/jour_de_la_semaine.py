@@ -1,7 +1,7 @@
 proportion = 0.8
 description = "Weekday name in French"
 tags = ["fr", "temp"]
-labels = {
+headers = {
     "jour semaine": 1,
     "type jour": 1,
     "jour de la semaine": 1,

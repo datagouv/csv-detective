@@ -6,9 +6,9 @@ proportion = 1
 parent = "float"
 description = "Longitude in the WGS format"
 tags = ["geo"]
-mandatory_label = True
+mandatory_header = True
 python_type = "float"
-SHARED_LONGITUDE_LABELS = {
+SHARED_LONGITUDE_HEADERS = {
     "longitude": 1,
     "long": 0.75,
     "lon": 0.75,
@@ -22,7 +22,7 @@ SHARED_LONGITUDE_LABELS = {
     "xlon": 1,
     "xlong": 1,
 }
-labels = SHARED_LONGITUDE_LABELS | {
+headers = SHARED_LONGITUDE_HEADERS | {
     "x gps": 1,
     "longitude wgs84": 1,
     "x wgs84": 1,

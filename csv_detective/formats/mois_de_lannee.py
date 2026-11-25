@@ -3,7 +3,7 @@ from unidecode import unidecode
 proportion = 1
 description = "Month name in French"
 tags = ["fr", "temp"]
-labels = {"mois": 1, "month": 1}
+headers = {"mois": 1, "month": 1}
 
 mois = {
     "janvier",

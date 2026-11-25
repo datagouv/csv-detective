@@ -2,7 +2,7 @@ proportion = 1
 description = "Integer"
 tags = ["type"]
 python_type = "int"
-labels = {"nb": 0.75, "nombre": 1, "nbre": 0.75}
+headers = {"nb": 0.75, "nombre": 1, "nbre": 0.75}
 
 
 def _is(val) -> bool:

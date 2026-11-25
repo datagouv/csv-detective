@@ -2,7 +2,7 @@ import re
 
 proportion = 1
 description = "Web URL"
-labels = {
+headers = {
     "url": 1,
     "url source": 1,
     "site web": 1,
