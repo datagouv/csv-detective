@@ -18,11 +18,11 @@ MAX_NUMBER_CATEGORICAL_VALUES = 25
 RATIO_CATEGORICAL_VALUES = 0.05
 
 
-def handle_empty_columns(return_table: pd.DataFrame):
+def handle_empty_columns(scores: pd.DataFrame):
     # handling that empty columns score 1 everywhere
-    for col in return_table.columns:
-        if sum(return_table[col]) == len(return_table):
-            return_table[col] = 0.0
+    for col in scores.columns:
+        if sum(scores[col]) == len(scores):
+            scores[col] = 0.0
 
 
 def test_col_val(
@@ -195,11 +195,11 @@ def test_headers(columns: list[str], formats: dict[str, Format], verbose: bool =
         start = time()
         logging.info("Testing headers to get formats")
 
-    return_table = pd.DataFrame(columns=columns)
+    scores = pd.DataFrame(columns=columns)
     for idx, (format_name, format) in enumerate(formats.items()):
         if verbose:
             start_type = time()
-        return_table.loc[format_name] = [format.header_score(col_name) for col_name in columns]
+        scores.loc[format_name] = [format.header_score(col_name) for col_name in columns]
         if verbose:
             display_logs_depending_process_time(
                 f'\t- Done with format "{format_name}" in {round(time() - start_type, 3)}s ({idx + 1}/{len(formats)})',
@@ -209,11 +209,11 @@ def test_headers(columns: list[str], formats: dict[str, Format], verbose: bool =
         display_logs_depending_process_time(
             f"Done testing headers in {round(time() - start, 3)}s", time() - start
         )
-    return return_table
+    return scores
 
 
 def _build_remaining_tests_per_col(
-    return_table: pd.DataFrame,
+    scores: pd.DataFrame,
     mandatory_header_skip: dict[str, set[str]],
     known_columns: dict[str, str] = {},
 ) -> dict[str, list[str]]:
@@ -221,18 +221,18 @@ def _build_remaining_tests_per_col(
     return {
         col: [
             format_name
-            for format_name in return_table.index
+            for format_name in scores.index
             # for parquet we know for sure some column types
             if known_columns.get(col) != format_name
-            and return_table.loc[format_name, col] > 0
+            and scores.loc[format_name, col] > 0
             and format_name not in mandatory_header_skip.get(col, set())
         ]
-        for col in return_table.columns
+        for col in scores.columns
     }
 
 
 def _apply_proportion_thresholds(
-    return_table: pd.DataFrame,
+    scores: pd.DataFrame,
     formats: dict[str, Format],
 ) -> None:
     """Zero scores still below format.proportion after full-file aggregation.
@@ -241,10 +241,10 @@ def _apply_proportion_thresholds(
     are not eliminated mid-file; the global proportion requirement is enforced here.
     """
     for format_name, fmt in formats.items():
-        if format_name not in return_table.index:
+        if format_name not in scores.index:
             continue
-        below = return_table.loc[format_name] < fmt.proportion
-        return_table.loc[format_name, below] = 0.0
+        below = scores.loc[format_name] < fmt.proportion
+        scores.loc[format_name, below] = 0.0
 
 
 def test_col_chunks(
@@ -262,7 +262,7 @@ def test_col_chunks(
         logging.info("Testing columns to get formats on chunks")
 
     # analysing the sample to get a first guess
-    return_table = test_col(
+    scores = test_col(
         table,
         formats,
         limited_output=limited_output,
@@ -280,9 +280,9 @@ def test_col_chunks(
         }
         for col in table.columns
     }
-    handle_empty_columns(return_table)
+    handle_empty_columns(scores)
     empty_cols = {col for col in table.columns if table[col].dropna().empty}
-    remaining_tests_per_col = _build_remaining_tests_per_col(return_table, mandatory_header_skip)
+    remaining_tests_per_col = _build_remaining_tests_per_col(scores, mandatory_header_skip)
 
     # hashing rows to get nb_duplicates
     row_hashes_count = pd.util.hash_pandas_object(table, index=False).value_counts()
@@ -341,13 +341,11 @@ def test_col_chunks(
                     zero_if_too_low=False,
                     skipna=skipna,
                 )
-                return_table.loc[format_name, col] = (
+                scores.loc[format_name, col] = (
                     # updating the score with weighted average
-                    (return_table.loc[format_name, col] * idx + batch_col_test) / (idx + 1)
+                    (scores.loc[format_name, col] * idx + batch_col_test) / (idx + 1)
                 )
-        remaining_tests_per_col = _build_remaining_tests_per_col(
-            return_table, mandatory_header_skip
-        )
+        remaining_tests_per_col = _build_remaining_tests_per_col(scores, mandatory_header_skip)
     analysis["nb_duplicates"] = sum(row_hashes_count > 1)
     analysis["categorical"] = [
         col
@@ -355,13 +353,13 @@ def test_col_chunks(
         if len(values) <= MAX_NUMBER_CATEGORICAL_VALUES
         or (len(values) / sum(values)) <= RATIO_CATEGORICAL_VALUES
     ]
-    _apply_proportion_thresholds(return_table, formats)
-    handle_empty_columns(return_table)
+    _apply_proportion_thresholds(scores, formats)
+    handle_empty_columns(scores)
     if verbose:
         display_logs_depending_process_time(
             f"Done testing chunks in {round(time() - start, 3)}s", time() - start
         )
-    return return_table, analysis, col_values
+    return scores, analysis, col_values
 
 
 PYARROW_TYPE_TO_PYTHON = {
@@ -436,11 +434,11 @@ def test_parquet_cols(
         }
         for col, pytype in columns.items()
     }
-    return_table = pd.DataFrame(columns=list(columns.keys()), index=list(formats.keys()))
+    scores = pd.DataFrame(columns=list(columns.keys()), index=list(formats.keys()))
     for col, pytype in columns.items():
         if pytype != "string":
             # setting types that we know are 100% valid from metadata
-            return_table.loc[pytype, col] = 1
+            scores.loc[pytype, col] = 1
 
     row_hashes_count = pd.Series()
     col_values = {col: pd.Series() for col in columns.keys()}
@@ -473,26 +471,26 @@ def test_parquet_cols(
                     limited_output=limited_output,
                     skipna=skipna,
                 )
-                return_table.loc[format_name, col] = (
+                scores.loc[format_name, col] = (
                     # if this batch's column tested 0 then test fails overall
                     0
                     if batch_col_test == 0
                     # set the first score
                     else batch_col_test
-                    if pd.isna(return_table.loc[format_name, col])
+                    if pd.isna(scores.loc[format_name, col])
                     # otherwise updating the score with weighted average
-                    else ((return_table.loc[format_name, col] * idx + batch_col_test) / (idx + 1))
+                    else ((scores.loc[format_name, col] * idx + batch_col_test) / (idx + 1))
                 )
         remaining_tests_per_col = _build_remaining_tests_per_col(
-            return_table, mandatory_header_skip, known_columns=columns
+            scores, mandatory_header_skip, known_columns=columns
         )
     analysis["nb_duplicates"] = sum(row_hashes_count > 1)
     analysis["categorical"] = [
         col for col, values in col_values.items() if len(values) <= MAX_NUMBER_CATEGORICAL_VALUES
     ]
-    handle_empty_columns(return_table)
+    handle_empty_columns(scores)
     if verbose:
         display_logs_depending_process_time(
             f"Done testing chunks in {round(time() - start, 3)}s", time() - start
         )
-    return return_table.fillna(0), analysis, col_values
+    return scores.fillna(0), analysis, col_values
