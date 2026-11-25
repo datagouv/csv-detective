@@ -12,7 +12,7 @@ proportion = 1
 description = "Date (flexible formats)"
 tags = ["temp", "type"]
 python_type = "date"
-SHARED_DATE_HEADERS = {
+SHARED_DATE_COLUMN_NAMES = {
     "date": 1,
     "mise à jour": 1,
     "modifie": 1,
@@ -22,7 +22,7 @@ SHARED_DATE_HEADERS = {
     "created": 1,
     "modified": 1,
 }
-headers = SHARED_DATE_HEADERS | {
+column_names = SHARED_DATE_COLUMN_NAMES | {
     "jour": 0.75,
     "periode": 0.75,
     "dpc": 0.5,

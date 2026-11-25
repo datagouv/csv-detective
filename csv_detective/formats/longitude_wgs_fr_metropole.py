@@ -1,10 +1,10 @@
-from csv_detective.formats.longitude_wgs import _is as is_longitude, headers  # noqa
+from csv_detective.formats.longitude_wgs import _is as is_longitude, column_names  # noqa
 
 proportion = 1
 parent = "longitude_wgs"
 description = "Longitude within the French metropole bounds in the WGS format"
 tags = ["fr", "geo"]
-mandatory_header = True
+mandatory_column_name = True
 python_type = "float"
 
 

@@ -4,7 +4,7 @@ from os.path import dirname, join
 proportion = 1
 description = "[ISO alpha 2](https://fr.wikipedia.org/wiki/ISO_3166-1_alpha-2) country code"
 tags = ["geo"]
-headers = {
+column_names = {
     "iso country code": 1,
     "code pays": 1,
     "pays": 1,

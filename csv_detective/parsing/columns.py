@@ -190,16 +190,16 @@ def test_col(
     return pd.DataFrame(column_results)
 
 
-def test_headers(columns: list[str], formats: dict[str, Format], verbose: bool = False):
+def test_column_names(columns: list[str], formats: dict[str, Format], verbose: bool = False):
     if verbose:
         start = time()
-        logging.info("Testing headers to get formats")
+        logging.info("Testing column names to get formats")
 
     scores = pd.DataFrame(columns=columns)
     for idx, (format_name, format) in enumerate(formats.items()):
         if verbose:
             start_type = time()
-        scores.loc[format_name] = [format.header_score(col_name) for col_name in columns]
+        scores.loc[format_name] = [format.column_name_score(col_name) for col_name in columns]
         if verbose:
             display_logs_depending_process_time(
                 f'\t- Done with format "{format_name}" in {round(time() - start_type, 3)}s ({idx + 1}/{len(formats)})',
@@ -207,14 +207,14 @@ def test_headers(columns: list[str], formats: dict[str, Format], verbose: bool =
             )
     if verbose:
         display_logs_depending_process_time(
-            f"Done testing headers in {round(time() - start, 3)}s", time() - start
+            f"Done testing column names in {round(time() - start, 3)}s", time() - start
         )
     return scores
 
 
 def _build_remaining_tests_per_col(
     scores: pd.DataFrame,
-    mandatory_header_skip: dict[str, set[str]],
+    mandatory_column_name_skip: dict[str, set[str]],
     known_columns: dict[str, str] = {},
 ) -> dict[str, list[str]]:
     # returns a dict with the table's columns as keys and the list of remaining format names to apply
@@ -225,7 +225,7 @@ def _build_remaining_tests_per_col(
             # for parquet we know for sure some column types
             if known_columns.get(col) != format_name
             and scores.loc[format_name, col] > 0
-            and format_name not in mandatory_header_skip.get(col, set())
+            and format_name not in mandatory_column_name_skip.get(col, set())
         ]
         for col in scores.columns
     }
@@ -270,19 +270,19 @@ def test_col_chunks(
         skipna=skipna,
         verbose=verbose,
     )
-    # mandatory_header formats are zeroed out at the end if the header doesn't match,
+    # mandatory_column_name formats are zeroed out at the end if the column name doesn't match,
     # so there's no point running the expensive field tests on those columns
-    mandatory_header_skip: dict[str, set[str]] = {
+    mandatory_column_name_skip: dict[str, set[str]] = {
         col: {
             format_name
             for format_name, fmt in formats.items()
-            if fmt.mandatory_header and fmt.header_score(col) == 0
+            if fmt.mandatory_column_name and fmt.column_name_score(col) == 0
         }
         for col in table.columns
     }
     handle_empty_columns(scores)
     empty_cols = {col for col in table.columns if table[col].dropna().empty}
-    remaining_tests_per_col = _build_remaining_tests_per_col(scores, mandatory_header_skip)
+    remaining_tests_per_col = _build_remaining_tests_per_col(scores, mandatory_column_name_skip)
 
     # hashing rows to get nb_duplicates
     row_hashes_count = pd.util.hash_pandas_object(table, index=False).value_counts()
@@ -328,7 +328,7 @@ def test_col_chunks(
                 remaining_tests_per_col[col] = [
                     format_name
                     for format_name in formats.keys()
-                    if format_name not in mandatory_header_skip.get(col, set())
+                    if format_name not in mandatory_column_name_skip.get(col, set())
                 ]
         for col, format_names in remaining_tests_per_col.items():
             # testing each column with the tests that are still competing
@@ -345,7 +345,7 @@ def test_col_chunks(
                     # updating the score with weighted average
                     (scores.loc[format_name, col] * idx + batch_col_test) / (idx + 1)
                 )
-        remaining_tests_per_col = _build_remaining_tests_per_col(scores, mandatory_header_skip)
+        remaining_tests_per_col = _build_remaining_tests_per_col(scores, mandatory_column_name_skip)
     analysis["nb_duplicates"] = sum(row_hashes_count > 1)
     analysis["categorical"] = [
         col
@@ -413,11 +413,11 @@ def test_parquet_cols(
         logging.info("Testing columns to get formats on chunks")
 
     columns = build_known_columns(table)
-    mandatory_header_skip: dict[str, set[str]] = {
+    mandatory_column_name_skip: dict[str, set[str]] = {
         col: {
             format_name
             for format_name, fmt in formats.items()
-            if fmt.mandatory_header and fmt.header_score(col) == 0
+            if fmt.mandatory_column_name and fmt.column_name_score(col) == 0
         }
         for col in columns.keys()
     }
@@ -427,8 +427,8 @@ def test_parquet_cols(
             for format_name, fmt in formats.items()
             # keeping formats that have the valid python type
             if fmt.python_type == pytype
-            # except if the column header doesn't fit
-            and format_name not in mandatory_header_skip.get(col, set())
+            # except if the column name doesn't fit
+            and format_name not in mandatory_column_name_skip.get(col, set())
             # we already know pure types are valid, only formats remain
             and format_name != pytype
         }
@@ -482,7 +482,7 @@ def test_parquet_cols(
                     else ((scores.loc[format_name, col] * idx + batch_col_test) / (idx + 1))
                 )
         remaining_tests_per_col = _build_remaining_tests_per_col(
-            scores, mandatory_header_skip, known_columns=columns
+            scores, mandatory_column_name_skip, known_columns=columns
         )
     analysis["nb_duplicates"] = sum(row_hashes_count > 1)
     analysis["categorical"] = [

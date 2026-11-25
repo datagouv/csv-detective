@@ -5,7 +5,7 @@ proportion = 1
 description = "JSON object"
 python_type = "json"
 tags = ["type"]
-headers = {
+column_names = {
     "list": 1,
     "dict": 1,
     "complex": 1,

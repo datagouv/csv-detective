@@ -3,7 +3,7 @@ from frformat import Commune, Millesime, Options
 proportion = 0.8
 description = "French commune name"
 tags = ["fr", "geo"]
-headers = {
+column_names = {
     "commune": 1,
     "ville": 1,
     "libelle commune": 1,

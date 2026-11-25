@@ -4,7 +4,7 @@ proportion = 1
 description = "Float number (with a dot or a comma as decimal separator)"
 tags = ["type"]
 python_type = "float"
-headers = {"part": 1, "ratio": 1, "taux": 1}
+column_names = {"part": 1, "ratio": 1, "taux": 1}
 
 scientific_notation_pattern = r"^-?\d+\.\d+[eE][+-]?\d+$"
 

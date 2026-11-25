@@ -3,8 +3,8 @@ from frformat import CodeCommuneInsee, Millesime
 proportion = 0.75
 description = "French commune code, from the INSEE reference source"
 tags = ["fr", "geo"]
-mandatory_header = True
-headers = {
+mandatory_column_name = True
+column_names = {
     "code commune insee": 1,
     "code insee": 1,
     "codes insee": 1,

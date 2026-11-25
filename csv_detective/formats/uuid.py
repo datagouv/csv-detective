@@ -2,7 +2,7 @@ import re
 
 proportion = 0.8
 description = "Universally unique identifier ([UUID](https://fr.wikipedia.org/wiki/Universally_unique_identifier))"
-headers = {"id": 1, "identifiant": 1}
+column_names = {"id": 1, "identifiant": 1}
 
 
 def _is(val) -> bool:

@@ -3,8 +3,8 @@ from frformat import CodeFantoir
 proportion = 1
 description = "Code from the [FANTOIR reference source](https://www.data.gouv.fr/datasets/fichier-fantoir-des-voies-et-lieux-dits) (deprecated since july 2023)"
 tags = ["fr", "geo"]
-mandatory_header = True
-headers = {
+mandatory_column_name = True
+column_names = {
     "cadastre1": 1,
     "code fantoir": 1,
     "fantoir": 1,

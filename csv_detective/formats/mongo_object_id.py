@@ -2,7 +2,7 @@ import re
 
 proportion = 0.8
 description = "Mongo object identifier"
-headers = {"id": 1, "objectid": 1}
+column_names = {"id": 1, "objectid": 1}
 
 
 def _is(val) -> bool:

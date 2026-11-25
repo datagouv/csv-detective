@@ -2,7 +2,7 @@ from csv_detective.formats.float import _is as is_float
 
 proportion = 0.8
 description = "Money amount"
-headers = {"budget": 1, "salaire": 1, "euro": 1, "euros": 1, "prêt": 1, "montant": 1}
+column_names = {"budget": 1, "salaire": 1, "euro": 1, "euros": 1, "prêt": 1, "montant": 1}
 
 currencies = {"€", "$", "£", "¥"}
 

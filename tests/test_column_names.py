@@ -5,10 +5,10 @@ from csv_detective.format import FormatsManager
 fmtm = FormatsManager()
 
 
-# money headers
-def test_money_headers():
-    header = "Montant total"
-    assert fmtm.formats["money"].header_score(header) == 0.5
+# money column names
+def test_money_column_names():
+    column_name = "Montant total"
+    assert fmtm.formats["money"].column_name_score(column_name) == 0.5
 
 
 @pytest.mark.parametrize(
@@ -22,17 +22,19 @@ def test_money_headers():
     ],
 )
 def test_latitude(params):
-    header, expected = params
-    assert expected == fmtm.formats["latitude_wgs"].header_score(header)
+    column_name, expected = params
+    assert expected == fmtm.formats["latitude_wgs"].column_name_score(column_name)
 
 
 def test_former_names_still_work():
     latitude = fmtm.formats["latitude_wgs"]
     with pytest.deprecated_call():
-        assert latitude.labels == latitude.headers
+        assert latitude.labels == latitude.column_names
     with pytest.deprecated_call():
         assert latitude.mandatory_label is True
     with pytest.deprecated_call():
         assert latitude.is_valid_label("latitude") == 1.0
     with pytest.deprecated_call():
-        assert fmtm.get_formats_with_mandatory_label() == fmtm.get_formats_with_mandatory_header()
+        assert (
+            fmtm.get_formats_with_mandatory_label() == fmtm.get_formats_with_mandatory_column_name()
+        )

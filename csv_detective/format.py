@@ -1,7 +1,7 @@
 import warnings
 from typing import Any, Callable, Iterable
 
-from csv_detective.parsing.text import header_score
+from csv_detective.parsing.text import column_name_score
 
 
 class Format:
@@ -12,10 +12,10 @@ class Format:
         func: Callable[[Any], bool],
         _test_values: dict[bool, list[str]],
         infer: Callable[[Iterable[Any]], str | None] | None = None,
-        headers: dict[str, float] = {},
+        column_names: dict[str, float] = {},
         proportion: float | int = 1,
         tags: list[str] = [],
-        mandatory_header: bool = False,
+        mandatory_column_name: bool = False,
         python_type: str = "string",
         parent: str | None = None,
     ) -> None:
@@ -31,10 +31,10 @@ class Format:
                 read every value of it, or None if there is none (the column is then not of this
                 format). Only used when proportion is 1: a format the user made tolerant cannot
                 be pinned down to a single way of reading every value.
-            headers: the dict of hint headers and their credibilty for the header score (NB: credibility is relative witin a single format, should be used to rank the valid headers)
+            column_names: the dict of hint column names and their credibilty for the column name score (NB: credibility is relative witin a single format, should be used to rank the valid column names)
             proportion: the tolerance (between 0 and 1) to say a column is valid for a format. (1 => 100% of the column has to pass the func check for the column to be considered valid)
             tags: to allow users to submit a file to only a subset of formats
-            mandatory_header: whether the format can only be considered if the column passes both field and header tests
+            mandatory_column_name: whether the format can only be considered if the column passes both field and column name tests
             python_type: the python type related to the format (less specific, used for downstream casting)
             parent: optional name of a less specific format to test when this one fails or to skip when it matches
         """
@@ -43,31 +43,31 @@ class Format:
         self.func: Callable[[Any], bool] = func
         self._test_values: dict[bool, list[str]] = _test_values
         self.infer: Callable[[Iterable[Any]], str | None] | None = infer
-        self.headers: dict[str, float] = headers
+        self.column_names: dict[str, float] = column_names
         self.proportion: float = self.check_proportion(proportion)
         self.tags: list[str] = tags
-        self.mandatory_header: bool = mandatory_header
+        self.mandatory_column_name: bool = mandatory_column_name
         self.python_type: str = python_type
         self.parent: str | None = parent
 
-    def header_score(self, header: str) -> float:
-        return header_score(header, self.headers)
+    def column_name_score(self, column_name: str) -> float:
+        return column_name_score(column_name, self.column_names)
 
     # the formats are exposed through FormatsManager().formats, so their former names stay
     # readable until a major version
     @property
     def labels(self) -> dict[str, float]:
-        _warn_deprecated("Format.labels", "Format.headers")
-        return self.headers
+        _warn_deprecated("Format.labels", "Format.column_names")
+        return self.column_names
 
     @property
     def mandatory_label(self) -> bool:
-        _warn_deprecated("Format.mandatory_label", "Format.mandatory_header")
-        return self.mandatory_header
+        _warn_deprecated("Format.mandatory_label", "Format.mandatory_column_name")
+        return self.mandatory_column_name
 
     def is_valid_label(self, val: str) -> float:
-        _warn_deprecated("Format.is_valid_label", "Format.header_score")
-        return self.header_score(val)
+        _warn_deprecated("Format.is_valid_label", "Format.column_name_score")
+        return self.column_name_score(val)
 
     @classmethod
     def check_proportion(cls, proportion: float | int) -> float | int:
@@ -122,10 +122,10 @@ class FormatsManager:
                 **{
                     attr: val
                     for attr in [
-                        "headers",
+                        "column_names",
                         "description",
                         "tags",
-                        "mandatory_header",
+                        "mandatory_column_name",
                         "python_type",
                     ]
                     if (val := getattr(module, attr, None))
@@ -157,17 +157,19 @@ class FormatsManager:
             if all(tag in fmt.tags for tag in tags)
         }
 
-    def get_formats_with_mandatory_header(self) -> dict[str, Format]:
+    def get_formats_with_mandatory_column_name(self) -> dict[str, Format]:
         return {
-            format_name: fmt for format_name, fmt in self.formats.items() if fmt.mandatory_header
+            format_name: fmt
+            for format_name, fmt in self.formats.items()
+            if fmt.mandatory_column_name
         }
 
     def get_formats_with_mandatory_label(self) -> dict[str, Format]:
         _warn_deprecated(
             "FormatsManager.get_formats_with_mandatory_label",
-            "FormatsManager.get_formats_with_mandatory_header",
+            "FormatsManager.get_formats_with_mandatory_column_name",
         )
-        return self.get_formats_with_mandatory_header()
+        return self.get_formats_with_mandatory_column_name()
 
     def available_tags(self) -> set[str]:
         return set(tag for format in self.formats.values() for tag in format.tags)
