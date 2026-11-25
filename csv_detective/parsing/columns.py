@@ -335,6 +335,9 @@ def test_col_chunks(
                 ]
         for col, format_names in remaining_tests_per_col.items():
             nb_batch_values = int(batch[col].count()) if skipna else len(batch)
+            if nb_batch_values == 0:
+                # nothing tested in this batch, the scores are unchanged
+                continue
             # testing each column with the tests that are still competing
             # after previous batchs analyses
             for format_name in format_names:
